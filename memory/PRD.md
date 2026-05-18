@@ -1,7 +1,7 @@
-# PRD — Central Inventory (Analysis Summary)
+# PRD — Central Inventory (Updated: Handover Document Complete)
 
 ## Original Problem Statement
-Pull code from https://github.com/parth-mygenie/central_inventory.git (main branch), go through all documentation, summarize the project and determine next steps.
+Pull code from https://github.com/parth-mygenie/central_inventory.git (main branch), go through all documentation, summarize the project, determine next steps, and create a final system handover document.
 
 ## Project Overview
 **MyGenie POS — Central Inventory Module**: A multi-level inventory management system for the MyGenie POS platform managing stock movement across a 3-level business hierarchy.
@@ -22,12 +22,34 @@ Pull code from https://github.com/parth-mygenie/central_inventory.git (main bran
 - Terminology adapter module (`terminology.js`)
 - Design guidelines (dark brutalist UI, IBM Plex Sans + JetBrains Mono)
 - Test hierarchy seeded: 2 centrals + 4 franchises under master
+- **[NEW] System Handover & Operational Documentation** — 912-line comprehensive document at `/app/memory/central_inventory/SYSTEM_HANDOVER_DOCUMENT.md`
+
+## Deliverables Created This Session
+1. **SYSTEM_HANDOVER_DOCUMENT.md** — Complete tech-team handover covering:
+   - Hierarchy model with terminology inversion explanation
+   - Stock data architecture (segments, aggregates, lineage)
+   - Full transfer lifecycle with all status transitions
+   - All 10 transfer flow types with rules
+   - Stock movement timing and floor policies
+   - Dispatch mechanics and source selection
+   - Receiving, partial receiving, and resolution types
+   - Visibility and access control by role
+   - Batch, expiry, and lineage tracking
+   - Adjustment, wastage, and reconciliation mechanisms
+   - Pending queues and operational workflow
+   - Reporting capabilities
+   - Franchise push and metadata sync
+   - Audit trail and events
+   - Current platform status with known issues
+   - 11 backend capabilities requiring development
+   - Complete API inventory with readiness status
+   - Glossary of all domain terms
 
 ## Current Blockers
-1. Test credentials for multi-role testing (Bearer tokens for Central/Master/Outlet)
-2. 11 items need backend team work (partial dispatch, soft reservation, over-receive, lateral transfers, return flow, reconciliation, adjustment API, wastage API, stocktake, cost models, pack conversion)
+1. Test credentials for multi-role testing
+2. 11 items need backend team work
 3. Operations Hub KPIs not specified by owner
-4. Unit conversion metadata missing in backend DB (blocks all transfer writes)
+4. Unit conversion metadata missing in backend DB
 
 ## Prioritized Backlog
 ### P0 — Must Have Phase 1
@@ -52,7 +74,7 @@ Pull code from https://github.com/parth-mygenie/central_inventory.git (main bran
 - Theoretical vs actual consumption reports
 
 ## Next Tasks
-1. Resolve backend blockers (unit conversion, missing APIs)
-2. Build core UI screens starting with Operations Hub
-3. Implement terminology adapter across all frontend components
-4. Coordinate with backend team on 11 required capabilities
+1. Share handover document with backend team for the 11 required capabilities
+2. Resolve backend blocker (unit conversion metadata)
+3. Begin UI implementation starting with core screens
+4. Coordinate backend development priorities
