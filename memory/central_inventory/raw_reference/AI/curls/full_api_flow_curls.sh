@@ -1,0 +1,493 @@
+#!/usr/bin/env bash
+
+# Full API curl collection (start to current state)
+# Covers:
+# 1) Auth/login flows used in this implementation timeline
+# 2) Franchise API v2 flows
+# 3) Inventory transfer hierarchy flows (request/approve/dispatch/receive/cancel/reject)
+
+# =============================
+# Base URLs
+# =============================
+BASE_V1="https://preprod.mygenie.online/api/v1"
+BASE_V2="https://preprod.mygenie.online/api/v2/vendoremployee"
+
+# =============================
+# Tokens / IDs (replace all)
+# =============================
+FRANCHISE_TOKEN="REPLACE_WITH_FRANCHISE_VENDOR_EMPLOYEE_TOKEN"
+CENTRAL_TOKEN="REPLACE_WITH_CENTRAL_VENDOR_EMPLOYEE_TOKEN"
+MASTER_TOKEN="REPLACE_WITH_MASTER_VENDOR_EMPLOYEE_TOKEN"
+ADMIN_TOKEN="REPLACE_WITH_ADMIN_TOKEN_FOR_LOGIN_AS_RESTAURANT"
+
+FRANCHISE_RESTAURANT_ID="REPLACE_WITH_FRANCHISE_RESTAURANT_ID"
+CENTRAL_RESTAURANT_ID="REPLACE_WITH_CENTRAL_RESTAURANT_ID"
+MASTER_RESTAURANT_ID="REPLACE_WITH_MASTER_RESTAURANT_ID"
+CHILD_RESTAURANT_ID="REPLACE_WITH_CHILD_RESTAURANT_ID"
+TRANSFER_ID="REPLACE_WITH_TRANSFER_ID"
+TRANSFER_ID_2="REPLACE_WITH_TRANSFER_ID_2"
+TRANSFER_ID_3="REPLACE_WITH_TRANSFER_ID_3"
+TRANSFER_ID_4="REPLACE_WITH_TRANSFER_ID_4"
+BUTTER_SOURCE_INVENTORY_ID="3585"
+WATER_SOURCE_INVENTORY_ID="3576"
+BUTTER_REQUEST_TRANSFER_ID="REPLACE_WITH_BUTTER_REQUEST_TRANSFER_ID"
+WATER_REQUEST_TRANSFER_ID="REPLACE_WITH_WATER_REQUEST_TRANSFER_ID"
+ORIGIN_TRANSFER_ID="REPLACE_WITH_TRANSFER_ID_FOR_LINEAGE_OR_NULL"
+
+# =============================
+# 1) Auth APIs (v1)
+# =============================
+
+echo "=== V1: vendoremployee/common-login ==="
+curl --location "${BASE_V1}/auth/vendoremployee/common-login" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "email": "killua@franchise.com",
+    "password": "Drunkrebel@29",
+    "fcm_token": "test_fcm_token"
+  }'
+
+echo
+echo "=== V1: adminemployee/login-as-restaurant ==="
+curl --location "${BASE_V1}/auth/adminemployee/login-as-restaurant" \
+  --header "Authorization: Bearer ${ADMIN_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw "{
+    \"restaurant_id\": ${FRANCHISE_RESTAURANT_ID}
+  }"
+
+echo
+echo "=== V1: vendoremployee/login (normal) ==="
+curl --location "${BASE_V1}/auth/vendoremployee/login" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "email": "abhishek@kalabahia.com",
+    "password": "Qplazm@10"
+  }'
+
+# =============================
+# 2) Franchise APIs (v2)
+# =============================
+
+echo
+echo "=== V2: franchise/list ==="
+curl --location "${BASE_V2}/franchise/list?limit=25" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json"
+
+echo
+echo "=== V2: franchise/create metadata ==="
+curl --location "${BASE_V2}/franchise/create" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json"
+
+echo
+echo "=== V2: franchise/create ==="
+curl --location "${BASE_V2}/franchise/create" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "name": "Demo Franchise Outlet",
+    "phone": "9999999999",
+    "email": "demo.franchise@example.com",
+    "password": "Demo@12345",
+    "address": "Demo Address, City"
+  }'
+
+echo
+echo "=== V2: franchise/manage/{id} ==="
+curl --location "${BASE_V2}/franchise/manage/${CHILD_RESTAURANT_ID}" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json"
+
+echo
+echo "=== V2: franchise/push-form/{id} ==="
+curl --location "${BASE_V2}/franchise/push-form/${CHILD_RESTAURANT_ID}" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json"
+
+echo
+echo "=== V2: franchise/push/{id} ==="
+curl --location "${BASE_V2}/franchise/push/${CHILD_RESTAURANT_ID}" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "push_food_bundle": true
+  }'
+
+echo
+echo "=== V2: franchise/history ==="
+curl --location "${BASE_V2}/franchise/history" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "limit": 50
+  }'
+
+# =============================
+# 3) Inventory Transfer APIs (v2)
+# =============================
+
+echo
+echo "=== V2: inventory-transfer/initiate (direct dispatch compatibility) ==="
+curl --location "${BASE_V2}/inventory-transfer/initiate" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw "{
+    \"from_restaurant_id\": ${CENTRAL_RESTAURANT_ID},
+    \"to_restaurant_id\": ${FRANCHISE_RESTAURANT_ID},
+    \"items\": [
+      {
+        \"source_inventory_master_id\": 1,
+        \"quantity\": 2,
+        \"unit\": \"kg\",
+        \"source_selector\": {
+          \"mode\": \"filter_bucket\",
+          \"bucket\": \"without_batch_and_expiry\",
+          \"batch_state\": \"null\",
+          \"expiry_state\": \"null\"
+        }
+      }
+    ]
+  }"
+
+echo
+echo "=== V2: inventory-transfer/request (franchise -> central) ==="
+curl --location "${BASE_V2}/inventory-transfer/request" \
+  --header "Authorization: Bearer ${FRANCHISE_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "items": [
+      {
+        "stock_title": "Tomato",
+        "unit_id": 1,
+        "quantity": 5,
+        "unit": "kg",
+        "source_selector": {
+          "mode": "filter_bucket",
+          "bucket": "without_batch_and_expiry",
+          "batch_state": "null",
+          "expiry_state": "null"
+        }
+      }
+    ]
+  }'
+
+echo
+echo "=== V2: inventory-transfer/request (central -> master) ==="
+curl --location "${BASE_V2}/inventory-transfer/request" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "items": [
+      {
+        "stock_title": "Cooking Oil",
+        "unit_id": 2,
+        "quantity": 10,
+        "unit": "ltr",
+        "source_selector": {
+          "mode": "filter_bucket",
+          "bucket": "without_batch_and_expiry",
+          "batch_state": "null",
+          "expiry_state": "null"
+        }
+      }
+    ]
+  }'
+
+echo
+echo "=== V2: inventory-transfer/approve/{id} (parent/source approver) ==="
+curl --location "${BASE_V2}/inventory-transfer/approve/${TRANSFER_ID}" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{}'
+
+echo
+echo "=== V2: inventory-transfer/reject/{id} (SOURCE rejects request) ==="
+curl --location "${BASE_V2}/inventory-transfer/reject/${TRANSFER_ID}" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{}'
+
+echo
+echo "=== V2: inventory-transfer/dispatch/{id} (after approval) ==="
+curl --location "${BASE_V2}/inventory-transfer/dispatch/${TRANSFER_ID}" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{}'
+
+echo
+echo "=== V2: inventory-transfer/receive/{id} (destination confirms receipt) ==="
+curl --location "${BASE_V2}/inventory-transfer/receive/${TRANSFER_ID}" \
+  --header "Authorization: Bearer ${FRANCHISE_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{}'
+
+echo
+echo "=== V2: inventory-transfer/cancel/{id} (SOURCE / sender only) ==="
+curl --location "${BASE_V2}/inventory-transfer/cancel/${TRANSFER_ID}" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{}'
+
+echo
+echo "=== V2: inventory-transfer/reject/{id} (DESTINATION / receiver only) ==="
+curl --location "${BASE_V2}/inventory-transfer/reject/${TRANSFER_ID}" \
+  --header "Authorization: Bearer ${FRANCHISE_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{}'
+
+echo
+echo "=== V2: inventory-transfer/details/{id} ==="
+curl --location "${BASE_V2}/inventory-transfer/details/${TRANSFER_ID}" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json"
+
+echo
+echo "=== V2: inventory-transfer/history ==="
+curl --location "${BASE_V2}/inventory-transfer/history" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw "{
+    \"restaurant_id\": ${CENTRAL_RESTAURANT_ID},
+    \"limit\": 20
+  }"
+
+echo
+echo "=== V2: inventory-transfer/source-options (frontend source selector) ==="
+curl --location "${BASE_V2}/inventory-transfer/source-options" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw "{
+    \"from_restaurant_id\": ${CENTRAL_RESTAURANT_ID},
+    \"source_inventory_master_id\": ${WATER_SOURCE_INVENTORY_ID}
+  }"
+
+echo
+echo "=== V2: inventory-transfer/initiate using without_expiry_only selector ==="
+curl --location "${BASE_V2}/inventory-transfer/initiate" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw "{
+    \"from_restaurant_id\": ${CENTRAL_RESTAURANT_ID},
+    \"to_restaurant_id\": ${FRANCHISE_RESTAURANT_ID},
+    \"items\": [
+      {
+        \"source_inventory_master_id\": ${WATER_SOURCE_INVENTORY_ID},
+        \"quantity\": 1,
+        \"unit\": \"ltr\",
+        \"source_selector\": {
+          \"mode\": \"filter_bucket\",
+          \"bucket\": \"without_expiry_only\",
+          \"batch_state\": \"value\",
+          \"batch\": \"WATER-APR-LOT-01\",
+          \"expiry_state\": \"null\"
+        }
+      }
+    ]
+  }"
+
+echo
+echo "=== V2: inventory-transfer/initiate using exact segment_id selector ==="
+curl --location "${BASE_V2}/inventory-transfer/initiate" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw "{
+    \"from_restaurant_id\": ${CENTRAL_RESTAURANT_ID},
+    \"to_restaurant_id\": ${FRANCHISE_RESTAURANT_ID},
+    \"items\": [
+      {
+        \"source_inventory_master_id\": ${WATER_SOURCE_INVENTORY_ID},
+        \"quantity\": 0.5,
+        \"unit\": \"ltr\",
+        \"source_selector\": {
+          \"mode\": \"segment_id\",
+          \"segment_id\": 3
+        }
+      }
+    ]
+  }"
+
+echo
+echo "=== V2: inventory/add-stock/{id} with batch + expiry + lineage ==="
+curl --location "${BASE_V2}/inventory/add-stock/${WATER_SOURCE_INVENTORY_ID}" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --form "quantity=40" \
+  --form "unit=ltr" \
+  --form "vendor_id=1" \
+  --form "payment_type=Cash" \
+  --form "purchase_date=2026-04-27" \
+  --form "price=1200" \
+  --form "tot_amount=1200" \
+  --form "batch=WATER-APR-LOT-01" \
+  --form "expiry_date=2026-12-31" \
+  --form "source_restaurant_id=${CENTRAL_RESTAURANT_ID}" \
+  --form "origin_transfer_id=${ORIGIN_TRANSFER_ID}"
+
+echo
+echo "=== Cancel/Reject/Receive payload variants ==="
+
+echo
+echo "=== Cancel (default backward-compatible: return_to_source) ==="
+curl --location "${BASE_V2}/inventory-transfer/cancel/${TRANSFER_ID}" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{}'
+
+echo
+echo "=== Cancel with damaged resolution ==="
+curl --location "${BASE_V2}/inventory-transfer/cancel/${TRANSFER_ID_2}" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "resolution_type": "damaged",
+    "resolution_meta": {
+      "reason": "temperature breach in transit",
+      "damaged_qty": 2
+    }
+  }'
+
+echo
+echo "=== Cancel with partial_return resolution ==="
+curl --location "${BASE_V2}/inventory-transfer/cancel/${TRANSFER_ID_3}" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "resolution_type": "partial_return",
+    "resolution_meta": {
+      "reason": "some cartons leaked",
+      "returned_qty": 6
+    }
+  }'
+
+echo
+echo "=== Cancel with in_transit_hold resolution ==="
+curl --location "${BASE_V2}/inventory-transfer/cancel/${TRANSFER_ID_4}" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "resolution_type": "in_transit_hold",
+    "resolution_meta": {
+      "reason": "carrier dispute - awaiting inspection"
+    }
+  }'
+
+echo
+echo "=== Receive with explicit full acceptance ==="
+curl --location "${BASE_V2}/inventory-transfer/receive/${TRANSFER_ID}" \
+  --header "Authorization: Bearer ${FRANCHISE_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "received_lines": [
+      { "line_id": 101, "accepted_qty": 10, "rejected_qty": 0 },
+      { "line_id": 102, "accepted_qty": 5, "rejected_qty": 0 }
+    ]
+  }'
+
+echo
+echo "=== Receive with partial rejection + return_to_source ==="
+curl --location "${BASE_V2}/inventory-transfer/receive/${TRANSFER_ID_2}" \
+  --header "Authorization: Bearer ${FRANCHISE_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "resolution_type": "return_to_source",
+    "resolution_meta": {
+      "reason": "minor breakage"
+    },
+    "received_lines": [
+      { "line_id": 201, "accepted_qty": 8, "rejected_qty": 2 }
+    ]
+  }'
+
+echo
+echo "=== Receive with partial rejection + damaged ==="
+curl --location "${BASE_V2}/inventory-transfer/receive/${TRANSFER_ID_3}" \
+  --header "Authorization: Bearer ${FRANCHISE_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "resolution_type": "damaged",
+    "resolution_meta": {
+      "reason": "seal broken"
+    },
+    "received_lines": [
+      { "line_id": 301, "accepted_qty": 6, "rejected_qty": 4 }
+    ]
+  }'
+
+echo
+echo "=== Hierarchy summary (franchise stores, default today) ==="
+curl --location "${BASE_V2}/inventory-transfer/hierarchy-summary" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "store_type": "franchise"
+  }'
+
+echo
+echo "=== Hierarchy summary (central stores, date range) ==="
+curl --location "${BASE_V2}/inventory-transfer/hierarchy-summary" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "store_type": "central",
+    "from_date": "2026-04-01",
+    "to_date": "2026-04-30"
+  }'
+
+echo
+echo "=== Hierarchy detail (store-wise stock + batches + transactions) ==="
+curl --location "${BASE_V2}/inventory-transfer/hierarchy-detail" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "store_restaurant_id": '${FRANCHISE_RESTAURANT_ID}',
+    "selected_stock_title": "Water",
+    "selected_unit_id": 3
+  }'
+
+echo
+echo "=== Pending stock queues ==="
+curl --location "${BASE_V2}/inventory-transfer/pending-queues" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "limit": 50
+  }'
+
+echo
+echo "=== Franchise bundle push ==="
+curl --location "${BASE_V2}/franchise/push/${FRANCHISE_RESTAURANT_ID}" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{"push_food_bundle": true}'
