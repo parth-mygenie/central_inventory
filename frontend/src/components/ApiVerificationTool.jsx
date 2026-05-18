@@ -371,7 +371,7 @@ function VerificationBar({
 
   return (
     <div
-      className="border-t border-[#27272A] px-3 py-2 flex items-center gap-3 bg-[#0A0A0A] shrink-0"
+      className="border-t border-[#27272A] px-3 py-2 flex items-center gap-3 bg-[#0A0A0A] shrink-0 relative z-[10000]"
       data-testid="verification-bar"
     >
       <span className="text-[10px] font-semibold tracking-widest uppercase text-[#52525B] shrink-0">
