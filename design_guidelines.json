@@ -1,0 +1,107 @@
+{
+  "theme_and_archetype": {
+    "theme": "dark",
+    "archetype": "Archetype 4 (Swiss & High-Contrast) combined with Retro-Futurism/Terminal Look",
+    "description": "A dark, highly structured, brutalist UI designed for developers. Focuses on data density, precise typography, and functional colors. No soft shadows, no gradients. Sharp edges."
+  },
+  "typography": {
+    "primary_font": "IBM Plex Sans, sans-serif",
+    "code_font": "JetBrains Mono, monospace",
+    "heading_strategy": "Tight tracking, semi-bold to bold weights, explicit text sizing up to text-2xl max (dense tool).",
+    "body_strategy": "Small, readable, low-contrast neutral grays for labels, high-contrast white for data.",
+    "banned_fonts": [
+      "Inter",
+      "Roboto",
+      "Space Grotesk"
+    ]
+  },
+  "colors": {
+    "background": {
+      "app": "#050505",
+      "panel": "#0A0A0A",
+      "input": "#000000"
+    },
+    "borders": {
+      "default": "#27272A",
+      "focus": "#FAFAFA",
+      "grid_lines": "#18181B"
+    },
+    "text": {
+      "primary": "#FAFAFA",
+      "secondary": "#A1A1AA",
+      "muted": "#52525B"
+    },
+    "functional": {
+      "method_get": "#3B82F6",
+      "method_post": "#10B981",
+      "method_put": "#F59E0B",
+      "method_delete": "#EF4444",
+      "method_patch": "#EAB308"
+    },
+    "status": {
+      "success": "#22C55E",
+      "warning": "#F59E0B",
+      "error": "#EF4444"
+    },
+    "terminology_highlight": {
+      "mismatch_bg": "rgba(245, 158, 11, 0.1)",
+      "mismatch_border": "#F59E0B",
+      "mismatch_text": "#FBBF24"
+    }
+  },
+  "layout_and_grids": {
+    "strategy": "CONTROL ROOM GRID",
+    "spacing": "Tight padding (p-2, p-4) to maximize data density.",
+    "structure": {
+      "container": "h-screen w-full flex overflow-hidden bg-[#050505] text-[#FAFAFA]",
+      "sidebar": "w-64 border-r border-[#27272A] flex flex-col h-full",
+      "main_area": "flex-1 flex flex-col h-full",
+      "top_bar": "h-14 border-b border-[#27272A] flex items-center px-4 gap-4",
+      "split_view": "flex-1 flex flex-row overflow-hidden",
+      "request_panel": "flex-1 border-r border-[#27272A] flex flex-col h-full",
+      "response_panel": "flex-1 flex flex-col h-full"
+    }
+  },
+  "components": {
+    "buttons": "Square edges (rounded-none), solid high-contrast text, 1px borders. Primary CTA is solid #FAFAFA text #000000.",
+    "inputs": "Flat, monospace for URL and JSON, dark background, 1px border. Focus state is a white 1px border.",
+    "tabs": "Minimalist underline style. Active state has 1px white bottom border and bright text. Inactive is muted gray.",
+    "json_editor": "Fully monospace text area, syntax highlighted (if possible), dark background, distinct line numbers.",
+    "badges": "Used for HTTP methods and status codes. Small, uppercase, tracking-[0.1em], colored text on subtle tinted background (10% opacity).",
+    "terminology_panel": "A dedicated section in the response view that scans JSON keys. Displays warnings when it detects 'master', 'franchise', 'central' instead of standard POS terms."
+  },
+  "visual_enhancers": {
+    "surfaces": "GRID BORDERS (The 'Technical' Look). Use border-collapse style layouts to expose the skeleton of the UI.",
+    "shadows": "None. Rely on 1px borders and background contrast for depth.",
+    "corners": "rounded-none (0px) on everything."
+  },
+  "motion": {
+    "hover_states": "Subtle background lightening (bg-zinc-900) or border color change. No scaling/bouncing.",
+    "transitions": "Instant or very fast (75ms). Developer tools need to feel snappy.",
+    "focus": "Clear 1px solid white border outline for accessibility."
+  },
+  "icons": {
+    "library": "@phosphor-icons/react",
+    "instructions": "Use Phosphor Icons in 'bold' or 'regular' weight for clear, technical aesthetic."
+  },
+  "accessibility": {
+    "contrast": "Ensure all text meets APCA standards. Use tinted grays (not pure #808080).",
+    "focus_management": "All interactive inputs must have visible focus rings (ring-1 ring-white/50)."
+  },
+  "testing": {
+    "data_testid_rules": "All interactive and key informational elements MUST include data-testid. Examples: api-list-item, method-selector, url-input, send-request-btn, response-status, json-viewer, terminology-warning."
+  },
+  "media_and_images": {
+    "images": [],
+    "instructions": "No images are needed. This is a pure data/API console."
+  },
+  "instructions_to_main_agent": [
+    "Install required icon library: yarn add @phosphor-icons/react",
+    "Install required font families (e.g., via Google Fonts in index.html or Fontsource): IBM Plex Sans and JetBrains Mono.",
+    "Strip Shadcn default border-radius globally (set --radius: 0 in global CSS).",
+    "Do not use card components with soft shadows. Build panels using raw divs with explicit 1px borders (border border-border).",
+    "Implement a robust 'Terminology Mapping' validation function that checks the response JSON keys for forbidden terms (e.g. 'franchise' instead of 'outlet') and highlights them in a dedicated 'Warnings' panel.",
+    "Ensure the JSON payload and response viewers use a <textarea> or code editor component set to font-mono (JetBrains Mono).",
+    "Structure the layout exactly as a desktop IDE: fixed sidebar, scrollable inner panes, no main page vertical scrolling."
+  ]
+}
