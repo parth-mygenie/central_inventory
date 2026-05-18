@@ -6,7 +6,13 @@ module.exports = {
     "./public/index.html"
   ],
   theme: {
-  	extend: {
+	fontFamily: {
+		sans: ['"IBM Plex Sans"', 'sans-serif'],
+		mono: ['"JetBrains Mono"', 'monospace'],
+	},
+	extend: {
+
+
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
