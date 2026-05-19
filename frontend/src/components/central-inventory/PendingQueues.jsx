@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useLoginContext } from "@/hooks/useLoginContext";
 import api from "@/services/api";
 import { mapRestaurantType } from "@/lib/terminology";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatTimestamp, formatItemsCount } from "@/lib/formatters";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -13,21 +14,24 @@ import {
   EmptyState,
   BlockedAction,
 } from "@/components/common/StateDisplays";
-import { StatusBadge, StoreTypeBadge } from "@/components/common/Badges";
-import { CheckCircle2, Inbox, SendHorizonal, Lock } from "lucide-react";
+import { StatusBadge } from "@/components/common/Badges";
+import { CheckCircle2, Inbox, SendHorizonal, Truck, Lock } from "lucide-react";
 
 /**
- * SCR-05 Pending Queues
+ * SCR-05 Pending Queues — Slice 2
  *
- * Three tabs: Approval Pending, Receive Pending, My Requests.
- * All action buttons disabled — write API blocked.
- * Approval tab hidden for Outlet users.
+ * Enhancements:
+ * - Ready to Dispatch tab (Item 1) — filters from transfer history
+ * - Items count column (Item 8)
+ * - Formatted timestamps (Item 4)
+ * - Contextual actions hidden for irrelevant roles
  */
 export default function PendingQueues() {
   const navigate = useNavigate();
-  const { restaurantType, canDo, isBottomLevel } = useLoginContext();
+  const { restaurantType, canDo, restaurantId } = useLoginContext();
 
   const [data, setData] = useState(null);
+  const [readyToDispatch, setReadyToDispatch] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState(() =>
@@ -38,15 +42,32 @@ export default function PendingQueues() {
     setLoading(true);
     setError(null);
     try {
+      // Fetch pending queues
       const resp = await api.getPendingQueues();
       const d = resp.data?.data || resp.data;
       setData(d);
+
+      // Fetch transfer history to find "approved" transfers for Ready to Dispatch
+      if (canDo("dispatch")) {
+        try {
+          const histResp = await api.getTransferHistory();
+          const histData = histResp.data?.data || histResp.data;
+          const histItems = Array.isArray(histData) ? histData : [];
+          // Filter for approved transfers where current user is the source (can dispatch)
+          const approved = histItems.filter(
+            (t) => t.status === "approved" && String(t.from_restaurant_id) === String(restaurantId)
+          );
+          setReadyToDispatch(approved);
+        } catch {
+          setReadyToDispatch([]);
+        }
+      }
     } catch (err) {
       setError(err?.response?.data?.message || "Failed to load queues");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [canDo, restaurantId]);
 
   useEffect(() => {
     fetchQueues();
@@ -58,6 +79,7 @@ export default function PendingQueues() {
 
   const renderTransferRow = (item, idx, showActions = false) => {
     const id = item.id || item.transfer_id;
+    const itemsCount = item.items_count ?? item.lines?.length ?? null;
     return (
       <TableRow
         key={id || idx}
@@ -65,25 +87,24 @@ export default function PendingQueues() {
         className="cursor-pointer hover:bg-accent/50"
         onClick={() => id && navigate(`/transfer/${id}`)}
       >
-        <TableCell className="text-xs font-mono">{id || "-"}</TableCell>
-        <TableCell className="text-xs">{item.from_restaurant_name || mapRestaurantType(item.from_restaurant_type) || "-"}</TableCell>
-        <TableCell className="text-xs">{item.to_restaurant_name || mapRestaurantType(item.to_restaurant_type) || "-"}</TableCell>
+        <TableCell className="text-xs font-mono">{id || "—"}</TableCell>
+        <TableCell className="text-xs">{item.from_restaurant_name || mapRestaurantType(item.from_restaurant_type) || "—"}</TableCell>
+        <TableCell className="text-xs">{item.to_restaurant_name || mapRestaurantType(item.to_restaurant_type) || "—"}</TableCell>
         <TableCell><StatusBadge status={item.status} /></TableCell>
-        <TableCell className="text-xs text-muted-foreground">{item.created_at || "-"}</TableCell>
+        <TableCell className="text-xs tabular-nums">{formatItemsCount(itemsCount)}</TableCell>
+        <TableCell className="text-xs text-muted-foreground">{formatTimestamp(item.created_at)}</TableCell>
         <TableCell>
           {showActions ? (
-            <div className="flex items-center gap-1">
-              <Button
-                data-testid={`action-disabled-${id}`}
-                variant="outline"
-                size="sm"
-                disabled
-                className="h-6 text-[10px] opacity-50"
-              >
-                <Lock className="h-2.5 w-2.5 mr-1" />
-                Action blocked
-              </Button>
-            </div>
+            <Button
+              data-testid={`action-disabled-${id}`}
+              variant="outline"
+              size="sm"
+              disabled
+              className="h-6 text-[10px] opacity-50"
+            >
+              <Lock className="h-2.5 w-2.5 mr-1" />
+              Action blocked
+            </Button>
           ) : (
             <span className="text-[10px] text-muted-foreground">View only</span>
           )}
@@ -91,6 +112,20 @@ export default function PendingQueues() {
       </TableRow>
     );
   };
+
+  const tableHeaders = (
+    <TableHeader>
+      <TableRow>
+        <TableHead className="text-[10px]">Transfer ID</TableHead>
+        <TableHead className="text-[10px]">From</TableHead>
+        <TableHead className="text-[10px]">To</TableHead>
+        <TableHead className="text-[10px]">Status</TableHead>
+        <TableHead className="text-[10px]">Items</TableHead>
+        <TableHead className="text-[10px]">Created</TableHead>
+        <TableHead className="text-[10px]">Actions</TableHead>
+      </TableRow>
+    </TableHeader>
+  );
 
   return (
     <div data-testid="pending-queues">
@@ -110,6 +145,18 @@ export default function PendingQueues() {
                 {approvalPending.length > 0 && (
                   <span className="ml-1 bg-blue-100 text-blue-700 text-[10px] px-1.5 py-0.5 rounded-full">
                     {approvalPending.length}
+                  </span>
+                )}
+              </TabsTrigger>
+            )}
+            {/* Ready to Dispatch tab (Item 1) — only for dispatch-capable roles */}
+            {canDo("dispatch") && (
+              <TabsTrigger data-testid="tab-ready-to-dispatch" value="readyToDispatch" className="gap-1.5">
+                <Truck className="h-3.5 w-3.5" />
+                Ready to Dispatch
+                {readyToDispatch.length > 0 && (
+                  <span className="ml-1 bg-green-100 text-green-700 text-[10px] px-1.5 py-0.5 rounded-full">
+                    {readyToDispatch.length}
                   </span>
                 )}
               </TabsTrigger>
@@ -148,18 +195,29 @@ export default function PendingQueues() {
                 <Card>
                   <CardContent className="py-0 px-0">
                     <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="text-[10px]">Transfer ID</TableHead>
-                          <TableHead className="text-[10px]">From</TableHead>
-                          <TableHead className="text-[10px]">To</TableHead>
-                          <TableHead className="text-[10px]">Status</TableHead>
-                          <TableHead className="text-[10px]">Created</TableHead>
-                          <TableHead className="text-[10px]">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
+                      {tableHeaders}
                       <TableBody>
                         {approvalPending.map((item, idx) => renderTransferRow(item, idx, true))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+          )}
+
+          {/* Ready to Dispatch tab (Item 1) */}
+          {canDo("dispatch") && (
+            <TabsContent value="readyToDispatch">
+              {readyToDispatch.length === 0 ? (
+                <EmptyState title="No transfers ready to dispatch" description="Approved transfers awaiting dispatch will appear here" />
+              ) : (
+                <Card>
+                  <CardContent className="py-0 px-0">
+                    <Table>
+                      {tableHeaders}
+                      <TableBody>
+                        {readyToDispatch.map((item, idx) => renderTransferRow(item, idx, true))}
                       </TableBody>
                     </Table>
                   </CardContent>
@@ -176,16 +234,7 @@ export default function PendingQueues() {
               <Card>
                 <CardContent className="py-0 px-0">
                   <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="text-[10px]">Transfer ID</TableHead>
-                        <TableHead className="text-[10px]">From</TableHead>
-                        <TableHead className="text-[10px]">To</TableHead>
-                        <TableHead className="text-[10px]">Status</TableHead>
-                        <TableHead className="text-[10px]">Created</TableHead>
-                        <TableHead className="text-[10px]">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
+                    {tableHeaders}
                     <TableBody>
                       {receivePending.map((item, idx) => renderTransferRow(item, idx, true))}
                     </TableBody>
@@ -203,16 +252,7 @@ export default function PendingQueues() {
               <Card>
                 <CardContent className="py-0 px-0">
                   <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="text-[10px]">Transfer ID</TableHead>
-                        <TableHead className="text-[10px]">From</TableHead>
-                        <TableHead className="text-[10px]">To</TableHead>
-                        <TableHead className="text-[10px]">Status</TableHead>
-                        <TableHead className="text-[10px]">Created</TableHead>
-                        <TableHead className="text-[10px]">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
+                    {tableHeaders}
                     <TableBody>
                       {myRequests.map((item, idx) => renderTransferRow(item, idx, false))}
                     </TableBody>

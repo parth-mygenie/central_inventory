@@ -8,39 +8,68 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { LoadingState, ErrorState, EmptyState } from "@/components/common/StateDisplays";
 import { StoreTypeBadge } from "@/components/common/Badges";
-import { Store, ArrowUpDown, Calendar, Search } from "lucide-react";
+import DateRangePicker from "@/components/common/DateRangePicker";
+import { Store, Search } from "lucide-react";
+import { format } from "date-fns";
 
 /**
- * SCR-02 Hierarchy Summary
+ * SCR-02 Hierarchy Summary — Slice 2
  *
- * List of visible stores with sent/received/transaction counts.
- * Tab filter: "Master Stores" sends store_type="central" (inverted).
- * Tab filter: "Outlets" sends store_type="franchise".
+ * Enhancements:
+ * - Date range picker (Item 6)
+ * - Downward-only scoped hierarchy visibility (Item 10)
+ *   - Central (isTopLevel): Both tabs
+ *   - Master (isMiddleLevel): Only Outlets tab (downward only)
+ *   - Outlet (isBottomLevel): Own store only
  */
 export default function HierarchySummary() {
   const navigate = useNavigate();
-  const { restaurantType, isBottomLevel } = useLoginContext();
+  const { restaurantType, isTopLevel, isMiddleLevel, isBottomLevel } = useLoginContext();
 
-  const [activeTab, setActiveTab] = useState("masterStores");
+  // For Master Store, default to "outlets" tab (only visible tab)
+  const defaultTab = isMiddleLevel ? "outlets" : "masterStores";
+  const [activeTab, setActiveTab] = useState(defaultTab);
   const [stores, setStores] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
+  const [dateRange, setDateRange] = useState(null);
 
   const fetchSummary = useCallback(async (tab) => {
     setLoading(true);
     setError(null);
     try {
       const storeType = STORE_TYPE_FILTERS[tab]; // CRITICAL: inverted mapping
-      const resp = await api.getHierarchySummary({ storeType });
+      const params = { storeType };
+
+      // Pass date range to API (Item 6)
+      if (dateRange?.from) {
+        params.fromDate = format(dateRange.from, "yyyy-MM-dd");
+      }
+      if (dateRange?.to) {
+        params.toDate = format(dateRange.to, "yyyy-MM-dd");
+      }
+
+      const resp = await api.getHierarchySummary(params);
       const data = resp.data?.data || resp.data;
-      setStores(data?.stores || []);
+      let storesList = data?.stores || [];
+
+      // Downward-only filtering (Item 10)
+      // For Master Store (isMiddleLevel), filter out any non-franchise stores
+      // that might have leaked through the API
+      if (isMiddleLevel && tab === "outlets") {
+        storesList = storesList.filter(
+          (s) => s.restaurant_type === "franchise"
+        );
+      }
+
+      setStores(storesList);
     } catch (err) {
       setError(err?.response?.data?.message || "Failed to load hierarchy");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [dateRange, isMiddleLevel]);
 
   useEffect(() => {
     fetchSummary(activeTab);
@@ -62,23 +91,34 @@ export default function HierarchySummary() {
       <Tabs value={activeTab} onValueChange={handleTabChange}>
         <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
           <TabsList data-testid="hierarchy-tabs">
-            <TabsTrigger data-testid="tab-master-stores" value="masterStores">
-              Master Stores
-            </TabsTrigger>
+            {/* Central Store sees both tabs; Master Store sees only Outlets (Item 10) */}
+            {(isTopLevel || (!isMiddleLevel && !isBottomLevel)) && (
+              <TabsTrigger data-testid="tab-master-stores" value="masterStores">
+                Master Stores
+              </TabsTrigger>
+            )}
             <TabsTrigger data-testid="tab-outlets" value="outlets">
               Outlets
             </TabsTrigger>
           </TabsList>
 
-          <div className="relative w-full max-w-xs">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              data-testid="hierarchy-search"
-              placeholder="Search stores..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-8 h-8 text-xs"
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Date Range Picker (Item 6) */}
+            <DateRangePicker
+              dateRange={dateRange}
+              onDateRangeChange={setDateRange}
             />
+
+            <div className="relative w-full max-w-xs">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                data-testid="hierarchy-search"
+                placeholder="Search stores..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-8 h-8 text-xs"
+              />
+            </div>
           </div>
         </div>
 

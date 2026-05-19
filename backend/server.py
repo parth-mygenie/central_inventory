@@ -228,6 +228,7 @@ async def proxy_transfer_history(request: Request):
             "to_restaurant_name": t["to_restaurant"]["restaurant_name"],
             "created_at": t["created_at"],
             "updated_at": t["updated_at"],
+            "items_count": len(t["lines"]),
         })
 
     return JSONResponse(content={"data": items, "meta": {"total": len(items), "page": 1}})

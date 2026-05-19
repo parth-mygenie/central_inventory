@@ -3,35 +3,37 @@ import { useNavigate } from "react-router-dom";
 import { useLoginContext } from "@/hooks/useLoginContext";
 import api from "@/services/api";
 import ContextSelector from "./ContextSelector";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   CheckCircle2,
   Inbox,
   SendHorizonal,
-  AlertTriangle,
+  Truck,
   ArrowRight,
   ClipboardList,
   Network,
-  Loader2,
 } from "lucide-react";
-import { LoadingState, ErrorState, EmptyState, BlockedAction } from "@/components/common/StateDisplays";
+import { LoadingState, ErrorState } from "@/components/common/StateDisplays";
 
 /**
- * SCR-01 Operations Hub Shell
+ * SCR-01 Operations Hub — Slice 2
  *
- * Main dashboard. Shows pending counts + navigation shortcuts.
- * KPI cards show "KPI pending backend/owner definition" per RPT-003: D.
+ * Enhancements:
+ * - KPI placeholder removed (Item 12)
+ * - Ready to Dispatch count card (Item 1)
+ * - Context selector updates hub data in-place (Item 11)
  */
 export default function OperationsHub() {
   const navigate = useNavigate();
-  const { restaurantType, isTopLevel, isMiddleLevel, isBottomLevel, canDo, restaurantId } = useLoginContext();
+  const { restaurantType, isTopLevel, canDo, restaurantId } = useLoginContext();
 
   const [queues, setQueues] = useState(null);
+  const [readyToDispatchCount, setReadyToDispatchCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeStoreId, setActiveStoreId] = useState(null);
+  const [activeStoreName, setActiveStoreName] = useState(null);
 
   const fetchQueues = useCallback(async () => {
     setLoading(true);
@@ -39,41 +41,88 @@ export default function OperationsHub() {
     try {
       const resp = await api.getPendingQueues();
       const data = resp.data?.data || resp.data;
-      setQueues(data);
+
+      // If a different store context is active, filter data for that store
+      if (activeStoreId && String(activeStoreId) !== String(restaurantId)) {
+        const aid = String(activeStoreId);
+        const filtered = {
+          approval_pending: (data.approval_pending || []).filter(
+            (t) => String(t.from_restaurant_id) === aid || String(t.to_restaurant_id) === aid
+          ),
+          receive_pending: (data.receive_pending || []).filter(
+            (t) => String(t.to_restaurant_id) === aid
+          ),
+          my_requests: (data.my_requests || []).filter(
+            (t) => String(t.to_restaurant_id) === aid
+          ),
+        };
+        setQueues(filtered);
+      } else {
+        setQueues(data);
+      }
+
+      // Fetch ready to dispatch count
+      if (canDo("dispatch")) {
+        try {
+          const histResp = await api.getTransferHistory();
+          const histData = histResp.data?.data || histResp.data;
+          const histItems = Array.isArray(histData) ? histData : [];
+          const sourceId = activeStoreId ? String(activeStoreId) : String(restaurantId);
+          const approved = histItems.filter(
+            (t) => t.status === "approved" && String(t.from_restaurant_id) === sourceId
+          );
+          setReadyToDispatchCount(approved.length);
+        } catch {
+          setReadyToDispatchCount(0);
+        }
+      }
     } catch (err) {
       setError(err?.response?.data?.message || "Failed to load pending queues");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [activeStoreId, restaurantId, canDo]);
 
   useEffect(() => {
     fetchQueues();
   }, [fetchQueues]);
 
+  const handleStoreChange = (storeId, storeName) => {
+    setActiveStoreId(storeId);
+    setActiveStoreName(storeName || null);
+  };
+
+  const handleResetContext = () => {
+    setActiveStoreId(null);
+    setActiveStoreName(null);
+  };
+
   const approvalCount = queues?.approval_pending?.length || 0;
   const receiveCount = queues?.receive_pending?.length || 0;
   const myRequestsCount = queues?.my_requests?.length || 0;
+  const isViewingOther = activeStoreId && String(activeStoreId) !== String(restaurantId);
 
   return (
     <div data-testid="operations-hub">
       <ContextSelector
         activeStoreId={activeStoreId}
-        onStoreChange={setActiveStoreId}
+        activeStoreName={activeStoreName}
+        onStoreChange={handleStoreChange}
+        onReset={handleResetContext}
+        isViewingOther={isViewingOther}
       />
 
       <h1 className="text-lg font-bold mb-4" data-testid="operations-hub-title">
         Operations Hub
       </h1>
 
-      {/* Pending counts cards */}
       {loading ? (
         <LoadingState lines={3} />
       ) : error ? (
         <ErrorState message={error} onRetry={fetchQueues} />
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
             {/* Approval pending — parent roles only */}
             {canDo("approve") && (
               <Card
@@ -88,6 +137,25 @@ export default function OperationsHub() {
                   <div className="min-w-0">
                     <p className="text-2xl font-bold">{approvalCount}</p>
                     <p className="text-xs text-muted-foreground">Pending Approvals</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Ready to Dispatch — dispatch-capable roles only (Item 1) */}
+            {canDo("dispatch") && (
+              <Card
+                data-testid="card-ready-to-dispatch"
+                className="cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => navigate("/queues")}
+              >
+                <CardContent className="py-4 px-4 flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-green-50 flex items-center justify-center shrink-0">
+                    <Truck className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-2xl font-bold">{readyToDispatchCount}</p>
+                    <p className="text-xs text-muted-foreground">Ready to Dispatch</p>
                   </div>
                 </CardContent>
               </Card>
@@ -161,19 +229,8 @@ export default function OperationsHub() {
             </Card>
           </div>
 
-          {/* KPI placeholder — RPT-003: D (owner to specify) */}
-          <Card data-testid="kpi-placeholder" className="border-dashed">
-            <CardContent className="py-6 px-4 flex flex-col items-center text-center">
-              <AlertTriangle className="h-8 w-8 text-muted-foreground/40 mb-2" />
-              <p className="text-sm font-medium text-muted-foreground">KPI Dashboard</p>
-              <p className="text-xs text-muted-foreground/70 mt-1 max-w-md">
-                KPI pending backend/owner definition (RPT-003: D). KPI cards will be added when the owner specifies the exact metrics.
-              </p>
-            </CardContent>
-          </Card>
-
           {/* Blocked write actions notice */}
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2">
             {canDo("dispatch") && (
               <Button data-testid="action-dispatch-disabled" variant="outline" size="sm" disabled className="opacity-50">
                 Dispatch Stock

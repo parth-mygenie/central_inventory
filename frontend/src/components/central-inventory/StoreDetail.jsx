@@ -3,15 +3,14 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useLoginContext } from "@/hooks/useLoginContext";
 import api from "@/services/api";
 import { mapRestaurantType } from "@/lib/terminology";
+import { formatTimestamp } from "@/lib/formatters";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   LoadingState,
   ErrorState,
   EmptyState,
-  BlockedAction,
 } from "@/components/common/StateDisplays";
 import { StoreTypeBadge, StatusBadge } from "@/components/common/Badges";
 import {
@@ -22,10 +21,10 @@ import {
 } from "lucide-react";
 
 /**
- * SCR-03 Store Detail
+ * SCR-03 Store Detail — Slice 2
  *
- * Single store view: stock summary, batch drilldown, transactions.
- * All write actions are disabled (Phase 1 limited slice).
+ * Enhancement:
+ * - Formatted timestamps in transactions (Item 4)
  */
 export default function StoreDetail() {
   const { id } = useParams();
@@ -33,7 +32,6 @@ export default function StoreDetail() {
   const location = useLocation();
   const { restaurantType: userType, canDo, restaurantId } = useLoginContext();
 
-  // Store info can come from navigation state (when clicking from hierarchy)
   const navState = location.state || {};
 
   const [data, setData] = useState(null);
@@ -74,7 +72,6 @@ export default function StoreDetail() {
   const storeType = data.restaurant_type || navState.storeType;
   const stockSummary = data.child_stock_summary || [];
   const childBatches = data.child_stock_batches || [];
-  const parentBatches = data.parent_stock_batches || [];
   const transactions = data.transactions || [];
   const childStores = data.restaurants || [];
 
@@ -200,7 +197,7 @@ export default function StoreDetail() {
         </CardContent>
       </Card>
 
-      {/* Batch drilldown (shows when stock item selected) */}
+      {/* Batch drilldown */}
       {selectedStock && (
         <Card className="mb-4">
           <CardHeader className="py-2.5 px-4 flex-row items-center justify-between">
@@ -229,8 +226,8 @@ export default function StoreDetail() {
                 <TableBody>
                   {childBatches.map((batch, idx) => (
                     <TableRow key={idx}>
-                      <TableCell className="text-xs">{batch.batch || "-"}</TableCell>
-                      <TableCell className="text-xs">{batch.expiry_date || "-"}</TableCell>
+                      <TableCell className="text-xs">{batch.batch || "—"}</TableCell>
+                      <TableCell className="text-xs">{batch.expiry_date || "—"}</TableCell>
                       <TableCell className="text-xs text-right tabular-nums">{batch.cal_quantity}</TableCell>
                     </TableRow>
                   ))}
@@ -241,7 +238,7 @@ export default function StoreDetail() {
         </Card>
       )}
 
-      {/* Transactions */}
+      {/* Transactions (Item 4 — formatted timestamps) */}
       <Card>
         <CardHeader className="py-2.5 px-4">
           <CardTitle className="text-xs text-muted-foreground font-medium uppercase tracking-wider flex items-center gap-1.5">
@@ -262,6 +259,7 @@ export default function StoreDetail() {
                   <TableHead className="text-[10px]">Item</TableHead>
                   <TableHead className="text-[10px] text-right">Qty</TableHead>
                   <TableHead className="text-[10px]">Status</TableHead>
+                  <TableHead className="text-[10px]">Date</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -272,13 +270,16 @@ export default function StoreDetail() {
                     className="cursor-pointer hover:bg-accent/50"
                     onClick={() => txn.transfer_id && navigate(`/transfer/${txn.transfer_id}`)}
                   >
-                    <TableCell className="text-xs font-mono">{txn.transfer_id || "-"}</TableCell>
-                    <TableCell className="text-xs">{mapRestaurantType(txn.from_restaurant_type)}: {txn.from_restaurant_name || "-"}</TableCell>
-                    <TableCell className="text-xs">{mapRestaurantType(txn.to_restaurant_type)}: {txn.to_restaurant_name || "-"}</TableCell>
-                    <TableCell className="text-xs">{txn.stock_title || "-"}</TableCell>
-                    <TableCell className="text-xs text-right tabular-nums">{txn.quantity ?? "-"}</TableCell>
+                    <TableCell className="text-xs font-mono">{txn.transfer_id || "—"}</TableCell>
+                    <TableCell className="text-xs">{mapRestaurantType(txn.from_restaurant_type)}: {txn.from_restaurant_name || "—"}</TableCell>
+                    <TableCell className="text-xs">{mapRestaurantType(txn.to_restaurant_type)}: {txn.to_restaurant_name || "—"}</TableCell>
+                    <TableCell className="text-xs">{txn.stock_title || "—"}</TableCell>
+                    <TableCell className="text-xs text-right tabular-nums">{txn.quantity ?? "—"}</TableCell>
                     <TableCell>
                       <StatusBadge status={txn.status} />
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {formatTimestamp(txn.date)}
                     </TableCell>
                   </TableRow>
                 ))}
