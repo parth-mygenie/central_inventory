@@ -1,62 +1,48 @@
-# Central Inventory — PRD
+# Central Inventory - PRD
 
 ## Original Problem Statement
-Build the Central Inventory frontend Phase 1 limited slice — read-only foundation based on completed Business Rule & UX Field Freeze.
+Pull branch `19_05_26` from `https://github.com/parth-mygenie/central_inventory.git` and set up as-is.
 
 ## Architecture
-- **Frontend**: React 19 + TailwindCSS + shadcn/ui components
-- **Backend**: FastAPI proxy to preprod.mygenie.online
-- **Database**: MongoDB (for local state/verification data)
-- **External API**: preprod.mygenie.online (V1 auth + V2 vendoremployee APIs)
+- **Backend**: FastAPI (Python) — API proxy to `preprod.mygenie.online` with local seed data enrichment
+- **Frontend**: React 19 + Tailwind CSS + Radix UI + Craco
+- **Database**: MongoDB (used for status checks, main data from seed_data.py)
+- **Auth**: Proxied to MyGenie preprod auth API
 
 ## User Personas
-- **Central Store Manager** (backend `master`): TOP-level, manages all stores
-- **Master Store Manager** (backend `central`): MIDDLE-level, manages assigned outlets
-- **Outlet Manager** (backend `franchise`): BOTTOM-level, manages own outlet only
-- **Super Admin**: All access + admin tools
+- **Central Store (master)**: Top-level — full access to all screens and actions
+- **Master Store (central)**: Mid-level — manages outlets, can approve/dispatch
+- **Outlet (franchise)**: Bottom-level — limited, read-only on most screens
 
 ## Core Requirements
-- 3-level hierarchy: Central Store → Master Store → Outlet
-- Terminology adapter (backend terms inverted from business terms)
-- Login context from `restaurant_type_flag`
-- Screen visibility per role matrix
-- Read-only screens for verified APIs
-- All write actions blocked (UNIT_CONVERSION_NOT_DEFINED)
+- Login via MyGenie vendor account
+- Operations Hub dashboard with pending counts
+- Hierarchy Summary with store listing (Master Stores / Outlets tabs)
+- Store Detail with stock summary, batch drilldown, transactions
+- Pending Queues (Approval, Receive, My Requests)
+- Transfer Detail (read-only)
+- Terminology mapping: backend "master"→"Central Store", "central"→"Master Store", "franchise"→"Outlet"
 
-## What's Been Implemented (May 2026)
-- Terminology adapter with full mapping
-- Login context hook with fallback handling
-- Screen visibility matrix (23 screens, 10+ actions)
-- API service layer (12 read API methods)
-- Backend API proxy (auth + V2 endpoints)
-- Real-time hook placeholder
-- 6 screens: SCR-00, SCR-01, SCR-02, SCR-03, SCR-05, SCR-09
-- Layout: Sidebar, Header, Login page
-- Common components: Badges, State displays
+## What's Been Implemented (May 19, 2026)
+- Full codebase pulled from GitHub branch `19_05_26`
+- Backend running with FastAPI proxy + seed data enrichment
+- Frontend running with all screens: Login, Operations Hub, Hierarchy Summary, Store Detail, Pending Queues, Transfer Detail
+- All tests passing (100% backend, 100% frontend)
 
-## Prioritized Backlog
+## Key Seed Data
+- Restaurants: My Genie (1), DemoCentral1 (781), DemoCentral2 (782), DemoFranchise1-4 (783-786)
+- Transfer IDs: 101-112 covering all statuses
+- 16 inventory items
 
-### P0 (Blocked on backend)
-- UNIT_CONVERSION_NOT_DEFINED fix → unblocks all write APIs
-- Test credentials with restaurant_type_flag for all 3 levels
+## P0/P1/P2 Features Remaining
+- **P0**: Write API integration (dispatch, approve, reject, receive, cancel) — currently blocked
+- **P1**: KPI Dashboard (pending owner definition)
+- **P1**: Reports screen (marked "coming soon")
+- **P2**: Stock adjustment, wastage recording
+- **P2**: Real-time updates
 
-### P1 (Next slice)
-- SCR-04 Request Stock form shell
-- SCR-07 Dispatch Wizard form shell
-- SCR-10 Receive Stock form shell
-- SCR-20 Reports Dashboard
-- Date range filters
-
-### P2 (Future)
-- Token masking in API tool (SEC-001)
-- Real-time WebSocket integration
-- Notifications (polling Phase 1)
-- Stock adjustment / wastage screens
-- Recipe mapping display
-- Physical stocktake
-
-## Next Tasks
-1. Owner: Provide test credentials with restaurant_type_flag
-2. Owner: Specify Operations Hub KPIs (RPT-003)
-3. Backend: Fix UNIT_CONVERSION_NOT_DEFINED
-4. Frontend: Slice 2 — write form shells + reports
+## Backlog / Next Tasks
+- Enable write operations when backend resolution is available
+- Define KPI metrics with product owner
+- Build Reports screen
+- Add unit conversion support
