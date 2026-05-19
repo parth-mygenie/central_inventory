@@ -48,7 +48,7 @@ export default function TransferDetail() {
       setData(d);
     } catch (err) {
       const status = err?.response?.status;
-      if (status === 404) {
+      if (status === 404 || status === 500) {
         setError("Transfer not found");
       } else {
         setError(err?.response?.data?.message || "Failed to load transfer details");

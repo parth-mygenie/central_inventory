@@ -27,11 +27,10 @@ export default function ContextSelector({ activeStoreId, onStoreChange }) {
   const currentStoreId = activeStoreId || restaurantId;
 
   const fetchStores = useCallback(async () => {
-    if (!canSwitch) return;
+    if (!canSwitch || !restaurantId) return;
     setLoading(true);
     setError(null);
     try {
-      // Fetch hierarchy detail for current store to get child restaurants
       const resp = await api.getHierarchyDetail({ storeRestaurantId: restaurantId });
       const data = resp.data?.data || resp.data;
       const childStores = data?.restaurants || [];

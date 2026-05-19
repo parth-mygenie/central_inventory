@@ -1,59 +1,62 @@
-# PRD — Central Inventory (Updated after Business Rule & UX Field Freeze)
+# Central Inventory — PRD
 
 ## Original Problem Statement
-CR Requirement Planning + API Verification + Full E2E Transfer Testing + Business Rule & UX Field Freeze for MyGenie POS Central Inventory Module.
+Build the Central Inventory frontend Phase 1 limited slice — read-only foundation based on completed Business Rule & UX Field Freeze.
 
-## What's Been Completed
-- [Jan 2026] CR Requirement Planning Document (28 sections, 50+ owner questions)
-- [Jan 2026] Internal API Verification Tool built at `/verify`
-- [Jan 2026] Test hierarchy seeded: 2 centrals + 4 franchises under master
-- [Jan 2026] 22+ read APIs verified working
-- [Jan 2026] Full E2E transfer lifecycle: 18/19 passed
-- [Jan 2026] Enterprise Requirement Review Round 2 — 43 gap questions answered
-- [Jan 2026] 96 owner decisions recorded and reconciled
-- [Jan 2026] **Business Rule & UX Field Freeze** — Terminology mapping, login context, screen visibility matrix, transfer lifecycle, API-to-UI field mapping all frozen
+## Architecture
+- **Frontend**: React 19 + TailwindCSS + shadcn/ui components
+- **Backend**: FastAPI proxy to preprod.mygenie.online
+- **Database**: MongoDB (for local state/verification data)
+- **External API**: preprod.mygenie.online (V1 auth + V2 vendoremployee APIs)
 
-## Key Freeze Documents
-| Document | Path |
-|---|---|
-| Business Rule & UX Field Freeze | `/app/memory/central_inventory/CENTRAL_INVENTORY_BUSINESS_RULE_AND_UX_FIELD_FREEZE.md` |
-| Login Context & Screen Visibility Matrix | `/app/memory/central_inventory/CENTRAL_INVENTORY_LOGIN_CONTEXT_AND_SCREEN_VISIBILITY_MATRIX.md` |
-| Owner Answers Complete | `/app/memory/central_inventory/OWNER_ANSWERS_COMPLETE.md` |
-| API Verification Report | `/app/memory/central_inventory/api_evidence/API_VERIFICATION_REPORT.md` |
+## User Personas
+- **Central Store Manager** (backend `master`): TOP-level, manages all stores
+- **Master Store Manager** (backend `central`): MIDDLE-level, manages assigned outlets
+- **Outlet Manager** (backend `franchise`): BOTTOM-level, manages own outlet only
+- **Super Admin**: All access + admin tools
 
-## Confirmed Terminology Mapping
-| Business Term (UI) | Backend API Term | Level |
-|---|---|---|
-| Central Store | `master` | TOP |
-| Master Store | `central` | MIDDLE |
-| Outlet | `franchise` | BOTTOM |
+## Core Requirements
+- 3-level hierarchy: Central Store → Master Store → Outlet
+- Terminology adapter (backend terms inverted from business terms)
+- Login context from `restaurant_type_flag`
+- Screen visibility per role matrix
+- Read-only screens for verified APIs
+- All write actions blocked (UNIT_CONVERSION_NOT_DEFINED)
 
-## Phase 1 Readiness: `limited_frontend_ui_ready`
-- 9 screens approved for full Phase 1 UX
-- 9 screens approved for limited Phase 1 UX (write actions blocked)
-- 5 features blocked (missing APIs)
-- 1 screen Phase 2
+## What's Been Implemented (May 2026)
+- Terminology adapter with full mapping
+- Login context hook with fallback handling
+- Screen visibility matrix (23 screens, 10+ actions)
+- API service layer (12 read API methods)
+- Backend API proxy (auth + V2 endpoints)
+- Real-time hook placeholder
+- 6 screens: SCR-00, SCR-01, SCR-02, SCR-03, SCR-05, SCR-09
+- Layout: Sidebar, Header, Login page
+- Common components: Badges, State displays
 
-## Remaining Blockers
-1. UNIT_CONVERSION_NOT_DEFINED — all transfer write APIs blocked
-2. 11 backend capabilities need new work
-3. Stock Adjustment, Wastage, Return, Recipe APIs missing
-4. Operations Hub KPIs not specified (RPT-003)
+## Prioritized Backlog
 
-## Next Tasks (Prioritized)
-### P0 — Immediate
-1. Backend: Fix unit conversion data → unblocks all write operations
-2. Frontend: Implement first UX slice (terminology adapter, login context, navigation, read-only screens)
-3. Backend: Provide adjustment/wastage/return API endpoints
+### P0 (Blocked on backend)
+- UNIT_CONVERSION_NOT_DEFINED fix → unblocks all write APIs
+- Test credentials with restaurant_type_flag for all 3 levels
 
-### P1 — Phase 1
-4. Build all 18 approved/limited Phase 1 screens
-5. Implement role-based screen visibility
-6. Token masking in API verification tool (SEC-001)
+### P1 (Next slice)
+- SCR-04 Request Stock form shell
+- SCR-07 Dispatch Wizard form shell
+- SCR-10 Receive Stock form shell
+- SCR-20 Reports Dashboard
+- Date range filters
 
-### P2 — Phase 2
-7. WebSocket notifications
-8. External channels (email/WhatsApp/SMS)
-9. Configurable RBAC
-10. Physical stocktake
-11. User Permission View (SCR-22)
+### P2 (Future)
+- Token masking in API tool (SEC-001)
+- Real-time WebSocket integration
+- Notifications (polling Phase 1)
+- Stock adjustment / wastage screens
+- Recipe mapping display
+- Physical stocktake
+
+## Next Tasks
+1. Owner: Provide test credentials with restaurant_type_flag
+2. Owner: Specify Operations Hub KPIs (RPT-003)
+3. Backend: Fix UNIT_CONVERSION_NOT_DEFINED
+4. Frontend: Slice 2 — write form shells + reports
