@@ -50,7 +50,7 @@ export default function ContextSelector({ activeStoreId, onStoreChange }) {
     (s) => String(s.restaurant_id || s.id) === String(currentStoreId)
   );
 
-  const storeName = selectedStore?.restaurant_name || user?.restaurant_name || user?.name || "My Store";
+  const storeName = user?.restaurant_name || user?.name || "My Store";
 
   return (
     <Card data-testid="context-selector" className="mb-4">
