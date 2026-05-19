@@ -44,7 +44,7 @@ export default function AppHeader() {
         {restaurantTypeUnknown && (
           <div className="flex items-center gap-1 text-[10px] text-rose-600 bg-rose-50 px-2 py-1 rounded-md border border-rose-200">
             <Shield className="h-3 w-3" />
-            Type flag missing — defaulting to Central
+            Type flag missing — defaulting to Central Store
           </div>
         )}
         <Button
