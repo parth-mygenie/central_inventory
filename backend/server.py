@@ -1,35 +1,32 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, Request, HTTPException
+from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
+import httpx
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List
+from typing import List, Optional
 import uuid
 from datetime import datetime, timezone
-
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# MongoDB connection
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# Create the main app without a prefix
-app = FastAPI()
+PREPROD_V1 = os.environ.get('PREPROD_API_BASE_V1', 'https://preprod.mygenie.online/api/v1')
+PREPROD_V2 = os.environ.get('PREPROD_API_BASE_V2', 'https://preprod.mygenie.online/api/v2/vendoremployee')
 
-# Create a router with the /api prefix
+app = FastAPI()
 api_router = APIRouter(prefix="/api")
 
-
-# Define Models
 class StatusCheck(BaseModel):
-    model_config = ConfigDict(extra="ignore")  # Ignore MongoDB's _id field
-    
+    model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     client_name: str
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -37,36 +34,77 @@ class StatusCheck(BaseModel):
 class StatusCheckCreate(BaseModel):
     client_name: str
 
-# Add your routes to the router instead of directly to app
 @api_router.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return {"message": "Central Inventory API Proxy"}
 
 @api_router.post("/status", response_model=StatusCheck)
 async def create_status_check(input: StatusCheckCreate):
     status_dict = input.model_dump()
     status_obj = StatusCheck(**status_dict)
-    
-    # Convert to dict and serialize datetime to ISO string for MongoDB
     doc = status_obj.model_dump()
     doc['timestamp'] = doc['timestamp'].isoformat()
-    
     _ = await db.status_checks.insert_one(doc)
     return status_obj
 
 @api_router.get("/status", response_model=List[StatusCheck])
 async def get_status_checks():
-    # Exclude MongoDB's _id field from the query results
     status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
-    
-    # Convert ISO string timestamps back to datetime objects
     for check in status_checks:
         if isinstance(check['timestamp'], str):
             check['timestamp'] = datetime.fromisoformat(check['timestamp'])
-    
     return status_checks
 
-# Include the router in the main app
+# ── Proxy: Auth (V1) ──────────────────────────────────────────────
+@api_router.post("/proxy/auth/login")
+async def proxy_auth_login(request: Request):
+    body = await request.json()
+    async with httpx.AsyncClient(timeout=30.0) as http:
+        resp = await http.post(
+            f"{PREPROD_V1}/auth/vendoremployee/common-login",
+            json=body,
+            headers={"Accept": "application/json", "Content-Type": "application/json"},
+        )
+    return JSONResponse(content=resp.json(), status_code=resp.status_code)
+
+# ── Proxy: V2 Inventory Transfer / Franchise / Inventory ──────────
+@api_router.api_route("/proxy/v2/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
+async def proxy_v2(path: str, request: Request):
+    auth_header = request.headers.get("Authorization", "")
+    headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+    }
+    if auth_header:
+        headers["Authorization"] = auth_header
+
+    target_url = f"{PREPROD_V2}/{path}"
+    query_string = str(request.query_params)
+    if query_string:
+        target_url += f"?{query_string}"
+
+    async with httpx.AsyncClient(timeout=30.0) as http:
+        method = request.method.lower()
+        body = None
+        if method in ("post", "put"):
+            try:
+                body = await request.json()
+            except Exception:
+                body = None
+
+        resp = await getattr(http, method)(
+            target_url,
+            json=body if body else None,
+            headers=headers,
+        )
+
+    try:
+        content = resp.json()
+    except Exception:
+        content = {"raw": resp.text}
+
+    return JSONResponse(content=content, status_code=resp.status_code)
+
 app.include_router(api_router)
 
 app.add_middleware(
@@ -77,7 +115,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
