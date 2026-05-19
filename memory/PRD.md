@@ -1,12 +1,12 @@
 # Central Inventory - PRD
 
 ## Original Problem Statement
-Pull branch `19_05_26` from `https://github.com/parth-mygenie/central_inventory.git` and set up as-is.
+Central Inventory management system for MyGenie POS — multi-level stock management across Central Store → Master Store → Outlet hierarchy.
 
 ## Architecture
 - **Backend**: FastAPI (Python) — API proxy to `preprod.mygenie.online` with local seed data enrichment
 - **Frontend**: React 19 + Tailwind CSS + Radix UI + Craco
-- **Database**: MongoDB (used for status checks, main data from seed_data.py)
+- **Database**: MongoDB (status checks), main data from seed_data.py
 - **Auth**: Proxied to MyGenie preprod auth API
 
 ## User Personas
@@ -19,15 +19,33 @@ Pull branch `19_05_26` from `https://github.com/parth-mygenie/central_inventory.
 - Operations Hub dashboard with pending counts
 - Hierarchy Summary with store listing (Master Stores / Outlets tabs)
 - Store Detail with stock summary, batch drilldown, transactions
-- Pending Queues (Approval, Receive, My Requests)
-- Transfer Detail (read-only)
+- Pending Queues (Approval, Ready to Dispatch, Receive, My Requests)
+- Transfer Detail (read-only with status timeline and contextual actions)
 - Terminology mapping: backend "master"→"Central Store", "central"→"Master Store", "franchise"→"Outlet"
 
-## What's Been Implemented (May 19, 2026)
+## What's Been Implemented
+
+### Slice 1 (May 19, 2026)
 - Full codebase pulled from GitHub branch `19_05_26`
 - Backend running with FastAPI proxy + seed data enrichment
-- Frontend running with all screens: Login, Operations Hub, Hierarchy Summary, Store Detail, Pending Queues, Transfer Detail
-- All tests passing (100% backend, 100% frontend)
+- All screens: Login, Operations Hub, Hierarchy Summary, Store Detail, Pending Queues, Transfer Detail
+- Role-based UX for 3 login levels
+- Terminology mapping infrastructure
+
+### Slice 2 (May 19, 2026)
+12 items implemented:
+1. Ready to Dispatch tab in Pending Queues
+2. Status timeline on Transfer Detail
+3. Line-level accept/reject display
+4. Consistent timestamp formatting (date-fns)
+5. Resolution reason display
+6. Date range picker on Hierarchy Summary
+7. Contextual action buttons by role + status
+8. Items count column in queues
+9. Store name fix validated
+10. Downward-only hierarchy visibility
+11. Context selector updates hub data in-place
+12. KPI placeholder removed
 
 ## Key Seed Data
 - Restaurants: My Genie (1), DemoCentral1 (781), DemoCentral2 (782), DemoFranchise1-4 (783-786)
@@ -35,14 +53,15 @@ Pull branch `19_05_26` from `https://github.com/parth-mygenie/central_inventory.
 - 16 inventory items
 
 ## P0/P1/P2 Features Remaining
-- **P0**: Write API integration (dispatch, approve, reject, receive, cancel) — currently blocked
-- **P1**: KPI Dashboard (pending owner definition)
+- **P0**: Write API integration (dispatch, approve, reject, receive, cancel) — blocked by UNIT_CONVERSION
 - **P1**: Reports screen (marked "coming soon")
+- **P1**: Transfer history dedicated screen
 - **P2**: Stock adjustment, wastage recording
 - **P2**: Real-time updates
 
 ## Backlog / Next Tasks
 - Enable write operations when backend resolution is available
-- Define KPI metrics with product owner
 - Build Reports screen
-- Add unit conversion support
+- Add transfer history with advanced filters
+- Confirmation dialogs for destructive actions (when write enabled)
+- KPI dashboard when owner defines metrics
