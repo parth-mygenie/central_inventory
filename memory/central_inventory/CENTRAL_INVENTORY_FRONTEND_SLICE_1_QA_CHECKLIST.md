@@ -7,7 +7,7 @@
 
 ## Test Environment
 
-- **URL**: https://72bf7bf3-92c8-4afe-934f-2a464ef8f2d3.preview.emergentagent.com
+- **URL**: https://transfer-hub-134.preview.emergentagent.com
 - **Login**: abhishek@kalabahia.com / Qplazm@10
 - **Note**: Test account lacks `restaurant_type_flag` — defaults to Central Store
 
