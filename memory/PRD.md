@@ -52,18 +52,25 @@ Central Inventory management system for MyGenie POS — multi-level stock manage
 - Transfer IDs: 101-112 covering all statuses
 - 16 inventory items
 
+### Slice 3 — PLANNING COMPLETE (20 May 2026), OWNER APPROVAL REQUIRED
+Scope: Transfer History + Stock Ledger (read-only enterprise traceability)
+- Planning document: `/app/memory/central_inventory/CENTRAL_INVENTORY_SLICE_3_HISTORY_LEDGER_PLANNING.md`
+- Handover document: `/app/memory/central_inventory/CENTRAL_INVENTORY_SLICE_3_PLANNING_HANDOVER.md`
+- 10 must-have items planned, 5 should-have items, 11 owner questions
+- Screen structure: One "History & Ledger" screen with two tabs
+- Status: Awaiting owner approval of scope and answers to 11 questions
+
 ## P0/P1/P2 Features Remaining
 - **P0**: Write API integration (dispatch, approve, reject, receive, cancel) — blocked by UNIT_CONVERSION
+- **P0**: Slice 3 — Transfer History + Stock Ledger (read-only) — planned, pending owner approval
 - **P1**: Reports screen (marked "coming soon")
-- **P1**: Transfer history dedicated screen
 - **P2**: Stock adjustment, wastage recording
 - **P2**: Real-time updates
+- **P2**: KPI dashboard (owner to specify metrics)
 
 ## Backlog / Next Tasks
-- Slice 3 planning & execution (pending user approval and scope)
-- Enable write operations when backend resolution is available
-- Build Reports screen
-- Add transfer history with advanced filters
+- Owner approval on Slice 3 scope + answers to 11 questions → implementation
+- Enable write operations when backend UNIT_CONVERSION resolution is available
+- Build Reports screen with CSV/PDF export
 - Confirmation dialogs for destructive actions (when write enabled)
-- KPI dashboard when owner defines metrics
 - Backend API & terminology refactoring
