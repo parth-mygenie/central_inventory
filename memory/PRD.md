@@ -21,7 +21,7 @@ Central Inventory management system for MyGenie POS — multi-level stock manage
 - Store Detail with stock summary, batch drilldown, transactions
 - Pending Queues (Approval, Ready to Dispatch, Receive, My Requests)
 - Transfer Detail (read-only with status timeline and contextual actions)
-- Terminology mapping: backend "master"→"Central Store", "central"→"Master Store", "franchise"→"Outlet"
+- Terminology mapping: backend "master"->"Central Store", "central"->"Master Store", "franchise"->"Outlet"
 
 ## What's Been Implemented
 
@@ -32,20 +32,20 @@ Central Inventory management system for MyGenie POS — multi-level stock manage
 - Role-based UX for 3 login levels
 - Terminology mapping infrastructure
 
-### Slice 2 (May 19, 2026)
-12 items implemented:
-1. Ready to Dispatch tab in Pending Queues
-2. Status timeline on Transfer Detail
-3. Line-level accept/reject display
-4. Consistent timestamp formatting (date-fns)
-5. Resolution reason display
-6. Date range picker on Hierarchy Summary
-7. Contextual action buttons by role + status
-8. Items count column in queues
-9. Store name fix validated
-10. Downward-only hierarchy visibility
-11. Context selector updates hub data in-place
-12. KPI placeholder removed
+### Slice 2 (May 19, 2026) - QA VALIDATED May 20, 2026
+12 items implemented and fully validated across all 3 roles:
+1. Ready to Dispatch tab in Pending Queues - PASS
+2. Status timeline on Transfer Detail - PASS
+3. Line-level accept/reject display - PASS
+4. Consistent timestamp formatting (date-fns) - PASS
+5. Resolution reason display - PASS
+6. Date range picker on Hierarchy Summary - PASS
+7. Contextual action buttons by role + status - PASS
+8. Items count column in queues - PASS
+9. Store name fix validated - PASS
+10. Downward-only hierarchy visibility - PASS
+11. Context selector updates hub data in-place - PASS
+12. KPI placeholder removed - PASS
 
 ## Key Seed Data
 - Restaurants: My Genie (1), DemoCentral1 (781), DemoCentral2 (782), DemoFranchise1-4 (783-786)
@@ -60,8 +60,10 @@ Central Inventory management system for MyGenie POS — multi-level stock manage
 - **P2**: Real-time updates
 
 ## Backlog / Next Tasks
+- Slice 3 planning & execution (pending user approval and scope)
 - Enable write operations when backend resolution is available
 - Build Reports screen
 - Add transfer history with advanced filters
 - Confirmation dialogs for destructive actions (when write enabled)
 - KPI dashboard when owner defines metrics
+- Backend API & terminology refactoring
