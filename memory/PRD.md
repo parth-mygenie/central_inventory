@@ -52,13 +52,13 @@ Central Inventory management system for MyGenie POS — multi-level stock manage
 - Transfer IDs: 101-112 covering all statuses
 - 16 inventory items
 
-### Slice 3 — PLANNING COMPLETE (20 May 2026), OWNER APPROVAL REQUIRED
+### Slice 3 — PLANNING COMPLETE (20 May 2026), OWNER APPROVED
 Scope: Transfer History + Stock Ledger (read-only enterprise traceability)
 - Planning document: `/app/memory/central_inventory/CENTRAL_INVENTORY_SLICE_3_HISTORY_LEDGER_PLANNING.md`
-- Handover document: `/app/memory/central_inventory/CENTRAL_INVENTORY_SLICE_3_PLANNING_HANDOVER.md`
-- 10 must-have items planned, 5 should-have items, 11 owner questions
-- Screen structure: One "History & Ledger" screen with two tabs
-- Status: Awaiting owner approval of scope and answers to 11 questions
+- Owner answers: `/app/memory/central_inventory/CENTRAL_INVENTORY_SLICE_3_OWNER_ANSWERS.md` (11/11 answered, approved)
+- 10 must-have items, 5 should-have items
+- Screen structure: One "History & Ledger" screen with two tabs at `/history`
+- Status: Owner approved. Ready for Implementation Planning Agent (no code modification yet).
 
 ## P0/P1/P2 Features Remaining
 - **P0**: Write API integration (dispatch, approve, reject, receive, cancel) — blocked by UNIT_CONVERSION
