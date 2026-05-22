@@ -1,13 +1,16 @@
 # Central Inventory — Comprehensive E2E + Phase 2 Test Report
 
-> **Date:** January 2026 (re-run on refreshed DB)  
+> **Date:** January 2026 (final run on refreshed DB, all migrations applied)  
 > **Environment:** preprod.mygenie.online  
 > **Accounts tested:** All 7 (Master + 2 Centrals + 4 Franchises)  
 > **Items tested:** Cooking Oil (ltr), maida (kg), red meat (kg), patri (kg)  
+> **Test script:** `e2e_final_test.py` (same folder)  
 
 ---
 
-## Final Score: 48/50 PASSED (96%)
+## Final Score: 52/52 PASSED (100%)
+
+---
 
 ### Section A: Direct Dispatch (12/12 PASS)
 | Test | Flow | Result |
@@ -19,93 +22,76 @@
 | A5 | Central1→Franchise1 (Cooking Oil 0.5ltr) + Receive | PASS |
 | A6 | Central2→Franchise3 (maida 1kg) + Receive | PASS |
 
-### Section B: Request→Approve→Dispatch→Receive (6/8)
-| Test | Flow | Result | Note |
-|---|---|---|---|
-| B1 | Franchise1 request→C1 approve | PASS | |
-| B1 | C1 dispatch (bucket selector) | FAIL | `SELECTED_BUCKET_STOCK_NOT_FOUND` — all stock is in segments, not legacy bucket. Use segment_id selector instead. |
-| B2 | Central2 request→Master approve | PASS | |
-| B2 | Master dispatch (bucket selector) | FAIL | Same bucket issue. Not a bug — selector mismatch. |
-
-### Section C: Reject + Cancel + Partial (8/8 PASS)
+### Section B: Request→Approve→Dispatch→Receive (8/8 PASS)
 | Test | Flow | Result |
 |---|---|---|
-| C1 | Pre-dispatch reject | PASS |
-| C2 | Post-dispatch cancel + stock restore | PASS |
-| C3 | Partial receive with damaged resolution | PASS |
-| C4 | Post-dispatch reject by destination | PASS |
+| B1 | Franchise1→Central1 request→approve→dispatch→receive (Oil 0.3ltr) | PASS |
+| B2 | Central2→Master request→approve→dispatch→receive (Oil 1ltr) | PASS |
 
-### Section D: Hierarchy Reporting (10/10 PASS)
+### Section C: Reject + Cancel + Partial Receive (8/8 PASS)
+| Test | Flow | Result |
+|---|---|---|
+| C1 | Pre-dispatch reject (F3→C2 request, C2 rejects) | PASS |
+| C2 | Post-dispatch cancel + stock restore (Master cancels) | PASS |
+| C3 | Partial receive with damaged resolution (70% accept, 30% damaged) | PASS |
+| C4 | Post-dispatch reject by destination (F1 refuses delivery) | PASS |
+
+### Section D: Hierarchy Reporting + Queues (10/10 PASS)
 | Test | Result |
 |---|---|
-| Hierarchy Summary (central + franchise) | PASS |
-| Hierarchy Detail (Master, C1, F1, F3) | PASS |
-| Pending Queues (Master, C1, F1) | PASS |
-| Transfer History | PASS |
+| Hierarchy Summary (central stores) | PASS |
+| Hierarchy Summary (franchise stores) | PASS |
+| Hierarchy Detail — Master (id=1) | PASS |
+| Hierarchy Detail — Central1 (id=781) | PASS |
+| Hierarchy Detail — Franchise1 (id=783) | PASS |
+| Hierarchy Detail — Franchise3 (id=785) | PASS |
+| Pending Queues — Master | PASS |
+| Pending Queues — Central1 | PASS |
+| Pending Queues — Franchise1 | PASS |
+| Transfer History — Master | PASS |
 
-### Section E: Phase 2 APIs (12/14)
-| Test | Result | Note |
+### Section E: Phase 2 Ops APIs (14/14 PASS)
+| Test | Result | Notes |
 |---|---|---|
-| Operational Settings GET | PASS | |
-| Reconciliation Summary | PASS | |
-| Ops Dashboard | PASS | |
-| Stale Transfers | PASS | |
-| Near-expiry Alerts | PASS | |
+| Operational Settings GET | PASS | Returns all P0–P11 settings |
+| Reconciliation Summary | PASS | Segment vs master drift |
+| Ops Dashboard | PASS | Hub KPIs |
+| Stale Transfers | PASS | Escalation list |
+| Near-expiry Alerts | PASS | Segment expiry window |
 | Cost Valuation (FIFO) | PASS | |
-| Wastage Report | PASS | |
-| Decrease Adjustment (segment_id) | PASS | Retried with segment_id selector |
-| Record Wastage (segment_id) | PASS | Retried with segment_id selector |
-| Session Status | PASS | Retried with restaurant_ids[] |
-| Lateral Initiate (C1→C2) | PASS | After enabling allow_lateral_central_transfer |
-| Recon Request Create | PASS | |
-| Return Initiate | PASS | Retried with correct `lines` field name |
-| Inward Audit | FAIL | `bill_pdf` column missing — migration not run |
+| Wastage Report | PASS | Multi-restaurant scope |
+| Decrease Adjustment | PASS | segment_id selector |
+| Record Wastage | PASS | segment_id selector |
+| Session Status | PASS | restaurant_ids[] param |
+| Lateral Transfer (C1→C2) | PASS | After enabling allow_lateral_central_transfer |
+| Reconciliation Request Create | PASS | |
+| Return Initiate | PASS | `lines` field, correct line_id from details |
+| Inward Audit | PASS | Destination token, bill_pdf migration applied |
 
 ### Section F: Stock Verification (All 7 stores)
-| Store | Stock |
+| Store | Stock After All Tests |
 |---|---|
-| Master (id=1) | Cooking Oil=18ltr, maida=45kg, patri=9kg, red meat=26kg |
-| Central1 (id=781) | Cooking Oil=1.5ltr |
-| Central2 (id=782) | maida=4kg, red meat=1.4kg |
-| Franchise1 (id=783) | Cooking Oil=0.5ltr |
-| Franchise2 (id=784) | no stock (no transfers sent) |
-| Franchise3 (id=785) | maida=1kg, red meat=2kg |
-| Franchise4 (id=786) | patri=1kg |
+| Master (id=1) | Cooking Oil=24.8ltr, maida=59.8kg, patri=13kg, red meat=32kg |
+| Central1 (id=781) | Cooking Oil=2.7ltr |
+| Central2 (id=782) | Cooking Oil=1ltr, maida=8kg, red meat=2.8kg |
+| Franchise1 (id=783) | Cooking Oil=1.3ltr |
+| Franchise2 (id=784) | no stock (no transfers sent to this store) |
+| Franchise3 (id=785) | maida=2kg, red meat=4kg |
+| Franchise4 (id=786) | patri=2kg |
 
 ---
 
-## Failure Analysis
+## Key Fixes Applied in Final Script (vs earlier 48/50 version)
 
-### 2 Selector Mismatches (NOT bugs — test script issue)
-- B1 Dispatch + B2 Dispatch used `filter_bucket` selector but all stock exists as segments (created by add-stock with batch/expiry)
-- **Fix:** Use `segment_id` selector — proven working in Section A and C tests
-- **Root cause:** When stock is added with batch/expiry, it creates segment rows. The `without_batch_and_expiry` bucket finds nothing because stock HAS batch and expiry.
-
-### 1 Migration Missing (Backend)
-- **Inward Audit:** `bill_pdf` column not found in `stock_vendor` table
-- **Fix:** Run migration `2026_05_xx_add_bill_pdf_to_stock_vendor`
-
----
-
-## New Phase 2 APIs Verified
-
-| API | Status | Notes |
+| Issue | Root Cause | Fix |
 |---|---|---|
-| `operational-settings/get` | WORKING | Returns all settings incl. lateral, reserve, vendor purchase |
-| `operational-settings/update` | WORKING | Master can enable lateral transfers |
-| `reconciliation-summary` | WORKING | Segment vs master drift report |
-| `ops-dashboard` | WORKING | Hub KPIs |
-| `stale-transfers` | WORKING | Escalation list |
-| `near-expiry-alerts` | WORKING | Segment expiry window |
-| `cost-valuation` | WORKING | FIFO valuation |
-| `decrease-adjustment` | WORKING | Hierarchy-scoped segment decrease |
-| `record-wastage` | WORKING | Segment decrease + wastage table |
-| `wastage-report` | WORKING | Multi-restaurant scope |
-| `operation-session/status` | WORKING | Freeze/stocktake session query |
-| `lateral/initiate` | WORKING | Sibling central→central transfer |
-| `reconciliation-request/create` | WORKING | Franchise creates recon request |
-| `return/initiate` | WORKING | Creates upward return from received transfer |
-| `inward-audit` | BLOCKED | bill_pdf column missing |
+| B1+B2 Dispatch failed | Used `filter_bucket` selector but stock only exists as segments (created with batch/expiry) | Changed to `segment_id` selector from source-options |
+| Decrease Adj + Record Wastage failed | Same bucket selector issue | Changed to `segment_id` selector |
+| Session Status failed | Sent `restaurant_id` (singular) | Changed to `restaurant_ids[]` (array) |
+| Lateral Initiate failed | `allow_lateral_central_transfer` was false | Enabled setting before test |
+| Return Initiate failed | Used `return_lines` field name | Changed to `lines` per actual API contract |
+| Inward Audit failed | Used Master token (source) | Changed to Central1 token (destination — only destination can audit) |
+| Inward Audit SQL error | `bill_pdf` column missing | Owner ran migration — now working |
 
 ---
 
@@ -114,8 +100,18 @@
 | From | To | Status |
 |---|---|---|
 | Master (1) | DemoCentral1 (781) | Done (by owner) |
-| Master (1) | DemoCentral2 (782) | Done (this session) |
-| DemoCentral1 (781) | DemoFranchise1 (783) | Done (this session) |
-| DemoCentral1 (781) | DemoFranchise2 (784) | Done (this session) |
-| DemoCentral2 (782) | DemoFranchise3 (785) | Done (this session) |
-| DemoCentral2 (782) | DemoFranchise4 (786) | Done (this session) |
+| Master (1) | DemoCentral2 (782) | Done |
+| DemoCentral1 (781) | DemoFranchise1 (783) | Done |
+| DemoCentral1 (781) | DemoFranchise2 (784) | Done |
+| DemoCentral2 (782) | DemoFranchise3 (785) | Done |
+| DemoCentral2 (782) | DemoFranchise4 (786) | Done |
+
+---
+
+## How to Re-run
+
+```bash
+python3 /app/memory/central_inventory/api_evidence/e2e_final_test.py
+```
+
+Seeds fresh stock, runs all 52 tests, prints pass/fail summary.
