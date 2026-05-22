@@ -1,76 +1,43 @@
 # Central Inventory - PRD
 
-## Original Problem Statement
-Central Inventory management system for MyGenie POS — multi-level stock management across Central Store → Master Store → Outlet hierarchy.
+## Problem Statement
+Clone and run the Central Inventory application from GitHub repo `parth-mygenie/central_inventory` (branch: `final_for_working_22_5_26`). No code modifications — just get it running.
 
 ## Architecture
-- **Backend**: FastAPI (Python) — API proxy to `preprod.mygenie.online` with local seed data enrichment
-- **Frontend**: React 19 + Tailwind CSS + Radix UI + Craco
-- **Database**: MongoDB (status checks), main data from seed_data.py
+- **Backend**: FastAPI (Python) — proxy server that forwards requests to `preprod.mygenie.online` APIs with seed data enrichment
+- **Frontend**: React (CRA + CRACO) with Tailwind CSS, Radix UI, shadcn/ui components
+- **Database**: MongoDB (used for status checks; main data is proxied/seeded)
 - **Auth**: Proxied to MyGenie preprod auth API
 
-## User Personas
-- **Central Store (master)**: Top-level — full access to all screens and actions
-- **Master Store (central)**: Mid-level — manages outlets, can approve/dispatch
-- **Outlet (franchise)**: Bottom-level — limited, read-only on most screens
+## Tech Stack
+- FastAPI + Motor (async MongoDB) + httpx (HTTP proxy)
+- React 19 + React Router 7 + Axios + Recharts + Radix UI
+- Tailwind CSS 3 + shadcn/ui component library
 
-## Core Requirements
-- Login via MyGenie vendor account
-- Operations Hub dashboard with pending counts
-- Hierarchy Summary with store listing (Master Stores / Outlets tabs)
-- Store Detail with stock summary, batch drilldown, transactions
-- Pending Queues (Approval, Ready to Dispatch, Receive, My Requests)
-- Transfer Detail (read-only with status timeline and contextual actions)
-- Terminology mapping: backend "master"->"Central Store", "central"->"Master Store", "franchise"->"Outlet"
+## Key Screens
+1. **Login** — Email/password auth via MyGenie preprod API
+2. **Operations Hub** (SCR-01) — Dashboard overview
+3. **Hierarchy Summary** (SCR-02) — Store hierarchy with transfer summaries
+4. **Store Detail** (SCR-03) — Individual store inventory/transfers
+5. **Pending Queues** (SCR-05) — Approval/receive pending transfers
+6. **Transfer Detail** (SCR-09) — Individual transfer details
 
-## What's Been Implemented
+## What's Been Implemented (Jan 2026)
+- [x] Cloned repo from GitHub (branch: final_for_working_22_5_26)
+- [x] Restored environment files (MONGO_URL, REACT_APP_BACKEND_URL)
+- [x] Installed backend Python dependencies
+- [x] Installed frontend Node.js dependencies
+- [x] Both services running via supervisor
+- [x] Backend API verified responding
+- [x] Frontend compiled and serving login page
 
-### Slice 1 (May 19, 2026)
-- Full codebase pulled from GitHub branch `19_05_26`
-- Backend running with FastAPI proxy + seed data enrichment
-- All screens: Login, Operations Hub, Hierarchy Summary, Store Detail, Pending Queues, Transfer Detail
-- Role-based UX for 3 login levels
-- Terminology mapping infrastructure
+## Seed Data Accounts (from seed_data.py)
+- `abhishek@kalabahia.com` → My Genie (master, ID=1)
+- `owner@democentral1.com` → DemoCentral1 (central, ID=781)
+- `owner@democentral2.com` → DemoCentral2 (central, ID=782)
+- `owner@demofranchise1.com` → DemoFranchise1 (franchise, ID=783)
+- Various other demo accounts
 
-### Slice 2 (May 19, 2026) - QA VALIDATED May 20, 2026
-12 items implemented and fully validated across all 3 roles:
-1. Ready to Dispatch tab in Pending Queues - PASS
-2. Status timeline on Transfer Detail - PASS
-3. Line-level accept/reject display - PASS
-4. Consistent timestamp formatting (date-fns) - PASS
-5. Resolution reason display - PASS
-6. Date range picker on Hierarchy Summary - PASS
-7. Contextual action buttons by role + status - PASS
-8. Items count column in queues - PASS
-9. Store name fix validated - PASS
-10. Downward-only hierarchy visibility - PASS
-11. Context selector updates hub data in-place - PASS
-12. KPI placeholder removed - PASS
-
-## Key Seed Data
-- Restaurants: My Genie (1), DemoCentral1 (781), DemoCentral2 (782), DemoFranchise1-4 (783-786)
-- Transfer IDs: 101-112 covering all statuses
-- 16 inventory items
-
-### Slice 3 — PLANNING COMPLETE (20 May 2026), OWNER APPROVED
-Scope: Transfer History + Stock Ledger (read-only enterprise traceability)
-- Planning document: `/app/memory/central_inventory/CENTRAL_INVENTORY_SLICE_3_HISTORY_LEDGER_PLANNING.md`
-- Owner answers: `/app/memory/central_inventory/CENTRAL_INVENTORY_SLICE_3_OWNER_ANSWERS.md` (11/11 answered, approved)
-- 10 must-have items, 5 should-have items
-- Screen structure: One "History & Ledger" screen with two tabs at `/history`
-- Status: Owner approved. Ready for Implementation Planning Agent (no code modification yet).
-
-## P0/P1/P2 Features Remaining
-- **P0**: Write API integration (dispatch, approve, reject, receive, cancel) — blocked by UNIT_CONVERSION
-- **P0**: Slice 3 — Transfer History + Stock Ledger (read-only) — planned, pending owner approval
-- **P1**: Reports screen (marked "coming soon")
-- **P2**: Stock adjustment, wastage recording
-- **P2**: Real-time updates
-- **P2**: KPI dashboard (owner to specify metrics)
-
-## Backlog / Next Tasks
-- Owner approval on Slice 3 scope + answers to 11 questions → implementation
-- Enable write operations when backend UNIT_CONVERSION resolution is available
-- Build Reports screen with CSV/PDF export
-- Confirmation dialogs for destructive actions (when write enabled)
-- Backend API & terminology refactoring
+## Next Action Items
+- User to test login with their MyGenie preprod credentials
+- Any feature additions or bug fixes as requested
