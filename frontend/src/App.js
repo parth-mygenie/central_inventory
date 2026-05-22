@@ -8,6 +8,7 @@ import HierarchySummary from "@/components/central-inventory/HierarchySummary";
 import StoreDetail from "@/components/central-inventory/StoreDetail";
 import PendingQueues from "@/components/central-inventory/PendingQueues";
 import TransferDetail from "@/components/central-inventory/TransferDetail";
+import HistoryLedger from "@/components/central-inventory/HistoryLedger";
 import { PermissionDenied } from "@/components/common/StateDisplays";
 
 /**
@@ -57,6 +58,7 @@ function AppRoutes() {
         <Route path="/hierarchy" element={<HierarchySummary />} />
         <Route path="/store/:id" element={<StoreDetail />} />
         <Route path="/queues" element={<PendingQueues />} />
+        <Route path="/history" element={<HistoryLedger />} />
         <Route path="/transfer/:id" element={<TransferDetail />} />
 
         {/* Catch-all → redirect to hub */}

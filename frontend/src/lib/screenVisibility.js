@@ -29,6 +29,7 @@ export const SCREEN_VISIBILITY = {
   "scr-17-adjustment":     { master: FULL,    central: HIDDEN,  franchise: HIDDEN },
   "scr-18-wastage":        { master: FULL,    central: FULL,    franchise: FULL  },
   "scr-20-reports":        { master: FULL,    central: FULL,    franchise: FULL  },
+  "scr-history-ledger":    { master: FULL,    central: FULL,    franchise: FULL  },
   "scr-21-api-verify":     { master: HIDDEN,  central: HIDDEN,  franchise: HIDDEN }, // admin only
 };
 
@@ -70,6 +71,13 @@ export const NAV_ITEMS = [
     label: "Pending Queues",
     path: "/queues",
     icon: "Inbox",
+  },
+  {
+    id: "history-ledger",
+    screen: "scr-history-ledger",
+    label: "History & Ledger",
+    path: "/history",
+    icon: "ScrollText",
   },
   {
     id: "reports",

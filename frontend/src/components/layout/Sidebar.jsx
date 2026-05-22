@@ -5,6 +5,7 @@ import {
   Network,
   Inbox,
   BarChart3,
+  ScrollText,
   ChevronLeft,
   ChevronRight,
   Package,
@@ -17,6 +18,7 @@ const ICON_MAP = {
   Network,
   Inbox,
   BarChart3,
+  ScrollText,
 };
 
 export default function Sidebar() {
