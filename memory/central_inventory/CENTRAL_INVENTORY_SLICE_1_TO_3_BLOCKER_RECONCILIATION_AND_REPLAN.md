@@ -337,66 +337,41 @@ This document contains 3 LOW-priority items and 1 MEDIUM-priority enhancement re
 
 ### Q-BR-001: Should Slice 3 remain read-only but note that write APIs are now verified?
 
-A. Yes — keep Slice 3 exactly as approved, note API readiness for Slice 4
-B. Yes — keep Slice 3 read-only but update disabled button labels to "coming next update"
-C. Expand Slice 3 to include one write flow (e.g., Approve/Reject)
-D. Defer
+**Owner Answer: A** — Keep Slice 3 exactly as approved, note API readiness for Slice 4.
 
-**Recommended answer:** B
-**Reason:** Most accurate user messaging. APIs are no longer "blocked" — they're "not yet integrated." Label change is trivial.
-**Impact if not answered:** Minor — current "Write API blocked" label is technically inaccurate but not harmful.
+**Decision:** Slice 3 proceeds unchanged. Disabled write button labels remain as-is. Write API readiness is documented for Slice 4 planning.
 
 ---
 
 ### Q-BR-002: Should newly unblocked write flows be planned as Slice 4?
 
-A. Yes — create Slice 4 as the write-flow slice (Dispatch, Request, Approve, Reject, Receive, Cancel)
-B. Yes — but combine with Slice 3 implementation
-C. Defer write flows until after Slice 3 is fully QA'd
-D. Defer
+**Owner Answer: A** — Create Slice 4 as dedicated write-flow slice (Dispatch, Request, Approve, Reject, Receive, Cancel).
 
-**Recommended answer:** A
-**Reason:** Clean separation. Slice 3 delivers read-only traceability. Slice 4 enables write operations. Each slice has clear acceptance criteria.
-**Impact if not answered:** Write flow planning is delayed.
+**Decision:** Slice 4 will be a dedicated write-flow slice. Clean separation: Slice 3 = read-only traceability, Slice 4 = write operations.
 
 ---
 
 ### Q-BR-003: Should Slice 4 write flows use the real preprod API or continue with seed data proxy?
 
-A. Connect to real preprod API for write operations (with seed data as fallback)
-B. Build write form UI shells that call seed/proxy endpoints (demo mode)
-C. Depends on whether preprod environment is stable enough for ongoing development
-D. Owner decides later
+**Owner Answer: D** — Owner decides later.
 
-**Recommended answer:** A
-**Reason:** 52/52 PASS proves preprod is stable. Real API integration validates the full stack.
-**Impact if not answered:** BLOCKS Slice 4 implementation approach.
+**Decision:** Deferred. Slice 4 planning will proceed with both options documented. Owner will decide API approach before Slice 4 implementation begins.
 
 ---
 
 ### Q-BR-004: Should the source-selector mode default to `segment_id` (as proven in E2E tests)?
 
-A. Yes — `segment_id` is the proven mode; use as default
-B. Support both `segment_id` and `filter_bucket` modes (user choice)
-C. Owner decides based on UX preference
-D. Defer
+**Owner Answer: C** — Owner decides based on UX preference.
 
-**Recommended answer:** A
-**Reason:** E2E tests show `filter_bucket` failed but `segment_id` works. The fix was specifically changing to `segment_id`. This should be the default.
-**Impact if not answered:** Source selector UI design is unclear for Slice 4.
+**Decision:** Deferred to UX review during Slice 4 planning. Both `segment_id` and `filter_bucket` modes will be documented. E2E evidence (`segment_id` = reliable, `filter_bucket` = failed) will be presented for owner UX decision.
 
 ---
 
 ### Q-BR-005: Should Phase 2 Ops APIs (KPIs, reconciliation, stale transfers, near-expiry alerts, cost valuation) be catalogued for Slice 5+ planning?
 
-A. Yes — create a Phase 2 Ops feature catalogue from the verified APIs
-B. Defer — focus on Slice 3 + 4 first
-C. Include one or two Ops features (e.g., KPIs) in Slice 4
-D. Owner decides later
+**Owner Answer: B** — Defer. Focus on Slice 3 + 4 first.
 
-**Recommended answer:** B
-**Reason:** Slice 3 and 4 are the immediate priorities. Phase 2 Ops can be catalogued after Slice 4 is planned.
-**Impact if not answered:** LOW — does not block current work.
+**Decision:** Phase 2 Ops API catalogue deferred. Focus remains on Slice 3 implementation → Slice 3 QA → Slice 4 planning. Ops APIs documented in reconciliation report for future reference.
 
 ---
 
