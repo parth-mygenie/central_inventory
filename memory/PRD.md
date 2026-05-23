@@ -43,22 +43,22 @@ Clone and run the Central Inventory module from GitHub repo (parth-mygenie/centr
 
 ## Prioritized Backlog
 
-### P0 — Slice 4 (APPROVED — 23 May 2026, ready for implementation)
-**Must-have (12 items):**
-- Approve/Reject/Dispatch/Receive/Cancel transfer actions on Transfer Detail
+### P0 — Slice 4 (IMPLEMENTED — 23 May 2026)
+**Must-have (12/12 DONE):**
+- Approve/Reject/Dispatch/Receive/Cancel transfer actions on Transfer Detail (enabled, wired to real API)
 - Partial receive with line-level resolution (promoted to must-have)
 - "Report Issue" action for destination on dispatched transfers (Q-XFER-006 override)
-- Direct Dispatch form (Central/Master → child, including Central→Outlet direct)
-- Request Stock form (child → parent, promoted to must-have)
-- Source selector configurable (segment_id + filter_bucket modes)
+- Direct Dispatch form at /dispatch/new (Central/Master to child, including Central to Outlet)
+- Request Stock form at /request/new (child to parent, promoted to must-have)
+- Source selector configurable (segment_id default + filter_bucket with warning)
 - Confirmation dialogs for all destructive actions
-- Duplicate submission prevention + post-action data refresh
+- Duplicate submission prevention + post-action data refresh via useWriteAction hook
 
-**Should-have (4 items):**
-- Edit transfer (pre-dispatch, resets to requested)
-- Success/error toast notifications
-- Quantity validation with UOM awareness
-- API error message terminology mapping
+**Should-have (3/4 DONE):**
+- Success/error toast notifications (Toaster mounted)
+- Quantity validation with UOM awareness (pcs=whole, kg/ltr=2 decimals)
+- API error message terminology mapping (mapApiErrorMessage)
+- Edit transfer: DEFERRED (API contract unknown)
 
 ### P1 — Slice 5 (Future)
 - Stock Adjustment, Wastage Entry, Stock Return forms
@@ -68,6 +68,6 @@ Clone and run the Central Inventory module from GitHub repo (parth-mygenie/centr
 - Ops Dashboard KPIs, Reports, Export, Real-time updates, Recipe display
 
 ## Next Tasks
-1. Slice 4 Implementation (12 must-have + 4 should-have — all APIs verified ready)
-2. Slice 4 QA
+1. Slice 4 QA (owner smoke test)
+2. Edit Transfer API discovery (deferred from Slice 4)
 3. Slice 5 Planning

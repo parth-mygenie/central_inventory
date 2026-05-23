@@ -94,20 +94,7 @@ export default function PendingQueues() {
         <TableCell className="text-xs tabular-nums">{formatItemsCount(itemsCount)}</TableCell>
         <TableCell className="text-xs text-muted-foreground">{formatTimestamp(item.created_at)}</TableCell>
         <TableCell>
-          {showActions ? (
-            <Button
-              data-testid={`action-disabled-${id}`}
-              variant="outline"
-              size="sm"
-              disabled
-              className="h-6 text-[10px] opacity-50"
-            >
-              <Lock className="h-2.5 w-2.5 mr-1" />
-              Action blocked
-            </Button>
-          ) : (
-            <span className="text-[10px] text-muted-foreground">View only</span>
-          )}
+          <span className="text-[10px] text-muted-foreground">View details</span>
         </TableCell>
       </TableRow>
     );

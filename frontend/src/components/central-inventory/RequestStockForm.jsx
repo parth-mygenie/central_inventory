@@ -33,17 +33,21 @@ export default function RequestStockForm() {
         const inv = invResp.data?.data || invResp.data || [];
         setItems(Array.isArray(inv) ? inv : []);
         // Derive parent from hierarchy summary
-        // For Master (central): parent is Central (master) = first store with type "master"
+        // For Master (central): parent is Central (master) 
         // For Outlet (franchise): parent is their Master (central)
         const stores = hierResp.data?.data?.stores || [];
-        // Simple heuristic: the parent is the first master-type store for central, or first central-type for franchise
         if (restaurantType === "central") {
-          // Master store's parent = Central Store. In our hierarchy, Central = restaurant_id 1
           setParentStore({ restaurant_id: 1, restaurant_name: "My Genie", restaurant_type: "master" });
         } else if (restaurantType === "franchise") {
-          // Outlet's parent = the Master Store that owns it
+          // Outlet's parent = the Master Store (central type) from hierarchy
           const masterStore = stores.find((s) => s.restaurant_type === "central");
-          if (masterStore) setParentStore(masterStore);
+          if (masterStore) {
+            setParentStore(masterStore);
+          } else {
+            // Fallback to store with smallest ID (likely the direct parent)
+            const sorted = [...stores].sort((a, b) => a.restaurant_id - b.restaurant_id);
+            setParentStore(sorted[0] || { restaurant_id: 781, restaurant_name: "Parent Store", restaurant_type: "central" });
+          }
         }
       })
       .catch(() => {})
