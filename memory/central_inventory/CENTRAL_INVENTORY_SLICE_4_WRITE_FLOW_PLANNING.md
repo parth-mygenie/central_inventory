@@ -8,9 +8,24 @@
 
 ## 1. Planning Status
 
-### `slice_4_scope_recommended_owner_questions_pending`
+### `slice_4_ready_for_implementation_planning_owner_approval_required`
 
-10 write-flow items recommended for Slice 4 must-have scope. 5 should-have items identified. 8 owner questions require answers before implementation begins. All core transfer write APIs are verified ready (52/52 E2E PASS). No backend blockers for Slice 4 transfer writes.
+All 8 owner questions answered. 12 must-have items confirmed (partial receive promoted + Report Issue added). 4 should-have items. All core transfer write APIs verified ready (52/52 E2E PASS). Real preprod API confirmed for write operations. No backend blockers.
+
+### Owner Answers Recorded (22 May 2026)
+
+| Question | Answer | Decision |
+|----------|--------|----------|
+| Q-S4-001 | **A** | Real preprod API for all write operations |
+| Q-S4-002 | **B** | Both modes — user can choose `segment_id` or `filter_bucket` (configurable picker) |
+| Q-S4-003 | **A** | Central → Outlet direct dispatch included |
+| Q-S4-004 | **A** | Outlet can create stock requests from parent |
+| Q-S4-005 | **A** | Parent can direct-dispatch without prior request |
+| Q-S4-006 | **C** | Include post-dispatch destination action as "Report Issue" — **BUSINESS RULE UPDATE REQUIRED: Q-XFER-006 must be updated to allow this** |
+| Q-S4-007 | **A** | Partial receive promoted to must-have |
+| Q-S4-008 | **A** | Adjustment/wastage excluded — Slice 4 = transfer writes only |
+
+**CRITICAL NOTE (Q-S4-006):** Owner chose to include post-dispatch "Report Issue" by destination despite existing business rule Q-XFER-006 stating "Destination CANNOT reject post-dispatch." The business rules document (`OWNER_ANSWERS_COMPLETE.md`) needs to be updated to reflect this override. The action will be labeled "Report Issue" (not "Reject") on the UI.
 
 ---
 
@@ -149,7 +164,7 @@
 
 ## 6. Recommended Slice 4 Scope
 
-### Must Have (10 items)
+### Must Have (12 items — updated after owner answers)
 
 | # | Item | Justification |
 |---|------|---------------|
@@ -157,22 +172,23 @@
 | 2 | **Reject transfer action** with reason dialog | Pre-dispatch reject with `resolution_type` + reason. Enables request rejection. |
 | 3 | **Dispatch approved transfer** on Transfer Detail | POST to dispatch/{id}. Enables request→approve→dispatch lifecycle. |
 | 4 | **Receive transfer (full)** on Transfer Detail | POST to receive/{id} with empty body. Completes the lifecycle. |
-| 5 | **Cancel transfer** with reason dialog | Post-dispatch/post-approve cancel with `resolution_type` + reason. |
-| 6 | **Direct Dispatch form** (new screen/modal) | Create transfer via `initiate` endpoint. Central/Master can push stock to children. |
-| 7 | **Source selector** (segment_id mode) | Mandatory for dispatch. Call source-options API, select segment_id. |
-| 8 | **Confirmation dialogs** for all destructive actions | Owner mandate (SEC-002: A — confirmation for ALL destructive actions). |
-| 9 | **Duplicate submission prevention** | Button disable during API call + backend idempotency (UX-002: A). |
-| 10 | **Post-action data refresh** | Refresh Transfer Detail, Pending Queues counts, and History after successful write. |
+| 5 | **Partial receive** with line-level resolution | Per-line accepted/rejected/damaged quantities. `received_lines[]` payload. Promoted from should-have per owner Q-S4-007: A. |
+| 6 | **Cancel transfer** with reason dialog | Post-dispatch/post-approve cancel with `resolution_type` + reason. |
+| 7 | **"Report Issue" action** for destination on dispatched transfers | Post-dispatch destination reject labeled as "Report Issue". Owner override of Q-XFER-006 — business rules to be updated. Uses `reject/{id}` API. |
+| 8 | **Direct Dispatch form** (new screen/modal) | Create transfer via `initiate` endpoint. Central/Master can push stock to children. Includes Central→Outlet direct (Q-S4-003: A). |
+| 9 | **Request Stock form** (child → parent) | Outlet/Master requests stock. Uses `request` endpoint. Promoted from should-have per owner Q-S4-004: A. |
+| 10 | **Source selector** (configurable: `segment_id` + `filter_bucket` modes) | User can choose mode (Q-S4-002: B). Both modes available. Call source-options API. |
+| 11 | **Confirmation dialogs** for all destructive actions | Owner mandate (SEC-002: A — confirmation for ALL destructive actions). |
+| 12 | **Duplicate submission prevention + post-action data refresh** | Button disable during API call (UX-002: A). Refresh detail/queues/history after success. |
 
-### Should Have (5 items)
+### Should Have (4 items — updated)
 
 | # | Item | Justification |
 |---|------|---------------|
-| 11 | **Request Stock form** (child → parent) | Outlet/Master requests stock. Uses `request` endpoint. |
-| 12 | **Partial receive** with line-level resolution | Per-line accepted/rejected/damaged quantities. Complex form but API verified (C3). |
 | 13 | **Edit transfer** (pre-dispatch, resets to requested) | Already in action matrix. Needs edit form. |
 | 14 | **Success/error toast notifications** | Clear feedback after every write action. |
 | 15 | **Quantity validation with UOM awareness** | Whole numbers for pcs, 2 decimals for kg/ltr (ITM-002: C). |
+| 16 | **API error message terminology mapping** | Backend may return "franchise" in errors — map through terminology adapter before display. |
 
 ### Future / Not Slice 4
 
@@ -200,16 +216,18 @@
 
 ### Source Selector (for Dispatch)
 
-**E2E evidence proves `segment_id` is the only reliable mode.** All `filter_bucket` attempts failed in testing (Key Fixes section of Comprehensive Final report).
+**Owner decided (Q-S4-002: B): Both modes — user can choose.** The source selector should offer both `segment_id` and `filter_bucket` modes as a configurable picker.
+
+**Important note from E2E testing:** `filter_bucket` mode failed in all tests where stock had batch/expiry data. `segment_id` mode passed 100%. The UI should default to `segment_id` and warn users that `filter_bucket` may not work with batched stock.
 
 **Recommended UX flow:**
 1. User selects item from inventory master list
 2. Frontend calls `source-options` API with `from_restaurant_id` + `source_inventory_master_id`
 3. API returns `segments[]` array with: `segment_id`, `cal_quantity`, `batch`, `expiry_date`
-4. User selects a segment (or system auto-selects if only one)
-5. `source_selector: {"mode": "segment_id", "segment_id": <selected>}` is included in dispatch payload
-
-**Open question:** Owner deferred source-selector UX decision (Q-BR-004: C). See Q-S4-002.
+4. User sees a selector with two modes:
+   - **Segment mode** (default): Pick specific segment from list
+   - **Bucket mode**: Select filter bucket (`without_batch_and_expiry` etc.)
+5. Selected `source_selector` object is included in dispatch payload
 
 ### Destination Selector (for Dispatch/Request)
 
@@ -234,37 +252,37 @@ Legend: **E** = Enabled, **H** = Hidden, **—** = Not applicable
 
 #### Central Store (backend `master`)
 
-| Status | Approve | Reject | Dispatch | Receive | Cancel | Edit |
-|--------|---------|--------|----------|---------|--------|------|
-| requested (as source) | **E** | **E** | H | H | H | H |
-| approved (as source) | H | H | **E** | H | **E** | H |
-| dispatched (as source) | H | H | H | H | **E** | H |
-| dispatched (as destination) | H | H | H | **E** | H | H |
-| received | H | H | H | H | H | H |
-| partially_received | H | H | H | H | H | H |
-| cancelled | H | H | H | H | H | H |
-| rejected | H | H | H | H | H | H |
+| Status | Approve | Reject | Dispatch | Receive | Cancel | Report Issue | Edit |
+|--------|---------|--------|----------|---------|--------|-------------|------|
+| requested (as source) | **E** | **E** | H | H | H | H | H |
+| approved (as source) | H | H | **E** | H | **E** | H | H |
+| dispatched (as source) | H | H | H | H | **E** | H | H |
+| dispatched (as destination) | H | H | H | **E** | H | **E** | H |
+| received | H | H | H | H | H | H | H |
+| partially_received | H | H | H | H | H | H | H |
+| cancelled | H | H | H | H | H | H | H |
+| rejected | H | H | H | H | H | H | H |
 
 #### Master Store (backend `central`)
 
-| Status | Approve | Reject | Dispatch | Receive | Cancel | Edit |
-|--------|---------|--------|----------|---------|--------|------|
-| requested (as source/parent) | **E** | **E** | H | H | H | H |
-| requested (as requester) | H | H | H | H | H | **E** |
-| approved (as source) | H | H | **E** | H | **E** | H |
-| dispatched (as source) | H | H | H | H | **E** | H |
-| dispatched (as destination) | H | H | H | **E** | H | H |
-| Terminal statuses | H | H | H | H | H | H |
+| Status | Approve | Reject | Dispatch | Receive | Cancel | Report Issue | Edit |
+|--------|---------|--------|----------|---------|--------|-------------|------|
+| requested (as source/parent) | **E** | **E** | H | H | H | H | H |
+| requested (as requester) | H | H | H | H | H | H | **E** |
+| approved (as source) | H | H | **E** | H | **E** | H | H |
+| dispatched (as source) | H | H | H | H | **E** | H | H |
+| dispatched (as destination) | H | H | H | **E** | H | **E** | H |
+| Terminal statuses | H | H | H | H | H | H | H |
 
 #### Outlet (backend `franchise`)
 
-| Status | Approve | Reject | Dispatch | Receive | Cancel | Edit |
-|--------|---------|--------|----------|---------|--------|------|
-| requested (as requester) | H | H | H | H | H | **E** |
-| dispatched (as destination) | H | H | H | **E** | H | H |
-| All other | H | H | H | H | H | H |
+| Status | Approve | Reject | Dispatch | Receive | Cancel | Report Issue | Edit |
+|--------|---------|--------|----------|---------|--------|-------------|------|
+| requested (as requester) | H | H | H | H | H | H | **E** |
+| dispatched (as destination) | H | H | H | **E** | H | **E** | H |
+| All other | H | H | H | H | H | H | H |
 
-This matrix is **already implemented** in `transferActions.js`. Slice 4 only needs to **enable the buttons** (remove disabled state) and **wire click handlers** to API calls.
+**Note on "Report Issue":** This is a post-dispatch action by the destination store. It uses the `reject/{id}` API endpoint. It is labeled "Report Issue" (not "Reject") per owner decision Q-S4-006: C. **Business rule Q-XFER-006 needs to be updated** to reflect this override.
 
 ---
 
@@ -319,9 +337,9 @@ This matrix is **already implemented** in `transferActions.js`. Slice 4 only nee
 | Title | "Receive Transfer #123?" |
 | Body | Line items summary with dispatched quantities |
 | Full Receive | "Receive All" button — empty body POST |
-| Partial Receive | Toggle to line-level form (should-have) |
+| Partial Receive | Toggle to line-level form (must-have per Q-S4-007: A) |
 
-### 9.6 Partial Receive Form (should-have)
+### 9.6 Partial Receive Form (must-have per Q-S4-007: A)
 
 | Field | Type | Required | Validation |
 |-------|------|----------|------------|
@@ -397,115 +415,22 @@ Backend handoff document NOT created (no blockers for Slice 4 scope).
 
 ---
 
-## 14. Owner Questions
+## 14. Owner Questions — ALL ANSWERED
 
-### Q-S4-001: Should Slice 4 use the real preprod API for write operations?
+All 8 questions answered on 22 May 2026.
 
-Owner previously deferred this (Q-BR-003: D).
+| # | Question | Answer | Decision |
+|---|----------|--------|----------|
+| Q-S4-001 | Real preprod API or seed proxy? | **A** | Real preprod API for all writes — 52/52 E2E PASS proves stability |
+| Q-S4-002 | Source selector mode? | **B** | Both modes configurable — user can choose segment_id or filter_bucket |
+| Q-S4-003 | Central → Outlet direct dispatch? | **A** | Included — Central can dispatch to any Outlet |
+| Q-S4-004 | Outlet can create stock requests? | **A** | Included — Outlet requests from parent |
+| Q-S4-005 | Direct dispatch without request? | **A** | Included — parent can push without prior request |
+| Q-S4-006 | Post-dispatch reject by destination? | **C** | Include as "Report Issue" — **business rule Q-XFER-006 needs update** |
+| Q-S4-007 | Partial receive scope? | **A** | Promoted to must-have |
+| Q-S4-008 | Adjustment/wastage excluded? | **A** | Excluded — Slice 4 = transfer writes only |
 
-A. Yes — connect to real preprod API for all write operations (52/52 E2E PASS proves stability)
-B. Build write forms that call our seed/proxy backend (demo mode — no real stock changes)
-C. Real API for simple actions (approve/reject/receive/cancel), seed proxy for create/dispatch
-D. Defer — decide during implementation
-
-**Recommended:** A
-**Reason:** 52/52 PASS proves preprod is stable. Real integration validates the full stack. Seed proxy doesn't actually perform writes.
-**Impact if not answered:** BLOCKS implementation approach. Cannot wire forms without knowing target API.
-
----
-
-### Q-S4-002: Should the source selector default to `segment_id` mode?
-
-Owner previously deferred this (Q-BR-004: C).
-
-A. Yes — `segment_id` only (proven reliable; `filter_bucket` failed in all tests)
-B. Show both modes — user can choose between segment and bucket
-C. Auto-select: if only one segment, skip picker; if multiple, show segment list
-D. Defer
-
-**Recommended:** C (auto-select with segment_id mode only)
-**Reason:** `filter_bucket` failed in every test. `segment_id` is the only proven mode. Auto-select reduces clicks when there's only one available segment.
-**Impact if not answered:** Source selector UI cannot be designed.
-
----
-
-### Q-S4-003: Should Central → Outlet direct transfer be included in Slice 4?
-
-A. Yes — Central can dispatch directly to any Outlet (bypassing Master)
-B. No — Central can only dispatch to Master Stores in Slice 4; direct-to-Outlet in future
-C. Yes, but with a warning: "This bypasses the Master Store"
-D. Defer
-
-**Recommended:** A
-**Reason:** Owner already confirmed (Q-HIER-001: A) and E2E tests A3-A4 prove it works. Backend validates parent-chain.
-**Impact if not answered:** Destination picker scope is unclear for Central users.
-
----
-
-### Q-S4-004: Should Outlet be able to create stock requests in Slice 4?
-
-A. Yes — Outlet can request stock from its parent (Master or Central)
-B. No — only Master can request from Central; Outlet requests deferred
-C. Yes, but request goes only to Master (not directly to Central)
-D. Defer
-
-**Recommended:** A
-**Reason:** Owner confirmed (per transfer flow table in OWNER_ANSWERS_COMPLETE.md). E2E B1 proves Franchise→Central request works.
-**Impact if not answered:** Request Stock form's role scope is unclear.
-
----
-
-### Q-S4-005: Can Central/Master push stock without a request (direct dispatch)?
-
-A. Yes — parent can initiate direct dispatch to any child without prior request
-B. Only via request flow (child must request first)
-C. Central can direct-dispatch; Master must wait for request
-D. Defer
-
-**Recommended:** A
-**Reason:** Owner confirmed (Conflict-001 resolution: parent-initiated direct dispatch skips approval). E2E Section A proves direct dispatch works at all levels.
-**Impact if not answered:** Direct Dispatch form's inclusion in Slice 4 is unclear.
-
----
-
-### Q-S4-006: Should post-dispatch reject by destination be included?
-
-E2E test C4 passes (post-dispatch reject by destination). But owner said (Q-XFER-006: C): "Destination CANNOT reject post-dispatch — must receive first."
-
-A. Include — API supports it and it's a useful safety valve
-B. Exclude — follow owner business rule strictly (destination must receive first, then return)
-C. Include but hide behind a "Report Issue" label instead of "Reject"
-D. Defer to future slice
-
-**Recommended:** B
-**Reason:** Owner was explicit. Even though API supports it, business rule says receive first. This reduces complexity in Slice 4.
-**Impact if not answered:** Action matrix for "dispatched" status at destination is unclear.
-
----
-
-### Q-S4-007: Should partial receive be in Slice 4 must-have or should-have?
-
-A. Must-have — partial receive is a core receiving workflow
-B. Should-have — implement if time allows, full receive is sufficient for launch
-C. Defer entirely to Slice 5
-D. Defer
-
-**Recommended:** B
-**Reason:** Full receive covers the common case. Partial receive is complex (per-line form with resolution types). Including it as should-have balances scope.
-**Impact if not answered:** Receive form complexity is unclear.
-
----
-
-### Q-S4-008: Should stock adjustment and wastage be excluded from Slice 4?
-
-A. Yes — exclude both. Slice 4 is transfer writes only. Adjustment/wastage are Slice 5.
-B. Include wastage only (store-level, simple form)
-C. Include both
-D. Defer
-
-**Recommended:** A
-**Reason:** Transfer write flows are complex enough for one slice. Adjustment/wastage have different permission models and UX patterns. Clean separation reduces risk.
-**Impact if not answered:** Scope may bloat.
+**No pending owner questions. Ready for implementation planning.**
 
 ---
 
@@ -585,39 +510,44 @@ D. Defer
 
 ## 18. Owner Approval Gate
 
-Owner must approve before implementation begins:
+All 8 owner questions answered. Final approval needed on:
 
-- [ ] **Slice 4 scope:** 10 must-have + 5 should-have items
-- [ ] **API approach:** Real preprod API or seed proxy (Q-S4-001)
-- [ ] **Source selector UX:** segment_id mode (Q-S4-002)
-- [ ] **Central → Outlet direct dispatch:** Included or not (Q-S4-003)
-- [ ] **Outlet stock request:** Included or not (Q-S4-004)
-- [ ] **Direct dispatch without request:** Included or not (Q-S4-005)
-- [ ] **Post-dispatch reject:** Included or excluded (Q-S4-006)
-- [ ] **Partial receive scope:** Must-have or should-have (Q-S4-007)
-- [ ] **Adjustment/wastage exclusion:** Confirmed excluded (Q-S4-008)
+- [x] **API approach:** Real preprod API (Q-S4-001: A) ✓
+- [x] **Source selector UX:** Both modes configurable (Q-S4-002: B) ✓
+- [x] **Central → Outlet direct dispatch:** Included (Q-S4-003: A) ✓
+- [x] **Outlet stock request:** Included (Q-S4-004: A) ✓
+- [x] **Direct dispatch without request:** Included (Q-S4-005: A) ✓
+- [x] **Post-dispatch "Report Issue":** Included, business rule update needed (Q-S4-006: C) ✓
+- [x] **Partial receive:** Must-have (Q-S4-007: A) ✓
+- [x] **Adjustment/wastage:** Excluded from Slice 4 (Q-S4-008: A) ✓
+
+**Remaining for owner:** Approve final Slice 4 scope (12 must-have + 4 should-have) to trigger implementation planning.
+
+**Action required:** Update business rule Q-XFER-006 in `OWNER_ANSWERS_COMPLETE.md` to reflect "Report Issue" override.
 
 ---
 
 ## 19. Recommended Next Agent
 
-### `Central Inventory Slice 4 Owner Question Gate Agent`
-
-Wait for owner answers to Q-S4-001 through Q-S4-008, then hand off to:
-
 ### `Central Inventory Slice 4 Implementation Planning Agent`
 
+All questions answered. Ready for implementation planning.
+
 Tasks:
-1. Resolve all owner answers into final scope
-2. Create file-level implementation plan (which components to create/modify)
-3. Create detailed component specifications
-4. Define exact API service functions to add to `api.js`
-5. Plan confirmation dialog component (reusable)
-6. Plan Direct Dispatch form component
-7. Plan Request Stock form component (if included)
-8. Plan source-selector component
-9. Define test plan
-10. Produce implementation-ready handover
+1. Create file-level implementation plan (components to create/modify)
+2. Add write API functions to `api.js`
+3. Update `transferActions.js` to add "Report Issue" action for dispatched-as-destination
+4. Create confirmation dialog component (reusable)
+5. Create Direct Dispatch form component
+6. Create Request Stock form component
+7. Create source-selector component (configurable segment_id + filter_bucket)
+8. Create partial receive form component
+9. Wire all action buttons in TransferDetail.jsx to real API calls
+10. Enable action buttons (remove disabled state)
+11. Add post-action refresh logic
+12. Add toast notifications
+13. Define test plan
+14. Produce implementation-ready handover
 
 ---
 
