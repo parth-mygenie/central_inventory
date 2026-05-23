@@ -146,6 +146,47 @@ function cancelTransfer(transferId, payload) {
   return client.post(`/proxy/v2/inventory-transfer/cancel/${transferId}`, payload);
 }
 
+// ── Stock Adjustment APIs (Slice 5 — Central Store only) ─────────
+
+function adjustStockDecrease(payload) {
+  return client.post("/proxy/v2/inventory-transfer/decrease-adjustment", {
+    source_inventory_master_id: payload.sourceInventoryMasterId,
+    quantity: payload.quantity,
+    unit: payload.unit,
+    source_selector: payload.sourceSelector,
+    reason: payload.reason,
+  });
+}
+
+function adjustStockIncrease(payload) {
+  return client.post("/proxy/v2/inventory/add-stock", {
+    source_inventory_master_id: payload.sourceInventoryMasterId,
+    quantity: payload.quantity,
+    unit: payload.unit,
+    reason: payload.reason,
+  });
+}
+
+// ── Wastage APIs (Slice 5 — all roles, own store level) ──────────
+
+function recordWastage(payload) {
+  return client.post("/proxy/v2/inventory/record-wastage", {
+    source_inventory_master_id: payload.sourceInventoryMasterId,
+    quantity: payload.quantity,
+    unit: payload.unit,
+    source_selector: payload.sourceSelector,
+    reason: payload.reason,
+  });
+}
+
+function getWastageReport({ restaurantIds, fromDate, toDate } = {}) {
+  const payload = {};
+  if (restaurantIds) payload.restaurant_ids = restaurantIds;
+  if (fromDate) payload.from_date = fromDate;
+  if (toDate) payload.to_date = toDate;
+  return client.post("/proxy/v2/inventory/wastage-report", payload);
+}
+
 // ── Export ────────────────────────────────────────────────────────
 
 const api = {
@@ -168,6 +209,11 @@ const api = {
   dispatchTransfer,
   receiveTransfer,
   cancelTransfer,
+  // Slice 5 — Stock Adjustment + Wastage APIs
+  adjustStockDecrease,
+  adjustStockIncrease,
+  recordWastage,
+  getWastageReport,
 };
 
 export default api;
