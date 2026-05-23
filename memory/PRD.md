@@ -43,10 +43,22 @@ Clone and run the Central Inventory module from GitHub repo (parth-mygenie/centr
 
 ## Prioritized Backlog
 
-### P0 — Slice 4 (Next — awaiting owner answers)
-- Approve/Reject/Dispatch/Receive/Cancel transfer actions
-- Direct Dispatch form + Source selector
-- Confirmation dialogs, duplicate prevention, post-action refresh
+### P0 — Slice 4 (APPROVED — 23 May 2026, ready for implementation)
+**Must-have (12 items):**
+- Approve/Reject/Dispatch/Receive/Cancel transfer actions on Transfer Detail
+- Partial receive with line-level resolution (promoted to must-have)
+- "Report Issue" action for destination on dispatched transfers (Q-XFER-006 override)
+- Direct Dispatch form (Central/Master → child, including Central→Outlet direct)
+- Request Stock form (child → parent, promoted to must-have)
+- Source selector configurable (segment_id + filter_bucket modes)
+- Confirmation dialogs for all destructive actions
+- Duplicate submission prevention + post-action data refresh
+
+**Should-have (4 items):**
+- Edit transfer (pre-dispatch, resets to requested)
+- Success/error toast notifications
+- Quantity validation with UOM awareness
+- API error message terminology mapping
 
 ### P1 — Slice 5 (Future)
 - Stock Adjustment, Wastage Entry, Stock Return forms
@@ -56,6 +68,6 @@ Clone and run the Central Inventory module from GitHub repo (parth-mygenie/centr
 - Ops Dashboard KPIs, Reports, Export, Real-time updates, Recipe display
 
 ## Next Tasks
-1. Owner answers Q-S4-001 through Q-S4-008
-2. Slice 4 Implementation Planning
-3. Slice 4 Implementation
+1. Slice 4 Implementation (12 must-have + 4 should-have — all APIs verified ready)
+2. Slice 4 QA
+3. Slice 5 Planning

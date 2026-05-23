@@ -1,9 +1,11 @@
 # Central Inventory — Owner Answers (Complete Record)
 
-> **Last Updated:** January 2026
+> **Last Updated:** 23 May 2026
 > **Total Questions Answered:** 66 (50+ Round 1 + 3 Conflict Resolutions + 2 Follow-ups + 11 Skipped Questions Recovered)
 > **Round 2 Gap Questions:** 29 answered + 1 clarification = 30
-> **Grand Total:** 96 answered decisions
+> **Slice 4 Owner Decisions:** 8 answered (22 May 2026)
+> **Slice 4 Final Scope Approval:** 23 May 2026
+> **Grand Total:** 104 answered decisions
 
 ---
 
@@ -50,7 +52,7 @@
 | Q-XFER-003 | **A** | Edit resets status to "requested" (forces re-approval) |
 | Q-XFER-004 | **A** | Strict stock enforcement — block if insufficient |
 | Q-XFER-005 | **C** | Lateral Master↔Master transfers require Central Store manager approval |
-| Q-XFER-006 | **C** | User chooses resolution type; **Destination CANNOT reject post-dispatch — must receive first** |
+| Q-XFER-006 | **C** | User chooses resolution type; **Destination CAN "Report Issue" post-dispatch** — OVERRIDE applied 23 May 2026 per Q-S4-006: C (see Slice 4 Override section below). Original rule was "cannot reject post-dispatch". New action labeled "Report Issue" (not "Reject") on UI. Uses `reject/{id}` API. |
 | Q-XFER-007 | **C** | Both transfer-level and line-level notes, optional |
 | Q-XFER-008 | **B** | Configurable expiry threshold per store |
 | Q-XFER-009 | **B** | Destination must choose resolution per rejected line during partial receive |
@@ -319,7 +321,7 @@
 | Full receive | YES |
 | Partial receive (per-line resolution) | YES |
 | Over-receive (more than dispatched) | YES (with reason) |
-| Direct reject | **NO — must receive first** |
+| Direct reject | **NO** — but destination CAN use **"Report Issue"** post-dispatch (Q-S4-006 override, 23 May 2026). Uses `reject/{id}` API. UI label is "Report Issue", not "Reject". |
 | Return after receiving | YES (to original sender, sender must accept) |
 
 ---
@@ -334,7 +336,79 @@
 | Round 2 skipped questions recovered | 11 |
 | Round 2 gap questions | 29 |
 | Round 2 clarifications | 1 |
-| **Grand Total Decisions** | **96** |
+| Slice 4 owner decisions | 8 |
+| **Grand Total Decisions** | **104** |
+
+---
+
+## SLICE 4 — OWNER APPROVAL (23 May 2026)
+
+### Scope Approved
+
+| Category | Count | Status |
+|---|---|---|
+| Must-have items | 12 | **APPROVED** |
+| Should-have items | 4 | **APPROVED** |
+| Real preprod APIs for all write flows | YES | **APPROVED** |
+
+### Slice 4 Owner Questions (answered 22 May 2026)
+
+| Question | Answer | Decision |
+|----------|--------|----------|
+| Q-S4-001 | **A** | Real preprod API for all write operations |
+| Q-S4-002 | **B** | Both modes — user can choose `segment_id` or `filter_bucket` (configurable picker) |
+| Q-S4-003 | **A** | Central → Outlet direct dispatch included |
+| Q-S4-004 | **A** | Outlet can create stock requests from parent |
+| Q-S4-005 | **A** | Parent can direct-dispatch without prior request |
+| Q-S4-006 | **C** | Include post-dispatch destination action as "Report Issue" — **Q-XFER-006 OVERRIDE APPLIED** |
+| Q-S4-007 | **A** | Partial receive promoted to must-have |
+| Q-S4-008 | **A** | Adjustment/wastage excluded — Slice 4 = transfer writes only |
+
+### Q-XFER-006 Override Record
+
+| Field | Value |
+|---|---|
+| **Original Rule (Q-XFER-006)** | Destination CANNOT reject post-dispatch — must receive first |
+| **Override Decision (Q-S4-006: C)** | Destination CAN "Report Issue" post-dispatch |
+| **Override Approved By** | Owner, 23 May 2026 |
+| **UI Label** | "Report Issue" (NOT "Reject") |
+| **API Used** | `POST /inventory-transfer/reject/{id}` |
+| **Payload** | `{ "resolution_type": "...", "resolution_meta": { "reason": "..." } }` |
+| **Rationale** | Destination should be able to report transit damage, wrong items, or quantity discrepancies without being forced to first receive and then return. Labeled "Report Issue" to maintain semantic distinction from pre-dispatch rejection. |
+
+### Promotions Applied
+
+| Item | From | To | Reason |
+|---|---|---|---|
+| Partial receive | Should-have | **Must-have** | Owner Q-S4-007: A |
+| Request Stock (child → parent) | Should-have | **Must-have** | Owner Q-S4-004: A |
+| Report Issue action | Not planned | **Must-have** | Owner Q-S4-006: C |
+
+### Final Slice 4 Must-Have Scope (12 items)
+
+| # | Item |
+|---|------|
+| 1 | Approve transfer action |
+| 2 | Reject transfer action with reason dialog |
+| 3 | Dispatch approved transfer |
+| 4 | Receive transfer (full) |
+| 5 | Partial receive with line-level resolution |
+| 6 | Cancel transfer with reason dialog |
+| 7 | "Report Issue" action for destination on dispatched transfers |
+| 8 | Direct Dispatch form (Central/Master → child, including Central→Outlet) |
+| 9 | Request Stock form (child → parent) |
+| 10 | Source selector (configurable: segment_id + filter_bucket modes) |
+| 11 | Confirmation dialogs for all destructive actions |
+| 12 | Duplicate submission prevention + post-action data refresh |
+
+### Final Slice 4 Should-Have Scope (4 items)
+
+| # | Item |
+|---|------|
+| 13 | Edit transfer (pre-dispatch, resets to requested) |
+| 14 | Success/error toast notifications |
+| 15 | Quantity validation with UOM awareness |
+| 16 | API error message terminology mapping |
 
 ---
 
