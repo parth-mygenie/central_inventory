@@ -11,37 +11,37 @@ Central Inventory module for MyGenie POS — multi-level inventory management ac
 
 ## What's Been Implemented
 
-### Slice 1 — COMPLETE (Jan 2026)
-- [x] Core screens: Login, Operations Hub, Hierarchy Summary, Store Detail, Pending Queues, Transfer Detail
-- [x] Role-based UX for Central/Master/Outlet
-- [x] Terminology mapping infrastructure
-- [x] Seed data: 7 stores, 16 items, 12 transfers
+### Slice 1 — COMPLETE
+- Core screens: Login, Operations Hub, Hierarchy Summary, Store Detail, Pending Queues, Transfer Detail
+- Role-based UX for Central/Master/Outlet, Terminology mapping
 
-### Slice 2 — COMPLETE + QA VALIDATED (20 May 2026)
-- [x] 12/12 items: Ready to Dispatch tab, Status timeline, Line-level accept/reject, Timestamp formatting, Resolution reasons, Date range picker, Contextual action buttons, Items count column, Store name fix, Downward-only hierarchy, Context selector in-place, KPI placeholder removed
-- [x] QA: Backend 10/10, Frontend 12/12
+### Slice 2 — COMPLETE + QA 12/12
+- Ready to Dispatch tab, Status timeline, Line-level accept/reject, Timestamp formatting, Resolution reasons, Date range picker, Contextual action buttons, Items count, Store name fix, Downward-only hierarchy, Context selector, KPI removed
 
-### Slice 3 — COMPLETE + QA VALIDATED (22 May 2026)
-- [x] History & Ledger screen at `/history` with two tabs
-- [x] Transfer History tab with 10 columns, all 7 statuses, filtering by status/direction/date/search
-- [x] Stock Ledger tab with 12 columns, derived from transfer data, movement type filtering
-- [x] Role-based visibility across all 3 levels
-- [x] Transfer Detail linkage from both tabs
-- [x] Safe empty/loading/error states
-- [x] QA: Frontend 15/15 PASS across Central/Master/Outlet roles
-- [x] No backend modifications
+### Slice 3 — COMPLETE + QA 23/23
+- History & Ledger screen at `/history` with Transfer History + Stock Ledger tabs
+- Filters, search, role-based visibility, Transfer Detail linkage
+
+### Slice 4 — PLANNING COMPLETE (22 May 2026)
+- Write flow planning document created
+- 10 must-have + 5 should-have items recommended
+- 10/10 write APIs verified_ready (52/52 E2E PASS)
+- 8 owner questions pending before implementation
+- No backend blockers for Slice 4
 
 ## Prioritized Backlog
 
-### P0 — Slice 4 (Next)
-- Write flow implementation: Dispatch Wizard, Request Stock, Approve/Reject, Receive, Cancel, Partial Receive
-- Source selector modal (segment_id mode)
-- Confirmation dialogs for destructive actions
+### P0 — Slice 4 (Next — awaiting owner answers)
+- Approve/Reject/Dispatch/Receive/Cancel transfer actions
+- Direct Dispatch form + Source selector
+- Confirmation dialogs, duplicate prevention, post-action refresh
 
-### P1 — Future Slices
+### P1 — Slice 5 (Future)
 - Stock Adjustment, Wastage Entry, Stock Return forms
-- Lateral Transfer UI, Ops Dashboard KPIs
-- Reports, CSV/PDF Export
+- Lateral Transfer UI, Partial Dispatch
+
+### P2 — Backlog
+- Ops Dashboard KPIs, Reports, Export, Real-time updates, Recipe display
 
 ## Seed Data Accounts
 - `abhishek@kalabahia.com` / `Qplazm@10` → Central Store (ID=1)
@@ -49,5 +49,6 @@ Central Inventory module for MyGenie POS — multi-level inventory management ac
 - `owner@demofranchise1.com` / `Qplazm@10` → Outlet (ID=783)
 
 ## Next Tasks
-1. Owner smoke test of Slice 3
-2. Slice 4 Write Flow Planning
+1. Owner answers Q-S4-001 through Q-S4-008
+2. Slice 4 Implementation Planning
+3. Slice 4 Implementation
