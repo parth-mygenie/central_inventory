@@ -9,9 +9,9 @@
 
 ## 1. Planning Status
 
-### `slice_5_scope_recommended_owner_approval_required`
+### `slice_5_scope_approved_ready_for_implementation_planning`
 
-All 5 candidate items evaluated. 18 existing owner decisions extracted. 8 of 10 original questions answered from existing docs. Only **2 genuinely new owner questions** remain. Recommended scope: Option A — Focused Stock Correction Slice.
+All 5 candidate items evaluated. 18 existing owner decisions extracted. All questions answered. Owner approved **Option A — Focused Stock Correction Slice** (Q-S5-001: A). Adjustment reason categories: use defaults, configurable in next phase (Q-S5-003: B). Ready for implementation planning.
 
 ---
 
@@ -81,32 +81,14 @@ All 5 candidate items evaluated. 18 existing owner decisions extracted. 8 of 10 
 
 ---
 
-## 5. Revised Owner Question Packet (2 questions only)
+## 5. Owner Answers (23 May 2026)
 
-### Q-S5-001: Which Slice 5 direction do you prefer?
+| Question | Answer | Decision |
+|----------|--------|----------|
+| Q-S5-001 | **A** | Option A — Stock Adjustment + Wastage as must-have, Edit Transfer as should-have. Stock Return and Lateral Transfers deferred to Slice 6. |
+| Q-S5-003 | **B** | Use defaults for now (Counting Error, System Correction, Opening Balance, Quality Issue, Other). Will be configurable in next phase. |
 
-A. **Option A** — Stock Adjustment + Wastage + Edit Transfer as should-have (safest, highest value, both are owner-confirmed "Must Have Phase 1")
-B. **Option B** — Edit Transfer + Stock Return + Lateral Transfers (lifecycle completion, higher risk)
-C. **Option D** — Split into 5A (Adj/Wastage) and 5B (Edit/Return/Lateral)
-D. Custom combination — please specify
-
-**Recommended:** A
-**Reason:** Adjustment and Wastage are owner-confirmed "Must Have Phase 1" (SKIP-011: A) with verified APIs (Section E: Decrease Adjustment PASS, Record Wastage PASS) and clear business rules. Stock Return and Lateral Transfers are higher complexity and can be Slice 6.
-**Impact if not answered:** Cannot finalize Slice 5 scope.
-**Question status:** `needs_owner_answer`
-**Why existing docs did not answer this:** Existing docs confirm individual item priority (P1) and Phase 1 status, but do not specify which items should be grouped into Slice 5 versus Slice 6. This is a sequencing decision.
-
-### Q-S5-003: What are the predefined reason categories for Stock Adjustment?
-
-A. Owner provides specific list now
-B. Use defaults: Counting Error, System Correction, Opening Balance, Quality Issue, Other
-C. Free-text only (no predefined dropdown)
-
-**Recommended:** B (with owner override if needed)
-**Reason:** Q-ADJ-003 says "mandatory reason with predefined categories" but the specific category names were never listed. Need the list or permission to use defaults.
-**Impact if not answered:** Implementation agent will use sensible defaults from Option B.
-**Question status:** `needs_owner_answer`
-**Why existing docs did not answer this:** Q-ADJ-003 confirms predefined categories are required but does not enumerate them.
+**All Slice 5 scope questions are now answered. No pending owner decisions.**
 
 ---
 
@@ -169,9 +151,9 @@ These are confirmed for Slice 5 implementation planning without further owner in
 
 ## 8. Recommended Next Agent
 
-### `Slice 5 Owner Question Gate Agent`
+### `Slice 5 Implementation Planning Agent`
 
-Present only Q-S5-001 and Q-S5-003 to owner. All other decisions are locked from existing documentation.
+All questions answered. Owner approved Option A. Proceed directly to implementation planning.
 
 ---
 
