@@ -1,10 +1,11 @@
 /**
- * Central Inventory — Transfer Action Matrix
+ * Central Inventory — Transfer Action Matrix (Slice 4 — Write-Enabled)
  *
  * Determines which actions are visible on Transfer Detail
  * based on transfer status, user role, and actor position (source vs destination).
  *
- * All actions remain DISABLED (write API blocked) — only visibility is controlled.
+ * Slice 4: Actions are now ENABLED and wired to real preprod APIs.
+ * "Report Issue" added per Q-XFER-006 override (Q-S4-006: C).
  *
  * Role mapping:
  *   backend "master"    = business "Central Store"  (TOP)
@@ -63,17 +64,16 @@ export function getAvailableActions(
       }
       if (isDestination) {
         actions.push({ id: "receive", label: "Receive", variant: "default" });
+        actions.push({ id: "report-issue", label: "Report Issue", variant: "destructive" });
       }
     }
   } else if (role === "central") {
     // Master Store — middle level
     if (status === "requested") {
       if (isSource) {
-        // Parent approving child's request
         actions.push({ id: "approve", label: "Approve", variant: "default" });
         actions.push({ id: "reject", label: "Reject", variant: "destructive" });
       } else if (isDestination && transferType === "request") {
-        // Own request — can edit
         actions.push({ id: "edit", label: "Edit", variant: "outline" });
       }
     } else if (status === "approved" && isSource) {
@@ -85,15 +85,16 @@ export function getAvailableActions(
       }
       if (isDestination) {
         actions.push({ id: "receive", label: "Receive", variant: "default" });
+        actions.push({ id: "report-issue", label: "Report Issue", variant: "destructive" });
       }
     }
   } else if (role === "franchise") {
     // Outlet — bottom level
     if (status === "requested" && isDestination && transferType === "request") {
-      // Own request — can edit
       actions.push({ id: "edit", label: "Edit", variant: "outline" });
     } else if (status === "dispatched" && isDestination) {
       actions.push({ id: "receive", label: "Receive", variant: "default" });
+      actions.push({ id: "report-issue", label: "Report Issue", variant: "destructive" });
     }
   }
 

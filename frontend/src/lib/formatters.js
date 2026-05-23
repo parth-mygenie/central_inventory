@@ -50,6 +50,18 @@ export function formatRelativeTime(isoString) {
 }
 
 /**
+ * Validate quantity for UOM: pcs = whole numbers, kg/ltr = up to 2 decimals
+ */
+export function validateQuantityForUnit(quantity, unit) {
+  const n = Number(quantity);
+  if (isNaN(n) || n <= 0) return "Quantity must be greater than 0";
+  const u = (unit || "").toLowerCase().trim();
+  if (u === "pcs" && !Number.isInteger(n)) return "Quantity must be a whole number for pieces";
+  if ((u === "kg" || u === "ltr") && n !== Math.round(n * 100) / 100) return "Maximum 2 decimal places allowed";
+  return null;
+}
+
+/**
  * Format items count: "3 items" / "1 item"
  */
 export function formatItemsCount(count) {

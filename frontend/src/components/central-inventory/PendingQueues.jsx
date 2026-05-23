@@ -181,11 +181,6 @@ export default function PendingQueues() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Write API blocked notice */}
-          <div className="mb-3">
-            <BlockedAction label="Write API pending / blocked in Phase 1 limited slice. All action buttons are disabled." />
-          </div>
-
           {/* Approval tab */}
           {canDo("approve") && (
             <TabsContent value="approval">

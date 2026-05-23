@@ -9,6 +9,8 @@ import StoreDetail from "@/components/central-inventory/StoreDetail";
 import PendingQueues from "@/components/central-inventory/PendingQueues";
 import TransferDetail from "@/components/central-inventory/TransferDetail";
 import HistoryLedger from "@/components/central-inventory/HistoryLedger";
+import DirectDispatchForm from "@/components/central-inventory/DirectDispatchForm";
+import RequestStockForm from "@/components/central-inventory/RequestStockForm";
 import { PermissionDenied } from "@/components/common/StateDisplays";
 
 /**
@@ -59,6 +61,8 @@ function AppRoutes() {
         <Route path="/store/:id" element={<StoreDetail />} />
         <Route path="/queues" element={<PendingQueues />} />
         <Route path="/history" element={<HistoryLedger />} />
+        <Route path="/dispatch/new" element={<DirectDispatchForm />} />
+        <Route path="/request/new" element={<RequestStockForm />} />
         <Route path="/transfer/:id" element={<TransferDetail />} />
 
         {/* Catch-all → redirect to hub */}

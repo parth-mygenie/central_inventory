@@ -110,6 +110,16 @@ export function getStoreTypeBadge(backendType) {
   return STORE_TYPE_BADGE[backendType.toLowerCase().trim()] || { bg: "bg-gray-100", text: "text-gray-600", border: "border-gray-200" };
 }
 
+// ── API error message mapping ─────────────────────────────────────
+
+export function mapApiErrorMessage(message) {
+  if (!message || typeof message !== "string") return message;
+  return message
+    .replace(/\bfranchise\b/gi, "Outlet")
+    .replace(/\bcentral\b/gi, "Master Store")
+    .replace(/\bmaster\b/gi, "Central Store");
+}
+
 // ── Scan text for raw backend terms (dev/debug utility) ──────────
 
 export function scanForTerminology(text) {

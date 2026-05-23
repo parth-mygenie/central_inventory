@@ -1,6 +1,7 @@
 import { Outlet } from "react-router-dom";
 import AppHeader from "./AppHeader";
 import Sidebar from "./Sidebar";
+import { Toaster } from "@/components/ui/toaster";
 
 export default function AppLayout() {
   return (
@@ -12,6 +13,7 @@ export default function AppLayout() {
           <Outlet />
         </main>
       </div>
+      <Toaster />
     </div>
   );
 }

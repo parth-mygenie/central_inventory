@@ -112,6 +112,40 @@ function getFranchiseHistory({ fromDate, toDate } = {}) {
   return client.post("/proxy/v2/franchise/history", payload);
 }
 
+// ── Write APIs (Slice 4 — verified_ready, 52/52 E2E PASS) ───────
+
+function initiateTransfer({ fromRestaurantId, toRestaurantId, items }) {
+  return client.post("/proxy/v2/inventory-transfer/initiate", {
+    from_restaurant_id: fromRestaurantId,
+    to_restaurant_id: toRestaurantId,
+    items,
+  });
+}
+
+function requestStock({ items }) {
+  return client.post("/proxy/v2/inventory-transfer/request", { items });
+}
+
+function approveTransfer(transferId) {
+  return client.post(`/proxy/v2/inventory-transfer/approve/${transferId}`, {});
+}
+
+function rejectTransfer(transferId, payload) {
+  return client.post(`/proxy/v2/inventory-transfer/reject/${transferId}`, payload);
+}
+
+function dispatchTransfer(transferId) {
+  return client.post(`/proxy/v2/inventory-transfer/dispatch/${transferId}`, {});
+}
+
+function receiveTransfer(transferId, payload = {}) {
+  return client.post(`/proxy/v2/inventory-transfer/receive/${transferId}`, payload);
+}
+
+function cancelTransfer(transferId, payload) {
+  return client.post(`/proxy/v2/inventory-transfer/cancel/${transferId}`, payload);
+}
+
 // ── Export ────────────────────────────────────────────────────────
 
 const api = {
@@ -126,6 +160,14 @@ const api = {
   getInventoryMaster,
   getFranchiseList,
   getFranchiseHistory,
+  // Slice 4 write APIs
+  initiateTransfer,
+  requestStock,
+  approveTransfer,
+  rejectTransfer,
+  dispatchTransfer,
+  receiveTransfer,
+  cancelTransfer,
 };
 
 export default api;

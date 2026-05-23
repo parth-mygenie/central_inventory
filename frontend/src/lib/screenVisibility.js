@@ -42,6 +42,7 @@ export const ACTION_PERMISSIONS = {
   "request-stock":    { master: false, central: true,  franchise: true  },
   "receive":          { master: true,  central: true,  franchise: true  },
   "cancel":           { master: true,  central: true,  franchise: false },
+  "report-issue":     { master: true,  central: true,  franchise: true  },
   "adjust-stock":     { master: true,  central: false, franchise: false },
   "record-wastage":   { master: true,  central: true,  franchise: true  },
   "create-items":     { master: true,  central: false, franchise: false },

@@ -229,18 +229,16 @@ export default function OperationsHub() {
             </Card>
           </div>
 
-          {/* Blocked write actions notice */}
+          {/* Quick actions — now ENABLED (Slice 4) */}
           <div className="flex flex-wrap gap-2">
             {canDo("dispatch") && (
-              <Button data-testid="action-dispatch-disabled" variant="outline" size="sm" disabled className="opacity-50">
+              <Button data-testid="action-dispatch-stock" variant="default" size="sm" onClick={() => navigate("/dispatch/new")}>
                 Dispatch Stock
-                <span className="ml-1.5 text-[9px]">(write API blocked)</span>
               </Button>
             )}
             {canDo("request-stock") && (
-              <Button data-testid="action-request-disabled" variant="outline" size="sm" disabled className="opacity-50">
+              <Button data-testid="action-request-stock" variant="outline" size="sm" onClick={() => navigate("/request/new")}>
                 Request Stock
-                <span className="ml-1.5 text-[9px]">(write API blocked)</span>
               </Button>
             )}
           </div>
