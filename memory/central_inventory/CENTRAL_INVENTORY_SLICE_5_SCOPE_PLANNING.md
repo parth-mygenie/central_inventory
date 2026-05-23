@@ -149,11 +149,152 @@ These are confirmed for Slice 5 implementation planning without further owner in
 
 ---
 
-## 8. Recommended Next Agent
+## 8. Questions Already Answered From Existing Docs
 
-### `Slice 5 Implementation Planning Agent`
+| Question Topic | Answer | Source Document | Status |
+|---|---|---|---|
+| Slice 5 direction | Option A — Adj + Wastage | Q-S5-001 owner answer (23 May 2026) | `answered` |
+| Adjustment reason categories | Use defaults, configurable later | Q-S5-003 owner answer (23 May 2026) | `answered` |
+| Single vs separate forms for adj/wastage | Separate — different permissions | Conflict-003 | `answered_from_existing_docs` |
+| Who can adjust stock? | Central Store manager ONLY | Q-ADJ-002: A | `answered_from_existing_docs` |
+| Adjustment approval needed? | No — immediate with audit trail | SKIP-004: B | `answered_from_existing_docs` |
+| Adjustment increase/decrease method? | Hybrid: add-stock + dedicated decrease | Q-ADJ-001: Hybrid | `answered_from_existing_docs` |
+| Adjustment reason mandatory? | Yes — predefined categories | Q-ADJ-003: A | `answered_from_existing_docs` |
+| Who can record wastage? | Any store manager at own level | SKIP-007: A | `answered_from_existing_docs` |
+| Wastage approval needed? | No — immediate with audit trail | SKIP-005: B | `answered_from_existing_docs` |
+| Wastage affects ledger? | Immediately | SKIP-006: A | `answered_from_existing_docs` |
+| Wastage photo evidence? | Phase 2 — not now | Q-WASTE-002: D | `answered_from_existing_docs` |
+| Wastage reason categories | Use sensible defaults (beta API reference) | Q-WASTE-001: B | `answered_from_existing_docs` |
+| Edit Transfer API wait? | Attempt discovery, implement if found | OI-001 | `answered_from_existing_docs` |
+| Edit Transfer behavior? | Resets to "requested" | Q-XFER-003: A | `answered_from_existing_docs` |
+| Stock Return in Slice 5? | Deferred to Slice 6 | Q-S5-001: A (scope = adj+wastage) | `answered` |
+| Lateral Transfers in Slice 5? | Deferred to Slice 6 | Q-S5-001: A | `answered` |
+| Cost/value in Slice 5? | Excluded | SKIP-003: C, OI-009 | `answered_from_existing_docs` |
+| Confirmation dialogs? | Yes — all destructive actions | SEC-002: A | `answered_from_existing_docs` |
+| Duplicate prevention method? | Frontend button disable + backend idempotency | UX-002: A | `answered_from_existing_docs` |
+| Before/after quantity in ledger? | Show "—" if not available from API | Q-S3-010: A, BLK-R-002 | `answered_from_existing_docs` |
+| Real preprod APIs required? | Yes — verified in Section E | Q-S4-001: A, API_VERIFICATION_COMPREHENSIVE_FINAL | `answered_from_existing_docs` |
+| Seed/mock fallback for missing APIs? | Generic proxy forwards to preprod | server.py line 238 | `answered_from_existing_docs` |
+| UOM rules? | pcs=whole, kg/ltr=2 decimals | ITM-002: C | `answered_from_existing_docs` |
+| Backend terminology mapping? | Always map master/central/franchise to Central/Master/Outlet | Q-TERM-003: A, Q-TERM-004: A | `answered_from_existing_docs` |
 
-All questions answered. Owner approved Option A. Proceed directly to implementation planning.
+**All 24 potential questions resolved. Zero pending owner decisions.**
+
+---
+
+## 9. Implementation Planning Readiness Gate
+
+| # | Gate | Met? | Evidence |
+|---|------|------|----------|
+| 1 | Baseline/owner decision docs reviewed | YES | 13 documents reviewed (Section 2) |
+| 2 | Existing owner decisions extracted | YES | 18 decisions extracted (Section 3) |
+| 3 | Repeated questions removed | YES | 8/10 marked answered_from_existing_docs (Section 4) |
+| 4 | Final Slice 5 scope selected | YES | Option A — Stock Correction (Q-S5-001: A) |
+| 5 | Must-have items finalized | YES | 7 items (Section 7) |
+| 6 | Should-have items finalized | YES | 4 items (Section 7) |
+| 7 | Deferred items clearly listed | YES | Stock Return + Lateral Transfers to Slice 6 |
+| 8 | Role permissions clear | YES | Adjustment=Central only, Wastage=all roles own level |
+| 9 | Approval rules clear | YES | No approval for either (SKIP-004, SKIP-005) |
+| 10 | Required forms/dialogs known | YES | 2 new forms + confirmation dialogs + reason input |
+| 11 | Ledger/history impact clear | YES | New movement types: Adjustment Increase/Decrease, Wastage |
+| 12 | API readiness known | YES | Decrease Adjustment PASS, Record Wastage PASS, Wastage Report PASS (Section E) |
+| 13 | Owner questions answered | YES | Q-S5-001: A, Q-S5-003: B (Section 5) |
+| 14 | Risks documented | YES | Edit Transfer API unknown, add-stock payload needs discovery |
+| 15 | Clean scope for next agent | YES | All decisions locked, no ambiguity |
+
+**All 15 gates met. Ready for implementation planning.**
+
+---
+
+## 10. Implementation Planning Handover
+
+### Baseline docs reviewed: 13
+### Existing owner decisions extracted: 18
+### Owner decisions recorded this session: 2
+
+### Final Slice 5 Scope: Option A — Focused Stock Correction
+
+### Must-Have (7 items)
+
+| # | Item | Role | API | Approval |
+|---|------|------|-----|----------|
+| 1 | Stock Adjustment form | Central only | Decrease: verified. Increase: `add-stock` (needs payload discovery) | None |
+| 2 | Wastage Entry form | All roles, own level | Record Wastage: verified | None |
+| 3 | Adjustment/Wastage entries in Stock Ledger | All roles (read) | Wastage Report: verified. Adjustment entries: derive from API | N/A |
+| 4 | Wastage Report view | All roles (scoped by hierarchy) | Wastage Report: verified (multi-restaurant) | N/A |
+| 5 | Predefined reason categories | N/A (form config) | N/A | N/A |
+| 6 | Confirmation dialogs | N/A (reuse pattern) | N/A | N/A |
+| 7 | Duplicate prevention + toast | N/A (reuse hook) | N/A | N/A |
+
+### Should-Have (4 items)
+
+| # | Item | Dependency |
+|---|------|-----------|
+| 8 | Edit Transfer | API discovery required |
+| 9 | Read-only banner text update | None |
+| 10 | Ops Hub adjustment/wastage summary | Adjustment/wastage data source |
+| 11 | Source selector parent heuristic fix | None |
+
+### Explicitly Deferred to Slice 6
+
+| # | Item | Reason |
+|---|------|--------|
+| 12 | Stock Return flow | Complex UX (sender acceptance, original-sender constraint) |
+| 13 | Lateral Master-to-Master transfers | Requires operational settings UI + Central approval gate |
+
+### Questions answered from existing docs: 22
+### Owner decisions still pending: 0
+
+### API Evidence Gaps
+
+| API | Status | Gap |
+|-----|--------|-----|
+| Decrease Adjustment | verified_ready | None |
+| Record Wastage | verified_ready | None |
+| Wastage Report | verified_ready | None |
+| add-stock (increase) | implied by Q-ADJ-001 | Payload shape needs discovery via proxy |
+| Edit Transfer (update) | unknown | Endpoint + payload unknown — attempt discovery |
+
+### Role/Permission Summary
+
+| Action | Central | Master | Outlet |
+|--------|---------|--------|--------|
+| Stock Adjustment (increase/decrease) | ALLOWED | HIDDEN | HIDDEN |
+| Wastage Entry | ALLOWED (own) | ALLOWED (own) | ALLOWED (own) |
+| Wastage Report | ALL stores | Own + children | Own only |
+
+### Approval Requirement Summary
+
+| Action | Approval Required? | Source |
+|--------|-------------------|--------|
+| Stock Adjustment | NO — immediate with audit trail | SKIP-004: B |
+| Wastage Entry | NO — immediate with audit trail | SKIP-005: B |
+
+### Ledger/History Impact
+
+| Action | Ledger Entry Type | Stock Effect |
+|--------|------------------|-------------|
+| Adjustment (increase) | "Adjustment (Increase)" | Stock increased at store |
+| Adjustment (decrease) | "Adjustment (Decrease)" | Stock decreased at store |
+| Wastage | "Wastage" | Stock reduced immediately |
+
+### Known Risks
+
+| # | Risk | Severity | Mitigation |
+|---|------|----------|------------|
+| 1 | Edit Transfer API unknown | MEDIUM | Attempt discovery; defer if not found |
+| 2 | add-stock payload unknown | LOW | Discover via proxy; decrease API shape is reference |
+| 3 | Adjustment permission leakage | MEDIUM | Central-only enforcement; backend validates |
+| 4 | Ledger new movement types | MEDIUM | Extend existing derived ledger with new entry types |
+| 5 | Wastage stock going negative | LOW | Allowed per policy (SKIP-009); display clearly |
+
+### Recommended Next Agent
+
+**`Slice 5 Implementation Planning Agent`**
+
+### Can implementation planning start? **YES**
+
+All 15 readiness gates met. Zero pending owner decisions. Scope is clean and unambiguous.
 
 ---
 
