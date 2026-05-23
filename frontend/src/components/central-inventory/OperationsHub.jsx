@@ -241,6 +241,11 @@ export default function OperationsHub() {
                 Request Stock
               </Button>
             )}
+            {canDo("adjust-stock") && (
+              <Button data-testid="action-adjust-stock" variant="outline" size="sm" onClick={() => navigate("/adjustment/new")}>
+                Adjust Stock
+              </Button>
+            )}
           </div>
         </>
       )}

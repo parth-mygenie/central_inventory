@@ -11,6 +11,7 @@ import TransferDetail from "@/components/central-inventory/TransferDetail";
 import HistoryLedger from "@/components/central-inventory/HistoryLedger";
 import DirectDispatchForm from "@/components/central-inventory/DirectDispatchForm";
 import RequestStockForm from "@/components/central-inventory/RequestStockForm";
+import StockAdjustmentForm from "@/components/central-inventory/StockAdjustmentForm";
 import { PermissionDenied } from "@/components/common/StateDisplays";
 
 /**
@@ -63,6 +64,7 @@ function AppRoutes() {
         <Route path="/history" element={<HistoryLedger />} />
         <Route path="/dispatch/new" element={<DirectDispatchForm />} />
         <Route path="/request/new" element={<RequestStockForm />} />
+        <Route path="/adjustment/new" element={<StockAdjustmentForm />} />
         <Route path="/transfer/:id" element={<TransferDetail />} />
 
         {/* Catch-all → redirect to hub */}
