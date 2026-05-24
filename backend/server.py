@@ -256,11 +256,10 @@ async def proxy_v2(path: str, request: Request):
             except Exception:
                 body = None
 
-        resp = await getattr(http, method)(
-            target_url,
-            json=body if body else None,
-            headers=headers,
-        )
+        kwargs = {"headers": headers}
+        if method in ("post", "put", "patch") and body is not None:
+            kwargs["json"] = body
+        resp = await getattr(http, method)(target_url, **kwargs)
 
     try:
         content = resp.json()
