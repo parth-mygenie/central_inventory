@@ -23,6 +23,9 @@ const MOVEMENT_TYPES = {
   transfer_in: { label: "Transfer In", color: "bg-emerald-100 text-emerald-700", icon: ArrowDownLeft },
   partial_receive: { label: "Partial Receive", color: "bg-teal-100 text-teal-700", icon: ArrowDownLeft },
   reversal: { label: "Reversal (Restored)", color: "bg-amber-100 text-amber-700", icon: ArrowRightLeft },
+  adjustment_increase: { label: "Adjustment (Increase)", color: "bg-blue-100 text-blue-700", icon: ArrowDownLeft },
+  adjustment_decrease: { label: "Adjustment (Decrease)", color: "bg-orange-100 text-orange-700", icon: ArrowUpRight },
+  wastage: { label: "Wastage", color: "bg-rose-100 text-rose-700", icon: ArrowUpRight },
 };
 
 const ALL_STATUSES = Object.keys(STATUS_CONFIG);
@@ -151,6 +154,34 @@ function deriveLedgerEntries(transfers, actorRestaurantId) {
   return entries;
 }
 
+/**
+ * Convert wastage report API entries into ledger-compatible rows.
+ * Each wastage entry produces one "Out" movement.
+ */
+function deriveWastageEntries(wastageData) {
+  return wastageData.map((w, idx) => ({
+    id: `W-${idx + 1}`,
+    date: w.created_at || w.date || w.timestamp,
+    store_id: w.restaurant_id || w.store_id || null,
+    store_name: w.restaurant_name || w.store_name || "—",
+    store_type: w.restaurant_type || w.store_type || null,
+    item: w.stock_title || w.item_name || w.item || "—",
+    movement_type: "wastage",
+    direction: "out",
+    quantity: w.quantity ?? w.cal_quantity ?? "—",
+    unit: w.unit || "—",
+    before_qty: null,
+    after_qty: null,
+    reference_type: "Wastage",
+    reference_id: w.id || null,
+    counterparty_name: null,
+    counterparty_type: null,
+    reason: w.reason || w.wastage_reason || null,
+    actor_id: w.recorded_by || w.user_id || null,
+    transfer_status: null,
+  }));
+}
+
 export default function HistoryLedger() {
   const navigate = useNavigate();
   const { restaurantId, restaurantType, isTopLevel, isMiddleLevel, isBottomLevel } = useLoginContext();
@@ -164,6 +195,7 @@ export default function HistoryLedger() {
 
   // Stock Ledger state
   const [fullTransfers, setFullTransfers] = useState([]);
+  const [wastageEntries, setWastageEntries] = useState([]);
   const [ledgerLoading, setLedgerLoading] = useState(false);
   const [ledgerLoaded, setLedgerLoaded] = useState(false);
   const [ledgerError, setLedgerError] = useState(null);
@@ -196,13 +228,13 @@ export default function HistoryLedger() {
     }
   }, []);
 
-  // Fetch full transfer details for ledger derivation (lazy)
+  // Fetch full transfer details + wastage data for ledger derivation (lazy)
   const fetchLedgerData = useCallback(async () => {
     if (ledgerLoaded || ledgerLoading) return;
     setLedgerLoading(true);
     setLedgerError(null);
     try {
-      // Use historyData to get transfer IDs, then fetch full details
+      // Fetch transfer details
       const ids = historyData.map((t) => t.id).filter(Boolean);
       const results = await Promise.allSettled(
         ids.map((id) => api.getTransferDetails(id))
@@ -212,13 +244,24 @@ export default function HistoryLedger() {
         .map((r) => r.value?.data?.data || r.value?.data || {})
         .filter((t) => t.id || t.lines);
       setFullTransfers(transfers);
+
+      // Fetch wastage data (best-effort — API may fail for non-Central roles)
+      try {
+        const wastageResp = await api.getWastageReport({ restaurantIds: [restaurantId] });
+        const wData = wastageResp.data?.data || wastageResp.data || [];
+        setWastageEntries(Array.isArray(wData) ? wData : []);
+      } catch {
+        // Wastage API may fail for some roles — not a blocking error
+        setWastageEntries([]);
+      }
+
       setLedgerLoaded(true);
     } catch (err) {
       setLedgerError("Failed to load stock ledger data");
     } finally {
       setLedgerLoading(false);
     }
-  }, [historyData, ledgerLoaded, ledgerLoading]);
+  }, [historyData, ledgerLoaded, ledgerLoading, restaurantId]);
 
   useEffect(() => { fetchHistory(); }, [fetchHistory]);
 
@@ -229,11 +272,15 @@ export default function HistoryLedger() {
     }
   }, [activeTab, historyData, ledgerLoaded, fetchLedgerData]);
 
-  // Derive ledger entries
+  // Derive ledger entries (transfers + wastage merged)
   const ledgerEntries = useMemo(() => {
-    if (!ledgerLoaded || fullTransfers.length === 0) return [];
-    return deriveLedgerEntries(fullTransfers, restaurantId);
-  }, [fullTransfers, ledgerLoaded, restaurantId]);
+    if (!ledgerLoaded) return [];
+    const transferEntries = fullTransfers.length > 0 ? deriveLedgerEntries(fullTransfers, restaurantId) : [];
+    const wastageRows = wastageEntries.length > 0 ? deriveWastageEntries(wastageEntries) : [];
+    const merged = [...transferEntries, ...wastageRows];
+    merged.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+    return merged;
+  }, [fullTransfers, wastageEntries, ledgerLoaded, restaurantId]);
 
   // ── Filtered Transfer History ─────────────────────────
   const filteredHistory = useMemo(() => {
@@ -676,7 +723,7 @@ export default function HistoryLedger() {
                 </Card>
               )}
               <p className="text-[10px] text-muted-foreground mt-2">
-                Showing {filteredLedger.length} of {ledgerEntries.length} movements (derived from {fullTransfers.length} transfers)
+                Showing {filteredLedger.length} of {ledgerEntries.length} movements
               </p>
             </>
           )}
