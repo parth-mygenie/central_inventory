@@ -1,66 +1,39 @@
-# Central Inventory - PRD
+# Central Inventory — PRD
 
-> **Last Updated:** 23 May 2026
-> **Status:** Slices 1-4 complete, repo pulled and running on Emergent platform
-
-## Problem Statement
-
-Central Inventory module for MyGenie POS — multi-level inventory management across Central Store → Master Store → Outlet hierarchy with transfer workflows, stock tracking, and reporting.
+## Original Problem Statement
+Pull repo from `https://github.com/parth-mygenie/central_inventory.git` (branch `24_5_26_1`), explore the tech stack, and get it running as-is. No modifications or testing needed.
 
 ## Architecture
+- **Backend**: FastAPI (Python) — acts as a proxy to `preprod.mygenie.online` APIs + seed data enrichment
+- **Frontend**: React 19 + Tailwind CSS + shadcn/ui (Radix) + craco build tool + react-router-dom v7
+- **Database**: MongoDB via Motor (async driver) — used for status checks; main data is proxied from external API + seed data
+- **Key Pattern**: Backend proxies all API calls to MyGenie preprod servers, enriching responses with local seed data for restaurant hierarchy, inventory transfers, pending queues, and history
 
-- **Backend**: FastAPI (Python) — proxy server forwarding to `preprod.mygenie.online` APIs with seed data enrichment
-- **Frontend**: React (CRA + CRACO) with Tailwind CSS, Radix UI, shadcn/ui components
-- **Database**: MongoDB (status checks); main data proxied/seeded from Laravel backend
-- **Auth**: Proxied to MyGenie preprod auth API
-- **Source**: GitHub `parth-mygenie/central_inventory`, branch `23_5_26_work_1`
+## Tech Stack
+- Python 3.11, FastAPI 0.110, Motor 3.3, Pydantic 2.x, httpx
+- React 19, react-router-dom 7.5, axios, recharts, shadcn/ui (Radix), Tailwind 3.4, craco
+- MongoDB (local)
 
-## What's Been Implemented (Slices 1-4)
+## Core Features
+- Login (proxied auth to MyGenie vendor API)
+- Operations Hub dashboard
+- Hierarchy Summary & Store Detail views
+- Pending Queues (approval, receive, my requests)
+- Transfer Detail view with status timeline
+- History Ledger
+- Direct Dispatch, Request Stock, Stock Adjustment, Wastage Entry forms
+- Wastage Report
 
-### Slice 1 — Read-Only Foundation
-- Context Selector, Operations Hub, Hierarchy Summary, Store Detail, Pending Queues, Transfer Detail
-- Role-based Central/Master/Outlet UX via terminology adapter
-- Seed data (7 restaurants, 16 inventory items, 12 transfers)
+## User Personas (from seed data)
+- Master store owner (abhishek@kalabahia.com → My Genie, ID=1)
+- Central store owners (owner@democentral1.com → ID=781, owner@democentral2.com → ID=782)
+- Franchise owners (owner@demofranchise1-4.com → IDs 783-786)
 
-### Slice 2 — UX Polish + Enterprise Transfer Visibility
-- Ready to Dispatch tab, Transfer Detail timeline, Date range picker, Action buttons
+## What's Been Implemented
+- [2025-05-24] Cloned repo, restored .env files, installed dependencies, started services — app running as-is
 
-### Slice 3 — Read-Only History & Ledger Traceability
-- Transfer History tab, Stock Ledger tab, Status/movement/direction filters
+## Backlog
+- No modifications requested
 
-### Slice 4 — Transfer Write Flows
-- Approve/Reject/Dispatch/Receive/Cancel transfers, Direct Dispatch, Request Stock forms
-
-## Setup Completed on Emergent
-
-- Pulled from GitHub: `parth-mygenie/central_inventory` branch `23_5_26_work_1`
-- Created `.env` files for backend (MONGO_URL, DB_NAME, PREPROD APIs) and frontend (REACT_APP_BACKEND_URL)
-- Installed dependencies: `pip install -r requirements.txt`, `yarn install`
-- Backend running on port 8001, Frontend on port 3000 (supervisor-managed)
-- **Testing: 24/24 backend tests PASS, 10/10 frontend features PASS**
-
-## Key Routes
-
-| Route | Screen |
-|-------|--------|
-| `/login` | Login page |
-| `/` | Operations Hub (SCR-01) |
-| `/hierarchy` | Hierarchy Summary (SCR-02) |
-| `/store/:id` | Store Detail (SCR-03) |
-| `/queues` | Pending Queues (SCR-05) |
-| `/history` | History & Ledger |
-| `/dispatch/new` | Direct Dispatch Form |
-| `/request/new` | Request Stock Form |
-| `/transfer/:id` | Transfer Detail (SCR-09) |
-
-## Deferred / Open Items
-
-1. Edit Transfer API discovery (P1)
-2. Stock Adjustment/Wastage/Stock Return write flows (P1)
-3. Real-time WebSocket notifications (P2)
-4. Reports screen, CSV/PDF export, KPI dashboard (P2)
-5. Lateral Master-to-Master transfers (P1)
-
-## Next Action Items
-- Owner manual Slice 4 smoke test pending
-- Slice 5 candidates: Edit Transfer, Stock Adjustment, Wastage, Stock Return, Lateral transfers
+## Next Tasks
+- Awaiting user instructions for any modifications or feature additions
