@@ -138,10 +138,6 @@ export default function ContextSelector({ activeStoreId, activeStoreName, onStor
           )}
         </div>
 
-        {/* Read-only mode notice */}
-        <div className="mt-2 text-[10px] text-amber-600 bg-amber-50 px-2 py-1 rounded border border-amber-200 inline-block">
-          Phase 1 Limited Slice — Read-only mode. Write operations pending backend resolution.
-        </div>
       </CardContent>
     </Card>
   );

@@ -87,7 +87,7 @@ export default function LoginPage() {
           </form>
 
           <p className="text-[10px] text-muted-foreground text-center mt-4">
-            Phase 1 — Read-only preview. Write operations pending backend resolution.
+            Central Inventory — MyGenie
           </p>
         </CardContent>
       </Card>

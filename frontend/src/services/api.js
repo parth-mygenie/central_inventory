@@ -8,8 +8,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
  * Centralizes all API calls. Uses proxy endpoints on our backend
  * which forward to preprod.mygenie.online.
  *
- * Read APIs only for Phase 1 Slice 1.
- * Write APIs are intentionally omitted (UNIT_CONVERSION_NOT_DEFINED blocker).
+ * Read APIs (Slice 1-3) + Write APIs (Slice 4 transfers + Slice 5 adjustment/wastage).
  */
 
 const client = axios.create({

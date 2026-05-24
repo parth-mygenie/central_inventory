@@ -37,10 +37,6 @@ export default function AppHeader() {
         <div className="text-xs text-muted-foreground hidden sm:block" data-testid="header-user-email">
           {user?.email || ""}
         </div>
-        <div className="flex items-center gap-1 text-[10px] text-amber-600 bg-amber-50 px-2 py-1 rounded-md border border-amber-200">
-          <Shield className="h-3 w-3" />
-          Read-only Mode
-        </div>
         {restaurantTypeUnknown && (
           <div className="flex items-center gap-1 text-[10px] text-rose-600 bg-rose-50 px-2 py-1 rounded-md border border-rose-200">
             <Shield className="h-3 w-3" />
