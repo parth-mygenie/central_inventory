@@ -13,6 +13,7 @@ import DirectDispatchForm from "@/components/central-inventory/DirectDispatchFor
 import RequestStockForm from "@/components/central-inventory/RequestStockForm";
 import StockAdjustmentForm from "@/components/central-inventory/StockAdjustmentForm";
 import WastageEntryForm from "@/components/central-inventory/WastageEntryForm";
+import WastageReport from "@/components/central-inventory/WastageReport";
 import { PermissionDenied } from "@/components/common/StateDisplays";
 
 /**
@@ -67,6 +68,7 @@ function AppRoutes() {
         <Route path="/request/new" element={<RequestStockForm />} />
         <Route path="/adjustment/new" element={<StockAdjustmentForm />} />
         <Route path="/wastage/new" element={<WastageEntryForm />} />
+        <Route path="/wastage/report" element={<WastageReport />} />
         <Route path="/transfer/:id" element={<TransferDetail />} />
 
         {/* Catch-all → redirect to hub */}

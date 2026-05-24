@@ -251,6 +251,11 @@ export default function OperationsHub() {
                 Record Wastage
               </Button>
             )}
+            {canDo("record-wastage") && (
+              <Button data-testid="action-wastage-report" variant="ghost" size="sm" onClick={() => navigate("/wastage/report")}>
+                Wastage Report
+              </Button>
+            )}
           </div>
         </>
       )}
