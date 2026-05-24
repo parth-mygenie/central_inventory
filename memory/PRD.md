@@ -25,15 +25,20 @@ Pull repo from `https://github.com/parth-mygenie/central_inventory.git` (branch 
 - Wastage Report
 
 ## User Personas (from seed data)
-- Master store owner (abhishek@kalabahia.com → My Genie, ID=1)
-- Central store owners (owner@democentral1.com → ID=781, owner@democentral2.com → ID=782)
-- Franchise owners (owner@demofranchise1-4.com → IDs 783-786)
+- Central Store users (abhishek@kalabahia.com, killua@zoldyck.com → My Genie, ID=1)
+- Master Store owners (owner@democentral1.com → ID=781, owner@democentral2.com → ID=782)
+- Outlet owners (owner@demofranchise1-4.com → IDs 783-786)
 
 ## What's Been Implemented
 - [2025-05-24] Cloned repo, restored .env files, installed dependencies, started services — app running as-is
+- [2025-05-24] Login context collision bug investigation completed (root cause: killua@zoldyck.com missing from EMAIL_RESTAURANT_MAP + frontend hard default to Central Store)
+- [2025-05-24] Bug fix: P0 added killua@zoldyck.com to seed_data.EMAIL_RESTAURANT_MAP, P1 hardened frontend fallback (null instead of "master" default)
 
 ## Backlog
-- No modifications requested
+- P2: Persist _token_restaurant_map to MongoDB (currently in-memory, volatile on server restart)
+- P2: Change _get_actor_restaurant() default from restaurant_id=1 to 401 error
 
 ## Next Tasks
-- Awaiting user instructions for any modifications or feature additions
+- QA validation of login context collision fix
+- Slice 5 owner smoke test
+- Slice 5 closure documentation

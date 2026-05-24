@@ -30,12 +30,11 @@ export function LoginContextProvider({ children }) {
   const [error, setError] = useState(null);
 
   // Derived values
-  // When restaurant_type_flag is not available (regular employee login),
-  // default to "master" (Central Store) for demo/dev purposes.
-  // HANDOVER NOTE: Proper test credentials with restaurant_type_flag are required
-  // for full login context derivation.
+  // restaurant_type_flag is required for correct role/permission derivation.
+  // If missing, restaurantType stays null — privileged actions are blocked.
+  // The restaurantTypeUnknown flag surfaces a diagnostic warning in the header.
   const rawRestaurantType = user?.restaurant_type_flag || null;
-  const restaurantType = rawRestaurantType || (user ? "master" : null);
+  const restaurantType = rawRestaurantType || null;
   const restaurantTypeUnknown = !rawRestaurantType && !!user;
   const restaurantId = user?.restaurant_id || null;
   const hierarchyLevel = restaurantType ? HIERARCHY_LEVEL[restaurantType] : null;

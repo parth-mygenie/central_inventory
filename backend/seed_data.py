@@ -36,6 +36,7 @@ RESTAURANTS = {
 # Login email → restaurant mapping
 EMAIL_RESTAURANT_MAP = {
     "abhishek@kalabahia.com":      1,
+    "killua@zoldyck.com":          1,
     "owner@democentral1.com":      781,
     "owner@democentral2.com":      782,
     "owner@demofranchise1.com":    783,
