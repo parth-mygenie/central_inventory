@@ -7,7 +7,7 @@ Pull repo from `https://github.com/parth-mygenie/central_inventory.git` (branch 
 - **Backend**: FastAPI (Python) — acts as a proxy to `preprod.mygenie.online` APIs + seed data enrichment
 - **Frontend**: React 19 + Tailwind CSS + shadcn/ui (Radix) + craco build tool + react-router-dom v7
 - **Database**: MongoDB via Motor (async driver) — used for status checks; main data is proxied from external API + seed data
-- **Key Pattern**: Backend proxies all API calls to MyGenie preprod servers, enriching responses with local seed data for restaurant hierarchy, inventory transfers, pending queues, and history
+- **Key Pattern**: Backend proxies auth to MyGenie POS API (token only). ALL restaurant context (type, ID, name, hierarchy, transfers, queues, history, stock) sourced from local seed_data.py. POS API is NOT the source of truth for restaurant context — this is by design for UX prototyping phase.
 
 ## Tech Stack
 - Python 3.11, FastAPI 0.110, Motor 3.3, Pydantic 2.x, httpx
@@ -33,8 +33,17 @@ Pull repo from `https://github.com/parth-mygenie/central_inventory.git` (branch 
 - [2025-05-24] Cloned repo, restored .env files, installed dependencies, started services — app running as-is
 - [2025-05-24] Login context collision bug investigation completed (root cause: killua@zoldyck.com missing from EMAIL_RESTAURANT_MAP + frontend hard default to Central Store)
 - [2025-05-24] Bug fix: P0 added killua@zoldyck.com to seed_data.EMAIL_RESTAURANT_MAP, P1 hardened frontend fallback (null instead of "master" default)
+- [2025-05-24] POS API Source-of-Truth Verification: CONFIRMED — POS API returns NO restaurant context fields. ALL context comes from seed_data.py. Acceptable for UX prototyping; blocks production.
+
+## Architecture Notes
+- POS API (`preprod.mygenie.online`) login endpoint returns: token, permissions, role_names, login_type — but NOT restaurant_type_flag, restaurant_id, or restaurant_name
+- EMAIL_RESTAURANT_MAP in seed_data.py is the SOLE source of user→restaurant mapping
+- All inventory, transfer, queue, history data is from seed_data.py (static/random)
+- Write operations (dispatch, approve, etc.) pass through to POS API
 
 ## Backlog
+- P0-PRODUCTION: Migrate restaurant context from seed_data to POS API (blocks production deployment)
+- P0-PRODUCTION: Migrate inventory/transfer/queue/history data to POS API (blocks production deployment)
 - P2: Persist _token_restaurant_map to MongoDB (currently in-memory, volatile on server restart)
 - P2: Change _get_actor_restaurant() default from restaurant_id=1 to 401 error
 
