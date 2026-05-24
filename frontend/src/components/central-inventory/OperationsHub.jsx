@@ -246,6 +246,11 @@ export default function OperationsHub() {
                 Adjust Stock
               </Button>
             )}
+            {canDo("record-wastage") && (
+              <Button data-testid="action-record-wastage" variant="outline" size="sm" onClick={() => navigate("/wastage/new")}>
+                Record Wastage
+              </Button>
+            )}
           </div>
         </>
       )}
