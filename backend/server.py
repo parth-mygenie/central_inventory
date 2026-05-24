@@ -24,11 +24,10 @@ db = client[os.environ['DB_NAME']]
 PREPROD_V1 = os.environ.get('PREPROD_API_BASE_V1', 'https://preprod.mygenie.online/api/v1')
 PREPROD_V2 = os.environ.get('PREPROD_API_BASE_V2', 'https://preprod.mygenie.online/api/v2/vendoremployee')
 
+SEED_FALLBACK_ENABLED = os.environ.get('SEED_FALLBACK_ENABLED', 'false').lower() == 'true'
+
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
-
-# ── In-memory session: email → restaurant_id mapping ──────────────
-_token_restaurant_map = {}
 
 class StatusCheck(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -61,7 +60,7 @@ async def get_status_checks():
     return status_checks
 
 
-# ── Proxy: Auth (V1) — enriched with restaurant_type_flag ─────────
+# ── Proxy: Auth (V1) — enriched with POS API profile context ──────
 @api_router.post("/proxy/auth/login")
 async def proxy_auth_login(request: Request):
     body = await request.json()
@@ -76,29 +75,92 @@ async def proxy_auth_login(request: Request):
 
     data = resp.json()
 
-    # Enrich: if login succeeded but restaurant_type_flag is missing, derive from seed data
     token = data.get("token") or (data.get("data", {}) or {}).get("token")
-    if token and email in seed_data.EMAIL_RESTAURANT_MAP:
-        rid = seed_data.EMAIL_RESTAURANT_MAP[email]
-        rest = seed_data.RESTAURANTS.get(rid, {})
-        # Store token→restaurant mapping for later proxy calls
-        _token_restaurant_map[token] = rid
+    if not token:
+        return JSONResponse(content=data, status_code=resp.status_code)
 
-        if not data.get("restaurant_type_flag"):
-            data["restaurant_type_flag"] = rest.get("restaurant_type_flag")
-        if not data.get("restaurant_id"):
-            data["restaurant_id"] = rid
-        if not data.get("restaurant_name"):
-            data["restaurant_name"] = rest.get("name")
+    # ── Phase 1: Fetch restaurant context from POS API profile ────
+    pos_context_resolved = False
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as http:
+            profile_resp = await http.get(
+                f"{PREPROD_V1}/vendoremployee/profile",
+                headers={
+                    "Accept": "application/json",
+                    "Authorization": f"Bearer {token}",
+                },
+            )
+        if profile_resp.status_code == 200:
+            profile_data = profile_resp.json()
+            restaurants = profile_data.get("restaurants", [])
+            if restaurants and isinstance(restaurants, list) and len(restaurants) > 0:
+                rest = restaurants[0]
+                rid = rest.get("id")
+                rname = rest.get("name")
+                rtype = rest.get("restaurant_type_flag")
+                parent_rid = rest.get("parent_restaurant_id")
+
+                if rid and rtype:
+                    data["restaurant_id"] = rid
+                    data["restaurant_name"] = rname
+                    data["restaurant_type_flag"] = rtype
+                    data["parent_restaurant_id"] = parent_rid
+
+                    await db.token_sessions.update_one(
+                        {"token": token},
+                        {"$set": {
+                            "token": token,
+                            "restaurant_id": rid,
+                            "restaurant_type_flag": rtype,
+                            "created_at": datetime.now(timezone.utc).isoformat(),
+                        }},
+                        upsert=True,
+                    )
+                    pos_context_resolved = True
+                    logger.info(f"POS profile context resolved for {email}: rid={rid}, type={rtype}")
+    except Exception as e:
+        logger.warning(f"POS profile call failed for {email}: {e}")
+
+    # ── Seed fallback: only if POS profile did not resolve AND env flag is set ──
+    if not pos_context_resolved and SEED_FALLBACK_ENABLED:
+        if email in seed_data.EMAIL_RESTAURANT_MAP:
+            rid = seed_data.EMAIL_RESTAURANT_MAP[email]
+            rest = seed_data.RESTAURANTS.get(rid, {})
+            if not data.get("restaurant_type_flag"):
+                data["restaurant_type_flag"] = rest.get("restaurant_type_flag")
+            if not data.get("restaurant_id"):
+                data["restaurant_id"] = rid
+            if not data.get("restaurant_name"):
+                data["restaurant_name"] = rest.get("name")
+
+            await db.token_sessions.update_one(
+                {"token": token},
+                {"$set": {
+                    "token": token,
+                    "restaurant_id": rid,
+                    "restaurant_type_flag": rest.get("restaurant_type_flag"),
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                }},
+                upsert=True,
+            )
+            logger.info(f"Seed fallback context used for {email}: rid={rid}")
 
     return JSONResponse(content=data, status_code=resp.status_code)
 
 
-def _get_actor_restaurant(request: Request):
-    """Resolve restaurant_id from token."""
+async def _get_actor_restaurant(request: Request):
+    """Resolve restaurant_id from token via MongoDB token_sessions."""
     auth = request.headers.get("Authorization", "")
     token = auth.replace("Bearer ", "").strip() if auth.startswith("Bearer") else ""
-    return _token_restaurant_map.get(token, 1)
+    if not token:
+        return 1  # safe default for unauthenticated seed endpoints
+
+    session = await db.token_sessions.find_one({"token": token}, {"_id": 0})
+    if session and session.get("restaurant_id"):
+        return session["restaurant_id"]
+
+    # Fallback: return 1 for seed-based endpoints that still need an actor_id
+    return 1
 
 
 # ── Seed-enriched endpoints ───────────────────────────────────────
@@ -106,7 +168,7 @@ def _get_actor_restaurant(request: Request):
 @api_router.post("/proxy/v2/inventory-transfer/hierarchy-summary")
 async def proxy_hierarchy_summary(request: Request):
     body = await request.json()
-    actor_id = _get_actor_restaurant(request)
+    actor_id = await _get_actor_restaurant(request)
     store_type = body.get("store_type")
 
     # Try real API first
@@ -154,7 +216,7 @@ async def proxy_hierarchy_summary(request: Request):
 @api_router.post("/proxy/v2/inventory-transfer/hierarchy-detail")
 async def proxy_hierarchy_detail(request: Request):
     body = await request.json()
-    actor_id = _get_actor_restaurant(request)
+    actor_id = await _get_actor_restaurant(request)
     store_id = body.get("store_restaurant_id")
     sel_stock = body.get("selected_stock_title")
     sel_unit = body.get("selected_unit_id")
@@ -165,7 +227,7 @@ async def proxy_hierarchy_detail(request: Request):
 
 @api_router.post("/proxy/v2/inventory-transfer/pending-queues")
 async def proxy_pending_queues(request: Request):
-    actor_id = _get_actor_restaurant(request)
+    actor_id = await _get_actor_restaurant(request)
     queues = seed_data.get_pending_queues(actor_id)
 
     # Serialize — strip heavy fields for queue list view
@@ -213,7 +275,7 @@ async def proxy_transfer_detail(transfer_id: int, request: Request):
 
 @api_router.post("/proxy/v2/inventory-transfer/history")
 async def proxy_transfer_history(request: Request):
-    actor_id = _get_actor_restaurant(request)
+    actor_id = await _get_actor_restaurant(request)
     history = seed_data.get_transfer_history(actor_id)
 
     items = []

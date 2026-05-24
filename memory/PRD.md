@@ -34,11 +34,14 @@ Pull repo from `https://github.com/parth-mygenie/central_inventory.git` (branch 
 - [2025-05-24] Login context collision bug investigation completed (root cause: killua@zoldyck.com missing from EMAIL_RESTAURANT_MAP + frontend hard default to Central Store)
 - [2025-05-24] Bug fix: P0 added killua@zoldyck.com to seed_data.EMAIL_RESTAURANT_MAP, P1 hardened frontend fallback (null instead of "master" default)
 - [2025-05-24] POS API Source-of-Truth Verification: CONFIRMED — POS API returns NO restaurant context fields. ALL context comes from seed_data.py. Acceptable for UX prototyping; blocks production.
+- [2025-05-24] POS API Context Migration Phase 1: COMPLETE — Login context now sourced from POS API `GET /api/v1/vendoremployee/profile → restaurants[0]`. Seed fallback gated behind `SEED_FALLBACK_ENABLED` env flag (default: false). Token→restaurant_id persisted in MongoDB. Zero frontend changes.
 
 ## Architecture Notes
 - POS API (`preprod.mygenie.online`) login endpoint returns: token, permissions, role_names, login_type — but NOT restaurant_type_flag, restaurant_id, or restaurant_name
-- EMAIL_RESTAURANT_MAP in seed_data.py is the SOLE source of user→restaurant mapping
-- All inventory, transfer, queue, history data is from seed_data.py (static/random)
+- **Phase 1 COMPLETE:** Proxy now calls `GET /api/v1/vendoremployee/profile` after login to get `restaurants[0]` with all context fields
+- EMAIL_RESTAURANT_MAP in seed_data.py is now ONLY used as demo/dev fallback (gated by `SEED_FALLBACK_ENABLED` env flag, default false)
+- Token→restaurant_id persisted in MongoDB `token_sessions` collection (survives server restart)
+- All inventory, transfer, queue, history data endpoints still use seed_data.py (Phase 2/3 scope)
 - Write operations (dispatch, approve, etc.) pass through to POS API
 
 ## Backlog
