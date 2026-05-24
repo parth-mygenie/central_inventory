@@ -47,7 +47,14 @@ Pull repo from `https://github.com/parth-mygenie/central_inventory.git` (branch 
 - P2: Persist _token_restaurant_map to MongoDB (currently in-memory, volatile on server restart)
 - P2: Change _get_actor_restaurant() default from restaurant_id=1 to 401 error
 
+## POS API Discovery (24 May 2026)
+- `GET /api/v1/vendoremployee/profile` returns `restaurants[]` with: id, name, restaurant_type_flag, parent_restaurant_id — ALL required context fields
+- `GET /api/v2/vendoremployee/franchise/list` returns parent/children hierarchy
+- Verified for all 4 user types via runtime API probes
+- Migration plan ready: Phase 1 (login context) has ZERO blockers
+
 ## Next Tasks
+- **P0: Phase 1 POS API Context Migration** — Replace EMAIL_RESTAURANT_MAP with POS API profile call in server.py
 - QA validation of login context collision fix
 - Slice 5 owner smoke test
 - Slice 5 closure documentation
