@@ -460,3 +460,117 @@ Each event includes actor and line snapshot (`meta_json.lines`), plus resolution
   Current implementation-only check for multi-hop source traceability, mixing behavior, and accountability limits.
 - `AI/test/batch_expiry_transfer_full_test_cases.md`
   Full regression checklist with curl flow + SQL seed/assertion queries for Water/Butter and expiry/FEFO validation.
+
+
+
+---
+
+## Addendum: Request Stock 3-Step Flow — Verified API Contract (25 May 2026)
+
+> Source: `memory/central_inventory/REQUEST_STOCK_E2E_TEST_RESULTS.md`
+
+### New Endpoints (registered 25 May 2026)
+
+| Endpoint | Method | Actor | Body | Status |
+|----------|--------|-------|------|--------|
+| `POST /inventory-transfer/request-sources` | POST | franchise or central only | `{}` | **WORKING** |
+| `POST /inventory-transfer/request-catalog` | POST | franchise or central only | `{"source_restaurant_id": <int>}` | **WORKING** |
+
+These were newly registered in `routes/api/v2/api.php`. Controller: `InventoryTransferApiController@requestSources` / `@requestCatalog`.
+
+### Canonical Request Stock UI Flow (3 steps + submit)
+
+```
+Step 1: POST /inventory-transfer/request-sources          → sources[] with can_submit_request
+Step 2: POST /inventory-transfer/request-catalog           → items[] from SOURCE store (source_inventory_master_id)
+Step 3: POST /inventory-transfer/request                   → create transfer (type=request, status=requested)
+Track:  POST /inventory-transfer/pending-queues            → my_requests (requester) / approval_pending (parent)
+```
+
+**Do NOT use `GET /inventory/get-inventory-master` for source catalog.** That returns the LOGGED-IN store's inventory, not the source store's.
+
+### request-sources contract
+
+**Who may call:** `restaurant_type_flag` = `franchise` or `central` only. Master → 403 `UNAUTHORIZED_ACTION`.
+
+**Response fields per source:**
+- `restaurant_id` — source store id
+- `name` — source store name
+- `restaurant_type` — master / central / franchise
+- `relation` — `direct_parent` | `upstream_master` | `sibling_central`
+- `is_direct_parent` — boolean, true for default parent
+- `can_submit_request` — boolean, **gates submit permission** (reflects `allow_cross_central_franchise_dispatch` for sibling)
+
+### request-catalog contract
+
+**Body:** `{"source_restaurant_id": <int>}` — id from request-sources.
+
+**Response fields per item:**
+- `source_inventory_master_id` — **REQUIRED for submit payload** (id at SOURCE store, not requester)
+- `stock_title`, `unit`, `unit_id`, `display_unit` — display
+- `available_display_qty`, `available_cal_quantity` — max hint / UX
+- `is_mapped_to_child` — push-map exists between child and this source SKU
+
+**Note:** Catalog browse is allowed even for non-submittable sources (200 OK). Submit permission is checked at `/request` endpoint only.
+
+`data.source_restaurant.can_submit_request` repeats whether submit to this source is allowed.
+
+**Error:** `REQUEST_SOURCE_NOT_ALLOWED` if `source_restaurant_id` not in allowed list.
+
+### request (submit) contract update
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| `items` | yes | Min 1 line |
+| `from_restaurant_id` | **no** | Defaults to `requester.parent_restaurant_id`. Set explicitly for non-default source. |
+| `items[].source_inventory_master_id` | **preferred** | Must exist at SOURCE store (from request-catalog) |
+| `items[].stock_title` + `items[].unit_id` | fallback | Legacy path if no master id |
+| `items[].quantity` | yes | In `unit` |
+| `items[].unit` | recommended | Display unit string |
+| `items[].source_selector` | **yes** | Same contract as dispatch |
+
+**source_selector for requests:**
+- Preferred: `{"mode": "segment_id", "segment_id": <int>}` — segment must belong to SOURCE restaurant
+- Legacy: `{"mode": "filter_bucket", "bucket": "without_batch_and_expiry", "batch_state": "null", "expiry_state": "null"}`
+- For requests, `filter_bucket` is the safe default since child cannot call source-options on parent's segments
+
+### Verified error codes for /request
+
+| Code | HTTP | Trigger |
+|------|------|---------|
+| `INVALID_HIERARCHY` | 403 | Source not allowed (sibling with cross flag off) |
+| `SOURCE_STOCK_NOT_FOUND` | 422 | `source_inventory_master_id` doesn't exist at source store |
+| `VALIDATION_FAILED` | 422 | Missing `source_selector` or items |
+| `UNAUTHORIZED_ACTION` | 403 | Master actor, or wrong token type |
+| `INVALID_SOURCE_SELECTOR` | 422 | Selector mode/bucket mismatch |
+
+### source-options ownership rule
+
+`POST /source-options` requires `from_restaurant_id == auth token restaurant_id`.
+- C782 token + from_restaurant_id=782 → OK (owner)
+- F786 token + from_restaurant_id=782 → `UNAUTHORIZED_ACTION` (child cannot query parent segments)
+- For request flow, skip segment picker and use `filter_bucket` or catalog `available_display_qty` as max hint.
+
+### Operational setting: `allow_cross_central_franchise_dispatch`
+
+**Default:** `false`
+**Effect:** Gates BOTH request-submit AND direct-dispatch for cross-branch edges.
+
+| With flag OFF | With flag ON |
+|---------------|-------------|
+| Sibling central in request-sources shows `can_submit_request: false` | Shows `can_submit_request: true` |
+| Submit to sibling → INVALID_HIERARCHY 403 | Submit succeeds |
+| Central dispatch to non-own franchise → INVALID_HIERARCHY | Dispatch succeeds |
+
+**Enable:** `POST /operational-settings/update` with `{"restaurant_id": 1, "settings": {"allow_cross_central_franchise_dispatch": true}}`
+
+### Inventory master IDs vary per store
+
+Each store has its OWN `inventory_master` ids. Using the requester's id in a request to a different source → `SOURCE_STOCK_NOT_FOUND`.
+
+| Store | Cooking Oil | maida | patri | red meat |
+|-------|-------------|-------|-------|----------|
+| Master(1) | 16980 | 16981 | 16983 | 16982 |
+| Central1(781) | 16984 | 16985 | 16986 | 16987 |
+| Central2(782) | 16988 | 16989 | 16990 | 16991 |
+| Franchise4(786) | 17004 | 17005 | 17006 | 17007 |

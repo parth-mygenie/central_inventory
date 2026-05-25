@@ -491,3 +491,279 @@ curl --location "${BASE_V2}/franchise/push/${FRANCHISE_RESTAURANT_ID}" \
   --header "Accept: application/json" \
   --header "Content-Type: application/json" \
   --data-raw '{"push_food_bundle": true}'
+
+
+
+# =============================
+# ADDENDUM: Request Stock 3-Step Flow (25 May 2026)
+# Verified against real POS APIs — all 24/24 tests PASS
+# Source: memory/central_inventory/REQUEST_STOCK_E2E_TEST_RESULTS.md
+# =============================
+
+# --- Tokens (replace with fresh tokens from login) ---
+# MASTER_TOKEN  = abhishek@kalabahia.com / Qplazm@10  → rid=1, type=master
+# CENTRAL1_TOKEN = owner@democentral1.com / Qplazm@10 → rid=781, type=central
+# CENTRAL2_TOKEN = owner@democentral2.com / Qplazm@10 → rid=782, type=central
+# FRANCHISE1_TOKEN = owner@demofranchise1.com / Qplazm@10 → rid=783, type=franchise
+# FRANCHISE4_TOKEN = owner@demofranchise4.com / Qplazm@10 → rid=786, type=franchise
+
+# =============================
+# Step 1: request-sources (who can this store request from?)
+# =============================
+
+echo
+echo "=== Request Sources — Franchise 786 ==="
+curl --location "${BASE_V2}/inventory-transfer/request-sources" \
+  --header "Authorization: Bearer ${FRANCHISE_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{}'
+# Expected: 3 sources — C782 (direct_parent, submit=true), Master(1) (upstream_master, submit=true), C781 (sibling_central, submit=false unless allow_cross_central_franchise_dispatch=true)
+
+echo
+echo "=== Request Sources — Central 781 ==="
+curl --location "${BASE_V2}/inventory-transfer/request-sources" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{}'
+# Expected: 2 sources — Master(1) (direct_parent, submit=true), C782 (sibling_central, submit=false by default)
+
+echo
+echo "=== Request Sources — Master (should FAIL 403) ==="
+curl --location "${BASE_V2}/inventory-transfer/request-sources" \
+  --header "Authorization: Bearer ${MASTER_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{}'
+# Expected: 403 UNAUTHORIZED_ACTION — master cannot use request flow
+
+# =============================
+# Step 2: request-catalog (source store SKUs)
+# =============================
+
+echo
+echo "=== Request Catalog — F786 browsing C782 (direct parent) ==="
+curl --location "${BASE_V2}/inventory-transfer/request-catalog" \
+  --header "Authorization: Bearer ${FRANCHISE_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{"source_restaurant_id": 782}'
+# Expected: items[] with source_inventory_master_id (16988, 16989, 16990, 16991), available_display_qty, is_mapped_to_child
+
+echo
+echo "=== Request Catalog — F786 browsing Master(1) ==="
+curl --location "${BASE_V2}/inventory-transfer/request-catalog" \
+  --header "Authorization: Bearer ${FRANCHISE_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{"source_restaurant_id": 1}'
+# Expected: items[] from master (16980, 16981, 16982, 16983)
+
+echo
+echo "=== Request Catalog — C781 browsing Master(1) ==="
+curl --location "${BASE_V2}/inventory-transfer/request-catalog" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{"source_restaurant_id": 1}'
+
+# =============================
+# Step 3: Submit request
+# =============================
+
+echo
+echo "=== Submit Request — F786 → default parent C782 (filter_bucket) ==="
+curl --location "${BASE_V2}/inventory-transfer/request" \
+  --header "Authorization: Bearer ${FRANCHISE_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "items": [
+      {
+        "source_inventory_master_id": 16989,
+        "stock_title": "maida",
+        "quantity": 0.5,
+        "unit": "kg",
+        "source_selector": {
+          "mode": "filter_bucket",
+          "bucket": "without_batch_and_expiry",
+          "batch_state": "null",
+          "expiry_state": "null"
+        }
+      }
+    ]
+  }'
+# Expected: status=true, transfer_id, type=request, status=requested
+
+echo
+echo "=== Submit Request — F786 → explicit from_restaurant_id=782 ==="
+curl --location "${BASE_V2}/inventory-transfer/request" \
+  --header "Authorization: Bearer ${FRANCHISE_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "from_restaurant_id": 782,
+    "items": [
+      {
+        "source_inventory_master_id": 16989,
+        "stock_title": "maida",
+        "quantity": 0.3,
+        "unit": "kg",
+        "source_selector": {
+          "mode": "filter_bucket",
+          "bucket": "without_batch_and_expiry",
+          "batch_state": "null",
+          "expiry_state": "null"
+        }
+      }
+    ]
+  }'
+# Expected: status=true, transfer_id
+
+echo
+echo "=== Submit Request — F786 → upstream Master(1) with segment_id ==="
+# First get a segment from master: POST source-options with MASTER token
+# (child cannot call source-options on parent — UNAUTHORIZED_ACTION)
+MASTER_SEGMENT_ID="REPLACE_WITH_SEGMENT_FROM_MASTER_SOURCE_OPTIONS"
+curl --location "${BASE_V2}/inventory-transfer/request" \
+  --header "Authorization: Bearer ${FRANCHISE_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw "{
+    \"from_restaurant_id\": 1,
+    \"items\": [
+      {
+        \"source_inventory_master_id\": 16983,
+        \"stock_title\": \"patri\",
+        \"quantity\": 0.1,
+        \"unit\": \"kg\",
+        \"source_selector\": {
+          \"mode\": \"segment_id\",
+          \"segment_id\": ${MASTER_SEGMENT_ID}
+        }
+      }
+    ]
+  }"
+# Expected: status=true, transfer_id (segment_id must belong to source/master restaurant)
+
+echo
+echo "=== Submit Request — F786 → sibling C781 (expect INVALID_HIERARCHY if flag off) ==="
+curl --location "${BASE_V2}/inventory-transfer/request" \
+  --header "Authorization: Bearer ${FRANCHISE_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "from_restaurant_id": 781,
+    "items": [
+      {
+        "source_inventory_master_id": 16985,
+        "stock_title": "maida",
+        "quantity": 0.1,
+        "unit": "kg",
+        "source_selector": {
+          "mode": "filter_bucket",
+          "bucket": "without_batch_and_expiry",
+          "batch_state": "null",
+          "expiry_state": "null"
+        }
+      }
+    ]
+  }'
+# Expected: 403 INVALID_HIERARCHY if allow_cross_central_franchise_dispatch=false
+# Expected: 200 success if allow_cross_central_franchise_dispatch=true
+
+echo
+echo "=== Submit Request — C781 → Master(1) (central requesting parent) ==="
+curl --location "${BASE_V2}/inventory-transfer/request" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw "{
+    \"items\": [
+      {
+        \"source_inventory_master_id\": 16983,
+        \"stock_title\": \"patri\",
+        \"quantity\": 0.1,
+        \"unit\": \"kg\",
+        \"source_selector\": {
+          \"mode\": \"segment_id\",
+          \"segment_id\": ${MASTER_SEGMENT_ID}
+        }
+      }
+    ]
+  }"
+# Expected: status=true, transfer_id
+
+# =============================
+# Error cases
+# =============================
+
+echo
+echo "=== Error: wrong source_inventory_master_id ==="
+curl --location "${BASE_V2}/inventory-transfer/request" \
+  --header "Authorization: Bearer ${FRANCHISE_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "items": [{"source_inventory_master_id": 99999, "stock_title": "ghost", "quantity": 1, "unit": "kg",
+      "source_selector": {"mode": "filter_bucket", "bucket": "without_batch_and_expiry", "batch_state": "null", "expiry_state": "null"}}]
+  }'
+# Expected: 422 SOURCE_STOCK_NOT_FOUND
+
+echo
+echo "=== Error: missing source_selector ==="
+curl --location "${BASE_V2}/inventory-transfer/request" \
+  --header "Authorization: Bearer ${FRANCHISE_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{"items": [{"source_inventory_master_id": 16989, "quantity": 0.5, "unit": "kg"}]}'
+# Expected: 422 VALIDATION_FAILED
+
+# =============================
+# Track: pending-queues after submit
+# =============================
+
+echo
+echo "=== Pending Queues — Franchise 786 (my_requests) ==="
+curl --location "${BASE_V2}/inventory-transfer/pending-queues" \
+  --header "Authorization: Bearer ${FRANCHISE_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{"limit": 50}'
+# Check data.my_requests for submitted requests
+
+echo
+echo "=== Pending Queues — Central 782 (approval_pending) ==="
+curl --location "${BASE_V2}/inventory-transfer/pending-queues" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{"limit": 50}'
+# Check data.approval_pending for requests from F786
+
+# =============================
+# Cross-branch flag management
+# =============================
+
+echo
+echo "=== Read operational settings ==="
+curl --location "${BASE_V2}/inventory-transfer/operational-settings/get" \
+  --header "Authorization: Bearer ${MASTER_TOKEN}" \
+  --header "Content-Type: application/json" \
+  --data-raw '{"restaurant_id": 1}'
+# Check resolved_settings.allow_cross_central_franchise_dispatch
+
+echo
+echo "=== Enable cross-branch dispatch/request ==="
+curl --location "${BASE_V2}/inventory-transfer/operational-settings/update" \
+  --header "Authorization: Bearer ${MASTER_TOKEN}" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "restaurant_id": 1,
+    "settings": {
+      "allow_cross_central_franchise_dispatch": true
+    }
+  }'
+# After enabling: sibling central shows can_submit_request=true in request-sources
+# and both cross-request and cross-dispatch succeed
