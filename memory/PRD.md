@@ -1,52 +1,58 @@
 # Central Inventory - PRD
 
 ## Original Problem Statement
-Central Inventory app — frontend-to-real-POS-API contract stabilization after seed shutdown. All flows now use real POS APIs only via backend proxy. Multiple UI/API failures were diagnosed and fixed.
+Central Inventory app — full operational validation after seed shutdown and API contract stabilization.
 
-## Architecture & Tech Stack
-- **Frontend**: React 19 with CRACO, Tailwind CSS, Radix UI components
-- **Backend**: FastAPI (Python) — proxy to POS API at preprod.mygenie.online
-- **Database**: MongoDB (token sessions only)
-- **External API**: V1 auth, V2 all inventory/transfer operations
+## Architecture
+- **Frontend**: React 19 + CRACO + Tailwind + Radix UI
+- **Backend**: FastAPI proxy → preprod.mygenie.online POS API
+- **Auth**: POS V1 login + profile enrichment → token in MongoDB
 
 ## What's Been Implemented
 
-### Session 1 (25 May 2026) — Repo Setup
-- Cloned repo from branch `25_5_26_AJ`, set up environment, services running
+### Session 1 — Repo Setup (25 May)
+- Cloned branch `25_5_26_AJ`, services running
 
-### Session 2 (25 May 2026) — Full UI/API Diagnosis
-- 14 distinct integration failures identified across 11 screens
-- Full diagnosis report created
+### Session 2 — Full Diagnosis (25 May)
+- 14 integration failures identified across 11 screens
 
-### Session 3 (25 May 2026) — Contract Stabilization (10 fixes)
-All fixes implemented in shared API service layer (`api.js`) + minimal component changes:
+### Session 3 — Contract Stabilization (25 May)
+- 10 API contract fixes in shared service layer
+- 11/11 backend API tests passing
 
-| # | Fix | Type | Files Changed |
-|---|-----|------|---------------|
-| 1 | `hierarchy-summary` mandatory `store_type` | Missing payload field | api.js, DirectDispatchForm, RequestStockForm |
-| 2 | `add-stock` route: `/inventory/add-stock/{id}` (ID in URL) | Wrong path | api.js |
-| 3 | `record-wastage` route: `/inventory-transfer/record-wastage` | Wrong path | api.js |
-| 4 | `source-options` fields: `source_inventory_master_id` + `from_restaurant_id` | Field name mismatch | api.js |
-| 5 | `decrease-adjustment` missing `restaurant_id` | Missing payload field | api.js, StockAdjustmentForm |
-| 6 | Transfer detail response: `{transfer, lines}` → flat object | Response unwrap | api.js (normalizer) |
-| 7 | `resolution_meta` JSON string → parsed object | Serialization | api.js (normalizer) |
-| 8 | hierarchy-detail stock: `total_quantity`→`cal_quantity` | Field mapping | api.js (normalizer) |
-| 9 | Wastage report: object→`wastage_records` array | Response unwrap | api.js (normalizer) |
-| 10 | Wastage record fields: `waste_reason`, `wastage_quantity`, `waste_date` | Field mapping | WastageReport, HistoryLedger |
+### Session 4 — Full E2E Operational Testing (25 May)
+- **18/18 frontend E2E tests PASSED**
+- Fixed auth token race condition (eager localStorage restore in api.js)
+- All screens tested with real POS API data
 
-**Testing: 11/11 backend API tests passed (100%). Frontend compiles clean.**
+## E2E Test Results — All Screens
 
-## Remaining Known Gaps (P2 — Not Blocking)
-- Transfer history items lack `from_restaurant_name` / `to_restaurant_name` (POS doesn't return them in list)
-- `items_count` not in POS transfer list response
-- `add-stock` POS API requires `vendor_id` — currently mapped from `restaurantId`; may need separate vendor lookup
-- Login test credentials (hisoka@phantom.com) returning 401 — POS-side credential issue
+| Screen | Route | Status | Details |
+|--------|-------|--------|---------|
+| Operations Hub | `/` | PASS | KPI cards, context selector, quick actions all working |
+| Hierarchy Summary | `/hierarchy` | PASS | Both Master Stores (2) and Outlets (4) tabs working |
+| Pending Queues | `/queues` | PASS | All 4 tabs, Ready to Dispatch badge (1) |
+| History & Ledger | `/history` | PASS | 16 transfers, status filters, direction toggle |
+| Transfer Detail | `/transfer/:id` | PASS | Status timeline, resolution details, line items |
+| Direct Dispatch | `/dispatch/new` | PASS | 6 destinations, 4 items, source selector |
+| Request Stock | `/request/new` | PASS | Parent store resolution, items, source selector |
+| Stock Adjustment | `/adjustment/new` | PASS | Increase/Decrease toggle, items, reasons |
+| Wastage Entry | `/wastage/new` | PASS | Items, source selector, reasons |
+| Wastage Report | `/wastage/report` | PASS | 6 entries with dates, items, quantities |
+| Store Detail | `/store/:id` | PASS | 6 child stores, 4 stock items with quantities |
 
-## Files Modified in Session 3
-- `/app/frontend/src/services/api.js` — route paths, payload builders, response normalizers
-- `/app/frontend/src/components/central-inventory/DirectDispatchForm.jsx` — dual hierarchy fetch
-- `/app/frontend/src/components/central-inventory/RequestStockForm.jsx` — dual hierarchy fetch
-- `/app/frontend/src/components/central-inventory/StockAdjustmentForm.jsx` — pass restaurantId
-- `/app/frontend/src/components/central-inventory/WastageEntryForm.jsx` — pass restaurantId
-- `/app/frontend/src/components/central-inventory/WastageReport.jsx` — field name fallbacks
-- `/app/frontend/src/components/central-inventory/HistoryLedger.jsx` — wastage entry mapping
+## Known P2 Issues (Not Blocking)
+1. Transfer history Source/Destination show "—" (POS list doesn't include restaurant names)
+2. Store Detail header shows "Store #1 / Unknown" (POS hierarchy-detail missing `store_restaurant_name`)
+3. Transfer Detail From/To show "—" (POS doesn't include nested restaurant objects)
+4. `items_count` missing from POS transfer list response
+5. Login credentials (hisoka@phantom.com) returning 401 — POS-side issue
+
+## Files Modified (Contract Stabilization + E2E Fixes)
+- `/app/frontend/src/services/api.js` — route paths, normalizers, eager token restore
+- `/app/frontend/src/components/central-inventory/DirectDispatchForm.jsx`
+- `/app/frontend/src/components/central-inventory/RequestStockForm.jsx`
+- `/app/frontend/src/components/central-inventory/StockAdjustmentForm.jsx`
+- `/app/frontend/src/components/central-inventory/WastageEntryForm.jsx`
+- `/app/frontend/src/components/central-inventory/WastageReport.jsx`
+- `/app/frontend/src/components/central-inventory/HistoryLedger.jsx`
