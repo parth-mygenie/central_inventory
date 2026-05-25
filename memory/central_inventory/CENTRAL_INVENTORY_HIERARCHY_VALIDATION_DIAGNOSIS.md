@@ -200,3 +200,34 @@ The frontend is functioning correctly for this scenario:
 4. **Error handling**: ✅ Shows POS error message to user via toast
 
 The ONLY frontend consideration is whether to **filter out franchise destinations** from the dispatch dropdown when the logged-in user is a Central store — but this should only be done if Central→Franchise is PERMANENTLY disallowed (not if it's a setting to be enabled).
+
+
+---
+
+## ADDENDUM — 25 May 2026: Resolution Confirmed
+
+### The setting `allow_cross_central_franchise_dispatch` EXISTS and WORKS
+
+Previous diagnosis concluded `allow_central_direct_franchise` did not exist. The **correct setting name** is `allow_cross_central_franchise_dispatch` (discovered from the Request Stock integration document).
+
+**Before enabling:**
+- `allow_cross_central_franchise_dispatch: false` (default)
+- Central(781) → Franchise(786) dispatch: `INVALID_HIERARCHY` 403
+- F786 → sibling C781 request: `INVALID_HIERARCHY` 403
+- `request-sources` showed C781 with `can_submit_request: false`
+
+**After enabling:**
+```
+POST /operational-settings/update
+{"restaurant_id": 1, "settings": {"allow_cross_central_franchise_dispatch": true}}
+→ HTTP 200, status=true, "Operational settings updated"
+```
+
+- Central(781) → Franchise(786) dispatch: **SUCCESS** (transfer_id=78)
+- F786 → sibling C781 request: **SUCCESS** (transfer_id=77)
+- `request-sources` now shows C781 with `can_submit_request: true`
+
+### Previous diagnosis was correct in root cause, wrong in setting name
+- Correct name: `allow_cross_central_franchise_dispatch`
+- Wrong name tried: `allow_central_direct_franchise` (rejected as invalid)
+- The flag controls BOTH dispatch (initiate) and request edges for cross-branch paths
