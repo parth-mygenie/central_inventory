@@ -1,45 +1,52 @@
 # Central Inventory - PRD
 
 ## Original Problem Statement
-User requested to wipe /app and pull the repo `https://github.com/parth-mygenie/central_inventory.git` (branch `25_5_26_AJ`) as-is, without any modifications or tests. Just pull and run.
-
-Subsequently requested FULL UI/API integration diagnosis across ALL Central Inventory screens after seed shutdown.
+Central Inventory app — frontend-to-real-POS-API contract stabilization after seed shutdown. All flows now use real POS APIs only via backend proxy. Multiple UI/API failures were diagnosed and fixed.
 
 ## Architecture & Tech Stack
-- **Frontend**: React 19 with CRACO, Tailwind CSS, Radix UI components, Recharts
-- **Backend**: FastAPI (Python) with Motor (async MongoDB driver) — acts as proxy to POS API
-- **Database**: MongoDB (token sessions only — no seed data)
-- **External API**: Proxies to `preprod.mygenie.online` V1 (auth) and V2 (all inventory ops)
+- **Frontend**: React 19 with CRACO, Tailwind CSS, Radix UI components
+- **Backend**: FastAPI (Python) — proxy to POS API at preprod.mygenie.online
+- **Database**: MongoDB (token sessions only)
+- **External API**: V1 auth, V2 all inventory/transfer operations
 
-## What Was Done
-- **Date**: May 25, 2026
-- Wiped existing /app, cloned repo from branch `25_5_26_AJ`
-- Set up environment (.env files, dependencies, services)
-- Conducted FULL UI/API integration diagnosis — NO code changes made
+## What's Been Implemented
 
-## Diagnosis Summary (25 May 2026)
-- **14 distinct integration failures** identified across 11 screens
-- **5 CRITICAL**: Direct Dispatch, Request Stock, Stock Adjustment, Wastage Entry, Transfer Detail
-- **5 HIGH**: Source options field mapping, stock quantity fields, resolution_meta JSON string
-- **3 MEDIUM**: Missing restaurant names in history, store name gaps
-- **1 LOW**: Missing unit_id field
-- Full diagnosis report: `/app/memory/central_inventory/CENTRAL_INVENTORY_FULL_UI_API_INTEGRATION_DIAGNOSIS.md`
+### Session 1 (25 May 2026) — Repo Setup
+- Cloned repo from branch `25_5_26_AJ`, set up environment, services running
 
-## Prioritized Backlog
+### Session 2 (25 May 2026) — Full UI/API Diagnosis
+- 14 distinct integration failures identified across 11 screens
+- Full diagnosis report created
 
-### P0 — Critical (5 screens broken)
-1. Fix `hierarchy-summary` mandatory `store_type` parameter
-2. Fix Transfer Detail response shape unwrapping (`data.transfer` + `data.lines`)
-3. Fix `source-options` field name mapping (`inventory_master_id` → `source_inventory_master_id`)
-4. Discover real POS endpoints for `add-stock` and `record-wastage` (current routes 404)
-5. Fix `decrease-adjustment` missing `restaurant_id` in payload
+### Session 3 (25 May 2026) — Contract Stabilization (10 fixes)
+All fixes implemented in shared API service layer (`api.js`) + minimal component changes:
 
-### P1 — High (data gaps)
-6. Fix transfer line field mapping (`source_stock_title`, `requested_qty`)
-7. JSON.parse `resolution_meta` before accessing properties
-8. Fix Wastage Report response unwrapping (`data.wastage_records`)
-9. Fix hierarchy-detail stock quantity field mapping
+| # | Fix | Type | Files Changed |
+|---|-----|------|---------------|
+| 1 | `hierarchy-summary` mandatory `store_type` | Missing payload field | api.js, DirectDispatchForm, RequestStockForm |
+| 2 | `add-stock` route: `/inventory/add-stock/{id}` (ID in URL) | Wrong path | api.js |
+| 3 | `record-wastage` route: `/inventory-transfer/record-wastage` | Wrong path | api.js |
+| 4 | `source-options` fields: `source_inventory_master_id` + `from_restaurant_id` | Field name mismatch | api.js |
+| 5 | `decrease-adjustment` missing `restaurant_id` | Missing payload field | api.js, StockAdjustmentForm |
+| 6 | Transfer detail response: `{transfer, lines}` → flat object | Response unwrap | api.js (normalizer) |
+| 7 | `resolution_meta` JSON string → parsed object | Serialization | api.js (normalizer) |
+| 8 | hierarchy-detail stock: `total_quantity`→`cal_quantity` | Field mapping | api.js (normalizer) |
+| 9 | Wastage report: object→`wastage_records` array | Response unwrap | api.js (normalizer) |
+| 10 | Wastage record fields: `waste_reason`, `wastage_quantity`, `waste_date` | Field mapping | WastageReport, HistoryLedger |
 
-### P2 — Medium (display gaps)
-10. Resolve restaurant names for transfer history
-11. Handle missing `unit_id` from inventory master
+**Testing: 11/11 backend API tests passed (100%). Frontend compiles clean.**
+
+## Remaining Known Gaps (P2 — Not Blocking)
+- Transfer history items lack `from_restaurant_name` / `to_restaurant_name` (POS doesn't return them in list)
+- `items_count` not in POS transfer list response
+- `add-stock` POS API requires `vendor_id` — currently mapped from `restaurantId`; may need separate vendor lookup
+- Login test credentials (hisoka@phantom.com) returning 401 — POS-side credential issue
+
+## Files Modified in Session 3
+- `/app/frontend/src/services/api.js` — route paths, payload builders, response normalizers
+- `/app/frontend/src/components/central-inventory/DirectDispatchForm.jsx` — dual hierarchy fetch
+- `/app/frontend/src/components/central-inventory/RequestStockForm.jsx` — dual hierarchy fetch
+- `/app/frontend/src/components/central-inventory/StockAdjustmentForm.jsx` — pass restaurantId
+- `/app/frontend/src/components/central-inventory/WastageEntryForm.jsx` — pass restaurantId
+- `/app/frontend/src/components/central-inventory/WastageReport.jsx` — field name fallbacks
+- `/app/frontend/src/components/central-inventory/HistoryLedger.jsx` — wastage entry mapping
