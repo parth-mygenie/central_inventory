@@ -71,6 +71,7 @@ export default function WastageEntryForm() {
         unit,
         sourceSelector,
         reason: finalReason,
+        restaurantId: restaurantId,
       }),
       {
         successMsg: `Wastage recorded — ${itemObj?.stock_title} ${quantity} ${unit}`,

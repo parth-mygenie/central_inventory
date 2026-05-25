@@ -28,11 +28,17 @@ export default function DirectDispatchForm() {
   useEffect(() => {
     let cancelled = false;
     setLoadingData(true);
-    Promise.all([api.getHierarchySummary(), api.getInventoryMaster()])
-      .then(([hierResp, invResp]) => {
+    // Fetch both store types since POS requires store_type as mandatory
+    Promise.all([
+      api.getHierarchySummary({ storeType: "central" }),
+      api.getHierarchySummary({ storeType: "franchise" }),
+      api.getInventoryMaster(),
+    ])
+      .then(([centralResp, franchiseResp, invResp]) => {
         if (cancelled) return;
-        const stores = hierResp.data?.data?.stores || [];
-        setDestinations(stores);
+        const centralStores = centralResp.data?.data?.stores || [];
+        const franchiseStores = franchiseResp.data?.data?.stores || [];
+        setDestinations([...centralStores, ...franchiseStores]);
         const inv = invResp.data?.data || invResp.data || [];
         setItems(Array.isArray(inv) ? inv : []);
       })

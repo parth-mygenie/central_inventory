@@ -70,6 +70,7 @@ export default function StockAdjustmentForm() {
       quantity: Number(quantity),
       unit,
       reason: finalReason,
+      restaurantId: restaurantId,
     };
 
     const apiCall = adjustType === "increase"

@@ -115,9 +115,9 @@ export default function WastageReport() {
                 </TableHeader>
                 <TableBody>
                   {entries.map((entry, idx) => (
-                    <TableRow key={entry.id || idx} data-testid={`wastage-report-row-${idx}`}>
+                    <TableRow key={entry.wastage_id || entry.id || idx} data-testid={`wastage-report-row-${idx}`}>
                       <TableCell className="text-xs whitespace-nowrap">
-                        {formatTimestamp(entry.created_at || entry.date || entry.timestamp)}
+                        {formatTimestamp(entry.waste_date || entry.created_at || entry.date || entry.timestamp)}
                       </TableCell>
                       <TableCell className="text-xs">
                         <div className="flex items-center gap-1.5">
@@ -131,13 +131,13 @@ export default function WastageReport() {
                         {entry.stock_title || entry.item_name || entry.item || "—"}
                       </TableCell>
                       <TableCell className="text-xs text-right font-mono">
-                        {entry.quantity ?? entry.cal_quantity ?? "—"}
+                        {entry.wastage_quantity ?? entry.quantity ?? entry.cal_quantity ?? "—"}
                       </TableCell>
                       <TableCell className="text-xs">
                         {entry.unit || "—"}
                       </TableCell>
                       <TableCell className="text-xs">
-                        {entry.reason || entry.wastage_reason || "—"}
+                        {entry.waste_reason || entry.reason || entry.wastage_reason || "—"}
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">
                         {entry.recorded_by || entry.user_name || entry.user_id || "—"}

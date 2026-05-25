@@ -27,17 +27,24 @@ export default function RequestStockForm() {
   useEffect(() => {
     let cancelled = false;
     setLoadingData(true);
-    Promise.all([api.getHierarchySummary(), api.getInventoryMaster()])
-      .then(([hierResp, invResp]) => {
+    // Fetch both store types since POS requires store_type as mandatory
+    Promise.all([
+      api.getHierarchySummary({ storeType: "central" }),
+      api.getHierarchySummary({ storeType: "franchise" }),
+      api.getInventoryMaster(),
+    ])
+      .then(([centralResp, franchiseResp, invResp]) => {
         if (cancelled) return;
         const inv = invResp.data?.data || invResp.data || [];
         setItems(Array.isArray(inv) ? inv : []);
         // Derive parent from hierarchy summary — dynamic, no hardcoded IDs
-        const stores = hierResp.data?.data?.stores || [];
+        const centralStores = centralResp.data?.data?.stores || [];
+        const franchiseStores = franchiseResp.data?.data?.stores || [];
+        const allStores = [...centralStores, ...franchiseStores];
         const parentRid = user?.parent_restaurant_id;
         if (restaurantType === "central" && parentRid) {
           // Master Store: parent is the Central (master) found via parent_restaurant_id
-          const parentFromHierarchy = stores.find((s) => s.restaurant_id === parentRid);
+          const parentFromHierarchy = allStores.find((s) => s.restaurant_id === parentRid);
           if (parentFromHierarchy) {
             setParentStore(parentFromHierarchy);
           } else {
@@ -46,7 +53,7 @@ export default function RequestStockForm() {
           }
         } else if (restaurantType === "franchise") {
           // Outlet: parent is their Master Store (central type)
-          const masterStore = stores.find((s) => s.restaurant_type === "central");
+          const masterStore = centralStores.find((s) => s.restaurant_type === "central");
           if (masterStore) {
             setParentStore(masterStore);
           } else if (parentRid) {
