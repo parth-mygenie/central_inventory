@@ -32,21 +32,28 @@ export default function RequestStockForm() {
         if (cancelled) return;
         const inv = invResp.data?.data || invResp.data || [];
         setItems(Array.isArray(inv) ? inv : []);
-        // Derive parent from hierarchy summary
-        // For Master (central): parent is Central (master) 
-        // For Outlet (franchise): parent is their Master (central)
+        // Derive parent from hierarchy summary — dynamic, no hardcoded IDs
         const stores = hierResp.data?.data?.stores || [];
-        if (restaurantType === "central") {
-          setParentStore({ restaurant_id: 1, restaurant_name: "My Genie", restaurant_type: "master" });
+        const parentRid = user?.parent_restaurant_id;
+        if (restaurantType === "central" && parentRid) {
+          // Master Store: parent is the Central (master) found via parent_restaurant_id
+          const parentFromHierarchy = stores.find((s) => s.restaurant_id === parentRid);
+          if (parentFromHierarchy) {
+            setParentStore(parentFromHierarchy);
+          } else {
+            // parent_restaurant_id known but not in hierarchy list — use it directly
+            setParentStore({ restaurant_id: parentRid, restaurant_name: "Central Store", restaurant_type: "master" });
+          }
         } else if (restaurantType === "franchise") {
-          // Outlet's parent = the Master Store (central type) from hierarchy
+          // Outlet: parent is their Master Store (central type)
           const masterStore = stores.find((s) => s.restaurant_type === "central");
           if (masterStore) {
             setParentStore(masterStore);
+          } else if (parentRid) {
+            setParentStore({ restaurant_id: parentRid, restaurant_name: "Parent Store", restaurant_type: "central" });
           } else {
-            // Fallback to store with smallest ID (likely the direct parent)
-            const sorted = [...stores].sort((a, b) => a.restaurant_id - b.restaurant_id);
-            setParentStore(sorted[0] || { restaurant_id: 781, restaurant_name: "Parent Store", restaurant_type: "central" });
+            // No parent resolvable — fail closed
+            setParentStore(null);
           }
         }
       })

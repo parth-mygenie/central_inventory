@@ -106,6 +106,7 @@ export function LoginContextProvider({ children }) {
         restaurant_type_flag: typeFlag,
         restaurant_id: restId,
         restaurant_name: profile.restaurant_name || data?.restaurant_name || data?.data?.restaurant_name,
+        parent_restaurant_id: profile.parent_restaurant_id || data?.parent_restaurant_id || data?.data?.parent_restaurant_id || null,
       };
 
       setToken(bearerToken);
