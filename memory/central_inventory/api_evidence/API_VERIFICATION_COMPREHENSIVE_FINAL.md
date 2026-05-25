@@ -235,3 +235,38 @@ Update: `POST /operational-settings/update` with `{"restaurant_id":1,"settings":
 | Franchise4(786) | 17004 | 17005 | 17006 | 17007 |
 
 **Critical:** `source_inventory_master_id` in request payload must be the SOURCE store's id (e.g. 16989 for maida at C782), NOT the requester's id (17005 at F786).
+
+
+---
+
+### Addendum: Pending-Queues Observations for Request Flow (25 May 2026)
+
+> Source: `REQUEST_STOCK_E2E_TEST_RESULTS.md`
+
+- `my_requests` items have `id: null` in some responses (POS inconsistency — `transfer_id` field not in queue item shape)
+- Frontend should use `data.my_requests` for requester's pipeline tracker
+- Parent sees requests in `data.approval_pending`
+- `from_restaurant_id` and `to_restaurant_id` are present in queue items
+- Requester (F786) saw 7 `my_requests` after test run (T18)
+- Parent (C782) saw 4 `approval_pending` from F786 (T19)
+- Master saw 2 `approval_pending` from C781 + F786 (T20)
+
+### Addendum: Edge Cases from Request Stock E2E (25 May 2026)
+
+> Source: `REQUEST_STOCK_E2E_TEST_RESULTS.md`
+
+1. **T14 (Master request attempt):** Returns `INVALID_SOURCE_SELECTOR` 422 instead of expected `UNAUTHORIZED_ACTION` 403.
+   - POS validates `source_selector` BEFORE checking actor role.
+   - Frontend should not show Request Stock button for master users (already gated by `canDo('request-stock')`).
+
+2. **T7 (Sibling catalog browse):** Returns 200 OK even when `can_submit_request=false`.
+   - Catalog browsing is NOT gated by the cross-flag; only submit is gated at `/request` endpoint.
+   - Frontend should also check `data.source_restaurant.can_submit_request` from catalog response for UX gating.
+
+3. **Pending-queues `id` field:** Queue items show `id: null` (not `transfer_id`).
+   - Queue list items from POS don't include `id` in the same shape as history items.
+   - Frontend should handle `item.id || item.transfer_id` for navigation.
+
+4. **T11 (Upstream master request with segment_id):** Works correctly.
+   - Franchise CAN request from master with master's `segment_id`.
+   - This implies segment lookup is done at the SOURCE store, not the requester.

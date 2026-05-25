@@ -767,3 +767,82 @@ curl --location "${BASE_V2}/inventory-transfer/operational-settings/update" \
   }'
 # After enabling: sibling central shows can_submit_request=true in request-sources
 # and both cross-request and cross-dispatch succeed
+
+
+# =============================
+# ADDENDUM: Missing Request Stock curl examples (25 May 2026)
+# Source: REQUEST_STOCK_E2E_TEST_RESULTS.md
+# =============================
+
+echo
+echo "=== Submit Request — Master → any (should FAIL — master cannot request) ==="
+curl --location "${BASE_V2}/inventory-transfer/request" \
+  --header "Authorization: Bearer ${MASTER_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "items": [
+      {
+        "source_inventory_master_id": 16985,
+        "stock_title": "maida",
+        "quantity": 0.1,
+        "unit": "kg",
+        "source_selector": {
+          "mode": "filter_bucket",
+          "bucket": "without_batch_and_expiry",
+          "batch_state": "null",
+          "expiry_state": "null"
+        }
+      }
+    ]
+  }'
+# Expected: 422 INVALID_SOURCE_SELECTOR (POS validates selector BEFORE checking actor role)
+# NOTE: Frontend should never reach here — master gated by canDo('request-stock')
+
+echo
+echo "=== Cross-branch dispatch — C781 → F786 (after enabling allow_cross_central_franchise_dispatch) ==="
+# Prerequisite: operational-settings/update with allow_cross_central_franchise_dispatch=true
+CENTRAL1_TOKEN="REPLACE_WITH_CENTRAL1_TOKEN_RID_781"
+curl --location "${BASE_V2}/inventory-transfer/initiate" \
+  --header "Authorization: Bearer ${CENTRAL1_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "from_restaurant_id": 781,
+    "to_restaurant_id": 786,
+    "items": [
+      {
+        "source_inventory_master_id": 16985,
+        "stock_title": "maida",
+        "quantity": 0.1,
+        "unit": "kg",
+        "source_selector": {
+          "mode": "filter_bucket",
+          "bucket": "without_batch_and_expiry",
+          "batch_state": "null",
+          "expiry_state": "null"
+        }
+      }
+    ]
+  }'
+# Expected: 200 success, transfer_id created (cross-branch dispatch allowed with flag ON)
+# Without flag: would return INVALID_HIERARCHY 403
+
+echo
+echo "=== Request Catalog — F786 browsing sibling C781 (browse allowed even if submit not) ==="
+curl --location "${BASE_V2}/inventory-transfer/request-catalog" \
+  --header "Authorization: Bearer ${FRANCHISE_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{"source_restaurant_id": 781}'
+# Expected: 200 OK with items[] — browse is NOT gated by can_submit_request
+# data.source_restaurant.can_submit_request = false (if cross flag off) / true (if on)
+
+echo
+echo "=== Pending Queues — Master (approval_pending from centrals + franchises) ==="
+curl --location "${BASE_V2}/inventory-transfer/pending-queues" \
+  --header "Authorization: Bearer ${MASTER_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{"limit": 50}'
+# Check data.approval_pending for requests from C781 and F786 to master

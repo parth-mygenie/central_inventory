@@ -574,3 +574,140 @@ Each store has its OWN `inventory_master` ids. Using the requester's id in a req
 | Central1(781) | 16984 | 16985 | 16986 | 16987 |
 | Central2(782) | 16988 | 16989 | 16990 | 16991 |
 | Franchise4(786) | 17004 | 17005 | 17006 | 17007 |
+
+
+---
+
+### Addendum: Pending-Queues Observations for Request Context (25 May 2026)
+
+> Source: `REQUEST_STOCK_E2E_TEST_RESULTS.md`
+
+- `my_requests` items have `id: null` in some POS responses (inconsistency — `transfer_id` not present in queue item shape)
+- Frontend should use `data.my_requests` for requester's pipeline tracker
+- Parent sees requests in `data.approval_pending`
+- `from_restaurant_id` and `to_restaurant_id` are present in queue items
+- Frontend should handle `item.id || item.transfer_id` for navigation to transfer detail
+
+### Addendum: Edge Cases from Request Stock E2E (25 May 2026)
+
+> Source: `REQUEST_STOCK_E2E_TEST_RESULTS.md`
+
+1. **T14 Master request → INVALID_SOURCE_SELECTOR 422** (not UNAUTHORIZED_ACTION 403)
+   - POS validates `source_selector` before checking actor role
+   - Frontend must gate the Request Stock button by `canDo('request-stock')` — master users never see it
+
+2. **T7 Sibling catalog browse → 200 OK** (even when `can_submit_request=false`)
+   - Catalog browse is not gated by cross-flag; only `/request` submit is gated
+   - Frontend should also read `data.source_restaurant.can_submit_request` from catalog response for submit-button gating
+
+3. **Pending-queues `id: null`** in queue list items
+   - POS queue items don't include `id` in the same shape as history items
+   - Use `item.id || item.transfer_id` for detail navigation
+
+4. **T11 Upstream master request with segment_id works**
+   - Franchise can request from master using master's `segment_id`
+   - Segment lookup runs at the SOURCE store, not the requester
+
+---
+
+## Addendum: Request Stock — Frontend Implementation Planning Notes (25 May 2026)
+
+> Source: `REQUEST_STOCK_E2E_TEST_RESULTS.md` — "Frontend Integration Notes" section
+> These are planning notes ONLY. No frontend changes implemented yet.
+
+### Migration from Old Request Stock Flow
+
+The current `RequestStockForm.jsx` uses APIs that do NOT match the canonical 3-step request contract. The following replacements are required:
+
+#### Replace `getHierarchySummary()` → `request-sources`
+
+| Current | Correct |
+|---------|---------|
+| Fetches `hierarchy-summary` with both store types, merges, picks parent | Call `POST /inventory-transfer/request-sources` → get `sources[]` with `can_submit_request` flag |
+| **Impact:** Missing hierarchy validation info, no `relation` data, no cross-branch gating | Provides `relation`, `is_direct_parent`, `can_submit_request` per source |
+
+#### Replace `getInventoryMaster()` → `request-catalog`
+
+| Current | Correct |
+|---------|---------|
+| Fetches logged-in store's own inventory via `GET /inventory/get-inventory-master` | Call `POST /inventory-transfer/request-catalog` with `source_restaurant_id` from selected source |
+| **Impact:** Shows CHILD store items instead of SOURCE store items; `source_inventory_master_id` will be wrong | Returns source store's items with correct `source_inventory_master_id` |
+
+### Canonical 3-Step Request Flow Integration
+
+```
+Step 1: POST /inventory-transfer/request-sources    → sources[] with can_submit_request
+Step 2: POST /inventory-transfer/request-catalog    → items[] from SOURCE store
+Step 3: POST /inventory-transfer/request            → create transfer (type=request, status=requested)
+Track:  POST /inventory-transfer/pending-queues     → my_requests (requester) / approval_pending (parent)
+```
+
+### Source-Store Catalog Handling
+
+- `request-catalog` returns items from the SELECTED SOURCE store, not the logged-in store
+- Each item has `source_inventory_master_id` — this is the id at the SOURCE store
+- `available_display_qty` serves as max quantity hint for UX (not enforceable — submit checks real stock)
+- `is_mapped_to_child` indicates whether push-map exists between child and this source SKU
+- Catalog browse is allowed even for non-submittable sources (200 OK) — submit permission checked at `/request` only
+- `data.source_restaurant.can_submit_request` should be checked for submit-button UX gating
+
+### Source-Owned Inventory IDs
+
+- **CRITICAL:** `source_inventory_master_id` in the submit payload must come from `request-catalog`, NOT from `get-inventory-master`
+- Each store has its OWN `inventory_master` ids (e.g., maida at C782 = 16989, maida at F786 = 17005)
+- Using requester's id for a different source → `SOURCE_STOCK_NOT_FOUND`
+
+### Pending Queue Integration Planning
+
+- After successful request submit, the created transfer appears in requester's `my_requests`
+- Parent/source sees the request in `approval_pending`
+- Queue items have `from_restaurant_id` and `to_restaurant_id`
+- **Caveat:** Queue items may have `id: null` — use `item.id || item.transfer_id` for navigation
+- Pending queues screen should refresh after request submission to show new entry
+
+### Hierarchy Validation Handling
+
+- `INVALID_HIERARCHY` (403) is returned when:
+  - Franchise submits to sibling central while `allow_cross_central_franchise_dispatch` is false
+  - Central submits to sibling central while flag is false
+- Frontend should pre-check `can_submit_request` from `request-sources` and disable/warn before submit
+- When submit returns `INVALID_HIERARCHY`, show user-friendly message (not raw error code)
+
+### Selector / Source-Picker Planning
+
+- `source-options` requires OWNER token (`from_restaurant_id == auth token restaurant_id`)
+- Child token + parent's `from_restaurant_id` → `UNAUTHORIZED_ACTION`
+- For request flow, the requester CANNOT call `source-options` on the source store's segments
+- **Safe default:** Use `filter_bucket` selector: `{"mode":"filter_bucket","bucket":"without_batch_and_expiry","batch_state":"null","expiry_state":"null"}`
+- Alternative: Use `request-catalog` `available_display_qty` as max hint without segment picker
+- If segment_id is needed (e.g., for master requests), it must be obtained separately (master user's own source-options call)
+
+### Coupled Hierarchy Behavior Handling
+
+The `allow_cross_central_franchise_dispatch` flag gates BOTH:
+1. `can_submit_request` in `request-sources` for sibling central
+2. `POST /request` hierarchy validation for sibling central as source
+3. `POST /initiate` hierarchy validation for cross-branch Central→Franchise dispatch
+
+Frontend implications:
+- Source picker must dynamically reflect `can_submit_request` state
+- If a source shows `can_submit_request: false`, disable the submit button (not the browse)
+- After operational settings change, request-sources must be re-fetched to get updated flags
+- The same flag affects both Request Stock and Direct Dispatch cross-branch flows
+
+### Frontend Contract Alignment Checklist
+
+- [ ] New API method: `requestSources()` → `POST /inventory-transfer/request-sources`
+- [ ] New API method: `requestCatalog(sourceRestaurantId)` → `POST /inventory-transfer/request-catalog`
+- [ ] Step 1 UI: Source picker showing `relation` labels (direct_parent / upstream_master / sibling_central)
+- [ ] Step 1 UI: Default selection = `is_direct_parent === true`
+- [ ] Step 1 UI: `can_submit_request` gating (disable submit for non-submittable sources)
+- [ ] Step 2 UI: Catalog from SELECTED SOURCE (not own store)
+- [ ] Step 2 UI: Use `source_inventory_master_id` from catalog, NOT from `get-inventory-master`
+- [ ] Step 3 submit: Optional `from_restaurant_id` when non-default source selected
+- [ ] Step 3 submit: `source_selector` with `filter_bucket` as safe default
+- [ ] Error handling: `INVALID_HIERARCHY` → user-friendly message
+- [ ] Error handling: `SOURCE_STOCK_NOT_FOUND` → item not available at source
+- [ ] Error handling: `REQUEST_SOURCE_NOT_ALLOWED` → source not in allowed list
+- [ ] Pending queues: Navigate using `item.id || item.transfer_id`
+- [ ] `relation` display labels in source picker
