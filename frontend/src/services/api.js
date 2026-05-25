@@ -246,8 +246,30 @@ function initiateTransfer({ fromRestaurantId, toRestaurantId, items }) {
   });
 }
 
-function requestStock({ items }) {
-  return client.post("/proxy/v2/inventory-transfer/request", { items });
+/**
+ * Request Stock — canonical 3-step flow (25 May 2026 contract).
+ *
+ * Step 1: requestSources()   → sources[] with can_submit_request
+ * Step 2: requestCatalog()   → items[] from SOURCE store (source_inventory_master_id)
+ * Step 3: requestStock()     → create transfer (type=request, status=requested)
+ *
+ * Do NOT use getHierarchySummary or getInventoryMaster for request flow.
+ */
+
+function requestSources() {
+  return client.post("/proxy/v2/inventory-transfer/request-sources", {});
+}
+
+function requestCatalog(sourceRestaurantId) {
+  return client.post("/proxy/v2/inventory-transfer/request-catalog", {
+    source_restaurant_id: sourceRestaurantId,
+  });
+}
+
+function requestStock({ items, fromRestaurantId }) {
+  const payload = { items };
+  if (fromRestaurantId) payload.from_restaurant_id = fromRestaurantId;
+  return client.post("/proxy/v2/inventory-transfer/request", payload);
 }
 
 function approveTransfer(transferId) {
@@ -349,6 +371,9 @@ const api = {
   getInventoryMaster,
   getFranchiseList,
   getFranchiseHistory,
+  // Request Stock 3-step flow
+  requestSources,
+  requestCatalog,
   // Slice 4 write APIs
   initiateTransfer,
   requestStock,

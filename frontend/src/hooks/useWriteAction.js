@@ -28,7 +28,9 @@ export function useWriteAction() {
       } else if (!err.response) {
         userMsg = "Network error — check transfer status before retrying";
       } else if (status === 403) {
-        userMsg = "Permission denied — you cannot perform this action";
+        userMsg = apiMsg
+          ? `Permission denied: ${mapApiErrorMessage(apiMsg)}`
+          : "Permission denied — you cannot perform this action";
       } else if (status === 404) {
         userMsg = "Transfer not found";
       } else {
