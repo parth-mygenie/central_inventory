@@ -29,6 +29,13 @@ function setToken(token) {
   }
 }
 
+// Eagerly restore token from localStorage on module load
+// so that API calls made before React effects run still carry auth.
+try {
+  const stored = localStorage.getItem("ci_token");
+  if (stored) setToken(stored);
+} catch { /* SSR or no localStorage */ }
+
 // ── Response normalizers (shared contract layer) ─────────────────
 
 /**
