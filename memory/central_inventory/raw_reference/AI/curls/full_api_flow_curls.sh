@@ -1396,3 +1396,181 @@ curl --location "${BASE_V2}/inventory-transfer/request" \
   }'
 echo "# Expected: request created with selector stored in meta_json."
 echo "# Dispatch will use stored selector instead of auto-FEFO."
+
+
+# =============================
+# ADDENDUM: P16 Lifecycle Revalidation Curls (26 May 2026)
+# Verified against live POS API — partial approve, cancel-remainder,
+# second wave, dispatch on partial, receive dispute, legacy compat
+# =============================
+
+# --- Credentials for this section ---
+# FRANCHISE4_TOKEN = owner@demofranchise4.com / Qplazm@10 → rid=786, type=franchise
+# CENTRAL2_TOKEN = owner@democentral2.com / Qplazm@10 → rid=782, type=central
+# MASTER_TOKEN = abhishek@kalabahia.com / Qplazm@10 → rid=1, type=master
+
+# --- Key segment references ---
+# C782 red meat (16991): seg 23 (MEAT-BATCH-01, 2026-06-30), seg 36 (same batch)
+# C782 maida (16989): seg 29 (MAIDA-BATCH-01, 2026-12-31)
+
+echo
+echo "=== P16: Create multi-line request for partial approve (F786 → C782) ==="
+curl --location "${BASE_V2}/inventory-transfer/request" \
+  --header "Authorization: Bearer ${FRANCHISE_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "items": [
+      {"source_inventory_master_id": 16991, "stock_title": "red meat", "quantity": 2, "unit": "kg"},
+      {"source_inventory_master_id": 16989, "stock_title": "maida", "quantity": 1, "unit": "kg"}
+    ]
+  }'
+echo "# Returns: transfer_id, 2 lines with line_ids"
+echo "# NOTE: No source_selector — P14 canonical flow"
+
+echo
+echo "=== P16: Partial approve — approve only one line with segment (REQUIRES segments[]) ==="
+echo "# CRITICAL: approval_lines[].segments is REQUIRED when using approval_lines"
+echo "# Omitting segments → VALIDATION_FAILED"
+PARTIAL_APPROVE_TRANSFER_ID="REPLACE_WITH_TRANSFER_ID"
+APPROVE_LINE_ID="REPLACE_WITH_LINE_ID"
+curl --location "${BASE_V2}/inventory-transfer/approve/${PARTIAL_APPROVE_TRANSFER_ID}" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw "{
+    \"approval_lines\": [
+      {
+        \"line_id\": ${APPROVE_LINE_ID},
+        \"approved_qty\": 0.3,
+        \"segments\": [{\"segment_id\": 23, \"quantity\": 0.3}],
+        \"remainder_policy\": \"hold\"
+      }
+    ],
+    \"default_remainder_policy\": \"hold\"
+  }"
+echo "# Expected: status=partially_approved"
+echo "# Lines: approved line has approved_display_qty=0.3, hold_display_qty=1.7"
+echo "# Non-approved lines get status=on_hold, hold_display_qty = full requested qty"
+
+echo
+echo "=== P16: Second wave approve (on partially_approved transfer) ==="
+echo "# Can call approve again on same transfer to approve more hold qty"
+curl --location "${BASE_V2}/inventory-transfer/approve/${PARTIAL_APPROVE_TRANSFER_ID}" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw "{
+    \"approval_lines\": [
+      {
+        \"line_id\": ${APPROVE_LINE_ID},
+        \"approved_qty\": 1,
+        \"segments\": [{\"segment_id\": 29, \"quantity\": 1}],
+        \"remainder_policy\": \"hold\"
+      }
+    ],
+    \"default_remainder_policy\": \"hold\"
+  }"
+echo "# Expected: approved_display_qty accumulates, hold_display_qty decreases"
+echo "# When all hold_display_qty = 0 → status transitions to approved"
+echo "# approval_waves[] in meta_json grows with each wave"
+
+echo
+echo "=== P16: Cancel remainder (drop all held lines/qty) ==="
+echo "# Only works on partially_approved transfers with hold_display_qty > 0"
+CANCEL_REMAINDER_TRANSFER_ID="REPLACE_WITH_PARTIALLY_APPROVED_TRANSFER_ID"
+curl --location "${BASE_V2}/inventory-transfer/approve/${CANCEL_REMAINDER_TRANSFER_ID}/cancel-remainder" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{}'
+echo "# Expected: status=approved (transitions from partially_approved)"
+echo "# Hold lines become status=cancelled_remainder, cancelled_display_qty populated"
+echo "# Approved line's requested_qty is EDITED (shrunk to match approved_display_qty)"
+echo "# Error if no hold remainder: UNKNOWN_ERROR / NO_HOLD_REMAINDER"
+
+echo
+echo "=== P16: Dispatch on partially_approved transfer ==="
+echo "# Dispatches ONLY approved lines; on_hold/cancelled_remainder lines are skipped"
+curl --location "${BASE_V2}/inventory-transfer/dispatch/${PARTIAL_APPROVE_TRANSFER_ID}" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{}'
+echo "# Expected: status=dispatched"
+echo "# Response lines only include dispatched items with dispatched_qty + outstanding_after"
+echo "# Non-approved lines NOT included in dispatch response"
+echo "# After dispatch: line status=pending (not dispatched), meta_json.dispatch.dispatched_display_total populated"
+
+echo
+echo "=== P16: Receive with dispute (AUTO-TRIGGERED by rejected_qty > 0) ==="
+echo "# CRITICAL: No explicit dispute:true flag needed"
+echo "# Simply submitting received_lines with rejected_qty > 0 triggers dispute"
+DISPATCHED_TRANSFER_ID="REPLACE_WITH_DISPATCHED_TRANSFER_ID"
+curl --location "${BASE_V2}/inventory-transfer/receive/${DISPATCHED_TRANSFER_ID}" \
+  --header "Authorization: Bearer ${FRANCHISE_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "received_lines": [
+      {"line_id": 91, "accepted_qty": 0.2, "rejected_qty": 0.1}
+    ]
+  }'
+echo "# Expected: status=receive_dispute_pending"
+echo "# resolution_meta populated with receive_dispute: {submitted_at, received_lines, resolution_type, receiver_employee_id}"
+echo "# Full acceptance (rejected_qty=0 on all lines or empty body) → status=received (no dispute)"
+
+echo
+echo "=== P16: Resolve dispute — ENDPOINT NOT FOUND (26 May 2026) ==="
+echo "# ALL these paths return 404:"
+echo "#   POST /resolve-dispute/{id}"
+echo "#   POST /receive-dispute/{id}"
+echo "#   POST /dispute/resolve/{id}"
+echo "#   POST /receive/{id}/resolve"
+echo "#   POST /dispute-resolution/{id}"
+echo "# Backend route for dispute resolution is NOT registered."
+echo "# Status: BLOCKED — Phase 4 frontend cannot be built until this is resolved."
+
+echo
+echo "=== P16: Transfer details (GET not POST!) ==="
+echo "# CRITICAL: details/{id} is GET, not POST"
+curl --location --request GET "${BASE_V2}/inventory-transfer/details/${PARTIAL_APPROVE_TRANSFER_ID}" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json"
+echo "# POST to this endpoint → 405 Method Not Allowed"
+echo "# Response: transfer header + lines with meta_json (STRING, needs JSON.parse)"
+echo "# meta_json.approval contains: approved_display_qty, hold_display_qty, cancelled_display_qty,"
+echo "#   requested_display_qty, original_requested_display_qty, remainder_policy, approval_waves[]"
+echo "# meta_json.dispatch contains: dispatched_display_total, last_wave_at"
+echo "# meta_json.segments contains: segment allocation details"
+echo "# meta_json.reserve contains: mode, segments_reserved, recorded_at"
+
+echo
+echo "=== P16: Legacy full approve backward compat ==="
+curl --location "${BASE_V2}/inventory-transfer/approve/${TRANSFER_ID}" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{}'
+echo "# Still works. approved_display_qty = full amount, hold_display_qty = 0"
+echo "# Backward compatible with all existing request-approve flows"
+
+echo
+echo "=== P16: Queue counter observations ==="
+echo "# approval_pending: includes both 'requested' AND 'partially_approved' transfers"
+echo "# receive_pending: includes 'dispatched' AND 'partially_received' transfers"
+echo "# my_requests: includes ALL lifecycle statuses (requested, approved, dispatched,"
+echo "#   receive_dispute_pending, partially_received)"
+echo "# Frontend must handle these extra statuses in queue rendering"
+
+echo
+echo "=== P16: Source-options for segment picker (needed for ApproveWaveDialog) ==="
+echo "# Central calls source-options on own-store segments for approve segment picker"
+curl --location "${BASE_V2}/inventory-transfer/source-options" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{"from_restaurant_id": 782, "source_inventory_master_id": 16991}'
+echo "# Returns: segments[], filters with counts"
+echo "# Use segment_id from here for approval_lines[].segments[].segment_id"
+echo "# source-options requires OWNER token (from_restaurant_id == auth token restaurant_id)"

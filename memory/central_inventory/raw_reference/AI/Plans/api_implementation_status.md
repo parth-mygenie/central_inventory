@@ -956,4 +956,163 @@ Frontend architecture analysis for P16 refined request-line lifecycle (partial a
 - `receiveDispute(id)`, `resolveDispute(id)`
 
 ### Required Status Config Additions
-- `partially_approved`, `on_hold`, `cancelled_remainder`, `receive_dispute_pending`
+- `partially_approved`, `on_hold`, `cancelled_remainder`, `receive_dispute_pending`, `partially_received`
+
+
+---
+
+## Addendum: P16 Lifecycle Revalidation — Live API Test Results (26 May 2026)
+
+> **Purpose:** Focused revalidation of previously failed/risky/blocked P16 lifecycle flows after latest backend fixes
+> **Method:** Live POS API curl testing against `preprod.mygenie.online`
+> **Transfers tested:** 104 (partial approve → dispatch → receive dispute), 105 (legacy full approve → dispatch → receive), 106 (partial approve → cancel-remainder), 107 (3-wave approve)
+> **Credential set:** Master(1)/C782/F786 (preprod vendor employee tokens)
+
+### P16 Partial Approve Contract (VERIFIED)
+
+**Endpoint:** `POST /inventory-transfer/approve/{id}`
+
+**Partial approve payload (REQUIRES `segments` per line):**
+
+```json
+{
+  "approval_lines": [
+    {
+      "line_id": 91,
+      "approved_qty": 0.3,
+      "segments": [{"segment_id": 23, "quantity": 0.3}],
+      "remainder_policy": "hold"
+    }
+  ],
+  "default_remainder_policy": "hold"
+}
+```
+
+**CRITICAL CONTRACT DELTA:** `segments[]` is REQUIRED per approval line. Sending `approval_lines` without `segments` → `VALIDATION_FAILED: approval_lines.0.segments field is required when approval lines is present`.
+
+**Response:**
+```json
+{
+  "status": true,
+  "data": {
+    "transfer_id": 104,
+    "status": "partially_approved",
+    "lines": [
+      {"line_id": 91, "status": "approved", "approved_display_qty": 0.3, "hold_display_qty": 1.7, "quantity_edited": true, "remainder_policy": "hold"},
+      {"line_id": 92, "status": "on_hold", "approved_display_qty": 0, "hold_display_qty": 1, "remainder_policy": "hold"}
+    ]
+  }
+}
+```
+
+### P16 Cancel-Remainder Contract (VERIFIED)
+
+**Endpoint:** `POST /inventory-transfer/approve/{id}/cancel-remainder`
+**Body:** `{}`
+**Prerequisite:** Transfer must be `partially_approved` with `hold_display_qty > 0` on at least one line
+**If no hold remainder:** `UNKNOWN_ERROR: NO_HOLD_REMAINDER`
+
+**Response (Transfer 106):**
+```json
+{
+  "status": true,
+  "data": {
+    "transfer_id": 106,
+    "status": "approved",
+    "lines": [
+      {"line_id": 94, "status": "approved", "approved_display_qty": 1, "hold_display_qty": 0, "requested_qty": 1},
+      {"line_id": 95, "status": "cancelled_remainder", "approved_display_qty": 0, "hold_display_qty": 0, "requested_qty": 0}
+    ]
+  }
+}
+```
+
+**Behavior:** Transitions `partially_approved` → `approved`. Hold lines become `cancelled_remainder`. `requested_qty` is edited (shrunk to match approved qty). `meta_json.approval.cancelled_display_qty` is populated.
+
+### P16 Second Wave Approve (VERIFIED)
+
+**Transfer 107:** 3-wave approve on single line (3kg maida)
+- Wave 1: `approved_display_qty=1, hold_display_qty=2` → status: `partially_approved`
+- Wave 2: `approved_display_qty=2, hold_display_qty=1` → status: `partially_approved`
+- Wave 3: `approved_display_qty=3, hold_display_qty=0` → status: `approved`
+
+`approval_waves[]` accumulates entries per wave, each with `approved_display_qty`, `segments[]`, `remainder_policy`, `at`.
+
+### P16 Dispatch on Partially Approved (VERIFIED)
+
+**Transfer 104:** Dispatched while `partially_approved` (only line 91 approved at 0.3kg, line 92 on_hold)
+- Response: `status: "dispatched"`, only line 91 dispatched (0.3kg), `outstanding_after: 1.7`
+- Line 92 (on_hold) was NOT dispatched
+- After dispatch: line 91 status = `pending` (NOT `dispatched`), `meta_json.dispatch.dispatched_display_total = 0.3`
+
+### P16 Receive Dispute (VERIFIED — Auto-Triggered)
+
+**CRITICAL CONTRACT DELTA:** No separate `dispute: true` flag. Submitting `received_lines` with `rejected_qty > 0` on a dispatched transfer AUTO-triggers `receive_dispute_pending`.
+
+**Transfer 104:** Received with `accepted_qty=0.2, rejected_qty=0.1` → status: `receive_dispute_pending`
+
+**`resolution_meta` populated on header:**
+```json
+{
+  "receive_dispute": {
+    "submitted_at": "2026-05-26T16:55:04+05:30",
+    "received_lines": [{"line_id": 91, "accepted_qty": 0.2, "rejected_qty": 0.1}],
+    "resolution_type": "return_to_source",
+    "receiver_employee_id": 4532
+  }
+}
+```
+
+### Resolve Dispute — ENDPOINT NOT FOUND (BLOCKER)
+
+All probed paths return 404:
+- `POST /resolve-dispute/{id}` → 404
+- `POST /receive/resolve-dispute/{id}` → 404
+- `POST /dispute/resolve/{id}` → 404
+- `POST /receive-dispute/{id}` → 404
+- `POST /dispute-resolution/{id}` → 404
+- `POST /receive/{id}/resolve` → 404
+
+**Status:** Backend route for dispute resolution is NOT registered. Phase 4 frontend blocked.
+
+### Transfer Details Endpoint (CONTRACT CORRECTION)
+
+**`GET /inventory-transfer/details/{id}` — METHOD IS GET (NOT POST)**
+
+POST → 405 Method Not Allowed. This is a contract correction from prior documentation that used POST.
+
+### Queue Counter Behavior (VERIFIED)
+
+**Central C782:**
+- `approval_pending`: Only `requested` status items (13). `partially_approved` transfers appear here when present.
+- `receive_pending`: Only `dispatched` status items (2)
+
+**Franchise F786:**
+- `receive_pending`: `dispatched` (8) + `partially_received` (1)
+- `my_requests`: `requested` (15), `approved` (6), `dispatched` (8), `receive_dispute_pending` (2), `partially_received` (1)
+
+**Queue counter impact:** `my_requests` includes statuses beyond `requested|approved|dispatched`. Frontend must handle `receive_dispute_pending`, `partially_received`.
+
+### Old Transfer Backward Compatibility (VERIFIED)
+
+**Transfer 34** (pre-P16, created 2026-05-22):
+- `meta_json` has `selector` key only — NO `approval` key
+- Line status: `approved` (simple)
+- Frontend null-safe access to `meta_json.approval.*` is required but safe
+
+### Legacy Full Approve (VERIFIED)
+
+**Transfer 105:** `POST /approve/105` with `{}` → `approved`, `approved_display_qty=0.1`, `hold_display_qty=0`. Backward compatible.
+
+### `partially_received` Status (NEWLY DISCOVERED)
+
+Not in original P16 vocabulary. Appears in franchise `receive_pending` and `my_requests` queues. Must be added to `terminology.js STATUS_CONFIG`.
+
+### Transfer IDs from this test session
+
+| Transfer | Lines | Purpose | Final Status |
+|----------|-------|---------|-------------|
+| 104 | 91 (red meat 2kg), 92 (maida 1kg) | Partial approve → dispatch → receive dispute | `receive_dispute_pending` |
+| 105 | 93 (maida 0.1kg) | Legacy full approve → dispatch → full receive | `received` |
+| 106 | 94 (maida 2kg), 95 (red meat 0.5kg) | Partial approve → cancel-remainder | `approved` (cancelled lines) |
+| 107 | 96 (maida 3kg) | 3-wave approve | `approved` |
