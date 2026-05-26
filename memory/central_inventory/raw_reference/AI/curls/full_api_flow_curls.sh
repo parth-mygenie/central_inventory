@@ -1521,15 +1521,43 @@ echo "# resolution_meta populated with receive_dispute: {submitted_at, received_
 echo "# Full acceptance (rejected_qty=0 on all lines or empty body) → status=received (no dispute)"
 
 echo
-echo "=== P16: Resolve dispute — ENDPOINT NOT FOUND (26 May 2026) ==="
-echo "# ALL these paths return 404:"
-echo "#   POST /resolve-dispute/{id}"
-echo "#   POST /receive-dispute/{id}"
-echo "#   POST /dispute/resolve/{id}"
-echo "#   POST /receive/{id}/resolve"
-echo "#   POST /dispute-resolution/{id}"
-echo "# Backend route for dispute resolution is NOT registered."
-echo "# Status: BLOCKED — Phase 4 frontend cannot be built until this is resolved."
+echo "=== P16: Resolve dispute — CONFIRMED WORKING (26 May 2026) ==="
+echo "# Canonical route: POST /receive-dispute/{id}/resolve"
+echo "# Prior 404 was WRONG ROUTE — tested /resolve-dispute/{id} instead of /receive-dispute/{id}/resolve"
+
+echo
+echo "=== P16-DISPUTE: Resolve dispute — ACCEPT path (central approves franchise dispute) ==="
+DISPUTE_TRANSFER_ID="REPLACE_WITH_RECEIVE_DISPUTE_PENDING_TRANSFER_ID"
+curl --location "${BASE_V2}/inventory-transfer/receive-dispute/${DISPUTE_TRANSFER_ID}/resolve" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "accept": true,
+    "note": "Damage approved"
+  }'
+echo "# Expected: status=true, data.status = received or partially_received"
+echo "# data.accepted = true"
+echo "# data.lines[] with received_qty / rejected_qty per line"
+echo "# resolution_meta populated with receive_totals: {accepted_qty, rejected_qty, returned_qty, damaged_qty, on_hold_qty}"
+echo "# Rejected qty handled per transfer's resolution_type (default: return_to_source)"
+echo "# Verified: Transfer 104 → partially_received (had on_hold maida line auto-received)"
+
+echo
+echo "=== P16-DISPUTE: Resolve dispute — REJECT path (central rejects, franchise re-receives) ==="
+curl --location "${BASE_V2}/inventory-transfer/receive-dispute/${DISPUTE_TRANSFER_ID}/resolve" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "accept": false,
+    "note": "Resubmit photos"
+  }'
+echo "# Expected: status=true, data.status = dispatched (REVERTED — franchise must re-receive)"
+echo "# data.accepted = false"
+echo "# resolution_meta populated with receive_dispute_rejected: {at, note}"
+echo "# Transfer reappears in franchise receive_pending queue (status=dispatched)"
+echo "# Verified: Transfer 108 → dispatched (reverted from receive_dispute_pending)"
 
 echo
 echo "=== P16: Transfer details (GET not POST!) ==="

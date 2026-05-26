@@ -11,53 +11,37 @@ Central Inventory management system for MyGenie — multi-restaurant hierarchy (
 
 ## What's Been Implemented
 - [2026-05-26] Cloned repo from `26_5_26_1` branch, installed all dependencies, services running
-- [2026-05-26] P16 Lifecycle Revalidation Pass — live API testing of 14 P16 scenarios
+- [2026-05-26] P16 Lifecycle Revalidation Pass — 16 scenarios confirmed working
+- [2026-05-26] Dispute Resolution Endpoint Retest — B1/B2 blockers RESOLVED
 
-## P16 Revalidation Results (26 May 2026)
+## P16 Revalidation Summary
 
-### Confirmed Working (16/16 scenarios pass)
-- Partial approve with `approval_lines[]` + `segments[]`
-- Header status `partially_approved`
-- Line-level statuses: `approved`, `on_hold`, `cancelled_remainder`
-- `meta_json.approval` fields fully populated
-- Second wave approve (accumulates across waves)
-- Cancel-remainder (transitions `partially_approved` → `approved`)
-- Dispatch on `partially_approved` (approved lines only)
-- `receive_dispute_pending` auto-triggered by partial receive
-- Legacy full approve `{}` backward compat
-- Old transfer without `meta_json.approval` (safe fallback)
-- P14 canonical request (no selector)
-- Queue counters with mixed statuses
-- Stale-transfers endpoint
-
-### Contract Deltas Found (9 items)
-- D1: `approval_lines[].segments[]` REQUIRED (not optional) — CRITICAL
-- D2: `details/{id}` is GET (not POST) — HIGH
-- D3: Dispute auto-triggered by `rejected_qty > 0` (no `dispute: true` flag) — HIGH
-- D4: `meta_json` returned as STRING — HIGH
-- D5: Line status after dispatch = `pending` (not `dispatched`) — MEDIUM
-- D6: `partially_received` new status in queues — MEDIUM
-- D7: `my_requests` includes all lifecycle statuses — MEDIUM
-- D8: Cancel-remainder edits `requested_qty` — LOW
-- D9: `partially_approved` in `approval_pending` (correct behavior) — LOW
-
-### Remaining Blockers (1 critical)
-- B1: `resolve-dispute` endpoint NOT FOUND (404) — Phase 4 blocker
-
-### Implementation Readiness
+### All 4 Phases: READY for Implementation
 - Phase 0 (Foundation): ✅ READY
 - Phase 1 (Line Rendering): ✅ READY
-- Phase 2 (Partial Approve UI): ⚠️ READY with caveat (segment picker mandatory)
+- Phase 2 (Partial Approve UI): ✅ READY (segment picker mandatory per D1)
 - Phase 3 (Cancel-Remainder + Second Wave): ✅ READY
-- Phase 4 (Dispute Resolution): ❌ BLOCKED (backend route missing)
+- Phase 4 (Dispute Resolution): ✅ READY (B1 resolved — route was `/receive-dispute/{id}/resolve`)
+
+### Dispute Resolution — Verified Contract
+- **Accept:** `POST /receive-dispute/{id}/resolve` with `{"accept": true, "note": "..."}` → `partially_received` or `received`
+- **Reject:** `POST /receive-dispute/{id}/resolve` with `{"accept": false, "note": "..."}` → reverts to `dispatched` (franchise re-receives)
+- Prior 404 was wrong route (`/resolve-dispute/{id}` instead of `/receive-dispute/{id}/resolve`)
+
+### 9 Contract Deltas (Unchanged)
+- D1-D9 documented in `P16_frontend_planning_risk_assessment.md` §19.2
+
+### 0 Remaining Blockers
+- B1: RESOLVED — dispute resolve endpoint confirmed
+- B2: RESOLVED — response shapes documented
 
 ## Prioritized Backlog
 - P0: Phase 0+1 implementation (status vocab + line-level rendering)
 - P0: Phase 2 ApproveWaveDialog with segment picker
 - P1: Phase 3 cancel-remainder + second wave UI
+- P1: Phase 4 dispute resolution UI
 - P1: Queue counter updates for new statuses
-- P2: Phase 4 dispute resolution (blocked on backend)
 
 ## Next Tasks
-- Confirm dispute resolution endpoint registration with backend team
 - Begin Phase 0 implementation (non-breaking additive changes)
+- All P16 API contracts verified — no backend dependencies remaining

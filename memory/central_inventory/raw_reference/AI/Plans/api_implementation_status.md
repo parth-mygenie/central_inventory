@@ -1112,7 +1112,117 @@ Not in original P16 vocabulary. Appears in franchise `receive_pending` and `my_r
 
 | Transfer | Lines | Purpose | Final Status |
 |----------|-------|---------|-------------|
-| 104 | 91 (red meat 2kg), 92 (maida 1kg) | Partial approve → dispatch → receive dispute | `receive_dispute_pending` |
+| 104 | 91 (red meat 2kg), 92 (maida 1kg) | Partial approve → dispatch → receive dispute → **resolve (accept)** | `partially_received` |
 | 105 | 93 (maida 0.1kg) | Legacy full approve → dispatch → full receive | `received` |
 | 106 | 94 (maida 2kg), 95 (red meat 0.5kg) | Partial approve → cancel-remainder | `approved` (cancelled lines) |
 | 107 | 96 (maida 3kg) | 3-wave approve | `approved` |
+| 108 | 97 (maida 0.5kg) | Full approve → dispatch → receive dispute → **resolve (reject)** | `dispatched` (reverted) |
+
+---
+
+## Addendum: Receive-Dispute Resolution Endpoint — CONFIRMED WORKING (26 May 2026)
+
+> **Root cause of prior 404:** Wrong route tested. Prior session probed `/resolve-dispute/{id}`, `/dispute/resolve/{id}`, etc.
+> **Canonical route:** `POST /inventory-transfer/receive-dispute/{id}/resolve`
+> **Status:** WORKING — both accept and reject paths verified
+
+### Endpoint Contract
+
+**Route:** `POST /inventory-transfer/receive-dispute/{id}/resolve`
+**Auth:** Central/sender token only (`from_restaurant_id` actor)
+**Prerequisite:** Transfer must be in `receive_dispute_pending` status
+
+### Accept Path (accept: true)
+
+**Request:**
+```json
+{
+  "accept": true,
+  "note": "Damage approved"
+}
+```
+
+**Response (Transfer 104):**
+```json
+{
+  "status": true,
+  "message": "Receive dispute resolved",
+  "data": {
+    "transfer_id": 104,
+    "status": "partially_received",
+    "lines": [
+      {"line_id": 92, "stock_title": "maida", "received_qty": 1, "rejected_qty": 0, "received_unit": "kg"},
+      {"line_id": 91, "stock_title": "red meat", "received_qty": 0.2, "rejected_qty": 0.1, "received_unit": "kg"}
+    ],
+    "accepted": true
+  }
+}
+```
+
+**Post-resolve state:**
+- Header status: `partially_received` (T104 had on_hold maida line auto-received at 1kg + red meat 0.2kg accepted)
+- `resolution_meta`: `{"receive_totals": {"damaged_qty": 0, "on_hold_qty": 0, "accepted_qty": 1.2, "rejected_qty": 0.1, "returned_qty": 0.1}, "skip_sender_approval": true}`
+- Rejected qty (0.1kg) handled per `resolution_type` (default `return_to_source`)
+
+### Reject Path (accept: false)
+
+**Request:**
+```json
+{
+  "accept": false,
+  "note": "Resubmit photos"
+}
+```
+
+**Response (Transfer 108):**
+```json
+{
+  "status": true,
+  "message": "Receive dispute resolved",
+  "data": {
+    "transfer_id": 108,
+    "status": "dispatched",
+    "accepted": false
+  }
+}
+```
+
+**Post-reject state:**
+- Header status: **reverts to `dispatched`** — franchise must re-submit receive
+- `resolution_meta`: `{"receive_dispute_rejected": {"at": "2026-05-26T21:01:11+05:30", "note": "Resubmit photos"}}`
+- Transfer reappears in franchise `receive_pending` queue (status=`dispatched`)
+- Transfer reappears in franchise `my_requests` queue (status=`dispatched`)
+
+### Dispute Resolution State Machine
+
+```
+                     ┌─ accept: true ──→ received / partially_received (terminal)
+receive_dispute_     │                   resolution_meta.receive_totals populated
+pending ─────────────┤
+                     │
+                     └─ accept: false ─→ dispatched (reverted, re-receivable)
+                                         resolution_meta.receive_dispute_rejected populated
+                                         franchise can re-submit receive
+```
+
+### Frontend Integration Notes
+
+1. **`api.js` new method:** `resolveDispute(transferId, { accept, note })` → `POST /receive-dispute/{id}/resolve`
+2. **DisputeResolutionDialog** inputs: accept (boolean toggle), note (text area)
+3. **After accept=true:** navigate to transfer detail (now `partially_received` or `received`)
+4. **After accept=false:** transfer reverts to `dispatched`; notify franchise to resubmit
+5. **Central sees dispute transfers** in `approval_pending`? NO — disputes do not appear in standard queues for central. Frontend should add dispute queue visibility (custom query or filter).
+6. **`resolution_meta` shape differs by path:** `receive_totals` on accept, `receive_dispute_rejected` on reject
+
+### Updated Implementation Readiness
+
+| Phase | Previous | Updated | Change Reason |
+|-------|----------|---------|---------------|
+| Phase 4: Franchise Lifecycle (Dispute) | ❌ BLOCKED | ✅ **READY** | `receive-dispute/{id}/resolve` confirmed working (both accept and reject) |
+
+### P16 Blocker Register (Updated)
+
+| # | Blocker | Status | Resolution |
+|---|---------|--------|------------|
+| B1 | `resolve-dispute` endpoint NOT FOUND | **RESOLVED** | Canonical route is `POST /receive-dispute/{id}/resolve` — prior 404 was wrong route path tested |
+| B2 | Dispute resolution meta shape unclear | **RESOLVED** | Accept: `receive_totals` with qty breakdown. Reject: `receive_dispute_rejected` with note + timestamp |

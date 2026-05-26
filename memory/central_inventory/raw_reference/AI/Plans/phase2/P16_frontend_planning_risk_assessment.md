@@ -596,10 +596,10 @@ The existing frontend was built for the atomic model. Every component assumes it
 
 ### 19.3 Remaining BLOCKERS
 
-| # | Blocker | Severity | Impact | Action Required |
-|---|---------|----------|--------|-----------------|
-| B1 | **`resolve-dispute` endpoint NOT FOUND** (404 on all probed paths: `/resolve-dispute/{id}`, `/receive/resolve-dispute/{id}`, `/dispute/resolve/{id}`, `/receive-dispute/{id}`, `/dispute-resolution/{id}`) | **CRITICAL** | Phase 4 (Dispute Resolution UI) cannot be built until backend registers this route | **Backend team must confirm route registration and contract** |
-| B2 | **Dispute resolution meta shape unclear** — `resolution_meta.receive_dispute` is populated on submit, but resolve-side response shape unknown | **HIGH** | Cannot design DisputeResolutionDialog without knowing what the resolve endpoint accepts and returns | **Blocked pending B1** |
+| # | Blocker | Severity | Status | Resolution |
+|---|---------|----------|--------|------------|
+| B1 | ~~`resolve-dispute` endpoint NOT FOUND~~ | ~~CRITICAL~~ | **RESOLVED (26 May 2026)** | Canonical route: `POST /receive-dispute/{id}/resolve`. Prior 404 was wrong route tested (`/resolve-dispute/{id}` instead of `/receive-dispute/{id}/resolve`). Both accept and reject paths verified. |
+| B2 | ~~Dispute resolution meta shape unclear~~ | ~~HIGH~~ | **RESOLVED (26 May 2026)** | Accept: `resolution_meta.receive_totals` with qty breakdown. Reject: `resolution_meta.receive_dispute_rejected` with note + timestamp. Reject reverts status to `dispatched`. |
 
 ### 19.4 Updated Risk Severity Matrix
 
@@ -622,7 +622,7 @@ The existing frontend was built for the atomic model. Every component assumes it
 | **Phase 1: TransferDetail Line-Level Rendering** | ✅ **READY** | None — `meta_json.approval` fields confirmed, old transfer fallback safe |
 | **Phase 2: Partial Approve UI** | ⚠️ **READY with caveat** | `ApproveWaveDialog` MUST integrate segment picker (D1) — `source-options` provides segments |
 | **Phase 3: Cancel-Remainder + Second Wave** | ✅ **READY** | Cancel-remainder and second wave both confirmed working |
-| **Phase 4: Franchise Lifecycle (Dispute)** | ❌ **BLOCKED** | `resolve-dispute` endpoint missing (B1) — dispute SUBMIT works but RESOLVE does not |
+| **Phase 4: Franchise Lifecycle (Dispute)** | ✅ **READY** | B1 resolved — `POST /receive-dispute/{id}/resolve` confirmed working (accept + reject paths) |
 
 ### 19.6 Verified P16 API Contract Summary
 
@@ -663,9 +663,17 @@ Body: { "received_lines": [{"line_id": <int>, "accepted_qty": <float>, "rejected
 Response (dispute): { status, data: { transfer_id, status: "receive_dispute_pending", message: "..." } }
 Response (full accept): { status, data: { transfer_id, status: "received", lines: [...] } }
 
-# Resolve dispute — ENDPOINT NOT FOUND (404)
-POST /resolve-dispute/{id}  ← DOES NOT EXIST
-POST /receive-dispute/{id}  ← DOES NOT EXIST
+# Resolve dispute — CONFIRMED WORKING
+# Canonical route: POST /receive-dispute/{id}/resolve
+# Prior 404 was WRONG ROUTE (tested /resolve-dispute/{id})
+POST /receive-dispute/{id}/resolve
+Body (accept): { "accept": true, "note": "Damage approved" }
+Response: { status, data: { transfer_id, status: "received"|"partially_received", lines: [...], accepted: true } }
+
+Body (reject): { "accept": false, "note": "Resubmit photos" }
+Response: { status, data: { transfer_id, status: "dispatched", accepted: false } }
+# Accept → terminal (received/partially_received). resolution_meta.receive_totals populated.
+# Reject → reverts to dispatched. resolution_meta.receive_dispute_rejected populated. Franchise re-receives.
 
 # Transfer details (GET not POST)
 GET /details/{id}
