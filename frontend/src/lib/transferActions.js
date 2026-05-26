@@ -16,12 +16,12 @@
 /**
  * Get available actions for a transfer given the current user context.
  *
- * @param {string} transferStatus - Transfer status (requested, approved, dispatched, etc.)
- * @param {string} transferType - Transfer type ("request" or "dispatch")
- * @param {string} userRestaurantType - Backend restaurant_type of logged-in user
- * @param {number|string} userRestaurantId - Restaurant ID of logged-in user
- * @param {number|string} fromRestaurantId - Source restaurant of the transfer
- * @param {number|string} toRestaurantId - Destination restaurant of the transfer
+ * P15/P16 independent hold-wave lifecycle:
+ * - Hold waves can be approved after dispatch/receive (same transfer).
+ * - partially_received transfers remain actionable for source (approve hold, dispatch, cancel-remainder).
+ * - "Approve More" appears whenever outstanding hold exists, regardless of header status.
+ *
+ * @param {object} options - Transfer + user context
  * @returns {Array<{id: string, label: string, variant: string}>} Visible actions
  */
 export function getAvailableActions(
@@ -30,12 +30,12 @@ export function getAvailableActions(
   userRestaurantType,
   userRestaurantId,
   fromRestaurantId,
-  toRestaurantId
+  toRestaurantId,
+  { hasOutstandingHold = false, hasApprovedUndispatched = false } = {}
 ) {
   if (!transferStatus || !userRestaurantType) return [];
 
   const status = transferStatus.toLowerCase().trim();
-  const role = userRestaurantType.toLowerCase().trim();
   const userId = String(userRestaurantId);
   const fromId = String(fromRestaurantId);
   const toId = String(toRestaurantId);
@@ -43,7 +43,7 @@ export function getAvailableActions(
   const isSource = userId === fromId;
   const isDestination = userId === toId;
 
-  // Terminal statuses — no actions
+  // Fully terminal — no actions for anyone
   if (["received", "cancelled", "rejected"].includes(status)) {
     return [];
   }
@@ -53,19 +53,42 @@ export function getAvailableActions(
   // ── Source-side actions (central/master who owns the stock) ──
   if (isSource) {
     if (status === "requested") {
-      actions.push({ id: "approve", label: "Approve", variant: "default" });
+      actions.push({ id: "approve", label: "Approve All", variant: "default" });
       actions.push({ id: "partial-approve", label: "Partial Approve", variant: "outline" });
       actions.push({ id: "reject", label: "Reject", variant: "destructive" });
+
     } else if (status === "partially_approved") {
       actions.push({ id: "partial-approve", label: "Approve More", variant: "default" });
       actions.push({ id: "dispatch", label: "Dispatch Approved", variant: "default" });
       actions.push({ id: "cancel-remainder", label: "Cancel Remainder", variant: "outline" });
       actions.push({ id: "reject", label: "Reject", variant: "destructive" });
+
     } else if (status === "approved") {
       actions.push({ id: "dispatch", label: "Dispatch", variant: "default" });
       actions.push({ id: "cancel", label: "Cancel", variant: "destructive" });
+
     } else if (status === "dispatched") {
+      // Independent hold: if hold remains, source can approve more or cancel remainder
+      if (hasOutstandingHold) {
+        actions.push({ id: "partial-approve", label: "Approve Hold", variant: "default" });
+        actions.push({ id: "cancel-remainder", label: "Cancel Remainder", variant: "outline" });
+      }
+      // If newly approved qty awaits dispatch (follow-up wave)
+      if (hasApprovedUndispatched) {
+        actions.push({ id: "dispatch", label: "Dispatch Wave", variant: "default" });
+      }
       actions.push({ id: "cancel", label: "Cancel", variant: "destructive" });
+
+    } else if (status === "partially_received") {
+      // Independent hold: partially_received is NOT terminal for source
+      if (hasOutstandingHold) {
+        actions.push({ id: "partial-approve", label: "Approve Hold", variant: "default" });
+        actions.push({ id: "cancel-remainder", label: "Cancel Remainder", variant: "outline" });
+      }
+      if (hasApprovedUndispatched) {
+        actions.push({ id: "dispatch", label: "Dispatch Wave", variant: "default" });
+      }
+
     } else if (status === "receive_dispute_pending") {
       actions.push({ id: "resolve-dispute", label: "Resolve Dispute", variant: "default" });
     }
@@ -78,8 +101,11 @@ export function getAvailableActions(
     } else if (status === "dispatched") {
       actions.push({ id: "receive", label: "Receive", variant: "default" });
       actions.push({ id: "report-issue", label: "Report Issue", variant: "destructive" });
+    } else if (status === "partially_received") {
+      // Follow-up receive for next dispatch wave
+      // (only show if there's dispatched qty to receive — backend handles validation)
+      actions.push({ id: "receive", label: "Receive", variant: "default" });
     }
-    // partially_received is terminal for destination — no actions
   }
 
   return actions;

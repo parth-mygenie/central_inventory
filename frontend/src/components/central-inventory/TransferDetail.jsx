@@ -230,7 +230,19 @@ export default function TransferDetail() {
   const disputeRejected = data.resolution_meta?.receive_dispute_rejected;
   const isDispute = data.status === "receive_dispute_pending";
 
-  const actions = getAvailableActions(data.status, data.type, restaurantType, restaurantId, data.from_restaurant_id, data.to_restaurant_id);
+  // P16: Compute hold/dispatch state for action matrix
+  const hasOutstandingHold = lines.some((l) =>
+    (l.holdDisplayQty ?? 0) > 0 || l.lineStatus === "on_hold"
+  );
+  const hasApprovedUndispatched = lines.some((l) =>
+    (l.approvedDisplayQty ?? 0) > 0 && (l.dispatchedDisplayTotal ?? 0) < (l.approvedDisplayQty ?? 0)
+  );
+
+  const actions = getAvailableActions(
+    data.status, data.type, restaurantType, restaurantId,
+    data.from_restaurant_id, data.to_restaurant_id,
+    { hasOutstandingHold, hasApprovedUndispatched }
+  );
 
   return (
     <div data-testid="transfer-detail">

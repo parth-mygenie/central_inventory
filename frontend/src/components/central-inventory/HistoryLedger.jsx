@@ -33,21 +33,34 @@ const ALL_STATUSES = Object.keys(STATUS_CONFIG);
 /**
  * Derive stock ledger entries from full transfer objects.
  * Each dispatched/received/partial/cancelled transfer produces 1-2 entries per line.
+ *
+ * P16 fix: Use actual dispatched/received quantities from meta_json and resolution_meta,
+ * not the requested qty. Merge restaurant names from historyNameMap.
  */
-function deriveLedgerEntries(transfers, actorRestaurantId) {
+function deriveLedgerEntries(transfers, actorRestaurantId, historyNameMap) {
   const entries = [];
   let entryId = 1;
+  const nameMap = historyNameMap || {};
 
   for (const t of transfers) {
     const lines = t.lines || t.data?.lines || [];
-    const fromName = t.from_restaurant?.restaurant_name || t.from_restaurant_name || "Unknown";
-    const toName = t.to_restaurant?.restaurant_name || t.to_restaurant_name || "Unknown";
-    const fromType = t.from_restaurant?.restaurant_type || t.from_restaurant_type || null;
-    const toType = t.to_restaurant?.restaurant_type || t.to_restaurant_type || null;
+    // P16: merge restaurant names from history list (details API lacks them)
+    const fromName = t.from_restaurant?.restaurant_name || t.from_restaurant_name || nameMap[t.from_restaurant_id]?.name || "—";
+    const toName = t.to_restaurant?.restaurant_name || t.to_restaurant_name || nameMap[t.to_restaurant_id]?.name || "—";
+    const fromType = t.from_restaurant?.restaurant_type || t.from_restaurant_type || nameMap[t.from_restaurant_id]?.type || null;
+    const toType = t.to_restaurant?.restaurant_type || t.to_restaurant_type || nameMap[t.to_restaurant_id]?.type || null;
+
+    // P16: get header-level receive totals for partial receive qty
+    const receiveTotals = t.resolution_meta?.receive_totals;
 
     for (const line of lines) {
+      // P16: Use dispatched qty from meta_json, not requested qty
+      const dispatchedQty = line.dispatchedDisplayTotal ?? line.quantity;
+      // Skip lines that were never dispatched (on_hold / cancelled_remainder)
+      const lineWasDispatched = line.dispatchedDisplayTotal != null ? line.dispatchedDisplayTotal > 0 : true;
+
       // Dispatched → source gets "Transfer Out"
-      if (["dispatched", "received", "partially_received", "cancelled"].includes(t.status)) {
+      if (["dispatched", "received", "partially_received", "cancelled"].includes(t.status) && lineWasDispatched) {
         entries.push({
           id: `L-${entryId++}`,
           date: t.dispatched_at || t.created_at,
@@ -57,7 +70,7 @@ function deriveLedgerEntries(transfers, actorRestaurantId) {
           item: line.stock_title,
           movement_type: "transfer_out",
           direction: "out",
-          quantity: line.quantity,
+          quantity: dispatchedQty,
           unit: line.unit,
           before_qty: null,
           after_qty: null,
@@ -71,8 +84,8 @@ function deriveLedgerEntries(transfers, actorRestaurantId) {
         });
       }
 
-      // Received → destination gets "Transfer In"
-      if (t.status === "received") {
+      // Received → destination gets "Transfer In" (use dispatched qty as received)
+      if (t.status === "received" && lineWasDispatched) {
         entries.push({
           id: `L-${entryId++}`,
           date: t.received_at || t.updated_at,
@@ -82,7 +95,7 @@ function deriveLedgerEntries(transfers, actorRestaurantId) {
           item: line.stock_title,
           movement_type: "transfer_in",
           direction: "in",
-          quantity: line.quantity,
+          quantity: dispatchedQty,
           unit: line.unit,
           before_qty: null,
           after_qty: null,
@@ -97,8 +110,9 @@ function deriveLedgerEntries(transfers, actorRestaurantId) {
       }
 
       // Partially received → destination gets partial entry
-      if (t.status === "partially_received") {
-        const acceptedQty = line.accepted_qty ?? line.quantity;
+      // P16: use accepted qty from resolution_meta.receive_totals (header-level)
+      if (t.status === "partially_received" && lineWasDispatched) {
+        const acceptedQty = line.accepted_qty ?? receiveTotals?.accepted_qty ?? dispatchedQty;
         entries.push({
           id: `L-${entryId++}`,
           date: t.received_at || t.updated_at,
@@ -123,7 +137,7 @@ function deriveLedgerEntries(transfers, actorRestaurantId) {
       }
 
       // Cancelled post-dispatch → source gets reversal (stock restored)
-      if (t.status === "cancelled" && t.dispatched_at) {
+      if (t.status === "cancelled" && t.dispatched_at && lineWasDispatched) {
         entries.push({
           id: `L-${entryId++}`,
           date: t.cancelled_at || t.updated_at,
@@ -133,7 +147,7 @@ function deriveLedgerEntries(transfers, actorRestaurantId) {
           item: line.stock_title,
           movement_type: "reversal",
           direction: "in",
-          quantity: line.quantity,
+          quantity: dispatchedQty,
           unit: line.unit,
           before_qty: null,
           after_qty: null,
@@ -272,15 +286,29 @@ export default function HistoryLedger() {
     }
   }, [activeTab, historyData, ledgerLoaded, fetchLedgerData]);
 
+  // Build restaurant name map from history data (history list has names, details does not)
+  const historyNameMap = useMemo(() => {
+    const map = {};
+    for (const t of historyData) {
+      if (t.from_restaurant_id && t.from_restaurant_name) {
+        map[t.from_restaurant_id] = { name: t.from_restaurant_name, type: t.from_restaurant_type || null };
+      }
+      if (t.to_restaurant_id && t.to_restaurant_name) {
+        map[t.to_restaurant_id] = { name: t.to_restaurant_name, type: t.to_restaurant_type || null };
+      }
+    }
+    return map;
+  }, [historyData]);
+
   // Derive ledger entries (transfers + wastage merged)
   const ledgerEntries = useMemo(() => {
     if (!ledgerLoaded) return [];
-    const transferEntries = fullTransfers.length > 0 ? deriveLedgerEntries(fullTransfers, restaurantId) : [];
+    const transferEntries = fullTransfers.length > 0 ? deriveLedgerEntries(fullTransfers, restaurantId, historyNameMap) : [];
     const wastageRows = wastageEntries.length > 0 ? deriveWastageEntries(wastageEntries) : [];
     const merged = [...transferEntries, ...wastageRows];
     merged.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
     return merged;
-  }, [fullTransfers, wastageEntries, ledgerLoaded, restaurantId]);
+  }, [fullTransfers, wastageEntries, ledgerLoaded, restaurantId, historyNameMap]);
 
   // ── Filtered Transfer History ─────────────────────────
   const filteredHistory = useMemo(() => {
