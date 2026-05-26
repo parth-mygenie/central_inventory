@@ -1602,3 +1602,9 @@ curl --location "${BASE_V2}/inventory-transfer/source-options" \
 echo "# Returns: segments[], filters with counts"
 echo "# Use segment_id from here for approval_lines[].segments[].segment_id"
 echo "# source-options requires OWNER token (from_restaurant_id == auth token restaurant_id)"
+
+# =============================
+# P16 FRONTEND IMPLEMENTATION COMPLETE (26 May 2026)
+# All 4 phases implemented + 16/16 tests PASS
+# Frontend API methods added: approveTransferPartial, cancelRemainder, resolveDispute
+# =============================

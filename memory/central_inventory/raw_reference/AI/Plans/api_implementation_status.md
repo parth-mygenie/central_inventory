@@ -1226,3 +1226,31 @@ pending ─────────────┤
 |---|---------|--------|------------|
 | B1 | `resolve-dispute` endpoint NOT FOUND | **RESOLVED** | Canonical route is `POST /receive-dispute/{id}/resolve` — prior 404 was wrong route path tested |
 | B2 | Dispute resolution meta shape unclear | **RESOLVED** | Accept: `receive_totals` with qty breakdown. Reject: `receive_dispute_rejected` with note + timestamp |
+
+---
+
+## Addendum: P16 Frontend Implementation Complete (26 May 2026)
+
+All 4 P16 frontend phases implemented and tested against live POS API.
+
+### Frontend API Methods Added
+
+| Method | Endpoint | Phase |
+|--------|----------|-------|
+| `approveTransferPartial(id, {approvalLines, defaultRemainderPolicy})` | `POST /approve/{id}` with `approval_lines[]` | 2 |
+| `cancelRemainder(id)` | `POST /approve/{id}/cancel-remainder` | 2 |
+| `resolveDispute(id, {accept, note})` | `POST /receive-dispute/{id}/resolve` | 3 |
+
+### Line Normalization Contract (api.js)
+
+Every transfer line returned by `getTransferDetails()` now includes:
+- `lineStatus` — line-level status (requested/approved/on_hold/cancelled_remainder/pending)
+- `hasApprovalMeta` — boolean flag for P16-enriched lines
+- `requestedDisplayQty`, `approvedDisplayQty`, `holdDisplayQty`, `cancelledDisplayQty`
+- `dispatchedDisplayTotal` — from meta_json.dispatch
+- `approvalWaves[]` — audit trail array
+- `meta` — parsed meta_json object (not string)
+
+Old transfers without meta_json.approval gracefully fall back to `line.quantity`.
+
+### Test Result: 16/16 PASS

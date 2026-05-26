@@ -742,3 +742,39 @@ Response: { status, data: { transfer, lines: [{meta_json: "<JSON string>", statu
   }
 }
 ```
+
+---
+
+## 20. Implementation Report — 26 May 2026
+
+> **Status:** ALL 4 PHASES IMPLEMENTED AND TESTED
+> **Test Result:** 16/16 features PASS (frontend-only testing against live POS API)
+> **Regression:** Direct Dispatch, Adjustment, Wastage, Hierarchy, Login — all preserved
+
+### 20.1 Files Modified
+
+| File | Change | Phase |
+|------|--------|-------|
+| `terminology.js` | Added `partially_approved`, `receive_dispute_pending` to STATUS_CONFIG; added LINE_STATUS_CONFIG with `on_hold`, `cancelled_remainder`, `pending`; added `getLineStatusConfig()` | 0 |
+| `transferActions.js` | Added `partially_approved` → partial-approve, dispatch, cancel-remainder, reject; Added `receive_dispute_pending` → resolve-dispute; Simplified role-based → source/destination-based action matrix | 0 |
+| `api.js` | Enhanced `normalizeTransferLine()` with P16 meta_json parsing; Added `approveTransferPartial()`, `cancelRemainder()`, `resolveDispute()` | 0 |
+| `TransferDetail.jsx` | Full P16 rewrite: LineStatusBadge, LineQtyBreakdown, Approval Waves audit card, dispute info display, all new action handlers | 1+2+3 |
+| `StatusTimeline.jsx` | Added `partially_approved` and `receive_dispute_pending` timeline steps | 1 |
+| `ReceiveDialog.jsx` | Uses `dispatchedDisplayTotal` from meta_json.dispatch instead of `line.quantity`; filters out non-dispatched lines | 1 |
+
+### 20.2 Files Created
+
+| File | Purpose | Phase |
+|------|---------|-------|
+| `ApproveWaveDialog.jsx` | Per-line segment picker + qty + remainder policy for partial approve | 2 |
+| `DisputeResolutionDialog.jsx` | Accept/reject toggle + note for dispute resolution | 3 |
+
+### 20.3 Verified Behaviors
+
+- Legacy full approve `{}` still works (backward compat preserved)
+- Old transfers without `meta_json.approval` render with single quantity column (graceful fallback)
+- `cancelled_remainder` lines render with strikethrough + opacity
+- `on_hold` lines render with yellow background tint
+- Approval waves show per-line audit trail with timestamps
+- ReceiveDialog correctly skips non-dispatched lines (on_hold, cancelled)
+- Action matrix correctly shows source vs destination actions without role branching
