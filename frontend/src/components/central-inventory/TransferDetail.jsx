@@ -362,7 +362,11 @@ export default function TransferDetail() {
                   <TableRow
                     key={idx}
                     data-testid={`transfer-line-${idx}`}
-                    className={line.lineStatus === "cancelled_remainder" ? "opacity-50 line-through" : line.lineStatus === "on_hold" ? "bg-yellow-50/40" : ""}
+                    className={
+                      line.lineStatus === "cancelled_remainder" ? "opacity-50 line-through" :
+                      line.lineStatus === "on_hold" ? "bg-yellow-50/40" :
+                      line.lineStatus === "partially_approved" ? "bg-sky-50/30" : ""
+                    }
                   >
                     <TableCell className="text-xs font-medium">{line.stock_title || "—"}</TableCell>
                     {hasP16Meta && (

@@ -97,6 +97,7 @@ export const STATUS_CONFIG = {
 // Line-level status vocabulary (P16)
 export const LINE_STATUS_CONFIG = {
   requested:            { label: "Requested",          color: "bg-amber-100 text-amber-800",   dot: "bg-amber-500" },
+  partially_approved:   { label: "Partially Approved", color: "bg-sky-100 text-sky-800",       dot: "bg-sky-500" },
   approved:             { label: "Approved",           color: "bg-blue-100 text-blue-800",     dot: "bg-blue-500" },
   on_hold:              { label: "On Hold",            color: "bg-yellow-100 text-yellow-800", dot: "bg-yellow-500" },
   cancelled_remainder:  { label: "Cancelled",          color: "bg-red-100 text-red-800",       dot: "bg-red-500" },

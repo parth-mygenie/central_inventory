@@ -85,6 +85,26 @@ function normalizeTransferLine(line) {
   const approval = meta.approval || {};
   const dispatch = meta.dispatch || {};
 
+  // P16: Derive operational line status from POS status + approval meta.
+  // POS returns line.status="approved" even when holdDisplayQty > 0 (partially approved).
+  // We derive a more accurate lineStatus for rendering:
+  //   - "approved" with hold > 0 → "partially_approved" (still re-approvable)
+  //   - "approved" with hold = 0 → "approved" (fully approved)
+  //   - "pending" after dispatch → keep "pending" (POS uses this for dispatched lines)
+  //   - everything else → pass through from POS
+  const rawStatus = (line.status || "requested").toLowerCase();
+  const holdQty = approval.hold_display_qty ?? 0;
+  const approvedQty = approval.approved_display_qty ?? 0;
+  let derivedLineStatus = rawStatus;
+  if (rawStatus === "approved" && holdQty > 0) {
+    derivedLineStatus = "partially_approved";
+  }
+
+  // Compute remaining approvable qty: requested - approved - cancelled
+  const requestedQty = approval.requested_display_qty ?? (line.requested_qty != null ? Number(line.requested_qty) : null);
+  const cancelledQty = approval.cancelled_display_qty ?? 0;
+  const remainingApprovableQty = requestedQty != null ? Math.max(0, requestedQty - approvedQty - cancelledQty) : null;
+
   return {
     ...line,
     stock_title: line.stock_title || line.source_stock_title || null,
@@ -93,13 +113,15 @@ function normalizeTransferLine(line) {
     accepted_qty: line.accepted_qty ?? null,
     rejected_qty: line.rejected_qty ?? null,
     // P16 line-level fields
-    lineStatus: line.status || "requested",
+    lineStatus: derivedLineStatus,
+    rawLineStatus: rawStatus,
     meta,
-    requestedDisplayQty: approval.requested_display_qty ?? (line.requested_qty != null ? Number(line.requested_qty) : null),
+    requestedDisplayQty: requestedQty,
     originalRequestedDisplayQty: approval.original_requested_display_qty ?? null,
-    approvedDisplayQty: approval.approved_display_qty ?? null,
-    holdDisplayQty: approval.hold_display_qty ?? null,
-    cancelledDisplayQty: approval.cancelled_display_qty ?? null,
+    approvedDisplayQty: approvedQty || null,
+    holdDisplayQty: holdQty ? Math.round(holdQty * 10000) / 10000 : null,
+    cancelledDisplayQty: cancelledQty ? Math.round(cancelledQty * 10000) / 10000 : null,
+    remainingApprovableQty: remainingApprovableQty != null ? Math.round(remainingApprovableQty * 10000) / 10000 : null,
     remainderPolicy: approval.remainder_policy ?? null,
     approvalWaves: approval.approval_waves || [],
     dispatchedDisplayTotal: dispatch.dispatched_display_total ?? null,

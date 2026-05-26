@@ -15,7 +15,9 @@ import api from "@/services/api";
  */
 export default function ApproveWaveDialog({ open, onOpenChange, transfer, onSubmit, submitting = false }) {
   const lines = (transfer?.lines || []).filter(
-    (l) => l.lineStatus === "requested" || l.lineStatus === "on_hold" || l.lineStatus === "approved"
+    (l) => l.lineStatus === "requested" || l.lineStatus === "on_hold"
+        || l.lineStatus === "partially_approved"
+        || (l.lineStatus === "approved" && (l.holdDisplayQty ?? 0) > 0)
   );
   const fromId = transfer?.from_restaurant_id;
 
@@ -28,18 +30,25 @@ export default function ApproveWaveDialog({ open, onOpenChange, transfer, onSubm
   useEffect(() => {
     if (!open) return;
     setLineApprovals(
-      lines.map((l) => ({
-        line_id: l.id,
-        stock_title: l.stock_title,
-        unit: l.unit || l.display_unit,
-        requestedQty: l.requestedDisplayQty ?? l.quantity ?? 0,
-        holdQty: l.holdDisplayQty ?? l.requestedDisplayQty ?? l.quantity ?? 0,
-        approvedQty: 0,
-        segmentId: null,
-        segmentQty: 0,
-        include: false,
-        masterId: l.source_inventory_master_id,
-      }))
+      lines.map((l) => {
+        // Use remainingApprovableQty as the available-to-approve ceiling.
+        // Falls back to holdDisplayQty, then full requested qty for first-time lines.
+        const approvableQty = l.remainingApprovableQty ?? l.holdDisplayQty ?? l.requestedDisplayQty ?? l.quantity ?? 0;
+        return {
+          line_id: l.id,
+          stock_title: l.stock_title,
+          unit: l.unit || l.display_unit,
+          requestedQty: l.requestedDisplayQty ?? l.quantity ?? 0,
+          holdQty: approvableQty,
+          currentApproved: l.approvedDisplayQty ?? 0,
+          approvedQty: 0,
+          segmentId: null,
+          segmentQty: 0,
+          include: false,
+          masterId: l.source_inventory_master_id,
+          lineStatus: l.lineStatus,
+        };
+      })
     );
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -138,7 +147,7 @@ export default function ApproveWaveDialog({ open, onOpenChange, transfer, onSubm
                         type="checkbox"
                         checked={la.include}
                         onChange={() => toggleLine(idx)}
-                        disabled={submitting}
+                        disabled={submitting || la.holdQty <= 0}
                         className="rounded"
                         data-testid={`approve-line-check-${idx}`}
                       />
@@ -146,9 +155,14 @@ export default function ApproveWaveDialog({ open, onOpenChange, transfer, onSubm
                         <Package className="h-3 w-3 text-muted-foreground" />
                         {la.stock_title}
                       </span>
+                      {la.currentApproved > 0 && (
+                        <span className="text-[9px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full">
+                          {la.currentApproved} already approved
+                        </span>
+                      )}
                     </div>
                     <span className="text-[10px] text-muted-foreground">
-                      Available: {la.holdQty} {la.unit}
+                      {la.holdQty > 0 ? `${la.holdQty} ${la.unit} remaining` : "Fully approved"}
                     </span>
                   </div>
 
