@@ -83,14 +83,30 @@ export function mapRole(backendType) {
 // ── Transfer status colors ───────────────────────────────────────
 
 export const STATUS_CONFIG = {
-  requested:          { label: "Requested",          color: "bg-amber-100 text-amber-800",    dot: "bg-amber-500" },
-  approved:           { label: "Approved",           color: "bg-blue-100 text-blue-800",      dot: "bg-blue-500" },
-  dispatched:         { label: "Dispatched",         color: "bg-indigo-100 text-indigo-800",  dot: "bg-indigo-500" },
-  received:           { label: "Received",           color: "bg-emerald-100 text-emerald-800",dot: "bg-emerald-500" },
-  partially_received: { label: "Partially Received", color: "bg-teal-100 text-teal-800",      dot: "bg-teal-500" },
-  cancelled:          { label: "Cancelled",          color: "bg-red-100 text-red-800",        dot: "bg-red-500" },
-  rejected:           { label: "Rejected",           color: "bg-rose-100 text-rose-800",      dot: "bg-rose-500" },
+  requested:                { label: "Requested",              color: "bg-amber-100 text-amber-800",     dot: "bg-amber-500" },
+  partially_approved:       { label: "Partially Approved",     color: "bg-sky-100 text-sky-800",         dot: "bg-sky-500" },
+  approved:                 { label: "Approved",               color: "bg-blue-100 text-blue-800",       dot: "bg-blue-500" },
+  dispatched:               { label: "Dispatched",             color: "bg-indigo-100 text-indigo-800",   dot: "bg-indigo-500" },
+  received:                 { label: "Received",               color: "bg-emerald-100 text-emerald-800", dot: "bg-emerald-500" },
+  partially_received:       { label: "Partially Received",     color: "bg-teal-100 text-teal-800",       dot: "bg-teal-500" },
+  receive_dispute_pending:  { label: "Dispute Pending",        color: "bg-orange-100 text-orange-800",   dot: "bg-orange-500" },
+  cancelled:                { label: "Cancelled",              color: "bg-red-100 text-red-800",         dot: "bg-red-500" },
+  rejected:                 { label: "Rejected",               color: "bg-rose-100 text-rose-800",       dot: "bg-rose-500" },
 };
+
+// Line-level status vocabulary (P16)
+export const LINE_STATUS_CONFIG = {
+  requested:            { label: "Requested",          color: "bg-amber-100 text-amber-800",   dot: "bg-amber-500" },
+  approved:             { label: "Approved",           color: "bg-blue-100 text-blue-800",     dot: "bg-blue-500" },
+  on_hold:              { label: "On Hold",            color: "bg-yellow-100 text-yellow-800", dot: "bg-yellow-500" },
+  cancelled_remainder:  { label: "Cancelled",          color: "bg-red-100 text-red-800",       dot: "bg-red-500" },
+  pending:              { label: "Pending",            color: "bg-slate-100 text-slate-700",   dot: "bg-slate-400" },
+};
+
+export function getLineStatusConfig(status) {
+  if (!status) return { label: "—", color: "bg-gray-100 text-gray-800", dot: "bg-gray-400" };
+  return LINE_STATUS_CONFIG[status.toLowerCase().trim()] || { label: status, color: "bg-gray-100 text-gray-800", dot: "bg-gray-400" };
+}
 
 export function getStatusConfig(status) {
   if (!status) return { label: "Unknown", color: "bg-gray-100 text-gray-800", dot: "bg-gray-400" };

@@ -44,22 +44,39 @@ function getTimelineSteps(transfer) {
     return steps;
   }
 
-  // Step 2: Approved (only for request-based)
-  if (type === "request" || transfer.approved_at) {
-    const approvedDone = !!transfer.approved_at || ["approved", "dispatched", "received", "partially_received"].includes(status);
+  // Step 2: Partially Approved (P16 — intermediate state)
+  if (status === "partially_approved" || (transfer.approved_at && ["partially_approved"].includes(status))) {
     steps.push({
-      key: "approved",
-      label: "Approved",
+      key: "partially_approved",
+      label: "Partially Approved",
       timestamp: transfer.approved_at,
       actor: transfer.approved_by,
-      completed: approvedDone,
-      active: status === "approved",
-      icon: "circle",
+      completed: true,
+      active: status === "partially_approved",
+      icon: "alert",
     });
   }
 
+  // Step 2b: Approved (only for request-based)
+  if (type === "request" || transfer.approved_at) {
+    const isPartial = status === "partially_approved";
+    const approvedDone = !isPartial && (!!transfer.approved_at || ["approved", "dispatched", "received", "partially_received", "receive_dispute_pending"].includes(status));
+    // Skip if partially_approved step already added AND status is still partially_approved
+    if (!isPartial) {
+      steps.push({
+        key: "approved",
+        label: "Approved",
+        timestamp: isPartial ? null : transfer.approved_at,
+        actor: transfer.approved_by,
+        completed: approvedDone,
+        active: status === "approved",
+        icon: "circle",
+      });
+    }
+  }
+
   // Step 3: Dispatched
-  const dispatchedDone = !!transfer.dispatched_at || ["dispatched", "received", "partially_received"].includes(status);
+  const dispatchedDone = !!transfer.dispatched_at || ["dispatched", "received", "partially_received", "receive_dispute_pending"].includes(status);
   steps.push({
     key: "dispatched",
     label: "Dispatched",
@@ -82,6 +99,20 @@ function getTimelineSteps(transfer) {
       icon: "ban",
       isBranch: true,
       reason: transfer.resolution_meta?.reason,
+    });
+    return steps;
+  }
+
+  // Step 3b: Receive Dispute Pending (P16)
+  if (status === "receive_dispute_pending") {
+    steps.push({
+      key: "receive_dispute_pending",
+      label: "Dispute Pending",
+      timestamp: transfer.updated_at,
+      actor: null,
+      completed: true,
+      active: true,
+      icon: "alert",
     });
     return steps;
   }
@@ -139,6 +170,8 @@ function getStepRingColor(step) {
   if (step.key === "rejected") return "border-rose-300 bg-rose-50";
   if (step.key === "cancelled") return "border-red-300 bg-red-50";
   if (step.key === "partially_received") return "border-teal-300 bg-teal-50";
+  if (step.key === "partially_approved") return "border-sky-300 bg-sky-50";
+  if (step.key === "receive_dispute_pending") return "border-orange-300 bg-orange-50";
   if (step.completed) return "border-emerald-300 bg-emerald-50";
   if (step.active) return "border-blue-400 bg-blue-50";
   return "border-muted bg-muted/30";

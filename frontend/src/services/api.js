@@ -71,9 +71,20 @@ function parseResolutionMeta(t) {
 /**
  * Normalize a transfer line from POS API.
  * POS field names → frontend expected names.
+ * P16: Parse meta_json.approval for line-level lifecycle fields.
  */
 function normalizeTransferLine(line) {
   if (!line) return line;
+  // Parse meta_json from string → object
+  let meta = line.meta_json;
+  if (typeof meta === "string") {
+    try { meta = JSON.parse(meta); } catch { meta = null; }
+  }
+  if (!meta) meta = {};
+
+  const approval = meta.approval || {};
+  const dispatch = meta.dispatch || {};
+
   return {
     ...line,
     stock_title: line.stock_title || line.source_stock_title || null,
@@ -81,6 +92,18 @@ function normalizeTransferLine(line) {
     unit: line.unit || line.requested_unit || line.display_unit || null,
     accepted_qty: line.accepted_qty ?? null,
     rejected_qty: line.rejected_qty ?? null,
+    // P16 line-level fields
+    lineStatus: line.status || "requested",
+    meta,
+    requestedDisplayQty: approval.requested_display_qty ?? (line.requested_qty != null ? Number(line.requested_qty) : null),
+    originalRequestedDisplayQty: approval.original_requested_display_qty ?? null,
+    approvedDisplayQty: approval.approved_display_qty ?? null,
+    holdDisplayQty: approval.hold_display_qty ?? null,
+    cancelledDisplayQty: approval.cancelled_display_qty ?? null,
+    remainderPolicy: approval.remainder_policy ?? null,
+    approvalWaves: approval.approval_waves || [],
+    dispatchedDisplayTotal: dispatch.dispatched_display_total ?? null,
+    hasApprovalMeta: Object.keys(approval).length > 0,
   };
 }
 
@@ -276,6 +299,27 @@ function approveTransfer(transferId) {
   return client.post(`/proxy/v2/inventory-transfer/approve/${transferId}`, {});
 }
 
+/** P16: Partial approve with approval_lines + segments per line */
+function approveTransferPartial(transferId, { approvalLines, defaultRemainderPolicy = "hold" }) {
+  return client.post(`/proxy/v2/inventory-transfer/approve/${transferId}`, {
+    approval_lines: approvalLines,
+    default_remainder_policy: defaultRemainderPolicy,
+  });
+}
+
+/** P16: Cancel hold on partially_approved transfer */
+function cancelRemainder(transferId) {
+  return client.post(`/proxy/v2/inventory-transfer/approve/${transferId}/cancel-remainder`, {});
+}
+
+/** P16: Resolve receive dispute (central/sender only) */
+function resolveDispute(transferId, { accept, note }) {
+  return client.post(`/proxy/v2/inventory-transfer/receive-dispute/${transferId}/resolve`, {
+    accept,
+    note,
+  });
+}
+
 function rejectTransfer(transferId, payload) {
   return client.post(`/proxy/v2/inventory-transfer/reject/${transferId}`, payload);
 }
@@ -378,6 +422,9 @@ const api = {
   initiateTransfer,
   requestStock,
   approveTransfer,
+  approveTransferPartial,
+  cancelRemainder,
+  resolveDispute,
   rejectTransfer,
   dispatchTransfer,
   receiveTransfer,

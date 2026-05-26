@@ -21,14 +21,21 @@ export default function ReceiveDialog({ open, onOpenChange, transfer, onSubmit, 
   const lines = transfer?.lines || transfer?.items || [];
   const [isPartial, setIsPartial] = useState(false);
   const [lineData, setLineData] = useState(() =>
-    lines.map((l) => ({
-      line_id: l.id,
-      dispatched: l.quantity ?? 0,
-      accepted_qty: l.quantity ?? 0,
-      rejected_qty: 0,
-      resolution_type: "",
-      reason: "",
-    }))
+    lines.map((l) => {
+      // P16: Use dispatched display total from meta_json.dispatch as truth source
+      const dispatchedQty = l.dispatchedDisplayTotal ?? l.quantity ?? 0;
+      return {
+        line_id: l.id,
+        dispatched: dispatchedQty,
+        accepted_qty: dispatchedQty,
+        rejected_qty: 0,
+        resolution_type: "",
+        reason: "",
+        stock_title: l.stock_title,
+        unit: l.unit,
+        lineStatus: l.lineStatus,
+      };
+    }).filter((ld) => ld.dispatched > 0) // Skip lines with 0 dispatched (on_hold, cancelled)
   );
 
   const updateLine = (idx, field, value) => {
@@ -87,8 +94,13 @@ export default function ReceiveDialog({ open, onOpenChange, transfer, onSubmit, 
             {lines.map((line, idx) => (
               <div key={idx} className="p-2.5 space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-xs font-medium">{line.stock_title || "Item"}</span>
-                  <span className="text-xs text-muted-foreground">{line.quantity} {line.unit}</span>
+                  <span className="text-xs font-medium">{lineData[idx]?.stock_title || line.stock_title || "Item"}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {lineData[idx]?.dispatched ?? line.quantity} {lineData[idx]?.unit || line.unit}
+                    {line.dispatchedDisplayTotal != null && line.dispatchedDisplayTotal !== line.quantity && (
+                      <span className="text-[10px] text-indigo-600 ml-1">(dispatched)</span>
+                    )}
+                  </span>
                 </div>
                 {isPartial && (
                   <div className="grid grid-cols-2 gap-2">

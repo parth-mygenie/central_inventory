@@ -44,58 +44,42 @@ export function getAvailableActions(
   const isDestination = userId === toId;
 
   // Terminal statuses — no actions
-  if (["received", "partially_received", "cancelled", "rejected"].includes(status)) {
+  if (["received", "cancelled", "rejected"].includes(status)) {
     return [];
   }
 
   const actions = [];
 
-  if (role === "master") {
-    // Central Store — top level
-    if (status === "requested" && isSource) {
-      actions.push({ id: "approve", label: "Approve", variant: "default" });
-      actions.push({ id: "reject", label: "Reject", variant: "destructive" });
-    } else if (status === "approved" && isSource) {
-      actions.push({ id: "dispatch", label: "Dispatch", variant: "default" });
-      actions.push({ id: "cancel", label: "Cancel", variant: "destructive" });
-    } else if (status === "dispatched") {
-      if (isSource) {
-        actions.push({ id: "cancel", label: "Cancel", variant: "destructive" });
-      }
-      if (isDestination) {
-        actions.push({ id: "receive", label: "Receive", variant: "default" });
-        actions.push({ id: "report-issue", label: "Report Issue", variant: "destructive" });
-      }
-    }
-  } else if (role === "central") {
-    // Master Store — middle level
+  // ── Source-side actions (central/master who owns the stock) ──
+  if (isSource) {
     if (status === "requested") {
-      if (isSource) {
-        actions.push({ id: "approve", label: "Approve", variant: "default" });
-        actions.push({ id: "reject", label: "Reject", variant: "destructive" });
-      } else if (isDestination && transferType === "request") {
-        actions.push({ id: "edit", label: "Edit", variant: "outline" });
-      }
-    } else if (status === "approved" && isSource) {
+      actions.push({ id: "approve", label: "Approve", variant: "default" });
+      actions.push({ id: "partial-approve", label: "Partial Approve", variant: "outline" });
+      actions.push({ id: "reject", label: "Reject", variant: "destructive" });
+    } else if (status === "partially_approved") {
+      actions.push({ id: "partial-approve", label: "Approve More", variant: "default" });
+      actions.push({ id: "dispatch", label: "Dispatch Approved", variant: "default" });
+      actions.push({ id: "cancel-remainder", label: "Cancel Remainder", variant: "outline" });
+      actions.push({ id: "reject", label: "Reject", variant: "destructive" });
+    } else if (status === "approved") {
       actions.push({ id: "dispatch", label: "Dispatch", variant: "default" });
       actions.push({ id: "cancel", label: "Cancel", variant: "destructive" });
     } else if (status === "dispatched") {
-      if (isSource) {
-        actions.push({ id: "cancel", label: "Cancel", variant: "destructive" });
-      }
-      if (isDestination) {
-        actions.push({ id: "receive", label: "Receive", variant: "default" });
-        actions.push({ id: "report-issue", label: "Report Issue", variant: "destructive" });
-      }
+      actions.push({ id: "cancel", label: "Cancel", variant: "destructive" });
+    } else if (status === "receive_dispute_pending") {
+      actions.push({ id: "resolve-dispute", label: "Resolve Dispute", variant: "default" });
     }
-  } else if (role === "franchise") {
-    // Outlet — bottom level
-    if (status === "requested" && isDestination && transferType === "request") {
+  }
+
+  // ── Destination-side actions (franchise/outlet who requested/receives) ──
+  if (isDestination) {
+    if (status === "requested" && transferType === "request") {
       actions.push({ id: "edit", label: "Edit", variant: "outline" });
-    } else if (status === "dispatched" && isDestination) {
+    } else if (status === "dispatched") {
       actions.push({ id: "receive", label: "Receive", variant: "default" });
       actions.push({ id: "report-issue", label: "Report Issue", variant: "destructive" });
     }
+    // partially_received is terminal for destination — no actions
   }
 
   return actions;
