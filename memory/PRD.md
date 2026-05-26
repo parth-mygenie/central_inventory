@@ -11,34 +11,26 @@ Central Inventory management system for MyGenie — multi-restaurant hierarchy (
 
 ## What's Been Implemented
 - [2026-05-26] Cloned repo from `26_5_26_1` branch
-- [2026-05-26] P16 Lifecycle Revalidation — 16 API scenarios verified against live POS
-- [2026-05-26] Dispute Resolution Endpoint confirmed (`POST /receive-dispute/{id}/resolve`)
-- [2026-05-26] P16 Frontend Implementation — ALL 4 PHASES COMPLETE (16/16 tests PASS)
-- [2026-05-26] **P16 Re-approve lifecycle rendering bug FIXED** — 3 issues resolved
+- [2026-05-26] P16 Lifecycle Revalidation — 16 API scenarios verified
+- [2026-05-26] P16 Frontend Implementation — ALL 4 PHASES COMPLETE
+- [2026-05-26] P16 Re-approve lifecycle rendering bug FIXED
+- [2026-05-26] **E2E UAT PASS — Full multi-wave lifecycle verified (Transfer #112)**
 
-### Bug Fix: Re-approve Lifecycle Rendering (26 May 2026)
+### E2E UAT Results (Transfer #112)
 
-**Root cause:** POS API returns `line.status = "approved"` even when `holdDisplayQty > 0`. Frontend treated this as finalized.
-
-**3 fixes applied:**
-1. **`api.js` normalization**: Derives `lineStatus = "partially_approved"` when POS says `approved` but `holdDisplayQty > 0`. Computes `remainingApprovableQty = requested - approved - cancelled`.
-2. **`terminology.js`**: Added `partially_approved` to `LINE_STATUS_CONFIG` (sky blue badge).
-3. **`ApproveWaveDialog.jsx`**: Uses `remainingApprovableQty` for available ceiling, shows "X already approved" badge, includes `partially_approved` lines in eligibility filter.
-
-**Also fixed:** Floating-point noise in hold/cancelled qty display (rounded to 4 decimals).
-
-## Files Modified (cumulative)
-- `terminology.js`, `transferActions.js`, `api.js`, `TransferDetail.jsx`, `StatusTimeline.jsx`, `ReceiveDialog.jsx`, `ApproveWaveDialog.jsx`
-
-## Files Created
-- `ApproveWaveDialog.jsx`, `DisputeResolutionDialog.jsx`
+| Step | Action | API Result | Frontend Verified |
+|------|--------|-----------|-------------------|
+| 1 | Create request (F786→C782, 0.4kg red meat) | T112 created, status=requested | N/A |
+| 2 | Partial approve (0.3kg from seg 36) | status=partially_approved, hold=0.1 | Line: "Partially Approved", Breakdown: Req:0.4 Appr:0.3 Hold:0.1, Actions: Approve More visible |
+| 3 | Second wave (approve remaining 0.1kg) | status=approved, hold=0, 2 waves | Line: "Approved", Hold gone, Approve More gone, Wave 1+2 audit trail |
+| 4a | Dispatch | status=dispatched, 0.4kg dispatched | Timeline: 4 steps, Dispatched checkmark |
+| 4b | Receive (full accept) | status=received | Terminal: "Received", all green, no actions, full breakdown preserved |
 
 ## Prioritized Backlog
-- P1: End-to-end UAT with live partial approve → dispatch → receive → dispute flow
 - P1: OperationsHub dispute count card
-- P2: Approval wave history collapsible audit view per line
-- P2: Queue sub-filtering (requested vs partially_approved within approval tab)
+- P2: Queue sub-filtering (requested vs partially_approved)
+- P2: Approval wave collapsible audit per line
 
 ## Next Tasks
-- UAT with stakeholders on live preprod environment
-- Consider adding dispute queue visibility for central users
+- Stakeholder review of P16 implementation
+- Production deployment planning
