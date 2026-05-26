@@ -5,29 +5,28 @@ import { useWriteAction } from "@/hooks/useWriteAction";
 import api from "@/services/api";
 import { mapRestaurantType } from "@/lib/terminology";
 import { validateQuantityForUnit } from "@/lib/formatters";
-import SourceSelector from "./SourceSelector";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LoadingState, PermissionDenied } from "@/components/common/StateDisplays";
-import { ArrowLeft, Plus, Trash2, Loader2, SendHorizonal, AlertCircle, Store } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Loader2, SendHorizonal, AlertCircle, Store, Info } from "lucide-react";
 
 /**
- * Canonical Request Stock Form — 3-step flow.
+ * Request Stock Form — canonical 3-step flow (P12/P14 contract).
  *
- * Step 1: POST /request-sources   → pick source store
- * Step 2: POST /request-catalog   → browse source store's items
- * Step 3: POST /request           → submit with source_inventory_master_id + source_selector
+ * Step 1: POST /request-sources       → pick source store
+ * Step 2: POST /request-catalog       → browse source store's items
+ * Step 3: POST /request               → submit (no source_selector)
  *
- * Source selector per item:
- *   - Preferred: segment_id from source-options (when caller owns the source store)
- *   - Fallback: filter_bucket picker (when source-options is UNAUTHORIZED for cross-store)
- *   - Backend assertSelectorAllocatable() validates at submit time
+ * Selector ownership per P14:
+ *   - Requester owns: source store, SKU (source_inventory_master_id), quantity
+ *   - Sender (central) owns: batch/segment/FEFO allocation via edit + dispatch
+ *   - source_selector omitted on request; dispatch uses auto-FEFO or line selector
  *
- * Replaces legacy DEFAULT_SOURCE_SELECTOR approach that blindly used
- * filter_bucket/without_batch_and_expiry (caused dispatch SELECTED_BUCKET_STOCK_NOT_FOUND).
+ * Availability (available_display_qty) is informational only — do NOT block submit when 0.
+ * SourceSelector is NOT shown here; central uses source-options on dispatch/edit UI.
  */
 
 const RELATION_LABELS = {
@@ -53,7 +52,7 @@ export default function RequestStockForm() {
   const [loadingCatalog, setLoadingCatalog] = useState(false);
   const [catalogError, setCatalogError] = useState(null);
 
-  // Step 3: Item rows (now includes sourceSelector per row)
+  // Step 3: Item rows
   const [rows, setRows] = useState([emptyRow()]);
 
   // Load request-sources on mount
@@ -148,7 +147,6 @@ export default function RequestStockForm() {
         const item = catalog.find((i) => String(i.source_inventory_master_id) === String(value));
         next[idx].unit = item?.unit || item?.display_unit || "";
         next[idx].unitId = item?.unit_id || null;
-        next[idx].sourceSelector = null; // Reset selector when item changes
       }
       return next;
     });
@@ -158,15 +156,15 @@ export default function RequestStockForm() {
     if (rows.length === 0 || !selectedSourceId) return;
     const isDefaultParent = selectedSource?.is_direct_parent;
 
+    // Canonical request payload per P12: no source_selector
+    // Sender (central) allocates at dispatch via auto-FEFO or edit + segment_id
     const payloadItems = rows.map((r) => {
       const item = catalog.find((i) => String(i.source_inventory_master_id) === String(r.itemId));
       return {
         source_inventory_master_id: Number(r.itemId),
         stock_title: item?.stock_title || "",
-        unit_id: item?.unit_id || r.unitId,
         quantity: Number(r.quantity),
         unit: item?.unit || r.unit,
-        source_selector: r.sourceSelector,
       };
     });
 
@@ -186,8 +184,9 @@ export default function RequestStockForm() {
     );
   };
 
+  // Validation: item selected + quantity > 0 + valid format. No selector required.
   const allValid = rows.length > 0 && submitAllowed && rows.every(
-    (r) => r.itemId && Number(r.quantity) > 0 && r.sourceSelector && !validateQuantityForUnit(r.quantity, r.unit)
+    (r) => r.itemId && Number(r.quantity) > 0 && !validateQuantityForUnit(r.quantity, r.unit)
   );
 
   return (
@@ -223,7 +222,6 @@ export default function RequestStockForm() {
           <ItemsCard
             rows={rows}
             catalog={catalog}
-            selectedSourceId={selectedSourceId}
             addRow={addRow}
             removeRow={removeRow}
             updateRow={updateRow}
@@ -242,7 +240,7 @@ export default function RequestStockForm() {
 // ── Sub-components ───────────────────────────────────────────────
 
 function emptyRow() {
-  return { itemId: "", quantity: "", unit: "", unitId: null, sourceSelector: null };
+  return { itemId: "", quantity: "", unit: "", unitId: null };
 }
 
 function BackButton({ navigate }) {
@@ -300,7 +298,7 @@ function SourcePicker({ sources, selectedSourceId, onSourceChange, canSubmitToSe
   );
 }
 
-function ItemsCard({ rows, catalog, selectedSourceId, addRow, removeRow, updateRow, submitting }) {
+function ItemsCard({ rows, catalog, addRow, removeRow, updateRow, submitting }) {
   return (
     <Card className="mb-4">
       <CardHeader className="py-2.5 px-4">
@@ -313,7 +311,6 @@ function ItemsCard({ rows, catalog, selectedSourceId, addRow, removeRow, updateR
             idx={idx}
             row={row}
             catalog={catalog}
-            selectedSourceId={selectedSourceId}
             totalRows={rows.length}
             removeRow={removeRow}
             updateRow={updateRow}
@@ -328,7 +325,7 @@ function ItemsCard({ rows, catalog, selectedSourceId, addRow, removeRow, updateR
   );
 }
 
-function ItemRow({ idx, row, catalog, selectedSourceId, totalRows, removeRow, updateRow, submitting }) {
+function ItemRow({ idx, row, catalog, totalRows, removeRow, updateRow, submitting }) {
   const qtyErr = row.quantity && validateQuantityForUnit(row.quantity, row.unit);
   const selectedItem = catalog.find((i) => String(i.source_inventory_master_id) === String(row.itemId));
 
@@ -374,8 +371,9 @@ function ItemRow({ idx, row, catalog, selectedSourceId, totalRows, removeRow, up
           />
           {qtyErr && <p className="text-[10px] text-destructive mt-0.5">{qtyErr}</p>}
           {selectedItem?.available_display_qty != null && (
-            <p className="text-[10px] text-muted-foreground mt-0.5">
-              Available: {selectedItem.available_display_qty} {selectedItem.unit || selectedItem.display_unit}
+            <p className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1" data-testid={`request-avail-hint-${idx}`}>
+              <Info className="h-3 w-3" />
+              Source has ~{selectedItem.available_display_qty} {selectedItem.unit || selectedItem.display_unit} (indicative)
             </p>
           )}
         </div>
@@ -384,20 +382,6 @@ function ItemRow({ idx, row, catalog, selectedSourceId, totalRows, removeRow, up
           <Input value={row.unit || "—"} className="h-7 text-xs bg-muted" readOnly data-testid={`request-unit-${idx}`} />
         </div>
       </div>
-
-      {/* Source selector — shown when item is selected */}
-      {row.itemId && selectedItem && (
-        <div>
-          <Label className="text-[10px]">Source Stock *</Label>
-          <SourceSelector
-            fromRestaurantId={selectedSourceId}
-            inventoryMasterId={selectedItem.source_inventory_master_id}
-            value={row.sourceSelector}
-            onChange={(v) => updateRow(idx, "sourceSelector", v)}
-            disabled={submitting}
-          />
-        </div>
-      )}
     </div>
   );
 }
