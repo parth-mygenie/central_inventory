@@ -329,9 +329,11 @@ function approveTransferPartial(transferId, { approvalLines, defaultRemainderPol
   });
 }
 
-/** P16: Cancel hold on partially_approved transfer */
-function cancelRemainder(transferId) {
-  return client.post(`/proxy/v2/inventory-transfer/approve/${transferId}/cancel-remainder`, {});
+/** P16: Cancel hold on partially_approved transfer — pass line_ids for targeted cancel */
+function cancelRemainder(transferId, lineIds) {
+  const payload = {};
+  if (lineIds && lineIds.length > 0) payload.line_ids = lineIds;
+  return client.post(`/proxy/v2/inventory-transfer/approve/${transferId}/cancel-remainder`, payload);
 }
 
 /** P16: Resolve receive dispute (central/sender only) */

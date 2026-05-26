@@ -15,7 +15,7 @@ import { StatusBadge, StoreTypeBadge } from "@/components/common/Badges";
 import DateRangePicker from "@/components/common/DateRangePicker";
 import {
   ScrollText, History, ArrowDownLeft, ArrowUpRight, Minus,
-  Search, X, Filter, Eye, ArrowRightLeft
+  Search, X, Filter, Eye, ArrowRightLeft, RefreshCw
 } from "lucide-react";
 
 const MOVEMENT_TYPES = {
@@ -45,8 +45,8 @@ function deriveLedgerEntries(transfers, actorRestaurantId, historyNameMap) {
   for (const t of transfers) {
     const lines = t.lines || t.data?.lines || [];
     // P16: merge restaurant names from history list (details API lacks them)
-    const fromName = t.from_restaurant?.restaurant_name || t.from_restaurant_name || nameMap[t.from_restaurant_id]?.name || "—";
-    const toName = t.to_restaurant?.restaurant_name || t.to_restaurant_name || nameMap[t.to_restaurant_id]?.name || "—";
+    const fromName = t.from_restaurant?.restaurant_name || t.from_restaurant_name || nameMap[t.from_restaurant_id]?.name || (t.from_restaurant_type ? mapRestaurantType(t.from_restaurant_type) : `Store #${t.from_restaurant_id || "?"}`);
+    const toName = t.to_restaurant?.restaurant_name || t.to_restaurant_name || nameMap[t.to_restaurant_id]?.name || (t.to_restaurant_type ? mapRestaurantType(t.to_restaurant_type) : `Store #${t.to_restaurant_id || "?"}`);
     const fromType = t.from_restaurant?.restaurant_type || t.from_restaurant_type || nameMap[t.from_restaurant_id]?.type || null;
     const toType = t.to_restaurant?.restaurant_type || t.to_restaurant_type || nameMap[t.to_restaurant_id]?.type || null;
 
@@ -84,8 +84,10 @@ function deriveLedgerEntries(transfers, actorRestaurantId, historyNameMap) {
         });
       }
 
-      // Received → destination gets "Transfer In" (use dispatched qty as received)
+      // Received → destination gets "Transfer In" (use actual received qty, not dispatched)
       if (t.status === "received" && lineWasDispatched) {
+        // P16 fix: Use accepted_qty from line if available (actual received), else dispatched total
+        const receivedQty = line.accepted_qty ?? receiveTotals?.accepted_qty ?? dispatchedQty;
         entries.push({
           id: `L-${entryId++}`,
           date: t.received_at || t.updated_at,
@@ -95,7 +97,7 @@ function deriveLedgerEntries(transfers, actorRestaurantId, historyNameMap) {
           item: line.stock_title,
           movement_type: "transfer_in",
           direction: "in",
-          quantity: dispatchedQty,
+          quantity: receivedQty,
           unit: line.unit,
           before_qty: null,
           after_qty: null,
@@ -421,7 +423,17 @@ export default function HistoryLedger() {
 
   return (
     <div data-testid="history-ledger">
-      <h1 className="text-lg font-bold mb-4">History & Ledger</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-lg font-bold">History & Ledger</h1>
+        <button
+          data-testid="refresh-history-btn"
+          onClick={() => { fetchHistory(); setLedgerLoaded(false); }}
+          disabled={historyLoading}
+          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+        >
+          <RefreshCw className={`h-3 w-3 ${historyLoading ? "animate-spin" : ""}`} /> Refresh
+        </button>
+      </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList data-testid="history-ledger-tabs" className="mb-4">

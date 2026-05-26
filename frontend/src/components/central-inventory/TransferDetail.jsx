@@ -17,7 +17,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { LoadingState, ErrorState, EmptyState } from "@/components/common/StateDisplays";
 import { StoreTypeBadge, StatusBadge } from "@/components/common/Badges";
-import { ArrowLeft, Package, FileWarning, Loader2, Clock, ShieldCheck, BarChart3 } from "lucide-react";
+import { ArrowLeft, Package, FileWarning, Loader2, Clock, ShieldCheck, BarChart3, RefreshCw } from "lucide-react";
 
 /** Line-level status badge (P16) */
 function LineStatusBadge({ status }) {
@@ -114,11 +114,16 @@ export default function TransferDetail() {
   };
 
   const handleCancelRemainder = () => {
+    // P16: Collect IDs of lines with outstanding hold to cancel
+    const holdLineIds = lines
+      .filter((l) => (l.holdDisplayQty ?? 0) > 0 || l.lineStatus === "on_hold")
+      .map((l) => l.id)
+      .filter(Boolean);
     setConfirmDialog({
       title: `Cancel Remainder — Transfer #${data.id || id}?`,
-      description: `This will cancel all held lines and transition the transfer to "Approved" for dispatch.`,
+      description: `This will cancel all held lines (${holdLineIds.length} line${holdLineIds.length !== 1 ? "s" : ""}) and transition the transfer to "Approved" for dispatch.`,
       confirmLabel: "Cancel Remainder",
-      onConfirm: () => execute(() => api.cancelRemainder(data.id || id), {
+      onConfirm: () => execute(() => api.cancelRemainder(data.id || id, holdLineIds), {
         successMsg: `Remainder cancelled for Transfer #${data.id || id}`,
         onSuccess: () => { setConfirmDialog(null); fetchDetail(); },
       }),
@@ -255,11 +260,23 @@ export default function TransferDetail() {
           <h1 className="text-lg font-bold">Transfer #{data.id || id}</h1>
           <StatusBadge status={data.status} />
         </div>
-        {data.type && (
-          <span className="text-[10px] text-muted-foreground bg-muted px-2 py-1 rounded">
-            {data.type === "dispatch" ? "Direct Dispatch" : "Request-based"}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          <Button
+            data-testid="refresh-transfer-btn"
+            variant="ghost"
+            size="sm"
+            onClick={fetchDetail}
+            disabled={loading}
+            className="h-7 text-xs gap-1"
+          >
+            <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} /> Refresh
+          </Button>
+          {data.type && (
+            <span className="text-[10px] text-muted-foreground bg-muted px-2 py-1 rounded">
+              {data.type === "dispatch" ? "Direct Dispatch" : "Request-based"}
+            </span>
+          )}
+        </div>
       </div>
 
       <StatusTimeline transfer={data} />

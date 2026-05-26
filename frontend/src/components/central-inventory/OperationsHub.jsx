@@ -68,10 +68,12 @@ export default function OperationsHub() {
           const histData = histResp.data?.data || histResp.data;
           const histItems = Array.isArray(histData) ? histData : [];
           const sourceId = activeStoreId ? String(activeStoreId) : String(restaurantId);
-          const approved = histItems.filter(
-            (t) => t.status === "approved" && String(t.from_restaurant_id) === sourceId
+          // P16: Include partially_approved and partially_received (follow-up dispatch waves)
+          const dispatchReady = histItems.filter(
+            (t) => ["approved", "partially_approved", "partially_received"].includes(t.status) &&
+                   String(t.from_restaurant_id) === sourceId
           );
-          setReadyToDispatchCount(approved.length);
+          setReadyToDispatchCount(dispatchReady.length);
         } catch {
           setReadyToDispatchCount(0);
         }

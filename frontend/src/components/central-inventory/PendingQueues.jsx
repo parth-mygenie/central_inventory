@@ -15,7 +15,7 @@ import {
   BlockedAction,
 } from "@/components/common/StateDisplays";
 import { StatusBadge } from "@/components/common/Badges";
-import { CheckCircle2, Inbox, SendHorizonal, Truck, Lock } from "lucide-react";
+import { CheckCircle2, Inbox, SendHorizonal, Truck, Lock, RefreshCw } from "lucide-react";
 
 /**
  * SCR-05 Pending Queues — Slice 2
@@ -54,10 +54,13 @@ export default function PendingQueues() {
           const histData = histResp.data?.data || histResp.data;
           const histItems = Array.isArray(histData) ? histData : [];
           // Filter for approved transfers where current user is the source (can dispatch)
-          const approved = histItems.filter(
-            (t) => t.status === "approved" && String(t.from_restaurant_id) === String(restaurantId)
+          // P16: Include partially_approved (has approved qty ready for dispatch)
+          // and partially_received (has follow-up dispatch waves possible)
+          const dispatchReady = histItems.filter(
+            (t) => ["approved", "partially_approved", "partially_received"].includes(t.status) &&
+                   String(t.from_restaurant_id) === String(restaurantId)
           );
-          setReadyToDispatch(approved);
+          setReadyToDispatch(dispatchReady);
         } catch {
           setReadyToDispatch([]);
         }
@@ -116,7 +119,19 @@ export default function PendingQueues() {
 
   return (
     <div data-testid="pending-queues">
-      <h1 className="text-lg font-bold mb-4">Pending Queues</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-lg font-bold">Pending Queues</h1>
+        <Button
+          data-testid="refresh-queues-btn"
+          variant="ghost"
+          size="sm"
+          onClick={fetchQueues}
+          disabled={loading}
+          className="h-7 text-xs gap-1"
+        >
+          <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} /> Refresh
+        </Button>
+      </div>
 
       {loading ? (
         <LoadingState lines={5} />
