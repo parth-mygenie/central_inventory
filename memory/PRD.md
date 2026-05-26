@@ -4,33 +4,31 @@
 Wipe current /app, pull https://github.com/parth-mygenie/central_inventory.git branch 26_5_26, and run as-is.
 
 ## Architecture
-- **Backend**: FastAPI (Python) — acts as a proxy to MyGenie POS API (preprod.mygenie.online)
+- **Backend**: FastAPI (Python) — proxy to MyGenie POS API (preprod.mygenie.online)
 - **Frontend**: React 19 (CRA + craco) + Tailwind CSS + shadcn/ui (Radix primitives)
-- **Database**: MongoDB (motor async driver) — stores token sessions and status checks
-- **Auth**: Proxied through MyGenie POS API (`/api/v1/auth/vendoremployee/common-login`)
+- **Database**: MongoDB (motor async driver) — token sessions + status checks
+- **Auth**: Proxied through MyGenie POS API
 
 ## What's Been Implemented
 
 ### 26 May 2026 — Initial Deploy
-- Cloned repo from branch `26_5_26` into /app, both services running
+- Cloned repo from branch `26_5_26`, both services running
 
 ### 26 May 2026 — Transfer 82 Dispatch Diagnosis
-- Root cause: legacy `filter_bucket/without_batch_and_expiry` selector on request, stock in `with_batch_and_expiry` only
-- Fix: edit → re-approve → dispatch
+- Root cause: legacy selector mismatch. Fix: edit → re-approve → dispatch
 
-### 26 May 2026 — P12/P14 Canonical Request Stock Migration (CURRENT)
-- **Removed SourceSelector from RequestStockForm** — requester no longer owns batch/segment/bucket selection
-- **Omit `source_selector` from request payload** — sender allocates at dispatch via auto-FEFO
-- **Availability informational only** — "Source has ~X (indicative)", does NOT block submit when 0
-- **SourceSelector preserved in DirectDispatchForm** — dispatch still needs segment selection for own-store stock
-- **Verified end-to-end:** Transfer #89 (curl) + #96 (UI test) — request without selector → approve → dispatch auto-FEFO → 200 OK
-- **Testing:** 10/10 backend + 13/13 frontend PASS
+### 26 May 2026 — P12/P14 Canonical Request Stock Migration
+- Removed SourceSelector from RequestStockForm (requester doesn't own allocation)
+- source_selector omitted on request; sender auto-FEFO at dispatch
+- Verified e2e: Transfer #89 (curl) + #96 (UI test)
+- 10/10 backend + 13/13 frontend PASS
 
-### Selector Ownership (P14 Contract)
-| Actor | Owns | API |
-|-------|------|-----|
-| Requester (franchise/central) | Source store, SKU, quantity | `POST /request` |
-| Sender (central/parent) | Batch/segment/FEFO allocation | `POST /edit/{id}`, `POST /dispatch/{id}` |
+### 26 May 2026 — P16 Frontend Planning & Risk Assessment
+- Deep architecture analysis for refined request-line lifecycle (P16)
+- Identified 12 critical assumption violations, 5 CRITICAL risks, 8 HIGH risks
+- Proposed 4-phase incremental migration (foundation → line rendering → partial approve → franchise lifecycle)
+- Document: `AI/Plans/phase2/P16_frontend_planning_risk_assessment.md`
+- No code changes — planning document only
 
 ## Tested Credentials
 | Email | Password | rid | type |
@@ -42,6 +40,9 @@ Wipe current /app, pull https://github.com/parth-mygenie/central_inventory.git b
 | owner@demofranchise4.com | Qplazm@10 | 786 | franchise |
 
 ## Backlog / Next Tasks
-- P1: Central dispatch UI — `source-options` → optional `edit` with `segment_id` → `dispatch` (sender-side selector UX)
-- P2: `reserve_on_approve=true` testing — verify auto-FEFO reserve at approve time
-- P2: Production deployment configuration
+- P0 (P16 Phase 0): Add status config, API methods, line normalization (non-breaking foundation)
+- P0 (P16 Phase 1): TransferDetail line-level rendering with meta_json.approval
+- P1 (P16 Phase 2): ApproveWaveDialog for central partial approve
+- P2 (P16 Phase 3): Cancel-remainder + second wave + franchise lifecycle actions
+- P2: Central dispatch UI with source-options → edit → dispatch
+- P3: reserve_on_approve=true testing

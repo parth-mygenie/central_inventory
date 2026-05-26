@@ -924,3 +924,36 @@ Dispatch reads `meta_json.selector` from the transfer line and calls `fetchAlloc
 - [x] After success, route to transfer detail or Pending Queues
 - [x] DirectDispatchForm regression verified (unchanged, SourceSelector preserved)
 
+
+
+---
+
+## Addendum: P16 Refined Request-Line — Frontend Planning (26 May 2026)
+
+> **Full document:** [`phase2/P16_frontend_planning_risk_assessment.md`](phase2/P16_frontend_planning_risk_assessment.md)
+> Status: PLANNING ONLY — no code changes implemented
+
+### Summary
+
+Frontend architecture analysis for P16 refined request-line lifecycle (partial approve waves, line-level statuses, hold/cancel-remainder, receive dispute). Key findings:
+
+- **12 critical assumptions** in current frontend that P16 violates (header-status=line-status, approve=full, dispatch=all-lines, etc.)
+- **5 CRITICAL risks** identified (stale state after approve wave, wrong dispatch qty display, incorrect queue counts, receive dialog wrong qty, status timeline breaks)
+- **4-phase incremental migration** proposed (Phase 0: foundation → Phase 1: line rendering → Phase 2: partial approve UI → Phase 3: franchise lifecycle)
+- **Zero regression risk** to DirectDispatch, Adjustment, Wastage, Hierarchy flows
+- Each phase independently deployable and rollback-safe
+
+### Required New Components
+- `ApproveWaveDialog` (central: segment picker + qty per line + remainder_policy)
+- `LineStatusBadge` (per-line: approved/on_hold/cancelled_remainder)
+- `LineQuantityBreakdown` (requested/approved/hold/cancelled per line)
+- `CancelRemainderDialog` (central: drop hold qty)
+
+### Required API Additions
+- `approveTransferPartial(id, {approvalLines, defaultRemainderPolicy})`
+- `cancelRemainder(id, {lineIds})`
+- `withdrawRequest(id)`, `amendRequest(id)`, `modificationRequest(id)`
+- `receiveDispute(id)`, `resolveDispute(id)`
+
+### Required Status Config Additions
+- `partially_approved`, `on_hold`, `cancelled_remainder`, `receive_dispute_pending`
