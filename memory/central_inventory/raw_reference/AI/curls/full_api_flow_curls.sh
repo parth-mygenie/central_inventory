@@ -1279,3 +1279,120 @@ curl --location "${BASE_V2}/inventory-transfer/dispatch-async/${BUTTER_REQUEST_T
   --header "Accept: application/json" \
   --header "Content-Type: application/json" \
   --data-raw '{}'
+
+
+# =============================
+# ADDENDUM: P12/P14 Canonical Request Flow — No Selector (26 May 2026)
+# Verified: request WITHOUT source_selector → approve → dispatch (auto-FEFO)
+# Transfers: #89 (curl verified), #96 (UI test)
+# =============================
+
+# --- Credentials ---
+# FRANCHISE4_TOKEN = owner@demofranchise4.com / Qplazm@10 → rid=786, type=franchise
+# CENTRAL2_TOKEN = owner@democentral2.com / Qplazm@10 → rid=782, type=central
+
+echo
+echo "=== P12: Request WITHOUT source_selector (786 → 782, canonical) ==="
+echo "# Per P14: requester owns source store + SKU + quantity only."
+echo "# Sender (central) allocates batch/segment at dispatch via auto-FEFO."
+curl --location "${BASE_V2}/inventory-transfer/request" \
+  --header "Authorization: Bearer ${FRANCHISE_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "items": [{
+      "source_inventory_master_id": 16991,
+      "quantity": 0.3,
+      "unit": "kg"
+    }]
+  }'
+echo "# Expected: status=true, transfer_id, type=request, status=requested"
+echo "# No source_selector in payload. No allocation at request time."
+
+echo
+echo "=== P12: Approve no-selector request (central 782) ==="
+echo "# Replace TRANSFER_ID with transfer_id from request response."
+curl --location "${BASE_V2}/inventory-transfer/approve/${TRANSFER_ID}" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{}'
+echo "# Expected: status=true, status=approved"
+
+echo
+echo "=== P14: Dispatch with auto-FEFO (no selector on line) ==="
+echo "# Body: {} — no source_selector, no dispatch_lines."
+echo "# Backend runs resolveDispatchSelector() → auto_fefo persisted."
+echo "# Allocates from first FEFO-eligible segment at source store."
+curl --location "${BASE_V2}/inventory-transfer/dispatch/${TRANSFER_ID}" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{}'
+echo "# Expected: status=true, status=dispatched"
+echo "# Transfer 89 verified: 0.3kg red meat dispatched via auto-FEFO from C782"
+
+echo
+echo "=== P12: Request with multiple items, no selector ==="
+curl --location "${BASE_V2}/inventory-transfer/request" \
+  --header "Authorization: Bearer ${FRANCHISE_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "items": [
+      {
+        "source_inventory_master_id": 16988,
+        "stock_title": "Cooking Oil",
+        "quantity": 0.5,
+        "unit": "ltr"
+      },
+      {
+        "source_inventory_master_id": 16989,
+        "stock_title": "maida",
+        "quantity": 1,
+        "unit": "kg"
+      }
+    ]
+  }'
+echo "# Expected: multi-line request created, no selector on any line."
+
+echo
+echo "=== P12: Request with explicit non-default source (786 → master 1) ==="
+curl --location "${BASE_V2}/inventory-transfer/request" \
+  --header "Authorization: Bearer ${FRANCHISE_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "from_restaurant_id": 1,
+    "items": [{
+      "source_inventory_master_id": 16982,
+      "stock_title": "red meat",
+      "quantity": 0.5,
+      "unit": "kg"
+    }]
+  }'
+echo "# Expected: request to master store (if allow_master_direct_franchise enabled)."
+
+echo
+echo "=== Backward compat: Request WITH optional source_selector (still accepted) ==="
+curl --location "${BASE_V2}/inventory-transfer/request" \
+  --header "Authorization: Bearer ${FRANCHISE_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "items": [{
+      "source_inventory_master_id": 16991,
+      "quantity": 0.2,
+      "unit": "kg",
+      "source_selector": {
+        "mode": "filter_bucket",
+        "bucket": "with_batch_and_expiry",
+        "batch_state": "value",
+        "batch": "MEAT-BATCH-01",
+        "expiry_state": "value",
+        "expiry_date": "2026-06-30"
+      }
+    }]
+  }'
+echo "# Expected: request created with selector stored in meta_json."
+echo "# Dispatch will use stored selector instead of auto-FEFO."

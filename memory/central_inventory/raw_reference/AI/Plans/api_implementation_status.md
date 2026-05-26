@@ -851,43 +851,76 @@ Dispatch reads `meta_json.selector` from the transfer line and calls `fetchAlloc
 
 ---
 
-## Addendum: Request Stock Selector Fix — Frontend Implementation (26 May 2026)
+## ~~Addendum: Request Stock Selector Fix — Frontend Implementation (26 May 2026)~~ SUPERSEDED
 
-> Source: Transfer 82 dispatch diagnosis → frontend fix implementation
-> Verified: 15/15 backend + 12/12 frontend tests PASS
+> **SUPERSEDED** by P12/P14 Canonical Migration below. The SourceSelector approach (adding per-row segment/bucket picker to RequestStockForm) was replaced by the canonical contract where requester does NOT own selector.
 
-### Problem
-`RequestStockForm.jsx` hardcoded `DEFAULT_SOURCE_SELECTOR` as `filter_bucket/without_batch_and_expiry` for ALL request items. This selector was persisted in `meta_json.selector` at request time. At dispatch time, if the source store's stock existed only in other buckets (e.g., `with_batch_and_expiry`), dispatch failed with `SELECTED_BUCKET_STOCK_NOT_FOUND`.
+---
 
-### Fix Implemented
-1. **Removed** `DEFAULT_SOURCE_SELECTOR` constant from `RequestStockForm.jsx`
-2. **Integrated** `SourceSelector` component per item row (same pattern as `DirectDispatchForm.jsx`)
-3. **Per-row `sourceSelector` state** — each item now has its own selector instead of sharing a global default
-4. **Submit validation** — submit button disabled until all rows have a sourceSelector selected
-5. **SourceSelector UNAUTHORIZED fallback** — when `source-options` returns 403 (cross-store request), SourceSelector automatically switches to bucket-only mode with warning message
-6. **Fixed bucket payload shape** — SourceSelector now emits `{ mode: "filter_bucket", bucket: "<name>", batch_state: "null", expiry_state: "null" }` (was incorrectly using `filter_bucket` key instead of `bucket`)
+## Addendum: P12/P14 Canonical Request Stock Migration — Frontend Implementation (26 May 2026)
 
-### Behavior Matrix (Verified)
+> Source: `AI/Plans/phase2/P12_request_stock_flow_frontend.md` + `AI/Plans/phase2/P14_request_selector_ownership.md`
+> Verified: 10/10 backend + 13/13 frontend tests PASS
+> Transfers verified: #89 (curl), #96 (UI test) — full lifecycle without source_selector
 
-| Scenario | source-options result | SourceSelector mode | User must |
-|----------|----------------------|--------------------|----|
-| Central dispatching own stock | 200 with segments[] | segment_id picker | Select segment |
-| Franchise requesting from parent central | 403 UNAUTHORIZED | filter_bucket picker (fallback) | Select bucket |
-| Central requesting from master | 403 UNAUTHORIZED | filter_bucket picker (fallback) | Select bucket |
+### Selector Ownership Contract (P14)
+
+| Actor | Owns | API phase |
+|-------|------|-----------|
+| **Requester** (franchise/central) | Source store, SKU (`source_inventory_master_id`), quantity | `POST /request` |
+| **Sender** (central/parent) | Batch/segment/FEFO allocation via `edit` and/or `dispatch` | `POST /edit/{id}`, `POST /dispatch/{id}` |
+
+### What Changed
+
+1. **Removed SourceSelector from RequestStockForm** — requester no longer selects batch, segment, or bucket
+2. **Removed `source_selector` from request payload** — omitted entirely; sender allocates at dispatch via auto-FEFO
+3. **Removed `sourceSelector` from row state** — row is now `{ itemId, quantity, unit, unitId }`
+4. **Removed SourceSelector import** from RequestStockForm
+5. **Submit validation simplified** — requires only item + quantity (no selector check)
+6. **Availability shown as informational** — "Source has ~X unit (indicative)" with Info icon; does NOT block submit when 0
+7. **SourceSelector preserved in DirectDispatchForm** — dispatch owner still needs segment/bucket selection for own-store stock
+
+### Canonical Request Payload (no source_selector)
+
+```json
+{
+  "from_restaurant_id": 782,
+  "items": [{
+    "source_inventory_master_id": 16991,
+    "stock_title": "red meat",
+    "quantity": 0.8,
+    "unit": "kg"
+  }]
+}
+```
+
+### Dispatch Auto-FEFO Behavior (P14 verified)
+
+- `POST /dispatch/{id}` with body `{}` on a request with no `meta_json.selector` → backend runs auto-FEFO across all available segments
+- Transfer 89: created without selector, approved, dispatched with auto-FEFO → **200 OK**, 0.3kg red meat deducted from first FEFO segment
+- Transfer 96: created via UI (franchise user), approved, dispatched → **200 OK**
+- No `SELECTED_BUCKET_STOCK_NOT_FOUND` errors — auto-FEFO allocates from any available stock
+
+### Backward Compatibility
+
+- Requests WITH `source_selector` still accepted (old clients, legacy requests)
+- Old requests with `meta_json.selector` dispatch using stored selector (not auto-FEFO)
+- `source_selector` optional on `POST /request` — POS API does not reject when omitted
 
 ### Files Changed
-- `frontend/src/components/central-inventory/RequestStockForm.jsx` — removed DEFAULT_SOURCE_SELECTOR, added SourceSelector per item row
-- `frontend/src/components/central-inventory/SourceSelector.jsx` — added 403 fallback, fixed bucket payload shape
+- `frontend/src/components/central-inventory/RequestStockForm.jsx` — removed SourceSelector, simplified to P12/P14 contract
+- `frontend/src/components/central-inventory/SourceSelector.jsx` — unchanged (still used by DirectDispatchForm)
 
-### Remaining Constraint
-For cross-store requests (franchise→central, central→master), the requester cannot call `source-options` on the source store's segments (POS API ownership rule). The requester must select a bucket blindly. Backend `assertSelectorAllocatable()` validates at submit time and returns `SELECTED_BUCKET_STOCK_NOT_FOUND` if the selected bucket is empty.
-
-### Frontend Contract Alignment Checklist (Updated)
-- [x] SourceSelector integrated per item row in RequestStockForm
-- [x] segment_id preferred when source-options available
-- [x] filter_bucket fallback when source-options UNAUTHORIZED (403)
-- [x] Submit button gated by sourceSelector presence
-- [x] Bucket payload shape corrected (uses `bucket` key, not `filter_bucket`)
-- [x] DirectDispatchForm regression verified (unchanged, still works)
-- [ ] Pending: retry UX when SELECTED_BUCKET_STOCK_NOT_FOUND at submit (currently shows generic toast)
+### P12 Frontend Checklist (Completed)
+- [x] Step 1: `request-sources` → filter UI by `can_submit_request`
+- [x] Step 2: `request-catalog` with chosen `source_restaurant_id`
+- [x] Use `source_inventory_master_id` from catalog, never child store ids
+- [x] Do NOT require `source_selector` on request submit
+- [x] Do NOT block lines when `available_display_qty === 0` (warn only)
+- [x] Removed child "Source Stock" bucket UI; central uses `source-options` on dispatch/edit
+- [x] Optional `from_restaurant_id` when user picks non-default source
+- [x] Do not rely on `get-inventory-master` for parent SKU list
+- [x] Handle `INVALID_HIERARCHY` when sibling central selected but flag off
+- [x] After success, route to transfer detail or Pending Queues
+- [x] DirectDispatchForm regression verified (unchanged, SourceSelector preserved)
 
