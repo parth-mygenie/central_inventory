@@ -28,10 +28,22 @@ Wipe current /app, pull https://github.com/parth-mygenie/central_inventory.git b
 
 ### 26 May 2026 — Transfer 82 Dispatch Diagnosis
 - **Issue:** `POST /dispatch/82` returned `400 SELECTED_BUCKET_STOCK_NOT_FOUND`
-- **Root cause:** Request saved with `filter_bucket/without_batch_and_expiry` selector but ALL stock at C782 for red meat exists only in `with_batch_and_expiry` segments
+- **Root cause:** Request saved with `filter_bucket/without_batch_and_expiry` but ALL stock at C782 for red meat exists only in `with_batch_and_expiry` segments
 - **Fix applied operationally:** Edit (segment_id:23) → Re-approve → Dispatch → 200 OK
-- **Docs updated:** `full_api_flow_curls.sh` (dispatch fix flow + Phase 2 ops sections), `api_implementation_status.md` (dispatch selector diagnosis + Phase 2 endpoints)
-- **No code changes** — this was a data/selector mismatch, not a code bug
+- **Docs updated:** `full_api_flow_curls.sh` + `api_implementation_status.md`
+
+### 26 May 2026 — Request Stock Selector Fix (Frontend)
+- **Problem:** `RequestStockForm.jsx` hardcoded `DEFAULT_SOURCE_SELECTOR` as `filter_bucket/without_batch_and_expiry` for ALL requests
+- **Fix implemented:**
+  - Removed `DEFAULT_SOURCE_SELECTOR` constant
+  - Integrated `SourceSelector` per item row (same as `DirectDispatchForm`)
+  - Per-row `sourceSelector` state — each item has own selector
+  - Submit button disabled until all rows have selector selected
+  - `SourceSelector` handles UNAUTHORIZED (403) by falling back to bucket picker with warning
+  - Fixed bucket payload shape (`bucket` key instead of `filter_bucket`)
+- **Testing:** 15/15 backend + 12/12 frontend tests PASS
+- **Files changed:** `RequestStockForm.jsx`, `SourceSelector.jsx`
+- **No backend changes** — preserved existing proxy/contracts
 
 ## Environment
 - `MONGO_URL` = local MongoDB
@@ -49,7 +61,7 @@ Wipe current /app, pull https://github.com/parth-mygenie/central_inventory.git b
 | owner@demofranchise4.com | Qplazm@10 | 786 | franchise |
 
 ## Backlog / Next Tasks
-- P0: None — app running as-is per user request
-- P1: Frontend RequestStockForm.jsx should validate bucket has stock before submit (pre-flight source-options check)
-- P1: Frontend should prefer segment_id selector over filter_bucket for new requests
+- P1: Retry UX when SELECTED_BUCKET_STOCK_NOT_FOUND at submit (currently shows generic toast — suggest trying different bucket)
+- P1: End-to-end request→approve→dispatch test with new selector flow
+- P2: Show filter counts in bucket picker when source-options data unavailable (requires backend proxy enhancement)
 - P2: Production deployment configuration
