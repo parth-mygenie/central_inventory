@@ -1,0 +1,70 @@
+{
+  "summary": "Comprehensive testing of Request Stock 3-step flow migration. All 10 backend API tests passed (100%). All 16 frontend features tested and working correctly. The canonical request-sources → request-catalog → request flow is fully functional.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_request_stock_flow.py",
+    "/app/test_reports/pytest/request_stock_flow_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "RequestStockForm.jsx correctly implements 3-step flow with proper data-testid attributes",
+    "api.js correctly implements requestSources, requestCatalog, requestStock functions",
+    "Source picker correctly shows relation labels (Direct Parent, Upstream Central, Sibling)",
+    "Blocked sources correctly show (blocked) indicator and cross-branch warning"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_request_stock_flow.py"
+  ],
+  "success_rate": {
+    "backend": "100% (10/10 pytest tests passed)",
+    "frontend": "100% (16/16 features tested)"
+  },
+  "test_credentials": {
+    "franchise_user": "owner@demofranchise4.com / Qplazm@10 (rid=786, type=franchise, parent=C782)",
+    "central_user": "owner@democentral1.com / Qplazm@10 (rid=781, type=central)"
+  },
+  "seed_data_creation": "None - using real POS API via proxy",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Request Stock 3-step flow fully tested and working. Backend APIs: request-sources, request-catalog, request all return correct data. Frontend correctly displays sources with relation labels and blocked indicators. Submit creates transfer and navigates to transfer detail.",
+  "features_tested": {
+    "backend_api_tests": {
+      "1_franchise_login_returns_context": "PASS - Returns restaurant_id=786, type=franchise, parent=782",
+      "2_central_login_returns_context": "PASS - Returns restaurant_id=781, type=central, parent=1",
+      "3_franchise_sees_3_sources": "PASS - direct_parent (C782), upstream_master (1), sibling_central (C781)",
+      "4_central_sees_2_sources": "PASS - direct_parent (master 1), sibling_central (C782)",
+      "5_sibling_blocked_indicator": "PASS - Central user's sibling has can_submit_request=false",
+      "6_catalog_returns_items": "PASS - Items have source_inventory_master_id, stock_title, unit, available_display_qty",
+      "7_catalog_from_different_source": "PASS - Can fetch catalog from upstream master",
+      "8_submit_valid_request": "PASS - Creates transfer with type=request, status=requested",
+      "9_submit_invalid_id_returns_422": "PASS - Returns 422 SOURCE_STOCK_NOT_FOUND",
+      "10_pending_queues_shows_requests": "PASS - my_requests contains submitted requests"
+    },
+    "frontend_ui_tests": {
+      "1_login_franchise_user": "PASS - Redirects to Operations Hub with DemoFranchise4 context",
+      "2_navigate_to_request_new": "PASS - Request Stock form loads with source picker",
+      "3_source_picker_shows_3_sources": "PASS - Shows DemoCentral2 (Direct Parent), My Genie (Upstream Central), DemoCentral1 (Sibling)",
+      "4_catalog_items_display": "PASS - Shows stock_title, unit, available_display_qty (e.g., 'Cooking Oil (ltr) — 1 avail')",
+      "5_select_item_and_quantity": "PASS - Item selection populates unit, quantity input works",
+      "6_submit_request_creates_transfer": "PASS - Navigates to /transfer/81 with status=Requested",
+      "7_login_central_user": "PASS - Shows DemoCentral1 as Master Store",
+      "8_central_sees_2_sources": "PASS - My Genie (Direct Parent), DemoCentral2 (Sibling)",
+      "9_sibling_blocked_indicator": "PASS - Shows '(blocked)' in red text",
+      "10_cross_branch_warning": "PASS - Warning message displayed when blocked source selected"
+    }
+  },
+  "api_contracts_verified": {
+    "POST /api/proxy/v2/inventory-transfer/request-sources": "Returns sources[] with restaurant_id, name, relation, can_submit_request, is_direct_parent",
+    "POST /api/proxy/v2/inventory-transfer/request-catalog": "Returns items[] with source_inventory_master_id, stock_title, unit, available_display_qty",
+    "POST /api/proxy/v2/inventory-transfer/request": "Creates transfer with type=request, status=requested, returns transfer_id",
+    "POST /api/proxy/v2/inventory-transfer/pending-queues": "Returns my_requests[] containing submitted requests"
+  }
+}
