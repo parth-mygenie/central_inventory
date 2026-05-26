@@ -711,3 +711,140 @@ Frontend implications:
 - [ ] Error handling: `REQUEST_SOURCE_NOT_ALLOWED` → source not in allowed list
 - [ ] Pending queues: Navigate using `item.id || item.transfer_id`
 - [ ] `relation` display labels in source picker
+
+
+
+---
+
+## Addendum: Dispatch Selector Diagnosis — Transfer 82 (26 May 2026)
+
+> Source: Live POS API investigation + `AI/Plans/phase2/P13_dispatch_selector_diagnosis_transfer82.md`
+> Resolution: **CONFIRMED and FIXED operationally**
+
+### Error
+
+`POST /api/v2/vendoremployee/inventory-transfer/dispatch/82` → `400 SELECTED_BUCKET_STOCK_NOT_FOUND`
+
+### Transfer 82 Header
+
+| Field | Value |
+|-------|-------|
+| `id` | 82 |
+| `type` | `request` |
+| `status` (before fix) | `approved` |
+| `from_restaurant_id` | **782** (DemoCentral2) |
+| `to_restaurant_id` | **786** (DemoFranchise4) |
+
+### Transfer 82 Line
+
+| Field | Value |
+|-------|-------|
+| `line_id` | 66 |
+| `source_inventory_master_id` | **16991** (red meat at C782) |
+| `requested_qty` | **0.8 kg** (quantity_cal=800) |
+| `meta_json.selector.mode` | `filter_bucket` |
+| `meta_json.selector.bucket` | **`without_batch_and_expiry`** |
+| `meta_json.selector.batch_state` | `null` |
+| `meta_json.selector.expiry_state` | `null` |
+
+### Source-Options for red meat at C782
+
+| Filter bucket | cal_quantity | count |
+|---------------|-------------|-------|
+| `without_batch_and_expiry` | **0** | **0** |
+| `without_batch_only` | 0 | 0 |
+| `without_expiry_only` | 0 | 0 |
+| `with_batch_and_expiry` | **2800** | **2** |
+
+**Segments:**
+- `segment_id=23`: 1.4kg, batch=MEAT-BATCH-01, expiry=2026-06-30, origin_transfer_id=37
+- `segment_id=36`: 1.4kg, batch=MEAT-BATCH-01, expiry=2026-06-30, origin_transfer_id=51
+
+### Root Cause (Confirmed)
+
+Request was saved with **legacy `filter_bucket` / `without_batch_and_expiry`** selector, but **ALL stock at C782 for red meat exists only in `with_batch_and_expiry` segment rows** (both from transfer-received batches with batch=MEAT-BATCH-01, expiry=2026-06-30).
+
+Dispatch reads `meta_json.selector` from the transfer line and calls `fetchAllocatableSourceRows()` which filters segments by the stored bucket. Since `without_batch_and_expiry` has 0 matching rows → `SELECTED_BUCKET_STOCK_NOT_FOUND`.
+
+**This is NOT a bug.** The POS API correctly refuses to dispatch from an empty bucket. The root cause is that the request was submitted with a selector that doesn't match the actual stock composition at the source store.
+
+### Fix Applied (Operational — 26 May 2026)
+
+| Step | Endpoint | Result |
+|------|----------|--------|
+| 1. Edit | `POST /edit/82` with `segment_id: 23` | 200 OK — selector updated, status reset to `requested` |
+| 2. Re-approve | `POST /approve/82` | 200 OK — status=`approved` |
+| 3. Dispatch | `POST /dispatch/82` with `{}` | **200 OK** — status=`dispatched`, 0.8kg deducted from seg 23 |
+
+**Post-dispatch state:** seg 23 = 0.6kg, seg 36 = 1.4kg, total remaining = 2.0kg
+
+### Dispatch Selector Contract (Canonical)
+
+| Phase | Accepts `source_selector` in payload? | Where selector comes from |
+|-------|--------------------------------------|--------------------------|
+| `POST /request` | **Yes** — stored in line `meta_json.selector` | Request payload `items[].source_selector` |
+| `POST /edit/{id}` | **Yes** — replaces stored selector | Edit payload `items[].source_selector` |
+| `POST /approve/{id}` | **No** — uses line selector | Line `meta_json.selector` (may allocate if `reserve_on_approve`) |
+| `POST /dispatch/{id}` | **No** — reads from line only | Line `meta_json.selector` |
+
+**Key rule:** `dispatch/{id}` does NOT accept `source_selector` in the dispatch payload body. It exclusively reads the selector persisted in the line's `meta_json.selector` field. To change the selector for dispatch, you MUST edit the transfer first, then re-approve.
+
+### Validation Timing
+
+| When | Validation | Error on failure |
+|------|-----------|-----------------|
+| Request/Edit time | `assertSelectorAllocatable()` | `SELECTED_BUCKET_STOCK_NOT_FOUND` (prevents saving bad selectors going forward) |
+| Dispatch time | `fetchAllocatableSourceRows()` | `SELECTED_BUCKET_STOCK_NOT_FOUND` (catches selectors saved before validation was added) |
+
+**Note:** `assertSelectorAllocatable()` was added as backend hardening. Transfer 82 was created **before** this validation was in place, which is why the bad selector was persisted.
+
+### Prevention Guidance
+
+1. **Prefer `segment_id` mode** — always points to a real segment row with known stock
+2. **If using `filter_bucket`:** call `source-options` first and check `filters.<bucket>.count > 0` before submitting
+3. **Frontend `RequestStockForm.jsx`** should validate selected bucket has stock before submit (pre-flight check)
+4. **For existing transfers stuck with bad selectors:** use `edit/{id}` with a valid selector → re-approve → dispatch
+
+### Related Files
+
+- `AI/Plans/phase2/P13_dispatch_selector_diagnosis_transfer82.md` — Full diagnosis narrative
+- `AI/curls/full_api_flow_curls.sh` — Dispatch fix flow section added (Transfer 82)
+- `memory/central_inventory/REQUEST_STOCK_E2E_TEST_RESULTS.md` — E2E test results (24/24 pass, pre-dispatch)
+
+---
+
+## Addendum: Phase 2 Operational Endpoints (26 May 2026)
+
+> New endpoints registered for Phase 2 operations. All under `/api/v2/vendoremployee/inventory-transfer/...`
+
+### New Endpoints
+
+| Endpoint | Method | Purpose | Status |
+|----------|--------|---------|--------|
+| `POST /operational-settings/get` | POST | Read operational flags (master only) | **REGISTERED** |
+| `POST /operational-settings/update` | POST | Update flags (master only) | **REGISTERED** |
+| `POST /reconciliation-summary` | POST | Segment vs master drift report | **REGISTERED** |
+| `POST /ops-dashboard` | POST | Operational dashboard metrics | **REGISTERED** |
+| `POST /stale-transfers` | POST | Transfers older than N hours | **REGISTERED** |
+| `POST /near-expiry-alerts` | POST | Segments expiring within N days | **REGISTERED** |
+| `POST /cost-valuation` | POST | FIFO cost valuation | **REGISTERED** |
+| `POST /operation-session/open` | POST | Open stocktake session | **REGISTERED** |
+| `POST /stocktake/lines` | POST | Submit counted quantities | **REGISTERED** |
+| `POST /stocktake/complete` | POST | Finalize stocktake | **REGISTERED** |
+| `POST /reconciliation-request/create` | POST | Create recon request (child) | **REGISTERED** |
+| `POST /reconciliation-request/{id}/lines` | POST | Add recon lines | **REGISTERED** |
+| `POST /reconciliation-request/{id}/submit` | POST | Submit recon request | **REGISTERED** |
+| `POST /reconciliation-request/{id}/approve` | POST | Approve recon (parent) | **REGISTERED** |
+| `POST /lateral/initiate` | POST | Central-to-central sibling transfer | **REGISTERED** |
+| `POST /inward-audit/{id}` | POST | Post-receive audit (no stock move) | **REGISTERED** |
+| `POST /decrease-adjustment` | POST | Hierarchy-scoped stock shrink | **REGISTERED** |
+| `POST /return/initiate` | POST | Return from received transfer | **REGISTERED** |
+| `POST /dispatch-async/{id}` | POST | Async dispatch (requires queue worker) | **REGISTERED** |
+
+### Operational Settings Flags
+
+| Flag | Default | Effect |
+|------|---------|--------|
+| `reserve_on_approve` | `false` | When true, approve allocates segment reservations (dispatch consumes instead of re-allocating) |
+| `allow_lateral_central_transfer` | `false` | When true, central-to-central sibling transfers are allowed |
+| `allow_cross_central_franchise_dispatch` | `false` | When true, cross-branch dispatch/request between sibling centrals and their franchises is allowed |

@@ -846,3 +846,436 @@ curl --location "${BASE_V2}/inventory-transfer/pending-queues" \
   --header "Content-Type: application/json" \
   --data-raw '{"limit": 50}'
 # Check data.approval_pending for requests from C781 and F786 to master
+
+
+
+# =============================
+# ADDENDUM: Dispatch Selector Diagnosis — Transfer 82 Fix Flow (26 May 2026)
+# Root cause: request saved with filter_bucket/without_batch_and_expiry but ALL
+# stock at C782 for red meat is in with_batch_and_expiry segments only.
+# Dispatch reads meta_json.selector from line → 0 matching segments → SELECTED_BUCKET_STOCK_NOT_FOUND
+#
+# Fix path: edit (correct selector) → re-approve → dispatch
+# See: AI/Plans/phase2/P13_dispatch_selector_diagnosis_transfer82.md
+# =============================
+
+# --- Variables for this flow ---
+# CENTRAL2_TOKEN = owner@democentral2.com / Qplazm@10 → rid=782, type=central
+# Transfer 82: type=request, from=782 (C2), to=786 (F4), line source_inventory_master_id=16991 (red meat)
+# Segments at C782 for red meat: seg_id=23 (1.4kg, MEAT-BATCH-01, exp 2026-06-30), seg_id=36 (1.4kg same)
+
+echo
+echo "=== DIAGNOSIS: Transfer 82 — inspect stored selector ==="
+echo "# Transfer 82 line 66 meta_json.selector:"
+echo "#   mode: filter_bucket"
+echo "#   bucket: without_batch_and_expiry"
+echo "#   batch_state: null, expiry_state: null"
+echo "# This bucket has count=0 at C782 for red meat. ALL stock is in with_batch_and_expiry."
+curl --location "${BASE_V2}/inventory-transfer/details/82" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json"
+echo "# Check lines[0].meta_json.selector — if bucket is without_batch_and_expiry, that's the problem."
+
+echo
+echo "=== DIAGNOSIS: Verify source-options bucket counts before dispatch ==="
+echo "# CRITICAL: Always check filters.*.count BEFORE using filter_bucket selector."
+echo "# If count=0 for the bucket, dispatch WILL fail with SELECTED_BUCKET_STOCK_NOT_FOUND."
+curl --location "${BASE_V2}/inventory-transfer/source-options" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{"from_restaurant_id": 782, "source_inventory_master_id": 16991}'
+echo "# Expected: filters.without_batch_and_expiry.count = 0"
+echo "# Expected: filters.with_batch_and_expiry.count = 2, cal_quantity = 2800"
+echo "# Segments: seg_id=23 (1.4kg), seg_id=36 (1.4kg)"
+
+echo
+echo "=== FIX STEP 1: Edit transfer 82 with correct segment_id selector ==="
+echo "# Edit replaces the stored selector in meta_json. Status resets to 'requested'."
+curl --location "${BASE_V2}/inventory-transfer/edit/82" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{
+    "items": [
+      {
+        "source_inventory_master_id": 16991,
+        "stock_title": "red meat",
+        "quantity": 0.8,
+        "unit": "kg",
+        "source_selector": {
+          "mode": "segment_id",
+          "segment_id": 23
+        }
+      }
+    ]
+  }'
+echo "# Expected: status=true, transfer_id=82, status=requested (edit resets to requested)"
+
+echo
+echo "=== FIX STEP 2: Re-approve after edit (mandatory — edit invalidates prior approval) ==="
+curl --location "${BASE_V2}/inventory-transfer/approve/82" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{}'
+echo "# Expected: status=true, transfer_id=82, status=approved"
+
+echo
+echo "=== FIX STEP 3: Dispatch (now uses corrected segment_id selector from meta_json) ==="
+echo "# Body: {} — dispatch reads selector from line meta_json, NOT from dispatch payload."
+curl --location "${BASE_V2}/inventory-transfer/dispatch/82" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{}'
+echo "# Expected: status=true, transfer_id=82, status=dispatched"
+echo "# Deducted: 0.8kg from segment 23 (MEAT-BATCH-01)"
+echo "# Remaining: seg 23 = 0.6kg, seg 36 = 1.4kg, total = 2.0kg"
+
+echo
+echo "=== VERIFIED RESULT (26 May 2026 10:26 UTC) ==="
+echo "# Edit:     200 OK — selector updated to segment_id:23, status reset to requested"
+echo "# Approve:  200 OK — status=approved"
+echo "# Dispatch: 200 OK — status=dispatched, 0.8kg deducted from seg 23"
+echo "# Post-dispatch source-options: total 2.0kg remaining (seg23=0.6kg + seg36=1.4kg)"
+
+echo
+echo "=== GENERAL: Dispatch selector contract reminder ==="
+echo "# dispatch/{id} does NOT accept source_selector in payload."
+echo "# It reads meta_json.selector from the transfer line (set at request/edit time)."
+echo "# If the stored selector points to an empty bucket → SELECTED_BUCKET_STOCK_NOT_FOUND."
+echo "# Fix: edit the transfer with a valid selector (segment_id preferred), re-approve, then dispatch."
+echo "#"
+echo "# Selector validation order:"
+echo "# 1. At request/edit time: assertSelectorAllocatable() runs — fails early if bucket is empty"
+echo "# 2. At dispatch time: fetchAllocatableSourceRows() runs — fails if stored selector matches 0 rows"
+echo "#"
+echo "# SAFE DEFAULT for request flow: segment_id from source-options (always points to real stock)"
+echo "# LEGACY FALLBACK: filter_bucket — ONLY safe when filters.*.count > 0 for that bucket"
+
+# =============================
+# ADDENDUM: Phase 2 Ops + P4b Reserve + P7-P11
+# Prereq: php artisan migrate (2026_05_21 through 2026_05_24)
+# =============================
+
+echo
+echo "=== G0a) Operational settings get (master) ==="
+curl --location "${BASE_V2}/inventory-transfer/operational-settings/get" \
+  --header "Authorization: Bearer ${MASTER_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw "{\"restaurant_id\": ${MASTER_RESTAURANT_ID}}"
+
+echo
+echo "=== G0b) Enable reserve_on_approve + allow_lateral_central_transfer (master only) ==="
+curl --location "${BASE_V2}/inventory-transfer/operational-settings/update" \
+  --header "Authorization: Bearer ${MASTER_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw "{
+    \"restaurant_id\": ${MASTER_RESTAURANT_ID},
+    \"settings\": {
+      \"reserve_on_approve\": true,
+      \"allow_lateral_central_transfer\": true
+    }
+  }"
+
+echo
+echo "=== G1a) Reconciliation summary (segment vs master drift) ==="
+curl --location "${BASE_V2}/inventory-transfer/reconciliation-summary" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{"detail_limit": 25}'
+
+echo
+echo "=== G1b) Ops dashboard ==="
+curl --location "${BASE_V2}/inventory-transfer/ops-dashboard" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{"limit": 10}'
+
+echo
+echo "=== G1c) Stale transfers ==="
+curl --location "${BASE_V2}/inventory-transfer/stale-transfers" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{"older_than_hours": 24, "limit": 20}'
+
+echo
+echo "=== G1d) Near-expiry alerts ==="
+curl --location "${BASE_V2}/inventory-transfer/near-expiry-alerts" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{"within_days": 3, "limit": 20}'
+
+echo
+echo "=== G1e) Cost valuation (FIFO) ==="
+curl --location "${BASE_V2}/inventory-transfer/cost-valuation" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw "{
+    \"method\": \"fifo\",
+    \"restaurant_id\": ${CENTRAL_RESTAURANT_ID}
+  }"
+
+echo
+echo "=== G2a) P4b: Approve with reserve ==="
+curl --location "${BASE_V2}/inventory-transfer/approve/${BUTTER_REQUEST_TRANSFER_ID}" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{}'
+
+echo
+echo "=== G3a) Open stocktake operation session (franchise store) ==="
+curl --location "${BASE_V2}/inventory-transfer/operation-session/open" \
+  --header "Authorization: Bearer ${FRANCHISE_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw "{
+    \"restaurant_id\": ${FRANCHISE_RESTAURANT_ID},
+    \"mode\": \"stocktake\"
+  }"
+
+echo
+echo "=== G3b) Stocktake lines (counted qty) ==="
+curl --location "${BASE_V2}/inventory-transfer/stocktake/lines" \
+  --header "Authorization: Bearer ${FRANCHISE_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw "{
+    \"restaurant_id\": ${FRANCHISE_RESTAURANT_ID},
+    \"lines\": [
+      {
+        \"stock_title\": \"Butter\",
+        \"unit_id\": 3,
+        \"counted_cal_qty\": 10
+      }
+    ]
+  }"
+
+echo
+echo "=== G3c) Stocktake complete ==="
+curl --location "${BASE_V2}/inventory-transfer/stocktake/complete" \
+  --header "Authorization: Bearer ${FRANCHISE_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw "{\"restaurant_id\": ${FRANCHISE_RESTAURANT_ID}}"
+
+echo
+echo "=== G4a) Record hierarchy wastage ==="
+curl --location "${BASE_V2}/inventory-transfer/record-wastage" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw "{
+    \"restaurant_id\": ${CENTRAL_RESTAURANT_ID},
+    \"quantity\": 1,
+    \"unit\": \"kg\",
+    \"stock_title\": \"Butter\",
+    \"unit_id\": 3,
+    \"reason_code\": \"damage\",
+    \"source_selector\": {
+      \"mode\": \"filter_bucket\",
+      \"bucket\": \"without_batch_and_expiry\",
+      \"batch_state\": \"null\",
+      \"expiry_state\": \"null\"
+    }
+  }"
+
+echo
+echo "=== G4b) Wastage report with hierarchy scope + segments ==="
+curl --location "${BASE_V2}/inventory/wastage-report" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw "{
+    \"restaurant_ids\": [${CENTRAL_RESTAURANT_ID}, ${FRANCHISE_RESTAURANT_ID}],
+    \"include_segments\": true
+  }"
+
+echo
+echo "=== G5a) Reconciliation request create (franchise child) ==="
+RECON_REQUEST_ID="REPLACE_WITH_RECONCILIATION_REQUEST_ID"
+curl --location "${BASE_V2}/inventory-transfer/reconciliation-request/create" \
+  --header "Authorization: Bearer ${FRANCHISE_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw "{
+    \"restaurant_id\": ${FRANCHISE_RESTAURANT_ID},
+    \"notes\": \"cycle count variance\"
+  }"
+
+echo
+echo "=== G5b) Reconciliation request lines ==="
+curl --location "${BASE_V2}/inventory-transfer/reconciliation-request/${RECON_REQUEST_ID}/lines" \
+  --header "Authorization: Bearer ${FRANCHISE_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw "{
+    \"restaurant_id\": ${FRANCHISE_RESTAURANT_ID},
+    \"lines\": [
+      {
+        \"stock_title\": \"Water\",
+        \"unit_id\": 3,
+        \"proposed_cal_qty\": 100
+      }
+    ]
+  }"
+
+echo
+echo "=== G5c) Reconciliation request submit ==="
+curl --location "${BASE_V2}/inventory-transfer/reconciliation-request/${RECON_REQUEST_ID}/submit" \
+  --header "Authorization: Bearer ${FRANCHISE_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw "{\"restaurant_id\": ${FRANCHISE_RESTAURANT_ID}}"
+
+echo
+echo "=== G5d) Reconciliation request approve (parent central; auto-applies variances) ==="
+curl --location "${BASE_V2}/inventory-transfer/reconciliation-request/${RECON_REQUEST_ID}/approve" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{}'
+
+echo
+echo "=== G6a) Lateral initiate (central A -> central B sibling) ==="
+CENTRAL_B_TOKEN="REPLACE_WITH_SIBLING_CENTRAL_VENDOR_EMPLOYEE_TOKEN"
+CENTRAL_B_RESTAURANT_ID="REPLACE_WITH_SIBLING_CENTRAL_RESTAURANT_ID"
+LATERAL_TRANSFER_ID="REPLACE_WITH_LATERAL_TRANSFER_ID"
+curl --location "${BASE_V2}/inventory-transfer/lateral/initiate" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw "{
+    \"from_restaurant_id\": ${CENTRAL_RESTAURANT_ID},
+    \"to_restaurant_id\": ${CENTRAL_B_RESTAURANT_ID},
+    \"items\": [
+      {
+        \"quantity\": 2,
+        \"unit\": \"kg\",
+        \"stock_title\": \"Butter\",
+        \"unit_id\": 3,
+        \"source_selector\": {
+          \"mode\": \"filter_bucket\",
+          \"bucket\": \"without_batch_and_expiry\",
+          \"batch_state\": \"null\",
+          \"expiry_state\": \"null\"
+        }
+      }
+    ]
+  }"
+
+echo
+echo "=== G6b) Lateral approve (master) ==="
+curl --location "${BASE_V2}/inventory-transfer/approve/${LATERAL_TRANSFER_ID}" \
+  --header "Authorization: Bearer ${MASTER_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{}'
+
+echo
+echo "=== G6c) Lateral dispatch (sender central) ==="
+curl --location "${BASE_V2}/inventory-transfer/dispatch/${LATERAL_TRANSFER_ID}" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{}'
+
+echo
+echo "=== G6d) Lateral receive (receiver central B) ==="
+curl --location "${BASE_V2}/inventory-transfer/receive/${LATERAL_TRANSFER_ID}" \
+  --header "Authorization: Bearer ${CENTRAL_B_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{}'
+
+echo
+echo "=== G7a) Inward audit (after receive; no stock move) ==="
+curl --location "${BASE_V2}/inventory-transfer/inward-audit/${BUTTER_REQUEST_TRANSFER_ID}" \
+  --header "Authorization: Bearer ${FRANCHISE_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{}'
+
+echo
+echo "=== G7b) Decrease adjustment (hierarchy-scoped shrink) ==="
+curl --location "${BASE_V2}/inventory-transfer/decrease-adjustment" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw "{
+    \"restaurant_id\": ${CENTRAL_RESTAURANT_ID},
+    \"quantity\": 0.5,
+    \"unit\": \"kg\",
+    \"stock_title\": \"Butter\",
+    \"unit_id\": 3,
+    \"source_selector\": {
+      \"mode\": \"filter_bucket\",
+      \"bucket\": \"without_batch_and_expiry\",
+      \"batch_state\": \"null\",
+      \"expiry_state\": \"null\"
+    }
+  }"
+
+echo
+echo "=== G7c) Return initiate (from received transfer) ==="
+curl --location "${BASE_V2}/inventory-transfer/return/initiate" \
+  --header "Authorization: Bearer ${FRANCHISE_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw "{
+    \"original_transfer_id\": ${BUTTER_REQUEST_TRANSFER_ID},
+    \"return_lines\": [
+      {\"line_id\": 1, \"quantity\": 1}
+    ]
+  }"
+
+echo
+echo "=== G7e) Enable cross-central franchise dispatch (master only) ==="
+curl --location "${BASE_V2}/inventory-transfer/operational-settings/update" \
+  --header "Authorization: Bearer ${MASTER_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw "{
+    \"restaurant_id\": ${MASTER_RESTAURANT_ID},
+    \"settings\": {
+      \"allow_cross_central_franchise_dispatch\": true
+    }
+  }"
+
+echo
+echo "=== G7f) Cross-central initiate (central A -> sibling central's franchise) ==="
+FRANCHISE_SIBLING_RESTAURANT_ID="REPLACE_WITH_FRANCHISE_UNDER_SIBLING_CENTRAL"
+curl --location "${BASE_V2}/inventory-transfer/initiate" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw "{
+    \"from_restaurant_id\": ${CENTRAL_RESTAURANT_ID},
+    \"to_restaurant_id\": ${FRANCHISE_SIBLING_RESTAURANT_ID},
+    \"items\": [{
+      \"source_inventory_master_id\": ${BUTTER_SOURCE_INVENTORY_ID},
+      \"quantity\": 1,
+      \"unit\": \"kg\",
+      \"source_selector\": {
+        \"mode\": \"segment_id\",
+        \"segment_id\": REPLACE_WITH_SEGMENT_ID_ON_SENDER_CENTRAL
+      }
+    }]
+  }"
+
+echo
+echo "=== G7d) Dispatch async (optional; requires queue worker) ==="
+curl --location "${BASE_V2}/inventory-transfer/dispatch-async/${BUTTER_REQUEST_TRANSFER_ID}" \
+  --header "Authorization: Bearer ${CENTRAL_TOKEN}" \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data-raw '{}'
