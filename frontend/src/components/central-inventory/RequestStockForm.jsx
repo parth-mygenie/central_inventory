@@ -5,6 +5,7 @@ import { useWriteAction } from "@/hooks/useWriteAction";
 import api from "@/services/api";
 import { mapRestaurantType } from "@/lib/terminology";
 import { validateQuantityForUnit } from "@/lib/formatters";
+import SourceSelector from "./SourceSelector";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,23 +19,21 @@ import { ArrowLeft, Plus, Trash2, Loader2, SendHorizonal, AlertCircle, Store } f
  *
  * Step 1: POST /request-sources   → pick source store
  * Step 2: POST /request-catalog   → browse source store's items
- * Step 3: POST /request           → submit with source_inventory_master_id
+ * Step 3: POST /request           → submit with source_inventory_master_id + source_selector
  *
- * Uses filter_bucket selector (child cannot call source-options on parent).
- * Replaces old getHierarchySummary + getInventoryMaster approach.
+ * Source selector per item:
+ *   - Preferred: segment_id from source-options (when caller owns the source store)
+ *   - Fallback: filter_bucket picker (when source-options is UNAUTHORIZED for cross-store)
+ *   - Backend assertSelectorAllocatable() validates at submit time
+ *
+ * Replaces legacy DEFAULT_SOURCE_SELECTOR approach that blindly used
+ * filter_bucket/without_batch_and_expiry (caused dispatch SELECTED_BUCKET_STOCK_NOT_FOUND).
  */
 
 const RELATION_LABELS = {
   direct_parent: "Direct Parent",
   upstream_master: "Upstream Central",
   sibling_central: "Sibling",
-};
-
-const DEFAULT_SOURCE_SELECTOR = {
-  mode: "filter_bucket",
-  bucket: "without_batch_and_expiry",
-  batch_state: "null",
-  expiry_state: "null",
 };
 
 export default function RequestStockForm() {
@@ -54,7 +53,7 @@ export default function RequestStockForm() {
   const [loadingCatalog, setLoadingCatalog] = useState(false);
   const [catalogError, setCatalogError] = useState(null);
 
-  // Step 3: Item rows
+  // Step 3: Item rows (now includes sourceSelector per row)
   const [rows, setRows] = useState([emptyRow()]);
 
   // Load request-sources on mount
@@ -136,7 +135,6 @@ export default function RequestStockForm() {
 
   const selectedSource = sources.find((s) => s.restaurant_id === selectedSourceId);
   const canSubmitToSelected = selectedSource?.can_submit_request !== false;
-  // Also check catalog-level permission if available
   const catalogCanSubmit = catalogSource?.can_submit_request !== false;
   const submitAllowed = canSubmitToSelected && catalogCanSubmit;
 
@@ -150,6 +148,7 @@ export default function RequestStockForm() {
         const item = catalog.find((i) => String(i.source_inventory_master_id) === String(value));
         next[idx].unit = item?.unit || item?.display_unit || "";
         next[idx].unitId = item?.unit_id || null;
+        next[idx].sourceSelector = null; // Reset selector when item changes
       }
       return next;
     });
@@ -167,7 +166,7 @@ export default function RequestStockForm() {
         unit_id: item?.unit_id || r.unitId,
         quantity: Number(r.quantity),
         unit: item?.unit || r.unit,
-        source_selector: DEFAULT_SOURCE_SELECTOR,
+        source_selector: r.sourceSelector,
       };
     });
 
@@ -188,7 +187,7 @@ export default function RequestStockForm() {
   };
 
   const allValid = rows.length > 0 && submitAllowed && rows.every(
-    (r) => r.itemId && Number(r.quantity) > 0 && !validateQuantityForUnit(r.quantity, r.unit)
+    (r) => r.itemId && Number(r.quantity) > 0 && r.sourceSelector && !validateQuantityForUnit(r.quantity, r.unit)
   );
 
   return (
@@ -224,6 +223,7 @@ export default function RequestStockForm() {
           <ItemsCard
             rows={rows}
             catalog={catalog}
+            selectedSourceId={selectedSourceId}
             addRow={addRow}
             removeRow={removeRow}
             updateRow={updateRow}
@@ -242,7 +242,7 @@ export default function RequestStockForm() {
 // ── Sub-components ───────────────────────────────────────────────
 
 function emptyRow() {
-  return { itemId: "", quantity: "", unit: "", unitId: null };
+  return { itemId: "", quantity: "", unit: "", unitId: null, sourceSelector: null };
 }
 
 function BackButton({ navigate }) {
@@ -300,7 +300,7 @@ function SourcePicker({ sources, selectedSourceId, onSourceChange, canSubmitToSe
   );
 }
 
-function ItemsCard({ rows, catalog, addRow, removeRow, updateRow, submitting }) {
+function ItemsCard({ rows, catalog, selectedSourceId, addRow, removeRow, updateRow, submitting }) {
   return (
     <Card className="mb-4">
       <CardHeader className="py-2.5 px-4">
@@ -313,6 +313,7 @@ function ItemsCard({ rows, catalog, addRow, removeRow, updateRow, submitting }) 
             idx={idx}
             row={row}
             catalog={catalog}
+            selectedSourceId={selectedSourceId}
             totalRows={rows.length}
             removeRow={removeRow}
             updateRow={updateRow}
@@ -327,7 +328,7 @@ function ItemsCard({ rows, catalog, addRow, removeRow, updateRow, submitting }) 
   );
 }
 
-function ItemRow({ idx, row, catalog, totalRows, removeRow, updateRow, submitting }) {
+function ItemRow({ idx, row, catalog, selectedSourceId, totalRows, removeRow, updateRow, submitting }) {
   const qtyErr = row.quantity && validateQuantityForUnit(row.quantity, row.unit);
   const selectedItem = catalog.find((i) => String(i.source_inventory_master_id) === String(row.itemId));
 
@@ -383,6 +384,20 @@ function ItemRow({ idx, row, catalog, totalRows, removeRow, updateRow, submittin
           <Input value={row.unit || "—"} className="h-7 text-xs bg-muted" readOnly data-testid={`request-unit-${idx}`} />
         </div>
       </div>
+
+      {/* Source selector — shown when item is selected */}
+      {row.itemId && selectedItem && (
+        <div>
+          <Label className="text-[10px]">Source Stock *</Label>
+          <SourceSelector
+            fromRestaurantId={selectedSourceId}
+            inventoryMasterId={selectedItem.source_inventory_master_id}
+            value={row.sourceSelector}
+            onChange={(v) => updateRow(idx, "sourceSelector", v)}
+            disabled={submitting}
+          />
+        </div>
+      )}
     </div>
   );
 }
