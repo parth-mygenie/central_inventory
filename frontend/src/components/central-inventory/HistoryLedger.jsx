@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLoginContext } from "@/hooks/useLoginContext";
 import api from "@/services/api";
-import { mapRestaurantType, STATUS_CONFIG, getStatusConfig } from "@/lib/terminology";
+import { mapRestaurantType, STATUS_CONFIG, getStatusConfig, TYPE_LABELS } from "@/lib/terminology";
 import { formatTimestamp, formatItemsCount } from "@/lib/formatters";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -569,8 +569,8 @@ export default function HistoryLedger() {
                                 <TableCell className="text-xs">{t.to_restaurant_name || "—"}</TableCell>
                                 <TableCell><StatusBadge status={t.status} /></TableCell>
                                 <TableCell>
-                                  <Badge variant="outline" className="text-[9px] font-normal">
-                                    {t.type === "request" ? "Request" : "Direct Dispatch"}
+                                  <Badge variant="outline" className={`text-[9px] font-normal ${t.type === "modification_request" ? "bg-amber-50 text-amber-700 border-amber-200" : ""}`}>
+                                    {TYPE_LABELS[t.type] || t.type}
                                   </Badge>
                                 </TableCell>
                                 <TableCell className="text-xs tabular-nums">{formatItemsCount(t.items_count)}</TableCell>

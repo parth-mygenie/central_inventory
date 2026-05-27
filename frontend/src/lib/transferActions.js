@@ -44,7 +44,7 @@ export function getAvailableActions(
   const isDestination = userId === toId;
 
   // Fully terminal — no actions for anyone
-  if (["received", "cancelled", "rejected"].includes(status)) {
+  if (["received", "cancelled", "rejected", "withdrawn"].includes(status)) {
     return [];
   }
 
@@ -97,8 +97,14 @@ export function getAvailableActions(
   // ── Destination-side actions (franchise/outlet who requested/receives) ──
   if (isDestination) {
     if (status === "requested" && transferType === "request") {
-      actions.push({ id: "edit", label: "Edit", variant: "outline" });
-    } else if (status === "dispatched") {
+      actions.push({ id: "amend", label: "Amend Request", variant: "outline" });
+      actions.push({ id: "withdraw", label: "Withdraw", variant: "destructive" });
+    }
+    // Modification: post-approval, franchise can request qty changes (creates child transfer)
+    if (["approved", "partially_approved", "dispatched", "partially_received"].includes(status) && transferType === "request") {
+      actions.push({ id: "modification", label: "Request Modification", variant: "outline" });
+    }
+    if (status === "dispatched") {
       actions.push({ id: "receive", label: "Receive", variant: "default" });
       actions.push({ id: "report-issue", label: "Report Issue", variant: "destructive" });
     } else if (status === "partially_received") {

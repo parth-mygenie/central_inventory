@@ -92,6 +92,14 @@ export const STATUS_CONFIG = {
   receive_dispute_pending:  { label: "Dispute Pending",        color: "bg-orange-100 text-orange-800",   dot: "bg-orange-500" },
   cancelled:                { label: "Cancelled",              color: "bg-red-100 text-red-800",         dot: "bg-red-500" },
   rejected:                 { label: "Rejected",               color: "bg-rose-100 text-rose-800",       dot: "bg-rose-500" },
+  withdrawn:                { label: "Withdrawn",              color: "bg-slate-100 text-slate-700",     dot: "bg-slate-400" },
+};
+
+// Transfer type display mapping
+export const TYPE_LABELS = {
+  request: "Request",
+  dispatch: "Direct Dispatch",
+  modification_request: "Modification",
 };
 
 // Line-level status vocabulary (P16)

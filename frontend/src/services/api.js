@@ -48,10 +48,19 @@ function normalizeTransfer(raw) {
   // If POS shape: { transfer: {...}, lines: [...] }, flatten
   if (raw.transfer && !raw.status && !raw.id) {
     const t = { ...raw.transfer, lines: raw.lines || [] };
-    return parseResolutionMeta(t);
+    return enrichTransferMeta(parseResolutionMeta(t));
   }
   // Already flat shape
-  return parseResolutionMeta(raw);
+  return enrichTransferMeta(parseResolutionMeta(raw));
+}
+
+/** P17: Enrich transfer with derived P17 fields */
+function enrichTransferMeta(t) {
+  if (!t) return t;
+  t.parentTransferId = t.parent_transfer_id || null;
+  t.isModificationRequest = (t.type === "modification_request");
+  t.isWithdrawn = (t.status === "withdrawn");
+  return t;
 }
 
 /**
@@ -336,6 +345,21 @@ function cancelRemainder(transferId, lineIds) {
   return client.post(`/proxy/v2/inventory-transfer/approve/${transferId}/cancel-remainder`, payload);
 }
 
+/** P17: Amend request — franchise replaces lines in-place (status=requested, type=request only) */
+function amendRequest(transferId, items) {
+  return client.post(`/proxy/v2/inventory-transfer/request/${transferId}/amend`, { items });
+}
+
+/** P17: Withdraw request — terminal status (status=requested, type=request only) */
+function withdrawRequest(transferId) {
+  return client.post(`/proxy/v2/inventory-transfer/request/${transferId}/withdraw`, {});
+}
+
+/** P17: Request modification — creates child transfer (post-approval, type=request only) */
+function requestModification(transferId, items) {
+  return client.post(`/proxy/v2/inventory-transfer/request/${transferId}/modification`, { items });
+}
+
 /** P16: Resolve receive dispute (central/sender only) */
 function resolveDispute(transferId, { accept, note }) {
   return client.post(`/proxy/v2/inventory-transfer/receive-dispute/${transferId}/resolve`, {
@@ -450,6 +474,10 @@ const api = {
   cancelRemainder,
   resolveDispute,
   rejectTransfer,
+  // P17: Amend, Withdraw, Modification
+  amendRequest,
+  withdrawRequest,
+  requestModification,
   dispatchTransfer,
   receiveTransfer,
   cancelTransfer,

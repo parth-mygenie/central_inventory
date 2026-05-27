@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useLoginContext } from "@/hooks/useLoginContext";
 import { useWriteAction } from "@/hooks/useWriteAction";
 import api from "@/services/api";
-import { mapRestaurantType, getStatusConfig, getLineStatusConfig } from "@/lib/terminology";
+import { mapRestaurantType, getStatusConfig, getLineStatusConfig, TYPE_LABELS } from "@/lib/terminology";
 import { formatTimestamp } from "@/lib/formatters";
 import { getAvailableActions } from "@/lib/transferActions";
 import StatusTimeline from "./StatusTimeline";
@@ -12,12 +12,13 @@ import ReasonDialog, { REPORT_ISSUE_TYPES } from "./ReasonDialog";
 import ReceiveDialog from "./ReceiveDialog";
 import ApproveWaveDialog from "./ApproveWaveDialog";
 import DisputeResolutionDialog from "./DisputeResolutionDialog";
+import ItemEditorDialog from "./ItemEditorDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { LoadingState, ErrorState, EmptyState } from "@/components/common/StateDisplays";
 import { StoreTypeBadge, StatusBadge } from "@/components/common/Badges";
-import { ArrowLeft, Package, FileWarning, Loader2, Clock, ShieldCheck, BarChart3, RefreshCw } from "lucide-react";
+import { ArrowLeft, Package, FileWarning, Loader2, Clock, ShieldCheck, BarChart3, RefreshCw, Link2 } from "lucide-react";
 
 /** Line-level status badge (P16) */
 function LineStatusBadge({ status }) {
@@ -73,6 +74,8 @@ export default function TransferDetail() {
   const [receiveOpen, setReceiveOpen] = useState(false);
   const [approveWaveOpen, setApproveWaveOpen] = useState(false);
   const [disputeOpen, setDisputeOpen] = useState(false);
+  const [amendOpen, setAmendOpen] = useState(false);
+  const [modificationOpen, setModificationOpen] = useState(false);
 
   const fetchDetail = useCallback(async () => {
     if (!id) return;
@@ -203,6 +206,43 @@ export default function TransferDetail() {
     });
   };
 
+  // P17: Amend — franchise replaces lines in-place
+  const handleAmend = () => setAmendOpen(true);
+  const handleAmendSubmit = (items) => {
+    execute(() => api.amendRequest(data.id || id, items), {
+      successMsg: `Request #${data.id || id} amended`,
+      onSuccess: () => { setAmendOpen(false); fetchDetail(); },
+    });
+  };
+
+  // P17: Withdraw — terminal, irreversible
+  const handleWithdraw = () => {
+    setConfirmDialog({
+      title: `Withdraw Request #${data.id || id}?`,
+      description: "This will permanently withdraw this request. This action cannot be undone — the request will be removed from the approval queue.",
+      confirmLabel: "Withdraw Request",
+      variant: "destructive",
+      onConfirm: () => execute(() => api.withdrawRequest(data.id || id), {
+        successMsg: `Request #${data.id || id} withdrawn`,
+        onSuccess: () => { setConfirmDialog(null); fetchDetail(); },
+      }),
+    });
+  };
+
+  // P17: Modification — creates child transfer
+  const handleModification = () => setModificationOpen(true);
+  const handleModificationSubmit = (items) => {
+    execute(() => api.requestModification(data.id || id, items), {
+      successMsg: `Modification request created for Transfer #${data.id || id}`,
+      onSuccess: (resp) => {
+        setModificationOpen(false);
+        const childId = resp?.data?.data?.transfer_id || resp?.data?.transfer_id;
+        if (childId) navigate(`/transfer/${childId}`);
+        else fetchDetail();
+      },
+    });
+  };
+
   const actionHandlers = {
     approve: handleApprove,
     "partial-approve": handlePartialApprove,
@@ -213,7 +253,9 @@ export default function TransferDetail() {
     cancel: handleCancel,
     "report-issue": handleReportIssue,
     "resolve-dispute": handleResolveDispute,
-    edit: () => {},
+    amend: handleAmend,
+    withdraw: handleWithdraw,
+    modification: handleModification,
   };
 
   if (loading) return <LoadingState lines={6} />;
@@ -273,11 +315,25 @@ export default function TransferDetail() {
           </Button>
           {data.type && (
             <span className="text-[10px] text-muted-foreground bg-muted px-2 py-1 rounded">
-              {data.type === "dispatch" ? "Direct Dispatch" : "Request-based"}
+              {TYPE_LABELS[data.type] || data.type}
             </span>
           )}
         </div>
       </div>
+
+      {/* P17: Parent transfer link for modification_request */}
+      {data.parentTransferId && (
+        <div data-testid="parent-transfer-link" className="mb-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Link2 className="h-3 w-3" />
+          <span>Modification of</span>
+          <button
+            onClick={() => navigate(`/transfer/${data.parentTransferId}`)}
+            className="font-mono font-medium text-blue-600 hover:underline"
+          >
+            Transfer #{data.parentTransferId}
+          </button>
+        </div>
+      )}
 
       <StatusTimeline transfer={data} />
 
@@ -516,6 +572,26 @@ export default function TransferDetail() {
         onOpenChange={setDisputeOpen}
         transfer={data}
         onSubmit={handleDisputeSubmit}
+        submitting={submitting}
+      />
+      <ItemEditorDialog
+        open={amendOpen}
+        onOpenChange={setAmendOpen}
+        transfer={data}
+        title={`Amend Request #${data?.id || id}`}
+        description="Replace all items in this request. Existing lines will be removed."
+        submitLabel="Amend Request"
+        onSubmit={handleAmendSubmit}
+        submitting={submitting}
+      />
+      <ItemEditorDialog
+        open={modificationOpen}
+        onOpenChange={setModificationOpen}
+        transfer={data}
+        title={`Request Modification — Transfer #${data?.id || id}`}
+        description="Request additional or changed quantities. A new modification request will be created for central approval."
+        submitLabel="Submit Modification"
+        onSubmit={handleModificationSubmit}
         submitting={submitting}
       />
     </div>

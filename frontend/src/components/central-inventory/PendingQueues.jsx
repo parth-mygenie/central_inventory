@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLoginContext } from "@/hooks/useLoginContext";
 import api from "@/services/api";
-import { mapRestaurantType } from "@/lib/terminology";
+import { mapRestaurantType, TYPE_LABELS } from "@/lib/terminology";
 import { formatTimestamp, formatItemsCount } from "@/lib/formatters";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -97,7 +97,11 @@ export default function PendingQueues() {
         <TableCell className="text-xs tabular-nums">{formatItemsCount(itemsCount)}</TableCell>
         <TableCell className="text-xs text-muted-foreground">{formatTimestamp(item.created_at)}</TableCell>
         <TableCell>
-          <span className="text-[10px] text-muted-foreground">View details</span>
+          {item.type === "modification_request" ? (
+            <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-medium" data-testid={`type-badge-${id}`}>Modification</span>
+          ) : (
+            <span className="text-[10px] text-muted-foreground">View details</span>
+          )}
         </TableCell>
       </TableRow>
     );

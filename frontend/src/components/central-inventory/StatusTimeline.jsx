@@ -44,6 +44,21 @@ function getTimelineSteps(transfer) {
     return steps;
   }
 
+  // Branch: Withdrawn (P17 — terminal, franchise-initiated)
+  if (status === "withdrawn") {
+    steps.push({
+      key: "withdrawn",
+      label: "Withdrawn",
+      timestamp: transfer.updated_at,
+      actor: null,
+      completed: true,
+      active: true,
+      icon: "ban",
+      isBranch: true,
+    });
+    return steps;
+  }
+
   // Step 2: Partially Approved (P16 — intermediate state)
   if (status === "partially_approved" || (transfer.approved_at && ["partially_approved"].includes(status))) {
     steps.push({
@@ -169,6 +184,7 @@ function StepIcon({ step }) {
 function getStepRingColor(step) {
   if (step.key === "rejected") return "border-rose-300 bg-rose-50";
   if (step.key === "cancelled") return "border-red-300 bg-red-50";
+  if (step.key === "withdrawn") return "border-slate-300 bg-slate-50";
   if (step.key === "partially_received") return "border-teal-300 bg-teal-50";
   if (step.key === "partially_approved") return "border-sky-300 bg-sky-50";
   if (step.key === "receive_dispute_pending") return "border-orange-300 bg-orange-50";
