@@ -259,6 +259,21 @@ export default function OperationsHub() {
               </Button>
             )}
           </div>
+
+          {/* Procurement actions — gated by add-stock-purchase permission */}
+          {canDo("add-stock-purchase") && (
+            <div className="mt-3 pt-3 border-t border-border">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">Procurement</p>
+              <div className="flex flex-wrap gap-2">
+                <Button data-testid="action-add-stock-purchase" variant="outline" size="sm" onClick={() => navigate("/procurement/new")}>
+                  Add Stock (Vendor)
+                </Button>
+                <Button data-testid="action-manage-vendors" variant="ghost" size="sm" onClick={() => navigate("/vendors")}>
+                  Manage Vendors
+                </Button>
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>

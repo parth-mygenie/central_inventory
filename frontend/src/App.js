@@ -14,6 +14,9 @@ import RequestStockForm from "@/components/central-inventory/RequestStockForm";
 import StockAdjustmentForm from "@/components/central-inventory/StockAdjustmentForm";
 import WastageEntryForm from "@/components/central-inventory/WastageEntryForm";
 import WastageReport from "@/components/central-inventory/WastageReport";
+import OperationalSettings from "@/components/central-inventory/OperationalSettings";
+import VendorManagement from "@/components/central-inventory/VendorManagement";
+import AddStockPurchaseForm from "@/components/central-inventory/AddStockPurchaseForm";
 import { PermissionDenied } from "@/components/common/StateDisplays";
 
 /**
@@ -69,6 +72,9 @@ function AppRoutes() {
         <Route path="/adjustment/new" element={<StockAdjustmentForm />} />
         <Route path="/wastage/new" element={<WastageEntryForm />} />
         <Route path="/wastage/report" element={<WastageReport />} />
+        <Route path="/settings" element={<OperationalSettings />} />
+        <Route path="/vendors" element={<VendorManagement />} />
+        <Route path="/procurement/new" element={<AddStockPurchaseForm />} />
         <Route path="/transfer/:id" element={<TransferDetail />} />
 
         {/* Catch-all → redirect to hub */}

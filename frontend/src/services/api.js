@@ -451,6 +451,51 @@ function getWastageReport({ restaurantIds, fromDate, toDate } = {}) {
 
 // ── Export ────────────────────────────────────────────────────────
 
+// ── P17 Operational Settings ─────────────────────────────────────
+
+function getOperationalSettings(restaurantId) {
+  const payload = {};
+  if (restaurantId) payload.restaurant_id = restaurantId;
+  return client.post("/proxy/v2/inventory-transfer/operational-settings/get", payload);
+}
+
+function updateOperationalSettings(restaurantId, settings) {
+  return client.post("/proxy/v2/inventory-transfer/operational-settings/update", {
+    restaurant_id: restaurantId,
+    settings,
+  });
+}
+
+// ── P18 Vendor Management ────────────────────────────────────────
+
+function getVendors() {
+  return client.get("/proxy/v2/inventory/get-vendor").then((resp) => {
+    // Normalize: POS returns raw array, wrap in data if needed
+    if (Array.isArray(resp.data)) {
+      resp.data = { data: resp.data };
+    }
+    return resp;
+  });
+}
+
+function addVendor(payload) {
+  return client.post("/proxy/v2/inventory/add-vendor", payload);
+}
+
+function updateVendor(id, payload) {
+  return client.put(`/proxy/v2/inventory/update-vendor/${id}`, payload);
+}
+
+function deleteVendor(id) {
+  return client.delete(`/proxy/v2/inventory/vendor-delete/${id}`);
+}
+
+// ── P19 Add Stock (Procurement) ──────────────────────────────────
+
+function addStockPurchase(inventoryMasterId, payload) {
+  return client.post(`/proxy/v2/inventory/add-stock/${inventoryMasterId}`, payload);
+}
+
 const api = {
   setToken,
   login,
@@ -486,6 +531,14 @@ const api = {
   adjustStockIncrease,
   recordWastage,
   getWastageReport,
+  // P17-Settings / P18-Vendors / P19-Procurement
+  getOperationalSettings,
+  updateOperationalSettings,
+  getVendors,
+  addVendor,
+  updateVendor,
+  deleteVendor,
+  addStockPurchase,
 };
 
 export default api;

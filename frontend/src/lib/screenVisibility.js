@@ -30,6 +30,9 @@ export const SCREEN_VISIBILITY = {
   "scr-18-wastage":        { master: FULL,    central: FULL,    franchise: FULL  },
   "scr-20-reports":        { master: FULL,    central: FULL,    franchise: FULL  },
   "scr-history-ledger":    { master: FULL,    central: FULL,    franchise: FULL  },
+  "scr-settings":          { master: FULL,    central: HIDDEN,  franchise: HIDDEN },
+  "scr-vendors":           { master: FULL,    central: FULL,    franchise: HIDDEN },
+  "scr-procurement":       { master: FULL,    central: FULL,    franchise: HIDDEN },
   "scr-21-api-verify":     { master: HIDDEN,  central: HIDDEN,  franchise: HIDDEN }, // admin only
 };
 
@@ -47,6 +50,8 @@ export const ACTION_PERMISSIONS = {
   "record-wastage":   { master: true,  central: true,  franchise: true  },
   "create-items":     { master: true,  central: false, franchise: false },
   "view-cross-reports": { master: true, central: false, franchise: false },
+  "manage-vendors":    { master: true, central: true,  franchise: false },
+  "add-stock-purchase":{ master: true, central: true,  franchise: false },
 };
 
 // ── Navigation items (for sidebar) ───────────────────────────────
@@ -87,6 +92,20 @@ export const NAV_ITEMS = [
     path: "/reports",
     icon: "BarChart3",
     comingSoon: true,
+  },
+  {
+    id: "vendors",
+    screen: "scr-vendors",
+    label: "Vendors",
+    path: "/vendors",
+    icon: "Building2",
+  },
+  {
+    id: "settings",
+    screen: "scr-settings",
+    label: "Settings",
+    path: "/settings",
+    icon: "Settings",
   },
 ];
 

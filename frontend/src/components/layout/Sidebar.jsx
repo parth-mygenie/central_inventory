@@ -9,6 +9,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Package,
+  Building2,
+  Settings,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -19,6 +21,8 @@ const ICON_MAP = {
   Inbox,
   BarChart3,
   ScrollText,
+  Building2,
+  Settings,
 };
 
 export default function Sidebar() {
