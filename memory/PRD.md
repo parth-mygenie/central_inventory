@@ -16,46 +16,41 @@ Central Inventory management app for MyGenie vendors. React 19 frontend + FastAP
 
 ## What's Been Implemented
 
-### Session 1: Repo clone & setup (May 26, 2026)
+### Session 1: Repo clone & setup (May 26)
 - Cloned from branch `27_5_26`, running
 
-### Session 2: P15/P16 Lifecycle Stabilization (May 26, 2026)
+### Session 2: P15/P16 Lifecycle Stabilization (May 26)
 - 7 regressions fixed, 100% test pass
 
-### Session 3: P17 Planning (May 27, 2026)
+### Session 3: P17 Planning (May 27)
 - API investigation, 3 endpoints confirmed, full plan created
 
-### Session 4: P17 Implementation (May 27, 2026)
-- **Amend Request**: `POST /request/{id}/amend` — franchise replaces lines in-place (status=requested, type=request only)
-  - ItemEditorDialog with source catalog, seeds from existing lines
-  - Action visibility: franchise-side only, status=requested, type=request
-- **Withdraw Request**: `POST /request/{id}/withdraw` — terminal status=withdrawn
-  - Destructive confirm dialog with warning
-  - StatusTimeline withdrawn branch (Ban icon, slate ring)
-  - `withdrawn` added to STATUS_CONFIG + terminal status list
-- **Modification Request**: `POST /request/{id}/modification` — creates child transfer
-  - ItemEditorDialog with catalog, navigates to child on success
-  - Parent link rendered: "Modification of Transfer #XXX"
-  - `modification_request` type badge in TransferDetail, PendingQueues, HistoryLedger
-  - TYPE_LABELS mapping for all transfer types
-- **Testing**: 32/32 backend + 16/16 frontend — all pass
-- **Files modified**: api.js, terminology.js, transferActions.js, TransferDetail.jsx, StatusTimeline.jsx, PendingQueues.jsx, HistoryLedger.jsx
-- **Files created**: ItemEditorDialog.jsx
+### Session 4: P17 Implementation + UAT (May 27)
+- Amend, Withdraw, Modification flows implemented
+- All tests pass (32/32 backend + 16/16 frontend)
+- Operational smoke test: T120-T125 created against live POS API
+  - T120: Full lifecycle (requested→approved→dispatched→received)
+  - T121: Amend verified (maida→red meat line replacement)
+  - T122: Withdraw verified (terminal, Requested→Withdrawn timeline)
+  - T123→T124: Modification verified (child created, parent unchanged)
+  - T125: Dispute flow (request→approve→dispatch→receive→resolved)
+- Browser UAT: All 4 key states screenshot-verified
+  - T121: Amend Request + Withdraw buttons visible
+  - T122: Withdrawn badge, timeline, no actions
+  - T123: Request Modification button visible
+  - T124: Parent link "Modification of Transfer #123", Modification type badge
+  - History: Withdrawn filter + Modification type badges
 
 ## P0 — Implemented
-- [x] Login, Ops Hub, Hierarchy, Queues, History, Ledger
-- [x] Transfer Detail with P16 lifecycle
-- [x] Partial approve, hold, cancel-remainder, dispute
+- [x] Full P15/P16 lifecycle (partial approve, hold, cancel-remainder, dispute)
+- [x] P17: Amend, Withdraw, Modification flows
+- [x] Operations Hub, Hierarchy, Queues, History, Ledger
 - [x] Request stock, Direct dispatch, Adjustment, Wastage
-- [x] P17: Amend request (franchise, status=requested)
-- [x] P17: Withdraw request (franchise, terminal)
-- [x] P17: Modification request (franchise, creates child transfer)
-- [x] P17: withdrawn status + modification_request type rendering
 
 ## P1 — Remaining
-- [ ] Real-time queue polling / WebSocket notifications
-- [ ] Cross-store reports for Central Store Manager
-- [ ] Parent transfer detail: show linked modifications sub-section
+- [ ] Real-time queue polling
+- [ ] Parent transfer detail: linked modifications sub-section
+- [ ] Cross-store reports
 
 ## P2 — Future
 - [ ] Batch management UI, Export, Dashboard analytics
