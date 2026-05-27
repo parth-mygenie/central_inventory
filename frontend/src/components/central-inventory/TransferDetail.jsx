@@ -18,7 +18,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { LoadingState, ErrorState, EmptyState } from "@/components/common/StateDisplays";
 import { StoreTypeBadge, StatusBadge } from "@/components/common/Badges";
-import { ArrowLeft, Package, FileWarning, Loader2, Clock, ShieldCheck, BarChart3, RefreshCw, Link2 } from "lucide-react";
+import { ArrowLeft, Package, FileWarning, Loader2, Clock, ShieldCheck, BarChart3, RefreshCw, Link2, GitBranch } from "lucide-react";
 
 /** Line-level status badge (P16) */
 function LineStatusBadge({ status }) {
@@ -67,6 +67,7 @@ export default function TransferDetail() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [linkedMods, setLinkedMods] = useState([]);
 
   // Dialog state
   const [confirmDialog, setConfirmDialog] = useState(null);
@@ -83,7 +84,21 @@ export default function TransferDetail() {
     setError(null);
     try {
       const resp = await api.getTransferDetails(id);
-      setData(resp.data?.data || resp.data);
+      const transfer = resp.data?.data || resp.data;
+      setData(transfer);
+      // Fetch linked modification requests (children of this transfer)
+      if (transfer && !transfer.isModificationRequest) {
+        try {
+          const histResp = await api.getTransferHistory();
+          const histItems = histResp.data?.data || histResp.data || [];
+          const children = (Array.isArray(histItems) ? histItems : []).filter(
+            (t) => t.type === "modification_request" && String(t.parent_transfer_id) === String(id)
+          );
+          setLinkedMods(children);
+        } catch { setLinkedMods([]); }
+      } else {
+        setLinkedMods([]);
+      }
     } catch (err) {
       const status = err?.response?.status;
       setError(status === 404 || status === 500 ? "Transfer not found" : err?.response?.data?.message || "Failed to load transfer details");
@@ -499,6 +514,50 @@ export default function TransferDetail() {
                 </div>
               </div>
             ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* P17: Linked Modification Requests (parent view) */}
+      {linkedMods.length > 0 && (
+        <Card className="mb-4" data-testid="linked-modifications-card">
+          <CardHeader className="py-2.5 px-4">
+            <CardTitle className="text-xs text-muted-foreground font-medium uppercase tracking-wider flex items-center gap-1.5">
+              <GitBranch className="h-3.5 w-3.5" />
+              Modification Requests
+              <span className="ml-1 bg-amber-100 text-amber-700 text-[10px] px-1.5 py-0.5 rounded-full font-semibold">{linkedMods.length}</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="py-0 px-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-[10px]">ID</TableHead>
+                  <TableHead className="text-[10px]">Status</TableHead>
+                  <TableHead className="text-[10px]">Created</TableHead>
+                  <TableHead className="text-[10px]">Items</TableHead>
+                  <TableHead className="text-[10px]"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {linkedMods.map((mod) => (
+                  <TableRow
+                    key={mod.id}
+                    data-testid={`linked-mod-${mod.id}`}
+                    className="cursor-pointer hover:bg-accent/50"
+                    onClick={() => navigate(`/transfer/${mod.id}`)}
+                  >
+                    <TableCell className="text-xs font-mono font-medium">#{mod.id}</TableCell>
+                    <TableCell><StatusBadge status={mod.status} /></TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{formatTimestamp(mod.created_at)}</TableCell>
+                    <TableCell className="text-xs tabular-nums">{mod.items_count ?? "—"}</TableCell>
+                    <TableCell>
+                      <span className="text-[10px] text-blue-600 hover:underline">View</span>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       )}
