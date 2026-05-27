@@ -1,42 +1,34 @@
 # Central Inventory - PRD
 
-## Tech Stack
-- **Frontend**: React 19, Tailwind CSS, Radix UI, shadcn/ui, React Router DOM 7, Craco
-- **Backend**: Python FastAPI, Motor (async MongoDB), httpx (proxy to MyGenie POS API)
+## Problem Statement
+Pull and run the Central Inventory app from `https://github.com/parth-mygenie/central_inventory.git` (branch `27_5_26_2`) as-is.
 
-## What's Been Implemented
+## Architecture
+- **Backend**: FastAPI (Python) — acts as API proxy to MyGenie POS preprod APIs
+- **Frontend**: React 19 + Craco + Tailwind CSS + Radix UI + Recharts
+- **Database**: MongoDB (via Motor async driver)
+- **Auth**: Proxied through MyGenie vendor employee login
 
-### P15/P16: Transfer Lifecycle (May 26)
-- Partial approve, hold, cancel-remainder, dispute, multi-wave dispatch/receive
+## What's Been Implemented (May 27, 2026)
+- Cloned repo from GitHub branch `27_5_26_2`
+- Created `.env` files for both backend and frontend with correct environment variables
+- Installed all Python and Node.js dependencies
+- Both services running successfully via supervisor
 
-### P17: Amend/Withdraw/Modification (May 27)
-- Franchise amend, withdraw, modification request flows
-- Linked modifications sub-section in parent TransferDetail
+## Core Features (from repo)
+- Login via MyGenie vendor account
+- Central inventory hierarchy summary/detail
+- Pending transfer queues
+- Transfer management (initiate, approve, reject, dispatch, receive, cancel)
+- Stock request flow (3-step: sources → catalog → request)
+- Stock adjustments (increase/decrease)
+- Wastage recording and reporting
+- Franchise management
+- Vendor management (CRUD)
+- Procurement (add stock purchase)
+- Operational settings
 
-### P17-Settings: Operational Settings UI (May 27)
-- 4 grouped sections (Hierarchy Policy, Transfer, Alerts, System)
-- Master-only policy editing with dangerous-toggle confirmation
-- Inherited vs stored badges, hierarchy inheritance rendering
-
-### P18: Vendor Management UI (May 27)
-- Vendor CRUD table with search
-- Master: full CRUD. Central: create + read only (when flag ON). Franchise: no access
-- PolicyGate blocked-state when procurement disabled
-- VendorFormDialog for create/edit
-
-### P19: Add Stock / Procurement UI (May 27)
-- Multi-line item entry with vendor, batch/expiry, commercial fields
-- Bill/invoice file upload (image + PDF)
-- Confirmation summary step before submit
-- Success toast + form reset for batch entries
-- Procurement section in Operations Hub (master + central only)
-
-### Testing: 100% pass across all features
-- P16: 32/32 backend + 16/16 frontend
-- P17: 32/32 backend + 16/16 frontend
-- P18/P19: 14/14 backend + 20/20 frontend
-
-## P1 — Remaining
-- [ ] Real-time queue polling
-- [ ] Procurement history / reporting
-- [ ] Multi-line purchase via add-purchase API
+## Backlog
+- P0: None — app pulled and running as requested
+- P1: Testing with real MyGenie credentials
+- P2: Any feature additions per user request
