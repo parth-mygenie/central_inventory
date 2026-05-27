@@ -3,46 +3,40 @@
 ## Tech Stack
 - **Frontend**: React 19, Tailwind CSS, Radix UI, shadcn/ui, React Router DOM 7, Craco
 - **Backend**: Python FastAPI, Motor (async MongoDB), httpx (proxy to MyGenie POS API)
-- **External APIs**: MyGenie POS preprod API (v1 auth, v2 vendor operations)
 
 ## What's Been Implemented
-- P15/P16 lifecycle (partial approve, hold, cancel-remainder, dispute)
-- P17: Amend, Withdraw, Modification flows + linked modifications visibility
-- Operations Hub, Hierarchy, Queues, History, Ledger, Request Stock, Direct Dispatch, Adjustment, Wastage
 
-## P0 — Implemented
-- [x] Full P15/P16/P17 lifecycle
-- [x] Linked Modifications sub-section in parent TransferDetail
-- [x] Bidirectional parent↔child navigation
+### P15/P16: Transfer Lifecycle (May 26)
+- Partial approve, hold, cancel-remainder, dispute, multi-wave dispatch/receive
 
-## P1 — Planned (P17-Settings / P18-Vendors / P19-AddStock)
-### Phase 1: Operational Settings UI
-- [ ] Settings page with hierarchy-scoped restaurant picker
-- [ ] Resolved vs stored rendering with inheritance indicators
-- [ ] Master-only policy editing with dangerous-toggle confirmation
-- [ ] 4 grouped sections (Hierarchy Policy, Transfer, Alerts, System)
-- API: `operational-settings/get`, `operational-settings/update`
+### P17: Amend/Withdraw/Modification (May 27)
+- Franchise amend, withdraw, modification request flows
+- Linked modifications sub-section in parent TransferDetail
 
-### Phase 2: Vendor Management UI
-- [ ] Vendor CRUD (list, create, edit, delete)
-- [ ] PolicyGate: blocked-state when `allow_child_direct_vendor_purchase` is off
-- [ ] Vendor table with search
-- [ ] VendorFormDialog
-- API: `get-vendor`, `add-vendor`, `update-vendor/{id}`, `vendor-delete/{id}`
+### P17-Settings: Operational Settings UI (May 27)
+- 4 grouped sections (Hierarchy Policy, Transfer, Alerts, System)
+- Master-only policy editing with dangerous-toggle confirmation
+- Inherited vs stored badges, hierarchy inheritance rendering
 
-### Phase 3: Add Stock / Procurement UI
-- [ ] Single-SKU inward form (SKU selector, vendor selector, qty/unit, batch/expiry)
-- [ ] Commercial fields (collapsible)
-- [ ] Confirmation summary before submit
-- [ ] Clear separation from transfer receive
-- API: `add-stock/{inventory_master_id}`
+### P18: Vendor Management UI (May 27)
+- Vendor CRUD table with search
+- Master: full CRUD. Central: create + read only (when flag ON). Franchise: no access
+- PolicyGate blocked-state when procurement disabled
+- VendorFormDialog for create/edit
 
-## Planning Documents
-- `AI/Plans/phase2/P17P18P19_settings_vendors_procurement_plan.md` — full plan
-- `AI/Plans/api_implementation_status_p17p18p19_addendum.md` — API contracts
+### P19: Add Stock / Procurement UI (May 27)
+- Multi-line item entry with vendor, batch/expiry, commercial fields
+- Bill/invoice file upload (image + PDF)
+- Confirmation summary step before submit
+- Success toast + form reset for batch entries
+- Procurement section in Operations Hub (master + central only)
 
-## P2 — Future
+### Testing: 100% pass across all features
+- P16: 32/32 backend + 16/16 frontend
+- P17: 32/32 backend + 16/16 frontend
+- P18/P19: 14/14 backend + 20/20 frontend
+
+## P1 — Remaining
 - [ ] Real-time queue polling
-- [ ] Multi-line procurement (`add-purchase`)
 - [ ] Procurement history / reporting
-- [ ] Bill upload
+- [ ] Multi-line purchase via add-purchase API
