@@ -35,25 +35,18 @@ Central Inventory module for MyGenie POS — multi-level stock management system
 - Direct Dispatch with source selector
 - Request Stock — canonical 3-step flow
 
-### Phase 2 Planning (27 May 2026)
-- P17 Amend/Withdraw/Modification — API validated, planning complete
-- P17/P18/P19 Settings/Vendors/Procurement — API validated, planning complete, UI implemented
-- **P20 Stock Inventory Summary — API VALIDATED, PLANNING COMPLETE (27 May 2026)**
-  - Both endpoints confirmed working across all 3 roles
-  - Full frontend implementation plan created
-  - 3-phase rollout recommended (~4 hours total)
-
-## P20 Status (27 May 2026)
-- API validation: 6/6 tests PASS (2 endpoints × 3 roles)
-- Planning document: `AI/Plans/phase2/P20_stock_inventory_summary_plan.md`
-- API addendum: `AI/Plans/api_implementation_status_p20_addendum.md`
-- Curl evidence: `AI/curls/p20_stock_inventory_curls.sh`
-- Implementation: NOT YET — planning only per user request
+### P20 Stock Inventory Summary — IMPLEMENTED (27 May 2026)
+- **API:** `getStockInventory()` → `GET /inventory/stock-inventory` (self-store only)
+- **Hook:** `useStockInventory` — fetch, stale detection, KPI derivation
+- **OperationsHub:** Stock Items + Low Stock KPI cards with navigation
+- **Stock Inventory page** (`/inventory`): Full table with search, category filter, 5 sort modes
+- **Low-stock indicators:** POS-computed `is_low_stock` → red badges + row highlights
+- **Sidebar nav item:** "Stock Inventory" with Package icon, all roles
+- **Testing:** 14/14 frontend PASS, 11/11 backend PASS across all 3 roles
 
 ## Prioritized Backlog
-- **P0:** P20 Phase 1 — API layer + hook + KPI cards in OperationsHub (~1 hr)
-- **P1:** P20 Phase 2 — Stock Items Table at /inventory (~1.5 hrs)
-- **P1:** P20 Phase 3 — Hierarchy Stock Overview with toggle (~1.5 hrs)
+- **P0:** None — current scope complete
+- **P1:** P20 Phase 3 — Hierarchy Stock Overview with toggle (master/central only) (~1.5 hrs)
 - **P2:** Reports screen (currently "Coming Soon" badge)
 - **P2:** Real-time notifications (WebSocket/polling — hook placeholder exists)
 - **P2:** Historical stock comparison (vs yesterday delta)
