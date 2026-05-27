@@ -17,6 +17,7 @@ import WastageReport from "@/components/central-inventory/WastageReport";
 import OperationalSettings from "@/components/central-inventory/OperationalSettings";
 import VendorManagement from "@/components/central-inventory/VendorManagement";
 import AddStockPurchaseForm from "@/components/central-inventory/AddStockPurchaseForm";
+import StockInventorySummary from "@/components/central-inventory/StockInventorySummary";
 import { PermissionDenied } from "@/components/common/StateDisplays";
 
 /**
@@ -63,6 +64,7 @@ function AppRoutes() {
         }
       >
         <Route path="/" element={<OperationsHub />} />
+        <Route path="/inventory" element={<StockInventorySummary />} />
         <Route path="/hierarchy" element={<HierarchySummary />} />
         <Route path="/store/:id" element={<StoreDetail />} />
         <Route path="/queues" element={<PendingQueues />} />

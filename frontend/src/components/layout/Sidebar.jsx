@@ -21,6 +21,7 @@ const ICON_MAP = {
   Inbox,
   BarChart3,
   ScrollText,
+  Package,
   Building2,
   Settings,
 };

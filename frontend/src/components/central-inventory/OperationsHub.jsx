@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLoginContext } from "@/hooks/useLoginContext";
+import { useStockInventory } from "@/hooks/useStockInventory";
 import api from "@/services/api";
 import ContextSelector from "./ContextSelector";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,6 +14,8 @@ import {
   ArrowRight,
   ClipboardList,
   Network,
+  Package,
+  AlertTriangle,
 } from "lucide-react";
 import { LoadingState, ErrorState } from "@/components/common/StateDisplays";
 
@@ -23,10 +26,12 @@ import { LoadingState, ErrorState } from "@/components/common/StateDisplays";
  * - KPI placeholder removed (Item 12)
  * - Ready to Dispatch count card (Item 1)
  * - Context selector updates hub data in-place (Item 11)
+ * - P20: Stock Inventory KPI cards
  */
 export default function OperationsHub() {
   const navigate = useNavigate();
   const { restaurantType, isTopLevel, canDo, restaurantId } = useLoginContext();
+  const { totalItems, lowStockCount, loading: stockLoading } = useStockInventory();
 
   const [queues, setQueues] = useState(null);
   const [readyToDispatchCount, setReadyToDispatchCount] = useState(0);
@@ -198,6 +203,51 @@ export default function OperationsHub() {
                 </CardContent>
               </Card>
             )}
+          </div>
+
+          {/* P20: Stock Inventory KPI cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+            <Card
+              data-testid="card-stock-items"
+              className="cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => navigate("/inventory")}
+            >
+              <CardContent className="py-4 px-4 flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+                  <Package className="h-5 w-5 text-slate-600" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-2xl font-bold">{stockLoading ? "—" : totalItems}</p>
+                  <p className="text-xs text-muted-foreground">Stock Items</p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+              </CardContent>
+            </Card>
+
+            <Card
+              data-testid="card-low-stock"
+              className={`cursor-pointer hover:shadow-md transition-shadow ${!stockLoading && lowStockCount > 0 ? "border-red-200 bg-red-50/30" : ""}`}
+              onClick={() => navigate("/inventory")}
+            >
+              <CardContent className="py-4 px-4 flex items-center gap-3">
+                <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${!stockLoading && lowStockCount > 0 ? "bg-red-100" : "bg-emerald-50"}`}>
+                  {!stockLoading && lowStockCount > 0 ? (
+                    <AlertTriangle className="h-5 w-5 text-red-600" />
+                  ) : (
+                    <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className={`text-2xl font-bold ${!stockLoading && lowStockCount > 0 ? "text-red-700" : ""}`}>
+                    {stockLoading ? "—" : lowStockCount}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {!stockLoading && lowStockCount > 0 ? "Low Stock" : "All Stocked"}
+                  </p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+              </CardContent>
+            </Card>
           </div>
 
           {/* Quick actions */}

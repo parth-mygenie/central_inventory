@@ -33,6 +33,7 @@ export const SCREEN_VISIBILITY = {
   "scr-settings":          { master: FULL,    central: HIDDEN,  franchise: HIDDEN },
   "scr-vendors":           { master: FULL,    central: FULL,    franchise: HIDDEN },
   "scr-procurement":       { master: FULL,    central: FULL,    franchise: HIDDEN },
+  "scr-stock-inventory":   { master: FULL,    central: FULL,    franchise: FULL  },
   "scr-21-api-verify":     { master: HIDDEN,  central: HIDDEN,  franchise: HIDDEN }, // admin only
 };
 
@@ -63,6 +64,13 @@ export const NAV_ITEMS = [
     label: "Operations Hub",
     path: "/",
     icon: "LayoutDashboard",
+  },
+  {
+    id: "stock-inventory",
+    screen: "scr-stock-inventory",
+    label: "Stock Inventory",
+    path: "/inventory",
+    icon: "Package",
   },
   {
     id: "hierarchy",

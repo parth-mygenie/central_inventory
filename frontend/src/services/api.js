@@ -449,6 +449,38 @@ function getWastageReport({ restaurantIds, fromDate, toDate } = {}) {
   });
 }
 
+// ── P20 Stock Inventory Summary ───────────────────────────────────
+
+/**
+ * P20: Get logged-in store's stock inventory summary.
+ * CAUTION: This is for summary/dashboard only.
+ * Do NOT use for request flow source catalog (use requestCatalog instead).
+ */
+function getStockInventory() {
+  return client.get("/proxy/v2/inventory/stock-inventory").then((resp) => {
+    const data = resp.data;
+    if (data?.current_stocks) {
+      data.current_stocks = data.current_stocks.map(normalizeStockItem);
+    }
+    return resp;
+  });
+}
+
+/**
+ * P20: Normalize stock-inventory item.
+ * POS returns quantities as strings; parse to floats for sorting/comparison.
+ */
+function normalizeStockItem(item) {
+  if (!item) return item;
+  return {
+    ...item,
+    cal_quantity: parseFloat(item.cal_quantity) || 0,
+    display_qty: parseFloat(item.display_qty) || 0,
+    quantity: parseFloat(item.quantity) || 0,
+    min_qty_alert: parseFloat(item.min_qty_alert) || 0,
+  };
+}
+
 // ── Export ────────────────────────────────────────────────────────
 
 // ── P17 Operational Settings ─────────────────────────────────────
@@ -539,6 +571,8 @@ const api = {
   updateVendor,
   deleteVendor,
   addStockPurchase,
+  // P20 Stock Inventory Summary
+  getStockInventory,
 };
 
 export default api;
