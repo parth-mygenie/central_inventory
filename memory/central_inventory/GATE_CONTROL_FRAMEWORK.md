@@ -30,10 +30,11 @@
 
 | # | Condition | Description |
 |---|-----------|-------------|
-| 1 | **All current baselines FROZEN** | Every item in CR Registry that is `IMPLEMENTED`, `QA_PASSED`, or `SMOKE_PASSED` must reach `FROZEN` |
-| 2 | **Owner gives final explicit approval** | Owner must record: "All current UI and business logic is approved. Proceed to Slice 6." |
-| 3 | **Freeze declaration exists** | `BASELINE_FREEZE_DECLARATION.md` created with full freeze manifest |
-| 4 | **CR Registry clean** | Zero items in `IMPLEMENTED` / `QA_PASSED` / `SMOKE_PASSED` status — everything is either `FROZEN` or `DEFERRED` |
+| 1 | **CI-060 completed** | UI Consolidation CR passes all screens × 3 roles |
+| 2 | **All CI-010 to CI-036 FROZEN** | Every item in CR Registry that is `IMPLEMENTED`, `QA_PASSED`, or `SMOKE_PASSED` must reach `FROZEN` via CI-060 |
+| 3 | **Owner gives final explicit approval** | Owner must record: "All current UI and business logic is approved. Proceed to Slice 6." |
+| 4 | **Freeze declaration exists** | `BASELINE_FREEZE_DECLARATION.md` created with full freeze manifest |
+| 5 | **CR Registry clean** | Zero items in `IMPLEMENTED` / `QA_PASSED` / `SMOKE_PASSED` status — everything is either `FROZEN` or `DEFERRED` |
 
 **Enforcement:**
 - Any agent asked to start Slice 6 work MUST first check CR Registry
@@ -220,12 +221,13 @@ Every CR/phase MUST pass through each gate sequentially. No skipping.
 
 | # | Checkpoint | How to Verify | Status |
 |---|-----------|--------------|--------|
-| 1 | CR Registry has ZERO items at `IMPLEMENTED` | `grep "IMPLEMENTED" CR_REGISTRY.md` returns 0 | NOT MET (7 items) |
-| 2 | CR Registry has ZERO items at `QA_PASSED` | `grep "QA_PASSED" CR_REGISTRY.md` returns 0 | NOT MET |
-| 3 | CR Registry has ZERO items at `SMOKE_PASSED` | `grep "SMOKE_PASSED" CR_REGISTRY.md` returns 0 | NOT MET (1 item) |
-| 4 | Every active baseline is `FROZEN` or `DEFERRED` | All rows checked | NOT MET |
-| 5 | `BASELINE_FREEZE_DECLARATION.md` exists | File exists in memory | NOT MET |
-| 6 | Owner recorded: "All current UI and business logic approved. Proceed to Slice 6." | Statement in acceptance doc | NOT MET |
+| 1 | CI-060 UI Consolidation complete | `CI_060_UI_CONSOLIDATION_REPORT.md` exists with all screens validated | NOT MET |
+| 2 | CR Registry has ZERO items at `IMPLEMENTED` | `grep "IMPLEMENTED" CR_REGISTRY.md` returns 0 | NOT MET (7 items) |
+| 3 | CR Registry has ZERO items at `QA_PASSED` | `grep "QA_PASSED" CR_REGISTRY.md` returns 0 | NOT MET (6 items) |
+| 4 | CR Registry has ZERO items at `SMOKE_PASSED` | `grep "SMOKE_PASSED" CR_REGISTRY.md` returns 0 | NOT MET (1 item) |
+| 5 | Every active baseline is `FROZEN` or `DEFERRED` | All rows checked | NOT MET |
+| 6 | `BASELINE_FREEZE_DECLARATION.md` exists | File exists in memory | NOT MET |
+| 7 | Owner recorded: "All current UI and business logic approved. Proceed to Slice 6." | Statement in `CI_060_OWNER_APPROVAL.md` | NOT MET |
 
 **If ANY checkpoint fails:** Agent MUST refuse Slice 6 work and return:
 > "BLOCKED by RULE 2: Cannot start Slice 6. The following baselines are not frozen: [list]. Owner Slice 6 approval not recorded."

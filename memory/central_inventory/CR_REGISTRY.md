@@ -87,6 +87,16 @@ Old IDs (CR-001, S1, INF-01, P15, OI-001 etc.) are listed as aliases for traceab
 
 ---
 
+### ACTIVE — UI Consolidation (Freeze Gate)
+
+| ID | Old ID | Name | What It Does | Status | Date |
+|----|--------|------|-------------|--------|------|
+| **CI-060** | NEW | UI Consolidation & Baseline Freeze | Review every screen (16 routes × 3 roles), validate UI + business logic, get single owner approval covering CI-010 through CI-036, freeze all baselines together | `PLANNING` | 28 May 2026 |
+
+> **CI-060 is the path to freeze.** Instead of 14 individual smoke tests, one consolidated review covers everything. Owner gives one approval statement for UI + business logic. That approval satisfies RULE 1 for all 14 items. Full scope in PRD.md.
+
+---
+
 ### BACKLOG — Deferred / Future / Blocked
 
 | ID | Old ID | Name | What It Would Do | Status | Blocker |
@@ -154,11 +164,11 @@ Old IDs (CR-001, S1, INF-01, P15, OI-001 etc.) are listed as aliases for traceab
 
 ## Next Actions (Priority Order)
 
-1. **CI-030 to CI-036 Closure Docs + Formal QA** → moves 7 items from `IMPLEMENTED` to `QA_PASSED`
-2. **Combined Owner Smoke Test** (CI-010 through CI-036) → moves all to `SMOKE_PASSED`
-3. **Owner Explicit Approval** (UI + business logic) → moves all to `ACCEPTED`
-4. **Baseline Freeze Declaration** → moves all `ACCEPTED` to `FROZEN`
-5. Only then: CI-040+ work can begin
+1. **Execute CI-060: UI Consolidation** — agent reviews every screen × 3 roles, validates UI + business logic, documents findings, fixes issues
+2. **CI-060 Owner Smoke** — owner walks through screens using smoke checklist
+3. **CI-060 Owner Approval** — owner records: "UI approved. Business logic approved." → satisfies RULE 1 for CI-010 through CI-036
+4. **Baseline Freeze Declaration** → all CI-010 through CI-036 move to `FROZEN`
+5. **RULE 2 unlocked** → CI-040+ work can begin with owner go-ahead
 
 ---
 
