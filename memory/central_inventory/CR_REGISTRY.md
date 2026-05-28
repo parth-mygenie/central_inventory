@@ -87,13 +87,24 @@ Old IDs (CR-001, S1, INF-01, P15, OI-001 etc.) are listed as aliases for traceab
 
 ---
 
-### ACTIVE — UI Consolidation (Freeze Gate)
+### ACTIVE — UI Consolidation (Deep Phase CR)
 
-| ID | Old ID | Name | What It Does | Status | Date |
-|----|--------|------|-------------|--------|------|
-| **CI-060** | NEW | UI Consolidation & Baseline Freeze | Review every screen (16 routes × 3 roles), validate UI + business logic, get single owner approval covering CI-010 through CI-036, freeze all baselines together | `PLANNING` | 28 May 2026 |
+| ID | Old ID | Name | What It Does | Phases | Status | Date |
+|----|--------|------|-------------|--------|--------|------|
+| **CI-060** | NEW | UI Consolidation & Baseline Freeze | Owner reviews every screen (16 routes × 3 roles), gives feedback on UI gaps + business logic gaps. Agent then: analyzes → plans → implements → QA's screen by screen. Owner re-reviews and approves. Then freeze. | 6 phases | `PLANNING` | 28 May 2026 |
 
-> **CI-060 is the path to freeze.** Instead of 14 individual smoke tests, one consolidated review covers everything. Owner gives one approval statement for UI + business logic. That approval satisfies RULE 1 for all 14 items. Full scope in PRD.md.
+**CI-060 Phases:**
+
+| Phase | Name | Who Drives | What Happens | Output |
+|-------|------|-----------|-------------|--------|
+| 1 | **Discovery** | Owner | Owner reviews each screen as each role, gives raw feedback — what's missing, what's wrong, what should change | `CI_060_DISCOVERY_FINDINGS.md` |
+| 2 | **Analysis** | Agent | Categorize findings: UI_GAP / BIZ_LOGIC_GAP / BUG / ENHANCEMENT / MISSING. Prioritize by severity. | Included in discovery findings |
+| 3 | **Planning** | Agent (owner confirms) | Implementation plan per finding, grouped by screen. Owner confirms scope before work starts. | `CI_060_IMPLEMENTATION_PLAN.md` |
+| 4 | **Implementation** | Agent | Fix/build screen by screen per approved plan. No scope creep. | `CI_060_IMPLEMENTATION_REPORT.md` |
+| 5 | **QA** | QA Agent | Independent validation per screen: finding resolved, no regression, 3-role check | `CI_060_QA_REPORT.md` |
+| 6 | **Owner Approval** | Owner | Re-reviews fixed screens. Records: "UI approved. Business logic approved." → Freeze all baselines. | `CI_060_OWNER_APPROVAL.md` + `BASELINE_FREEZE_DECLARATION.md` |
+
+> **CI-060 is owner-driven.** Agent does NOT decide what's correct — owner does. Agent captures, plans, implements, QA's. Owner approves. Full scope in `PRD.md`.
 
 ---
 
@@ -164,11 +175,12 @@ Old IDs (CR-001, S1, INF-01, P15, OI-001 etc.) are listed as aliases for traceab
 
 ## Next Actions (Priority Order)
 
-1. **Execute CI-060: UI Consolidation** — agent reviews every screen × 3 roles, validates UI + business logic, documents findings, fixes issues
-2. **CI-060 Owner Smoke** — owner walks through screens using smoke checklist
-3. **CI-060 Owner Approval** — owner records: "UI approved. Business logic approved." → satisfies RULE 1 for CI-010 through CI-036
-4. **Baseline Freeze Declaration** → all CI-010 through CI-036 move to `FROZEN`
-5. **RULE 2 unlocked** → CI-040+ work can begin with owner go-ahead
+1. **CI-060 Phase 1: DISCOVERY** — Present app to owner, capture feedback screen by screen (owner-driven, agent captures)
+2. **CI-060 Phase 2: ANALYSIS** — Agent categorizes and prioritizes all findings
+3. **CI-060 Phase 3: PLANNING** — Agent creates implementation plan, owner confirms scope
+4. **CI-060 Phase 4: IMPLEMENTATION** — Agent fixes/builds screen by screen per plan
+5. **CI-060 Phase 5: QA** — Independent QA validates each fixed screen
+6. **CI-060 Phase 6: OWNER APPROVAL** — Owner re-reviews, records "UI + business logic approved" → baseline freeze
 
 ---
 

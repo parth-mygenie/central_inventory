@@ -126,93 +126,195 @@ Browser → React SPA (port 3000)
 
 ---
 
-## NEXT: CI-060 — UI Consolidation (Freeze Gate CR)
+## NEXT: CI-060 — UI Consolidation (Deep Phase CR)
 
 ### Purpose
-Single CR to review **every screen** across all 3 roles, validate UI correctness + business logic correctness, and get **one owner approval** that covers CI-010 through CI-036. This is the vehicle to freeze all baselines together.
+Owner-driven review of **every screen** across all 3 roles. Owner identifies what's missing in UI and business logic. Those findings are then planned, implemented, QA'd — screen by screen. This is the path to baseline freeze.
 
 ### Why this approach?
-- 14 individual smoke tests is impractical
-- Owner needs to see the full product, not fragments
-- UI + business logic approval should be holistic, not per-slice
-- One consolidated approval satisfies RULE 1 for all 14 items
+- Owner is the authority on what the UI should look like and how business logic should behave
+- Agent cannot decide if business logic is correct — only owner can
+- Feedback must be captured formally before any fixes
+- Each fix goes through the full gate: plan → implement → QA
+- Freeze happens only after owner approves the final state
 
-### Scope: All 16 routes × 3 roles
+### How CI-060 works (6 phases)
 
-| # | Route | Screen | Component | What To Validate | Touches CIs |
-|---|-------|--------|-----------|-----------------|-------------|
-| 1 | `/login` | Login | `LoginPage` | Auth flow, correct redirect, no backend terms | CI-010, CI-020 |
-| 2 | `/` | Operations Hub | `OperationsHub` | Pending counts, action buttons per role, stock KPI cards, procurement shortcuts | CI-010, CI-011, CI-014, CI-036 |
-| 3 | `/inventory` | Stock Inventory | `StockInventorySummary` | Stock items, low-stock alerts, hierarchy rollup for parent roles | CI-036 |
-| 4 | `/hierarchy` | Hierarchy Summary | `HierarchySummary` | Store list, tabs (Master Stores / Outlets), date filter, store drill-down | CI-010, CI-011 |
+```
+PHASE 1: DISCOVERY        — Owner reviews every screen, gives feedback
+PHASE 2: ANALYSIS         — Agent documents findings, categorizes, prioritizes
+PHASE 3: PLANNING         — Agent creates implementation plan per finding
+PHASE 4: IMPLEMENTATION   — Agent fixes/builds, screen by screen
+PHASE 5: QA               — Independent QA validates each screen after fixes
+PHASE 6: OWNER APPROVAL   — Owner re-reviews, approves UI + business logic → FREEZE
+```
+
+---
+
+### Phase 1: DISCOVERY (Owner-driven)
+
+**Who:** Owner reviews the live app
+**What:** Owner goes through each screen as each role and tells us:
+- "This screen is missing X"
+- "This business logic is wrong — it should do Y"
+- "This UI element should look like Z"
+- "This button shouldn't be here"
+- "I need a field for W"
+
+**Screen-by-screen review scope:**
+
+| # | Route | Screen | Component | Owner Reviews For | Touches CIs |
+|---|-------|--------|-----------|------------------|-------------|
+| 1 | `/login` | Login | `LoginPage` | Auth flow, branding, redirect behavior | CI-010, CI-020 |
+| 2 | `/` | Operations Hub | `OperationsHub` | Pending counts, action buttons per role, KPI cards, procurement shortcuts, layout | CI-010, CI-011, CI-014, CI-036 |
+| 3 | `/inventory` | Stock Inventory | `StockInventorySummary` | Stock items, low-stock display, hierarchy rollup, missing columns/data | CI-036 |
+| 4 | `/hierarchy` | Hierarchy Summary | `HierarchySummary` | Store list, tabs, filters, drill-down, missing metrics | CI-010, CI-011 |
 | 5 | `/store/:id` | Store Detail | `StoreDetail` | Stock summary, batch drilldown, transactions, low-stock highlight | CI-010 |
-| 6 | `/queues` | Pending Queues | `PendingQueues` | 4 tabs (Approvals, Receives, Ready to Dispatch, My Requests), role-gated | CI-010, CI-011, CI-013 |
-| 7 | `/transfer/:id` | Transfer Detail | `TransferDetail` | From/to info, status badge, timeline, line items, action buttons per role+status, line-level actions, amend/withdraw/modify | CI-010, CI-011, CI-013, CI-030, CI-031, CI-032 |
-| 8 | `/dispatch/new` | Direct Dispatch | `DirectDispatchForm` | Destination picker, item selection, source selector, submit | CI-013 |
-| 9 | `/request/new` | Request Stock | `RequestStockForm` | Parent store display, item selection, source selector, submit | CI-013 |
-| 10 | `/adjustment/new` | Stock Adjustment | `StockAdjustmentForm` | Central-only access, increase/decrease toggle, item picker, reason dropdown, confirmation | CI-014 |
-| 11 | `/wastage/new` | Wastage Entry | `WastageEntryForm` | All roles, item picker, reason dropdown (6 categories), confirmation | CI-014 |
-| 12 | `/wastage/report` | Wastage Report | `WastageReport` | Role-scoped, date filter, wastage data | CI-014 |
-| 13 | `/history` | History & Ledger | `HistoryLedger` | Transfer History tab, Stock Ledger tab, 7 movement type filters, search, transfer linkage | CI-012, CI-014 |
-| 14 | `/settings` | Operational Settings | `OperationalSettings` | Policy keys, inherited values, permission-gated (franchise cannot update) | CI-033 |
-| 15 | `/vendors` | Vendor Management | `VendorManagement` | Vendor list, add/edit/delete, policy-gated | CI-034 |
-| 16 | `/procurement/new` | Add Stock (Vendor) | `AddStockPurchaseForm` | Item selection, quantity, vendor, batch/expiry | CI-035 |
+| 6 | `/queues` | Pending Queues | `PendingQueues` | Tab structure, queue items, role gating, missing info | CI-010, CI-011, CI-013 |
+| 7 | `/transfer/:id` | Transfer Detail | `TransferDetail` | Status, timeline, line items, action buttons, line-level actions, amend/withdraw | CI-010, CI-011, CI-013, CI-030, CI-031, CI-032 |
+| 8 | `/dispatch/new` | Direct Dispatch | `DirectDispatchForm` | Destination picker, item selection, source selector, validation, flow | CI-013 |
+| 9 | `/request/new` | Request Stock | `RequestStockForm` | Parent display, item selection, source selector, validation, flow | CI-013 |
+| 10 | `/adjustment/new` | Stock Adjustment | `StockAdjustmentForm` | Access control, increase/decrease, item picker, reason categories | CI-014 |
+| 11 | `/wastage/new` | Wastage Entry | `WastageEntryForm` | Access per role, item picker, reason categories, confirmation | CI-014 |
+| 12 | `/wastage/report` | Wastage Report | `WastageReport` | Role scoping, date filter, data display, missing columns | CI-014 |
+| 13 | `/history` | History & Ledger | `HistoryLedger` | Both tabs, filters, search, movement types, data accuracy | CI-012, CI-014 |
+| 14 | `/settings` | Operational Settings | `OperationalSettings` | Policy keys, inheritance, permission gating | CI-033 |
+| 15 | `/vendors` | Vendor Management | `VendorManagement` | CRUD flow, policy gating, missing fields | CI-034 |
+| 16 | `/procurement/new` | Add Stock (Vendor) | `AddStockPurchaseForm` | Form fields, vendor selection, validation | CI-035 |
 
-### Shared UI elements to validate across ALL screens
+**Also review across ALL screens:**
+- Sidebar navigation (correct items per role?)
+- Header (store name, role badge, no stale text?)
+- Context selector (store picker works? locked for Outlet?)
+- Terminology (zero backend terms visible?)
+- Confirmation dialogs (show before destructive actions?)
+- Error states (what happens when API fails?)
 
-| Element | Component | What To Check |
-|---------|-----------|---------------|
-| Sidebar navigation | `Sidebar` | Correct items per role, active state, "(soon)" on Reports |
-| Header | `AppHeader` | Store name, role badge (Central Store / Master Store / Outlet), no stale banners |
-| Context selector | `ContextSelector` | Store picker for parent roles, locked for Outlet |
-| Confirmation dialogs | `ConfirmActionDialog` | Shows before all destructive actions |
-| Reason dialogs | `ReasonDialog` | Shows for reject/cancel with reason categories |
-| Source selector | `SourceSelector` | Segment + bucket modes, fallback for unauthorized |
-| Terminology | `terminology.js` | Zero backend terms (`master`/`central`/`franchise`) visible in UI |
+**Owner reviews as 3 roles:**
 
-### Role matrix for CI-060
+| Role | Login | What to focus on |
+|------|-------|-----------------|
+| Central Store | `killua@zoldyck.com` / `Qplazm@10` | Full access — dispatch, adjust, all stores visible, settings edit |
+| Master Store | `owner@democentral1.com` / `Qplazm@10` | Mid-level — dispatch + request, own children, limited settings |
+| Outlet | `owner@demofranchise1.com` / `Qplazm@10` | Bottom-level — request only, own store locked, no dispatch/adjust |
 
-| Screen | Central Store | Master Store | Outlet |
-|--------|--------------|-------------|--------|
-| Operations Hub | Full: dispatch, adjust, wastage, procurement | Full: dispatch, request, wastage, procurement | Limited: request, wastage only |
-| Hierarchy Summary | Both tabs | Both tabs | Limited |
-| Store Detail | Any store | Own + children | Own only |
-| Pending Queues | 3-4 tabs | 3-4 tabs | No approval tab |
-| Transfer Detail | All actions | All actions | Receive + limited |
-| Dispatch form | Yes | Yes | Hidden |
-| Request form | Hidden | Yes | Yes |
-| Adjustment form | Yes | Permission denied | Permission denied |
-| Wastage form | Yes | Yes | Yes |
-| Settings | Full edit | Read (or limited edit) | Hidden or read-only |
-| Vendors | Yes | Yes | Hidden or policy-gated |
-| Procurement | Yes | Yes | Policy-gated |
+**Output:** Owner's raw feedback, screen by screen. Agent captures everything.
 
-### CI-060 execution steps
+---
+
+### Phase 2: ANALYSIS (Agent-driven)
+
+**Who:** Agent
+**What:** Take owner's feedback and produce a structured findings document:
+
+| Per finding | What to capture |
+|-------------|----------------|
+| Screen | Which route / component |
+| Type | `UI_GAP` / `BIZ_LOGIC_GAP` / `BUG` / `ENHANCEMENT` / `MISSING_SCREEN` |
+| Severity | `CRITICAL` / `HIGH` / `MEDIUM` / `LOW` |
+| Description | Exactly what owner said |
+| Current behavior | What the screen does now |
+| Expected behavior | What owner wants |
+| Affected CIs | Which CI-XXX items this touches |
+
+**Output:** `CI_060_DISCOVERY_FINDINGS.md` — all findings categorized, prioritized, ready for planning.
+
+---
+
+### Phase 3: PLANNING (Agent-driven, owner confirms)
+
+**Who:** Agent creates plan, owner confirms scope
+**What:** For each finding, create implementation plan:
+
+| Per finding | Plan contains |
+|-------------|---------------|
+| Finding reference | Link to discovery finding |
+| Files to change | Exact components/routes |
+| Approach | How to fix/build |
+| Effort estimate | Small / Medium / Large |
+| Dependencies | Other findings that must go first |
+| Risk | What could break |
+
+Group findings by screen for efficient implementation.
+
+**Output:** `CI_060_IMPLEMENTATION_PLAN.md` — screen-by-screen plan. Owner confirms before implementation starts.
+
+---
+
+### Phase 4: IMPLEMENTATION (Agent-driven, screen by screen)
+
+**Who:** Agent
+**What:** Implement fixes/changes per the approved plan, screen by screen.
+
+**Rules:**
+- One screen at a time
+- Each screen change gets its own implementation note
+- No scope creep — only implement what's in the plan
+- If a fix touches shared components, document the blast radius
+
+**Output:** `CI_060_IMPLEMENTATION_REPORT.md` — what was changed, per screen.
+
+---
+
+### Phase 5: QA (Screen by screen)
+
+**Who:** QA Agent (independent)
+**What:** After each screen is fixed, QA validates:
+
+| Check | Description |
+|-------|-------------|
+| Finding resolved | The specific issue owner raised is fixed |
+| No regression | Other screens still work |
+| 3-role validation | Fix works for all applicable roles |
+| Business logic correct | Behavior matches what owner described |
+| UI correct | Visual matches what owner wanted |
+
+**Output:** `CI_060_QA_REPORT.md` — screen-by-screen QA results.
+
+---
+
+### Phase 6: OWNER APPROVAL → FREEZE
+
+**Who:** Owner
+**What:** Owner re-reviews the fixed screens and records explicit approval:
+
+> "I have reviewed all screens across all 3 roles.
+> UI is approved.
+> Business logic is approved.
+> Proceed to baseline freeze."
+
+**This single statement satisfies RULE 1 for all CI-010 through CI-036.**
+
+**Output:**
+- `CI_060_OWNER_APPROVAL.md` — owner's explicit statement
+- `BASELINE_FREEZE_DECLARATION.md` — all CI-010 to CI-036 move to `FROZEN`
+- CR Registry updated — all items `FROZEN` with freeze date
+
+---
+
+### CI-060 document chain
 
 ```
-Step 1: Agent logs in as each role, screenshots every screen
-Step 2: Validate UI correctness (layout, badges, terminology, no stale text)
-Step 3: Validate business logic (correct buttons per role, correct data scoping, permission enforcement)
-Step 4: Validate shared elements (sidebar, header, dialogs, source selector)
-Step 5: Document all findings in CI-060 report
-Step 6: Fix any issues found
-Step 7: Re-validate fixes
-Step 8: Present to owner for smoke + approval (UI + business logic)
-Step 9: Owner records explicit approval
-Step 10: Freeze all baselines CI-010 through CI-036
+Phase 1 → CI_060_DISCOVERY_FINDINGS.md        (owner feedback captured)
+Phase 2 → (included in discovery findings)
+Phase 3 → CI_060_IMPLEMENTATION_PLAN.md        (owner confirms before work)
+Phase 4 → CI_060_IMPLEMENTATION_REPORT.md      (what was changed)
+Phase 5 → CI_060_QA_REPORT.md                  (independent validation)
+Phase 6 → CI_060_OWNER_APPROVAL.md             (owner sign-off)
+       → BASELINE_FREEZE_DECLARATION.md        (all frozen)
 ```
 
-### CI-060 output documents
-- `CI_060_UI_CONSOLIDATION_REPORT.md` — screen-by-screen findings
-- `CI_060_OWNER_SMOKE_CHECKLIST.md` — what owner must verify
-- `CI_060_OWNER_APPROVAL.md` — owner records: "UI approved. Business logic approved."
-- `BASELINE_FREEZE_DECLARATION.md` — all CI-010 to CI-036 frozen
+### What the next agent does FIRST
 
-### After CI-060 completes
-- All 14 baselines move to `FROZEN`
-- RULE 1 satisfied for all items (QA + smoke + owner approval via CI-060)
-- RULE 2 gate opens (new work can begin)
-- Owner gives Slice 6 go-ahead (or not)
+**Do NOT start fixing anything.** Phase 1 is DISCOVERY — owner-driven.
+
+```
+1. Read this PRD
+2. Prepare the app for owner review (ensure it's running, all 3 roles accessible)
+3. Present each screen to owner, role by role
+4. Capture owner's feedback exactly as given
+5. Only after ALL feedback is captured → move to Phase 2 (Analysis)
+```
 
 ---
 
