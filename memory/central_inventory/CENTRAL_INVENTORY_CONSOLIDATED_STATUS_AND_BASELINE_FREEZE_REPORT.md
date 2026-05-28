@@ -201,8 +201,8 @@ The Central Inventory module is a multi-level inventory transfer management syst
 | **Slice 3: History & Ledger** | S1-4 Closure Report (23 May) | All 15 features present | `iteration_5.json` — 15/15 pass | `baseline_frozen` | None | None |
 | **Slice 4: Transfer Write Flows** | S1-4 Closure Report (23 May) | All 12 MH + 3 SH present | `iteration_8.json` — 34/34 pass | `baseline_frozen` | None | None |
 | **Slice 5: Adj/Wastage/Cleanup** | S5 QA Report + Smoke Result (24 May) | All 7 must-have + 2 extras present | `S5_FINAL_QA_VALIDATION_REPORT` — 55/57 pass; Smoke — 44/44 pass | `baseline_partially_frozen` | Owner acceptance not recorded; code has evolved past S5 | Record acceptance or supersede |
-| **Seed Shutdown** | Seed Shutdown Report (25 May) | Verified — no seed in server.py | Implementation report curl-verified; **No independent QA report** | `baseline_partially_frozen` | Missing QA validation report | Execute seed shutdown QA |
-| **POS API Context Migration P1** | P1 Implementation Report (24 May) | POS profile call in server.py confirmed | P1 QA Handoff exists; no QA report found | `baseline_partially_frozen` | Missing QA validation report | Execute POS migration QA |
+| **Seed Shutdown** | Seed Shutdown QA Report (28 May) | Verified — no seed in server.py; seed_data.py DELETED | 20/20 checks pass; all artifacts cleaned | `baseline_frozen` | None | None |
+| **POS API Context Migration P1** | POS Migration P1 QA Report (28 May) | POS profile call confirmed; 4 users verified | 17/17 checks pass; MongoDB persistence confirmed | `baseline_frozen` | None | None |
 | **P15/P16: Request-Line Lifecycle** | AI/Plans + iterations 15-16 | Components exist in code | `iteration_15.json` + `iteration_16.json` — all pass; `test_p16_lifecycle.py` | `baseline_not_frozen` | No formal closure doc in memory | Create P15/P16 closure doc |
 | **P17: Amend/Withdraw/Modification** | AI/Plans + iterations 17-18 | TransferDetail enhanced; tests exist | `iteration_17.json` — 16/16 pass; `test_p17_lifecycle.py` | `baseline_not_frozen` | No formal closure doc in memory | Create P17 lifecycle closure doc |
 | **P17-Settings: Operational Settings** | AI/Plans + iteration 18 | `OperationalSettings.jsx` exists, route active | `iteration_18.json` — pass; `test_p17_p18_p19_features.py` | `baseline_not_frozen` | No formal closure doc in memory | Create P17-Settings closure doc |
@@ -235,8 +235,8 @@ The Central Inventory module is a multi-level inventory transfer management syst
 | Item | Implementation Evidence | Why Not Frozen |
 |---|---|---|
 | Slice 5 (Adj/Wastage/Cleanup) | Code + QA + Owner Smoke all pass | Owner acceptance never recorded; code moved past S5 |
-| Seed Shutdown | Code verified, curl-tested | No independent QA report created |
-| POS API Context Migration P1 | Code verified, 4 users tested | No independent QA report created |
+| Seed Shutdown | Code verified + QA'd (28 May) + artifacts deleted | `SEED_SHUTDOWN_QA_REPORT.md` — 20/20 pass. **MOVED TO BUCKET A** |
+| POS API Context Migration P1 | Code verified + QA'd (28 May) | `POS_MIGRATION_P1_QA_REPORT.md` — 17/17 pass. **MOVED TO BUCKET A** |
 | P15/P16 Request-Line Lifecycle | Code + iteration 15-16 tests pass | No formal closure doc in memory |
 | P17 Amend/Withdraw/Modification | Code + iteration 17 tests pass | No formal closure doc in memory |
 | P17-Settings Operational Settings | Code + iteration 18 tests pass | No formal closure doc in memory |

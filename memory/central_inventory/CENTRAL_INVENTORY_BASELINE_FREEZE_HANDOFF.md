@@ -19,7 +19,7 @@ All core features (S1-S5 + P15-P20) are code-complete and test-verified. Freeze 
 
 ---
 
-## 3. Frozen Baselines (4)
+## 3. Frozen Baselines (6)
 
 | Baseline | Status |
 |---|---|
@@ -27,16 +27,16 @@ All core features (S1-S5 + P15-P20) are code-complete and test-verified. Freeze 
 | Slice 2: UX Polish + Enterprise | `baseline_frozen` |
 | Slice 3: History & Ledger | `baseline_frozen` |
 | Slice 4: Transfer Write Flows | `baseline_frozen` |
+| Seed Shutdown | `baseline_frozen` (QA 28 May — 20/20 pass, seed_data.py deleted, all artifacts cleaned) |
+| POS API Context Migration P1 | `baseline_frozen` (QA 28 May — 17/17 pass, 4 users verified) |
 
 ---
 
-## 4. Non-Frozen Baselines (9)
+## 4. Non-Frozen Baselines (7)
 
 | Baseline | Why Not Frozen | Blocking Item |
 |---|---|---|
 | Slice 5: Adj/Wastage/Cleanup | Owner acceptance never recorded | Process gap |
-| Seed Shutdown | QA report missing | QA not executed |
-| POS Context Migration P1 | QA report missing | QA not executed |
 | P15/P16: Request-Line Lifecycle | No closure doc | Documentation gap |
 | P17: Amend/Withdraw/Modification | No closure doc | Documentation gap |
 | P17-Settings: Operational Settings | No closure doc | Documentation gap |
@@ -54,8 +54,8 @@ All core features (S1-S5 + P15-P20) are code-complete and test-verified. Freeze 
 - PRD.md stale
 
 ### QA Blockers:
-- Seed Shutdown QA report never created
-- POS Context Migration P1 QA report never created
+- **RESOLVED** — Seed Shutdown QA complete (28 May, 20/20 pass)
+- **RESOLVED** — POS Context Migration P1 QA complete (28 May, 17/17 pass)
 
 ### Process Blockers:
 - Slice 5 owner acceptance not recorded

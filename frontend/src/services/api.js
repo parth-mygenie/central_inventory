@@ -5,7 +5,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 /**
  * Central Inventory — API Service Layer
  *
- * Post-seed-shutdown: all calls go through proxy → real POS API.
+ * All calls go through proxy → real POS API.
  * This layer handles route paths, payload building, and response
  * normalization so components receive a stable contract.
  */

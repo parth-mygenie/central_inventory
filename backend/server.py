@@ -122,7 +122,7 @@ async def proxy_auth_login(request: Request):
     except Exception as e:
         logger.warning(f"POS profile call failed for {email}: {e}")
 
-    # No seed fallback — if POS profile fails, frontend fail-closed handles it
+    # If POS profile fails, frontend fail-closed handles it (no context = restricted access)
     return JSONResponse(content=data, status_code=resp.status_code)
 
 

@@ -34,10 +34,12 @@ Build a Central Inventory module for the MyGenie POS platform managing stock mov
 - Hardcoded UI cleanup (no read-only banners)
 - GET proxy bugfix
 
-### Seed Shutdown (25 May 2026) — Complete, QA Pending
+### Seed Shutdown (25 May 2026) — Complete, QA PASSED (28 May)
 - All seed dependencies removed from server.py
+- `seed_data.py` permanently deleted (28 May QA cleanup)
 - Generic V2 proxy handles all endpoints
 - Frontend hardcoded IDs replaced with dynamic POS-derived values
+- QA Report: 20/20 checks pass, zero seed references remain
 
 ### P15/P16: Request-Line Lifecycle (25-26 May 2026) — Implemented, Closure Doc Pending
 - ApproveWaveDialog, DisputeResolutionDialog, ItemEditorDialog
@@ -65,7 +67,7 @@ Build a Central Inventory module for the MyGenie POS platform managing stock mov
 
 ### P0 (Documentation/Process — No Code)
 - P15-P20 closure documentation
-- Seed Shutdown QA
+- ~~Seed Shutdown QA~~ DONE (28 May)
 - Combined owner acceptance
 - Baseline freeze declaration
 

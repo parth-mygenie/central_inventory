@@ -244,7 +244,7 @@ class TestInventoryMasterAPI:
         """Test inventory master returns list of items"""
         headers = {"Authorization": f"Bearer {auth_token}"}
         response = requests.get(f"{BASE_URL}/api/proxy/v2/inventory/get-inventory-master", headers=headers)
-        # This endpoint may return from real API or seed data
+        # This endpoint returns from real POS API
         assert response.status_code in [200, 404, 500]  # May fail if real API doesn't have data
         if response.status_code == 200:
             data = response.json()

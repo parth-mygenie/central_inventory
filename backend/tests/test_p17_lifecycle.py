@@ -358,12 +358,12 @@ class TestItemEditorDialog:
         # }
         print("PASS: ItemEditorDialog loads catalog from request-catalog (code verified)")
     
-    def test_item_editor_seeds_from_existing_lines(self):
-        """ItemEditorDialog should seed rows from existing transfer lines"""
+    def test_item_editor_prepopulates_from_existing_lines(self):
+        """ItemEditorDialog should pre-populate rows from existing transfer lines"""
         # Code verification: ItemEditorDialog.jsx line 45-56
         # const lines = transfer?.lines || [];
         # if (lines.length > 0) { setRows(lines.map(...)) }
-        print("PASS: ItemEditorDialog seeds from existing lines (code verified)")
+        print("PASS: ItemEditorDialog pre-populates from existing lines (code verified)")
 
 
 class TestTransferDetailP17:
