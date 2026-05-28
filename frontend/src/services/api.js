@@ -574,6 +574,16 @@ function getFoodCategories() {
     return { ...r, data: Array.isArray(r.data) ? r.data : [] };
   });
 }
+function createFoodCategory(payload) {
+  return client.post("/proxy/v2/product/add-categories", payload);
+}
+function updateFoodCategory(id, payload) {
+  // CRITICAL: POS uses POST not PUT for this route
+  return client.post(`/proxy/v2/product/update-categories/${id}`, payload);
+}
+function deleteFoodCategory(id) {
+  return client.delete(`/proxy/v2/product/delete-categories/${id}`);
+}
 function addFood(payload) { return client.post("/proxy/v2/product/add-food", payload); }
 function updateFood(id, payload) { return client.put(`/proxy/v2/product/foods/${id}`, payload); }
 function deleteFood(id) { return client.delete(`/proxy/v2/product/delete/${id}`); }
@@ -581,6 +591,16 @@ function getAddonList() {
   return client.get("/proxy/v2/product/addon-list").then(r => {
     return { ...r, data: r.data?.addons || [] };
   });
+}
+function createAddon(payload) {
+  return client.post("/proxy/v2/product/add-addon", payload);
+}
+function updateAddon(id, payload) {
+  // CRITICAL: route is addon-update (noun-verb), NOT update-addon
+  return client.put(`/proxy/v2/product/addon-update/${id}`, payload);
+}
+function deleteAddon(id) {
+  return client.delete(`/proxy/v2/product/delete-addon/${id}`);
 }
 
 // ── P21 Catalogue — Recipes ──────────────────────────────────────
@@ -689,10 +709,16 @@ const api = {
   // P21 Catalogue — Product
   getFoodsList,
   getFoodCategories,
+  createFoodCategory,
+  updateFoodCategory,
+  deleteFoodCategory,
   addFood,
   updateFood,
   deleteFood,
   getAddonList,
+  createAddon,
+  updateAddon,
+  deleteAddon,
   // P21 Catalogue — Recipes
   getRecipeList,
   getRecipeDetail,

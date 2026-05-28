@@ -163,37 +163,184 @@ function FoodFormDialog({ open, onOpenChange, food, categories, onSaved }) {
 function FoodCategoriesTab() {
   const [cats, setCats] = useState([]);
   const [loading, setLoading] = useState(true);
-  useEffect(() => { api.getFoodCategories().then(r => setCats(r.data || [])).finally(() => setLoading(false)); }, []);
+  const [error, setError] = useState(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editCat, setEditCat] = useState(null);
+
+  const load = useCallback(async () => {
+    setLoading(true); setError(null);
+    try { const r = await api.getFoodCategories(); setCats(r.data || []); }
+    catch (e) { setError(e?.message || "Failed"); }
+    finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleDelete = async (id) => {
+    try { await api.deleteFoodCategory(id); toast({ title: "Category deleted" }); load(); }
+    catch (e) { toast({ title: e?.response?.data?.message || e?.response?.data?.error || "Delete failed", variant: "destructive" }); }
+  };
+
   if (loading) return <LoadingState lines={3} />;
-  if (cats.length === 0) return <EmptyState title="No food categories" />;
+  if (error) return <ErrorState message={error} onRetry={load} />;
+
   return (
-    <div className="border rounded-lg overflow-hidden">
-      <Table><TableHeader><TableRow><TableHead className="text-xs">Name</TableHead><TableHead className="text-xs">Tax</TableHead><TableHead className="text-xs text-center">Status</TableHead></TableRow></TableHeader>
-        <TableBody>{cats.map(c => (
-          <TableRow key={c.id} data-testid={`fcat-row-${c.id}`}>
-            <TableCell className="py-2 text-sm">{c.name}</TableCell>
-            <TableCell className="py-2 text-xs text-muted-foreground">{c.tax_type} {c.gst_percent ? `${c.gst_percent}%` : ""}</TableCell>
-            <TableCell className="py-2 text-center"><Badge variant={c.status === 1 ? "outline" : "secondary"} className="text-[10px]">{c.status === 1 ? "Active" : "Inactive"}</Badge></TableCell>
-          </TableRow>))}</TableBody></Table>
-    </div>
+    <>
+      <div className="flex justify-end mb-3">
+        <Button size="sm" onClick={() => { setEditCat(null); setDialogOpen(true); }} data-testid="add-food-cat-btn"><Plus className="h-4 w-4 mr-1" />Add Category</Button>
+      </div>
+      {cats.length === 0 ? <EmptyState title="No food categories" /> : (
+        <div className="border rounded-lg overflow-hidden">
+          <Table><TableHeader><TableRow>
+            <TableHead className="text-xs">Name</TableHead><TableHead className="text-xs">Tax</TableHead>
+            <TableHead className="text-xs text-center">Status</TableHead><TableHead className="text-xs w-24">Actions</TableHead>
+          </TableRow></TableHeader>
+            <TableBody>{cats.map(c => (
+              <TableRow key={c.id} data-testid={`fcat-row-${c.id}`}>
+                <TableCell className="py-2 text-sm font-medium">{c.name}</TableCell>
+                <TableCell className="py-2 text-xs text-muted-foreground">{c.tax_type} {c.gst_percent ? `${c.gst_percent}%` : ""}</TableCell>
+                <TableCell className="py-2 text-center"><Badge variant={c.status === 1 ? "outline" : "secondary"} className="text-[10px]">{c.status === 1 ? "Active" : "Inactive"}</Badge></TableCell>
+                <TableCell className="py-2 flex gap-1">
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => { setEditCat(c); setDialogOpen(true); }} data-testid={`edit-fcat-${c.id}`}><Pencil className="h-3.5 w-3.5" /></Button>
+                  <AlertDialog><AlertDialogTrigger asChild><Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive" data-testid={`del-fcat-${c.id}`}><Trash2 className="h-3.5 w-3.5" /></Button></AlertDialogTrigger>
+                    <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Delete "{c.name}"?</AlertDialogTitle><AlertDialogDescription>This may affect linked food items.</AlertDialogDescription></AlertDialogHeader>
+                      <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => handleDelete(c.id)}>Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+                </TableCell>
+              </TableRow>))}</TableBody></Table>
+        </div>
+      )}
+      <FoodCategoryFormDialog open={dialogOpen} onOpenChange={setDialogOpen} category={editCat} onSaved={load} />
+    </>
+  );
+}
+
+function FoodCategoryFormDialog({ open, onOpenChange, category, onSaved }) {
+  const [name, setName] = useState("");
+  const [catType, setCatType] = useState("food");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (category) { setName(category.name || ""); setCatType(category.cat_type || "food"); }
+    else { setName(""); setCatType("food"); }
+  }, [category, open]);
+
+  const save = async () => {
+    if (!name.trim()) return;
+    setSaving(true);
+    try {
+      if (category) await api.updateFoodCategory(category.id, { name, cat_type: catType });
+      else await api.createFoodCategory({ name, cat_type: catType });
+      toast({ title: category ? "Category updated" : "Category created" });
+      onOpenChange(false); onSaved();
+    } catch (e) {
+      const d = e?.response?.data;
+      const msg = d?.error || (d?.errors ? Object.values(d.errors).flat().join(", ") : "") || d?.message || "Failed";
+      toast({ title: msg, variant: "destructive" });
+    } finally { setSaving(false); }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-xs">
+        <DialogHeader><DialogTitle>{category ? "Edit" : "Add"} Food Category</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div><Label className="text-xs">Category Name *</Label><Input value={name} onChange={e => setName(e.target.value)} className="h-8 text-sm" data-testid="fcat-name-input" /></div>
+        </div>
+        <DialogFooter><Button onClick={save} disabled={saving || !name.trim()} size="sm" data-testid="save-fcat-btn">{saving && <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />}Save</Button></DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
 function AddonsTab() {
   const [addons, setAddons] = useState([]);
   const [loading, setLoading] = useState(true);
-  useEffect(() => { api.getAddonList().then(r => setAddons(r.data || [])).finally(() => setLoading(false)); }, []);
+  const [error, setError] = useState(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editAddon, setEditAddon] = useState(null);
+
+  const load = useCallback(async () => {
+    setLoading(true); setError(null);
+    try { const r = await api.getAddonList(); setAddons(r.data || []); }
+    catch (e) { setError(e?.message || "Failed"); }
+    finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleDelete = async (id) => {
+    try { await api.deleteAddon(id); toast({ title: "Addon deleted" }); load(); }
+    catch (e) { toast({ title: e?.response?.data?.message || "Delete failed", variant: "destructive" }); }
+  };
+
   if (loading) return <LoadingState lines={3} />;
-  if (addons.length === 0) return <EmptyState title="No addons" />;
+  if (error) return <ErrorState message={error} onRetry={load} />;
+
   return (
-    <div className="border rounded-lg overflow-hidden">
-      <Table><TableHeader><TableRow><TableHead className="text-xs">Name</TableHead><TableHead className="text-xs text-right">Price</TableHead><TableHead className="text-xs text-center">Status</TableHead></TableRow></TableHeader>
-        <TableBody>{addons.map(a => (
-          <TableRow key={a.id} data-testid={`addon-row-${a.id}`}>
-            <TableCell className="py-2 text-sm">{a.name}</TableCell>
-            <TableCell className="py-2 text-sm text-right tabular-nums">{a.price}</TableCell>
-            <TableCell className="py-2 text-center"><Badge variant={a.status === 1 ? "outline" : "secondary"} className="text-[10px]">{a.status === 1 ? "Active" : "Inactive"}</Badge></TableCell>
-          </TableRow>))}</TableBody></Table>
-    </div>
+    <>
+      <div className="flex justify-end mb-3">
+        <Button size="sm" onClick={() => { setEditAddon(null); setDialogOpen(true); }} data-testid="add-addon-btn"><Plus className="h-4 w-4 mr-1" />Add Addon</Button>
+      </div>
+      {addons.length === 0 ? <EmptyState title="No addons" /> : (
+        <div className="border rounded-lg overflow-hidden">
+          <Table><TableHeader><TableRow>
+            <TableHead className="text-xs">Name</TableHead><TableHead className="text-xs text-right">Price</TableHead>
+            <TableHead className="text-xs text-center">Status</TableHead><TableHead className="text-xs w-24">Actions</TableHead>
+          </TableRow></TableHeader>
+            <TableBody>{addons.map(a => (
+              <TableRow key={a.id} data-testid={`addon-row-${a.id}`}>
+                <TableCell className="py-2 text-sm font-medium">{a.name}</TableCell>
+                <TableCell className="py-2 text-sm text-right tabular-nums">{a.price}</TableCell>
+                <TableCell className="py-2 text-center"><Badge variant={a.status === 1 ? "outline" : "secondary"} className="text-[10px]">{a.status === 1 ? "Active" : "Inactive"}</Badge></TableCell>
+                <TableCell className="py-2 flex gap-1">
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => { setEditAddon(a); setDialogOpen(true); }} data-testid={`edit-addon-${a.id}`}><Pencil className="h-3.5 w-3.5" /></Button>
+                  <AlertDialog><AlertDialogTrigger asChild><Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive" data-testid={`del-addon-${a.id}`}><Trash2 className="h-3.5 w-3.5" /></Button></AlertDialogTrigger>
+                    <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Delete "{a.name}"?</AlertDialogTitle><AlertDialogDescription>This will also remove any linked addon recipes.</AlertDialogDescription></AlertDialogHeader>
+                      <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => handleDelete(a.id)}>Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+                </TableCell>
+              </TableRow>))}</TableBody></Table>
+        </div>
+      )}
+      <AddonFormDialog open={dialogOpen} onOpenChange={setDialogOpen} addon={editAddon} onSaved={load} />
+    </>
+  );
+}
+
+function AddonFormDialog({ open, onOpenChange, addon, onSaved }) {
+  const [name, setName] = useState("");
+  const [price, setPrice] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (addon) { setName(addon.name || ""); setPrice(String(addon.price || "")); }
+    else { setName(""); setPrice(""); }
+  }, [addon, open]);
+
+  const save = async () => {
+    if (!name.trim() || !price) return;
+    setSaving(true);
+    try {
+      if (addon) await api.updateAddon(addon.id, { name, price: Number(price) });
+      else await api.createAddon({ name, price: Number(price) });
+      toast({ title: addon ? "Addon updated" : "Addon created" });
+      onOpenChange(false); onSaved();
+    } catch (e) {
+      const d = e?.response?.data;
+      const msg = d?.errors ? (Array.isArray(d.errors) ? d.errors.map(x => x.message).join(", ") : Object.values(d.errors).flat().join(", ")) : (d?.message || "Failed");
+      toast({ title: msg, variant: "destructive" });
+    } finally { setSaving(false); }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-xs">
+        <DialogHeader><DialogTitle>{addon ? "Edit" : "Add"} Addon</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div><Label className="text-xs">Name *</Label><Input value={name} onChange={e => setName(e.target.value)} className="h-8 text-sm" data-testid="addon-name-input" /></div>
+          <div><Label className="text-xs">Price *</Label><Input type="number" min="0" step="any" value={price} onChange={e => setPrice(e.target.value)} className="h-8 text-sm" data-testid="addon-price-input" /></div>
+        </div>
+        <DialogFooter><Button onClick={save} disabled={saving || !name.trim() || !price} size="sm" data-testid="save-addon-btn">{saving && <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />}Save</Button></DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -12,8 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Search, Plus, Pencil, Trash2, Loader2, Beaker, FolderOpen } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, Loader2, Beaker, FolderOpen, AlertTriangle } from "lucide-react";
 import { LoadingState, ErrorState, EmptyState } from "@/components/common/StateDisplays";
+import { toast } from "@/hooks/use-toast";
 
 export default function IngredientCatalogue() {
   const { canAccess } = useLoginContext();
@@ -120,34 +121,62 @@ function IngredientsTab() {
 }
 
 function EditIngredientDialog({ open, onOpenChange, item, onSaved }) {
+  const [stockTitle, setStockTitle] = useState("");
   const [unit, setUnit] = useState("");
   const [minAlert, setMinAlert] = useState("");
   const [minUnit, setMinUnit] = useState("");
   const [saving, setSaving] = useState(false);
+  const [showRenameWarn, setShowRenameWarn] = useState(false);
 
   useEffect(() => {
-    if (item) { setUnit(item.unit || ""); setMinAlert(String(item.min_qty_alert || "")); setMinUnit(item.min_unit_alert || ""); }
+    if (item) {
+      setStockTitle(item.stock_title || "");
+      setUnit(item.unit || "");
+      setMinAlert(String(item.min_qty_alert || ""));
+      setMinUnit(item.min_unit_alert || "");
+      setShowRenameWarn(false);
+    }
   }, [item]);
 
+  const nameChanged = item && stockTitle.trim() !== (item.stock_title || "").trim();
+
   const save = async () => {
+    if (nameChanged && !showRenameWarn) {
+      setShowRenameWarn(true);
+      return;
+    }
     setSaving(true);
     try {
-      await api.updateStockItem(item.id, { unit, min_qty_alert: Number(minAlert), min_unit_alert: minUnit });
+      const payload = { unit, min_qty_alert: Number(minAlert), min_unit_alert: minUnit };
+      if (nameChanged) payload.stock_title = stockTitle.trim();
+      await api.updateStockItem(item.id, payload);
+      toast({ title: "Ingredient updated" });
       onOpenChange(false); onSaved();
-    } catch { }
-    finally { setSaving(false); }
+    } catch (e) {
+      toast({ title: e?.response?.data?.message || "Update failed", variant: "destructive" });
+    } finally { setSaving(false); setShowRenameWarn(false); }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) setShowRenameWarn(false); }}>
       <DialogContent className="max-w-sm">
-        <DialogHeader><DialogTitle>Edit {item?.stock_title}</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>Edit Ingredient</DialogTitle></DialogHeader>
         <div className="space-y-3">
+          <div>
+            <Label className="text-xs">Ingredient Name</Label>
+            <Input value={stockTitle} onChange={e => { setStockTitle(e.target.value); setShowRenameWarn(false); }} className="h-8 text-sm" data-testid="edit-ing-name" />
+          </div>
+          {showRenameWarn && (
+            <div className="flex items-start gap-2 p-2.5 rounded-md border border-amber-200 bg-amber-50 text-amber-800 text-[11px]" data-testid="rename-warning">
+              <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+              <span>This name may be used in recipes, transfers, and reports. Renaming may affect operational consistency. Click Save again to confirm.</span>
+            </div>
+          )}
           <div><Label className="text-xs">Unit</Label><Input value={unit} onChange={e => setUnit(e.target.value)} className="h-8 text-sm" data-testid="edit-ing-unit" /></div>
           <div><Label className="text-xs">Min Stock Alert</Label><Input type="number" value={minAlert} onChange={e => setMinAlert(e.target.value)} className="h-8 text-sm" data-testid="edit-ing-min-alert" /></div>
           <div><Label className="text-xs">Min Alert Unit</Label><Input value={minUnit} onChange={e => setMinUnit(e.target.value)} className="h-8 text-sm" data-testid="edit-ing-min-unit" /></div>
         </div>
-        <DialogFooter><Button onClick={save} disabled={saving} size="sm" data-testid="save-ing-btn">{saving && <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />}Save</Button></DialogFooter>
+        <DialogFooter><Button onClick={save} disabled={saving} size="sm" data-testid="save-ing-btn">{saving && <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />}{showRenameWarn ? "Confirm Rename & Save" : "Save"}</Button></DialogFooter>
       </DialogContent>
     </Dialog>
   );
