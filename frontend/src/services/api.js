@@ -528,6 +528,111 @@ function addStockPurchase(inventoryMasterId, payload) {
   return client.post(`/proxy/v2/inventory/add-stock/${inventoryMasterId}`, payload);
 }
 
+// ── P21 Catalogue — Inventory Categories ─────────────────────────
+
+function getStockItemCategories() {
+  return client.get("/proxy/v2/inventory/stock-item-categories").then(r => {
+    const d = r.data; return { ...r, data: d?.data || [] };
+  });
+}
+function getStockItemCategoryById(id) {
+  return client.get(`/proxy/v2/inventory/stock-item-categories/get/${id}`).then(r => {
+    return { ...r, data: r.data?.data || r.data };
+  });
+}
+function createStockItemCategory(payload) {
+  return client.post("/proxy/v2/inventory/stock-item-categories/store", payload);
+}
+function updateStockItemCategory(id, payload) {
+  return client.put(`/proxy/v2/inventory/stock-item-categories/update/${id}`, payload);
+}
+function deleteStockItemCategory(id) {
+  return client.delete(`/proxy/v2/inventory/stock-item-categories/delete/${id}`);
+}
+
+// ── P21 Catalogue — Inventory Items ──────────────────────────────
+
+function addInventoryItem(items) {
+  return client.post("/proxy/v2/inventory/add-inventory", items);
+}
+function updateStockItem(id, payload) {
+  return client.put(`/proxy/v2/inventory/update-stock/${id}`, payload);
+}
+
+// ── P21 Catalogue — Products / Foods ─────────────────────────────
+
+function getFoodsList() {
+  return client.get("/proxy/v2/product/foods-list").then(r => {
+    const foods = (r.data?.foods || []).map(f => ({
+      ...f, price: Number(f.price) || 0, tax: parseFloat(f.tax) || 0,
+    }));
+    return { ...r, data: foods };
+  });
+}
+function getFoodCategories() {
+  return client.get("/proxy/v2/product/categories").then(r => {
+    return { ...r, data: Array.isArray(r.data) ? r.data : [] };
+  });
+}
+function addFood(payload) { return client.post("/proxy/v2/product/add-food", payload); }
+function updateFood(id, payload) { return client.put(`/proxy/v2/product/foods/${id}`, payload); }
+function deleteFood(id) { return client.delete(`/proxy/v2/product/delete/${id}`); }
+function getAddonList() {
+  return client.get("/proxy/v2/product/addon-list").then(r => {
+    return { ...r, data: r.data?.addons || [] };
+  });
+}
+
+// ── P21 Catalogue — Recipes ──────────────────────────────────────
+
+function getRecipeList() {
+  return client.get("/proxy/v2/recipe/get-recipe").then(r => {
+    return { ...r, data: r.data?.recipes || [] };
+  });
+}
+function getRecipeDetail(id) {
+  return client.get(`/proxy/v2/recipe/recipe/${id}`).then(r => {
+    return { ...r, data: r.data?.recipe || r.data };
+  });
+}
+function createRecipe(payload) { return client.post("/proxy/v2/recipe/store-recipe", payload); }
+function updateRecipe(id, payload) { return client.put(`/proxy/v2/recipe/update-recipe/${id}`, payload); }
+function deleteRecipe(id) { return client.delete(`/proxy/v2/recipe/delete-recipe/${id}`); }
+
+// ── P21 Catalogue — Sub-recipes ──────────────────────────────────
+
+function getSubRecipeList() {
+  return client.get("/proxy/v2/recipe/sub-recipes").then(r => {
+    const d = r.data;
+    if (d?.sub_recipes) return { ...r, data: d.sub_recipes };
+    if (Array.isArray(d)) return { ...r, data: d };
+    return { ...r, data: [] };
+  });
+}
+function createSubRecipe(payload) { return client.post("/proxy/v2/recipe/store-sub-recipe", payload); }
+function updateSubRecipe(id, payload) { return client.put(`/proxy/v2/recipe/update-sub-recipe/${id}`, payload); }
+
+// ── P21 Catalogue — Addon-recipes ────────────────────────────────
+
+function getAddonRecipes() {
+  return client.get("/proxy/v2/product/addon-recipe-list").then(r => {
+    return { ...r, data: r.data?.recipes || [] };
+  });
+}
+function getAddonRecipeById(id) {
+  return client.get(`/proxy/v2/product/addon-recipe/${id}`).then(r => {
+    return { ...r, data: r.data?.recipe || r.data };
+  });
+}
+function getAddonsWithoutRecipe() {
+  return client.get("/proxy/v2/product/addons-without-recipe").then(r => {
+    return { ...r, data: r.data?.addons || [] };
+  });
+}
+function createAddonRecipe(payload) { return client.post("/proxy/v2/product/store-addon-recipe", payload); }
+function updateAddonRecipe(id, payload) { return client.put(`/proxy/v2/product/update-addon-recipe/${id}`, payload); }
+function deleteAddonRecipe(id) { return client.delete(`/proxy/v2/product/delete-addon-recipe/${id}`); }
+
 const api = {
   setToken,
   login,
@@ -573,6 +678,38 @@ const api = {
   addStockPurchase,
   // P20 Stock Inventory Summary
   getStockInventory,
+  // P21 Catalogue — Inventory
+  getStockItemCategories,
+  getStockItemCategoryById,
+  createStockItemCategory,
+  updateStockItemCategory,
+  deleteStockItemCategory,
+  addInventoryItem,
+  updateStockItem,
+  // P21 Catalogue — Product
+  getFoodsList,
+  getFoodCategories,
+  addFood,
+  updateFood,
+  deleteFood,
+  getAddonList,
+  // P21 Catalogue — Recipes
+  getRecipeList,
+  getRecipeDetail,
+  createRecipe,
+  updateRecipe,
+  deleteRecipe,
+  // P21 Catalogue — Sub-recipes
+  getSubRecipeList,
+  createSubRecipe,
+  updateSubRecipe,
+  // P21 Catalogue — Addon-recipes
+  getAddonRecipes,
+  getAddonRecipeById,
+  getAddonsWithoutRecipe,
+  createAddonRecipe,
+  updateAddonRecipe,
+  deleteAddonRecipe,
 };
 
 export default api;

@@ -11,6 +11,10 @@ import {
   Package,
   Building2,
   Settings,
+  Beaker,
+  UtensilsCrossed,
+  BookOpen,
+  Link2,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -24,6 +28,10 @@ const ICON_MAP = {
   Package,
   Building2,
   Settings,
+  Beaker,
+  UtensilsCrossed,
+  BookOpen,
+  Link2,
 };
 
 export default function Sidebar() {

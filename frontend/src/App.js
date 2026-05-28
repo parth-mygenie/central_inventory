@@ -18,6 +18,10 @@ import OperationalSettings from "@/components/central-inventory/OperationalSetti
 import VendorManagement from "@/components/central-inventory/VendorManagement";
 import AddStockPurchaseForm from "@/components/central-inventory/AddStockPurchaseForm";
 import StockInventorySummary from "@/components/central-inventory/StockInventorySummary";
+import IngredientCatalogue from "@/components/central-inventory/IngredientCatalogue";
+import ProductCatalogue from "@/components/central-inventory/ProductCatalogue";
+import RecipeCatalogue from "@/components/central-inventory/RecipeCatalogue";
+import AddonRecipeCatalogue from "@/components/central-inventory/AddonRecipeCatalogue";
 import { PermissionDenied } from "@/components/common/StateDisplays";
 
 /**
@@ -77,6 +81,10 @@ function AppRoutes() {
         <Route path="/settings" element={<OperationalSettings />} />
         <Route path="/vendors" element={<VendorManagement />} />
         <Route path="/procurement/new" element={<AddStockPurchaseForm />} />
+        <Route path="/catalogue/ingredients" element={<IngredientCatalogue />} />
+        <Route path="/catalogue/products" element={<ProductCatalogue />} />
+        <Route path="/catalogue/recipes" element={<RecipeCatalogue />} />
+        <Route path="/catalogue/addon-recipes" element={<AddonRecipeCatalogue />} />
         <Route path="/transfer/:id" element={<TransferDetail />} />
 
         {/* Catch-all → redirect to hub */}

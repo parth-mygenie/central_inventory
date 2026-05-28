@@ -34,6 +34,7 @@ export const SCREEN_VISIBILITY = {
   "scr-vendors":           { master: FULL,    central: FULL,    franchise: HIDDEN },
   "scr-procurement":       { master: FULL,    central: FULL,    franchise: HIDDEN },
   "scr-stock-inventory":   { master: FULL,    central: FULL,    franchise: FULL  },
+  "scr-catalogue":         { master: FULL,    central: HIDDEN,  franchise: HIDDEN },
   "scr-21-api-verify":     { master: HIDDEN,  central: HIDDEN,  franchise: HIDDEN }, // admin only
 };
 
@@ -107,6 +108,34 @@ export const NAV_ITEMS = [
     label: "Vendors",
     path: "/vendors",
     icon: "Building2",
+  },
+  {
+    id: "catalogue-ingredients",
+    screen: "scr-catalogue",
+    label: "Ingredients",
+    path: "/catalogue/ingredients",
+    icon: "Beaker",
+  },
+  {
+    id: "catalogue-products",
+    screen: "scr-catalogue",
+    label: "Products",
+    path: "/catalogue/products",
+    icon: "UtensilsCrossed",
+  },
+  {
+    id: "catalogue-recipes",
+    screen: "scr-catalogue",
+    label: "Recipes",
+    path: "/catalogue/recipes",
+    icon: "BookOpen",
+  },
+  {
+    id: "catalogue-addon-recipes",
+    screen: "scr-catalogue",
+    label: "Addon Recipes",
+    path: "/catalogue/addon-recipes",
+    icon: "Link2",
   },
   {
     id: "settings",
