@@ -89,20 +89,53 @@ Old IDs (CR-001, S1, INF-01, P15, OI-001 etc.) are listed as aliases for traceab
 
 ### ACTIVE — UI Consolidation (Deep Phase CR)
 
-| ID | Old ID | Name | What It Does | Phases | Status | Date |
-|----|--------|------|-------------|--------|--------|------|
-| **CI-060** | NEW | UI Consolidation & Baseline Freeze | Owner reviews every screen (16 routes × 3 roles), gives feedback on UI gaps + business logic gaps. Agent then: analyzes → plans → implements → QA's screen by screen. Owner re-reviews and approves. Then freeze. | 6 phases | `PLANNING` | 28 May 2026 |
+| ID | Old ID | Name | What It Does | Phases | Status | Planned | Frozen |
+|----|--------|------|-------------|--------|--------|---------|--------|
+| **CI-060** | NEW | UI Consolidation & Baseline Freeze | Owner reviews every screen (16 routes × 3 roles), gives feedback on UI gaps + business logic gaps. Agent then: analyzes → plans → implements → QA's screen by screen. Owner re-reviews and approves. Then freeze. | 6 phases | `FROZEN` (CR definition frozen — execution starts at Phase 1) | 28 May 2026 | 28 May 2026 |
 
-**CI-060 Phases:**
+#### CI-060 Freeze Evidence (Gate 7 Checklist)
 
-| Phase | Name | Who Drives | What Happens | Output |
-|-------|------|-----------|-------------|--------|
-| 1 | **Discovery** | Owner | Owner reviews each screen as each role, gives raw feedback — what's missing, what's wrong, what should change | `CI_060_DISCOVERY_FINDINGS.md` |
-| 2 | **Analysis** | Agent | Categorize findings: UI_GAP / BIZ_LOGIC_GAP / BUG / ENHANCEMENT / MISSING. Prioritize by severity. | Included in discovery findings |
-| 3 | **Planning** | Agent (owner confirms) | Implementation plan per finding, grouped by screen. Owner confirms scope before work starts. | `CI_060_IMPLEMENTATION_PLAN.md` |
-| 4 | **Implementation** | Agent | Fix/build screen by screen per approved plan. No scope creep. | `CI_060_IMPLEMENTATION_REPORT.md` |
-| 5 | **QA** | QA Agent | Independent validation per screen: finding resolved, no regression, 3-role check | `CI_060_QA_REPORT.md` |
-| 6 | **Owner Approval** | Owner | Re-reviews fixed screens. Records: "UI approved. Business logic approved." → Freeze all baselines. | `CI_060_OWNER_APPROVAL.md` + `BASELINE_FREEZE_DECLARATION.md` |
+| # | Gate Criteria | Evidence | Status |
+|---|-------------|----------|--------|
+| 1 | Requirements documented | PRD.md § "CI-060 — UI Consolidation" — 16 routes × 3 roles, 6-phase plan, role matrix, shared elements, document chain | PASS |
+| 2 | Scope explicitly bounded | 16 named routes, 3 named roles, 6 defined phases with clear who/what/output per phase | PASS |
+| 3 | Phases defined with gates | Discovery → Analysis → Planning → Implementation → QA → Owner Approval. Each has: who drives, what happens, what output is produced | PASS |
+| 4 | Owner-driven rule codified | Phase 1 is owner-driven. Agent does NOT decide what's correct. Agent captures, plans, implements, QA's. Owner approves. | PASS |
+| 5 | Entry condition clear | Next agent reads PRD → prepares app → presents to owner → captures feedback. No fixing before Phase 2. | PASS |
+| 6 | Exit condition clear | Owner records: "UI approved. Business logic approved." → `BASELINE_FREEZE_DECLARATION.md` → all CI-010 to CI-036 frozen | PASS |
+| 7 | Document chain defined | `CI_060_DISCOVERY_FINDINGS.md` → `CI_060_IMPLEMENTATION_PLAN.md` → `CI_060_IMPLEMENTATION_REPORT.md` → `CI_060_QA_REPORT.md` → `CI_060_OWNER_APPROVAL.md` → `BASELINE_FREEZE_DECLARATION.md` | PASS |
+| 8 | RULE 1 compliance | Phase 5 = QA, Phase 1+6 = Owner smoke/review, Phase 6 = Owner explicit approval (UI + biz logic). All three RULE 1 prerequisites are built into the phase structure. | PASS |
+| 9 | RULE 2 compliance | Freeze declaration in Phase 6 clears all RULE 2 checkpoints. No new work until all CI-010 to CI-036 frozen. | PASS |
+| 10 | CR Registry entry | This row. Status = `FROZEN`. | PASS |
+
+**What is frozen:** The CI-060 *definition* — its scope, phases, gates, rules, document chain, entry/exit conditions. No one changes what CI-060 means or how it works.
+
+**What is NOT frozen:** The CI-060 *execution* — Phase 1 has not started yet. The next agent begins Phase 1 (Discovery).
+
+#### CI-060 Phase Tracker
+
+| Phase | Name | Status | Started | Completed | Output Doc |
+|-------|------|--------|---------|-----------|------------|
+| 1 | Discovery | `NOT_STARTED` | — | — | `CI_060_DISCOVERY_FINDINGS.md` |
+| 2 | Analysis | `NOT_STARTED` | — | — | Included in discovery findings |
+| 3 | Planning | `NOT_STARTED` | — | — | `CI_060_IMPLEMENTATION_PLAN.md` |
+| 4 | Implementation | `NOT_STARTED` | — | — | `CI_060_IMPLEMENTATION_REPORT.md` |
+| 5 | QA | `NOT_STARTED` | — | — | `CI_060_QA_REPORT.md` |
+| 6 | Owner Approval | `NOT_STARTED` | — | — | `CI_060_OWNER_APPROVAL.md` + `BASELINE_FREEZE_DECLARATION.md` |
+
+#### CI-060 Phases — Detailed Gates
+
+**Phase 1 → Phase 2 gate:** All 16 screens reviewed by owner as all 3 roles. All feedback captured in `CI_060_DISCOVERY_FINDINGS.md`. Owner confirms: "I have reviewed all screens. My feedback is complete."
+
+**Phase 2 → Phase 3 gate:** Every finding categorized (UI_GAP / BIZ_LOGIC_GAP / BUG / ENHANCEMENT / MISSING_SCREEN), severity assigned (CRITICAL / HIGH / MEDIUM / LOW), current vs expected behavior documented.
+
+**Phase 3 → Phase 4 gate:** Implementation plan created per finding, grouped by screen. Owner confirms: "Plan matches my feedback. Proceed to implementation."
+
+**Phase 4 → Phase 5 gate:** All planned changes implemented. `CI_060_IMPLEMENTATION_REPORT.md` created with files changed per screen. Backend compiles. Frontend compiles. No regression in existing routes.
+
+**Phase 5 → Phase 6 gate:** Independent QA validates every fixed screen: finding resolved, no regression, 3-role check, business logic correct. `CI_060_QA_REPORT.md` created with screen-by-screen results. Zero critical/high defects.
+
+**Phase 6 exit gate:** Owner re-reviews all fixed screens. Records explicit statement: "UI reviewed and approved. Business logic reviewed and approved. Proceed to baseline freeze." → `BASELINE_FREEZE_DECLARATION.md` created. All CI-010 through CI-036 move to `FROZEN` in CR Registry.
 
 > **CI-060 is owner-driven.** Agent does NOT decide what's correct — owner does. Agent captures, plans, implements, QA's. Owner approves. Full scope in `PRD.md`.
 
@@ -132,7 +165,7 @@ Old IDs (CR-001, S1, INF-01, P15, OI-001 etc.) are listed as aliases for traceab
 
 | Status | Count | Items |
 |--------|-------|-------|
-| `FROZEN` | 3 | CI-001, CI-002, CI-003 (planning docs — no code) |
+| `FROZEN` | 4 | CI-001, CI-002, CI-003 (planning docs), **CI-060 (definition frozen, execution Phase 1 not started)** |
 | `SMOKE_PASSED` | 1 | CI-014 (smoke done, owner approval not recorded) |
 | `QA_PASSED` | 6 | CI-010, CI-011, CI-012, CI-013, CI-020, CI-021 |
 | `IMPLEMENTED` | 7 | CI-030, CI-031, CI-032, CI-033, CI-034, CI-035, CI-036 |
@@ -140,28 +173,33 @@ Old IDs (CR-001, S1, INF-01, P15, OI-001 etc.) are listed as aliases for traceab
 | `DEFERRED` | 11 | CI-041 through CI-052 (excluding CI-046) |
 | `BLOCKED` | 1 | CI-046 |
 
-**Zero implementation baselines are FROZEN.**
+**Zero implementation baselines are FROZEN. CI-060 (definition) is frozen — execution begins at Phase 1 (Discovery).**
+**All 14 implementation baselines (CI-010 to CI-036) will freeze together via CI-060 Phase 6.**
 
 ---
 
-## What's Missing Per Item (RULE 1 Checklist)
+## What's Missing Per Item → All Routed Through CI-060
 
-| ID | Name | QA | Smoke | Owner Approval | Path to Freeze |
-|----|------|----|-------|----------------|----------------|
-| CI-010 | Read-Only Foundation | Done | **MISSING** | **MISSING** | Smoke → Approval → Freeze |
-| CI-011 | UX Polish | Done | **MISSING** | **MISSING** | Smoke → Approval → Freeze |
-| CI-012 | History & Audit | Done | **MISSING** | **MISSING** | Smoke → Approval → Freeze |
-| CI-013 | Transfer Write Actions | Done | **MISSING** | **MISSING** | Smoke → Approval → Freeze |
-| CI-014 | Stock Adj/Wastage/Cleanup | Done | Done | **MISSING** | Approval → Freeze |
-| CI-020 | POS Login Context | Done | **MISSING** | **MISSING** | Smoke → Approval → Freeze |
-| CI-021 | Seed Data Removal | Done | **MISSING** | **MISSING** | Smoke → Approval → Freeze |
-| CI-030 | Line-Level Approval | **MISSING** (informal only) | **MISSING** | **MISSING** | Closure doc → Formal QA → Smoke → Approval → Freeze |
-| CI-031 | Dispute Resolution | **MISSING** (informal only) | **MISSING** | **MISSING** | Same |
-| CI-032 | Amend/Withdraw/Modify | **MISSING** (informal only) | **MISSING** | **MISSING** | Same |
-| CI-033 | Operational Settings | **MISSING** (informal only) | **MISSING** | **MISSING** | Same |
-| CI-034 | Vendor Management | **MISSING** (informal only) | **MISSING** | **MISSING** | Same |
-| CI-035 | Add Stock from Vendor | **MISSING** (informal only) | **MISSING** | **MISSING** | Same |
-| CI-036 | Stock Inventory Summary | **MISSING** (informal only) | **MISSING** | **MISSING** | Same |
+Every implementation baseline (CI-010 to CI-036) freezes via CI-060. No individual freeze paths.
+
+| ID | Name | Current Status | What CI-060 Provides |
+|----|------|---------------|---------------------|
+| CI-010 | Read-Only Foundation | `QA_PASSED` | Phase 1: owner smoke/review → Phase 6: owner approval → FROZEN |
+| CI-011 | UX Polish | `QA_PASSED` | Same |
+| CI-012 | History & Audit | `QA_PASSED` | Same |
+| CI-013 | Transfer Write Actions | `QA_PASSED` | Same |
+| CI-014 | Stock Adj/Wastage/Cleanup | `SMOKE_PASSED` | Phase 1: owner re-confirms → Phase 6: owner approval → FROZEN |
+| CI-020 | POS Login Context | `QA_PASSED` | Phase 1: owner smoke/review → Phase 6: owner approval → FROZEN |
+| CI-021 | Seed Data Removal | `QA_PASSED` | Phase 1: owner smoke/review → Phase 6: owner approval → FROZEN |
+| CI-030 | Line-Level Approval | `IMPLEMENTED` | Phase 1: owner reviews → Phase 4: fixes if needed → Phase 5: QA → Phase 6: approval → FROZEN |
+| CI-031 | Dispute Resolution | `IMPLEMENTED` | Same |
+| CI-032 | Amend/Withdraw/Modify | `IMPLEMENTED` | Same |
+| CI-033 | Operational Settings | `IMPLEMENTED` | Same |
+| CI-034 | Vendor Management | `IMPLEMENTED` | Same |
+| CI-035 | Add Stock from Vendor | `IMPLEMENTED` | Same |
+| CI-036 | Stock Inventory Summary | `IMPLEMENTED` | Same |
+
+**Path:** CI-060 Phase 1 (Discovery) → Phase 2 (Analysis) → Phase 3 (Planning) → Phase 4 (Implementation) → Phase 5 (QA) → Phase 6 (Owner Approval) → All 14 items `FROZEN`
 
 ---
 
