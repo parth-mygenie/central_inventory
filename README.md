@@ -122,6 +122,22 @@ All mapping handled by `src/lib/terminology.js`. UI never displays raw backend t
 
 ## Baseline Status (28 May 2026)
 
+### How To Read This
+
+Every work item uses ID format **`CI-XXX`** (Central Inventory sequential):
+
+| Range | Category | What It Means |
+|-------|----------|---------------|
+| CI-001 to CI-003 | **Planning** | Requirements docs, business rules, owner decisions — no code |
+| CI-010 to CI-014 | **Core Build** | The main product, built in 5 slices (screens → polish → history → write actions → stock management) |
+| CI-020 to CI-021 | **Infrastructure** | Backend plumbing — real login context, fake data removal |
+| CI-030 to CI-036 | **Extensions** | Features added after core — line-level approval, disputes, settings, vendors, procurement, inventory dashboard |
+| CI-040 to CI-052 | **Backlog** | Deferred/future — smart dispatch, reports, exports, returns, permissions |
+
+Full details, old ID cross-reference, and gate rules: **`/app/memory/central_inventory/CR_REGISTRY.md`**
+
+### Current Status
+
 | ID | Name | What | Status | QA | Smoke | Owner Approval |
 |----|------|------|--------|----|-------|----------------|
 | CI-010 | Read-Only Foundation | 6 screens + login + roles | `QA_PASSED` | Done | **NO** | **NO** |
@@ -141,7 +157,7 @@ All mapping handled by `src/lib/terminology.js`. UI never displays raw backend t
 
 **FROZEN: 0 implementation baselines | Owner action needed: 14 baselines**
 
-**Owner-Mandated Rules:**
+### Owner-Mandated Rules
 - **RULE 1:** No baseline freeze without QA + Owner Smoke Test + Owner Explicit Approval (UI + business logic). No implicit. No assumed.
 - **RULE 2:** No new work (CI-040+) until ALL baselines CI-010 to CI-036 are FROZEN + owner gives explicit go-ahead
 
