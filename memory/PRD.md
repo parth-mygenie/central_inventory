@@ -17,33 +17,34 @@ Central Inventory module for MyGenie POS — multi-level stock management system
 ## What's Been Implemented
 
 ### Phase 1 (Slices 1-5): Core Inventory System
-- Login via MyGenie vendor account with role detection
-- Hierarchy Summary, Store Detail, Operations Hub, Pending Queues
-- Transfer lifecycle: request → approve → dispatch → receive
-- P16: Partial approve, line-level statuses, cancel-remainder, receive dispute
-- P17: Amend, withdraw, modification, operational settings
-- P18: Vendor Management CRUD
-- P19: Add Stock (Procurement) UI
-- Stock Adjustment, Wastage recording + reporting
-- Direct Dispatch with source selector
-- Request Stock — canonical 3-step flow
+- Full transfer lifecycle, hierarchy, pending queues, history
+- P16 partial approve, P17 amend/withdraw/modification
+- P18 Vendors, P19 Procurement, Stock Adjustment, Wastage
 
 ### P20 Stock Inventory Summary — IMPLEMENTED (27 May 2026)
-- Self-store inventory visibility with KPI cards + inventory table
+- Self-store inventory visibility, KPI cards, inventory table
 - Testing: 14/14 frontend PASS, 11/11 backend PASS
 
 ### P21 Smart Dispatch/Request Assistance — PLANNED (27 May 2026)
 - Destination-aware intelligence layer for dispatch/request flows
-- 5-phase roadmap (suggestions → quantities → history → consumption → optimization)
-- Full planning doc: `AI/Plans/phase3/P21_smart_dispatch_request_assistance.md`
+- 5-phase roadmap: `AI/Plans/phase3/P21_smart_dispatch_request_assistance.md`
+
+### P21 Catalogue Phase — API VALIDATED + PLANNED (27 May 2026)
+- **30 API probes** against live POS — 19 WORKING, 9 BLOCKED (recipe/sub-recipe 404)
+- Inventory Catalogue (7/7 endpoints working)
+- Product Catalogue (6/6 endpoints working)
+- Addon-Recipe Catalogue (6/6 endpoints working)
+- **Recipe + Sub-recipe: ALL BLOCKED (404)** — routes not registered on POS build
+- Full planning: `AI/Plans/phase3/P21_catalogue_planning.md`
+- Curl evidence: `AI/curls/p21_catalogue_curls.sh`
 
 ## Prioritized Backlog
-- **P0:** P21 Phase 1 — Low-stock suggestions in dispatch + request forms (~4-5h)
-- **P1:** P21 Phase 2 — Recommended quantities + source confidence (~3-4h)
-- **P1:** P20 Phase 3 — Hierarchy stock overview toggle (~1.5h)
-- **P2:** P21 Phase 3 — Transfer history context + pending request awareness (~3-4h)
-- **P2:** Reports screen implementation
-- **P3:** P21 Phase 4 — Consumption-aware intelligence (future)
+- **P0:** P21 Catalogue Phase 1 — Inventory Catalogue (ingredients + categories) (~5-6h)
+- **P0:** P21 Catalogue Phase 4 — Addon-Recipe management (~4-5h)
+- **P1:** P21 Catalogue Phase 2 — Product/Food Catalogue (~5-6h)
+- **P1:** P21 Smart Dispatch Phase 1+2 — Low-stock suggestions + qty recommendations (~8h)
+- **P2:** P20 Phase 3 — Hierarchy stock overview toggle (~1.5h)
+- **BLOCKED:** P21 Catalogue Phase 3 — Recipe/Sub-recipe (POS routes return 404)
 
 ## Test Credentials
 - Master: `abhishek@kalabahia.com` / `Qplazm@10` → rid=1, type=master
