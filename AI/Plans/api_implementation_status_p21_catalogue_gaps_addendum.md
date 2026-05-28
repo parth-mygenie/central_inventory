@@ -61,17 +61,36 @@
 | — | `/product/update-addon/{id}` | PUT | **404** | **NOT FOUND** | Route not registered |
 | — | `/product/addons/{id}` | PUT | **404** | **NOT FOUND** | Route not registered |
 
-**FINDING: Create + Read + Delete confirmed. UPDATE IS MISSING.**
+### GAP B: Add-on Master CRUD — FULL CRUD CONFIRMED
 
-No update route found for addon master. Probed `POST /product/update-addon/{id}`, `PUT /product/update-addon/{id}`, `PUT /product/addons/{id}` — all 404.
+**Previously:** Probed wrong route (`/product/update-addon/{id}` — 404). Correct route is `/product/addon-update/{id}`.
 
-**Implication:** To "edit" an addon, operator must delete + re-create. This also breaks existing addon-recipe mappings (since addon_id changes). **Edit addon is effectively not supported** without backend route addition.
+**Confirmed endpoints:**
+
+| # | Endpoint | Method | HTTP | Status | Notes |
+|---|----------|--------|:---:|--------|-------|
+| B1 | `/product/add-addon` | POST | 422 | **WORKING** | Validates `name`, `price` required |
+| B2 | `/product/add-addon` | POST | 201 | **WORKING** | `{id: 12632, name: "...", price: 25}` |
+| B3 | `/product/add-addon` (dupe) | POST | 409 | **WORKING** | `{errors: [{message: "This addon name already exists..."}]}` |
+| B4 | `/product/addon-list` | GET | 200 | **WORKING** | `{addons: [{id, name, price, status}]}` |
+| B7 | `/product/addon-update/{id}` | **PUT** | 200 | **WORKING** | `{message: "Addon updated successfully"}` |
+| B8 | `/product/addon-update/{id}` (empty) | PUT | 422 | **WORKING** | Validates `name`, `price` required |
+| B9 | `/product/addon-update/99999` | PUT | 404 | **WORKING** | `{errors: [{code: "not_found", message: "Addon not found"}]}` |
+| B13 | `/product/delete-addon/{id}` | DELETE | 200 | **WORKING** | `{message: "Addon deleted successfully!"}` |
+
+**Full lifecycle verified (B10-B12):** Create → Update (rename + price change) → Verify in list → Delete. All working.
+
+**CRITICAL ROUTE NAME:** Update is `/product/addon-update/{id}` (noun-verb), NOT `/product/update-addon/{id}` (verb-noun). Previous investigation probed the wrong route.
 
 **Response shapes:**
 - Create: `{id, name, price}` (201) — flat object, no wrapper
+- Update: `{message}` (200)
 - Delete: `{message}` (200)
-- List: `{addons: [{id, name, price, status}]}`
-- Duplicate: `{errors: [{message: "..."}]}` (409) — array format, not object
+- Not found: `{errors: [{code: "not_found", message: "Addon not found"}]}` (404) — array format
+- Duplicate: `{errors: [{message: "This addon name already exists..."}]}` (409) — array format
+- Validation: `{message, errors: {field: [msgs]}}` (422) — object format
+
+**Implication:** Addon update IS supported. Frontend can implement full edit dialog.
 
 ---
 
@@ -110,8 +129,8 @@ The Edit Ingredient dialog simply didn't include a `stock_title` field. Adding i
 | **Food Category Delete** | `/product/delete-categories/{id}` | DELETE | **WORKING** |
 | **Food Category List** | `/product/categories` | GET | **WORKING** (existing) |
 | **Addon Create** | `/product/add-addon` | POST | **WORKING** |
+| **Addon Update** | `/product/addon-update/{id}` | **PUT** | **WORKING** |
 | **Addon Delete** | `/product/delete-addon/{id}` | DELETE | **WORKING** |
-| **Addon Update** | — | — | **NOT FOUND** (no route) |
 | **Addon List** | `/product/addon-list` | GET | **WORKING** (existing) |
 | **Ingredient Edit Name** | `/inventory/update-stock/{id}` | PUT | **WORKING** (stock_title accepted) |
 
@@ -119,8 +138,8 @@ The Edit Ingredient dialog simply didn't include a `stock_title` field. Adding i
 
 | Gap | Fix Needed | Complexity |
 |-----|-----------|------------|
-| A: Food Category CRUD | Add create/edit/delete buttons to FoodCategoriesTab. Use `POST` for update (not PUT). | LOW — 3 new api.js methods + dialog |
-| B: Addon Create + Delete | Add create + delete to AddonsTab. No edit (backend missing). | LOW — 2 new api.js methods + buttons |
+| A: Food Category CRUD | Add create/edit/delete to FoodCategoriesTab. Use `POST` for update (not PUT). | LOW — 3 new api.js methods + dialog |
+| B: Addon Full CRUD | Add create/edit/delete to AddonsTab. Update via `PUT /product/addon-update/{id}`. | LOW — 3 new api.js methods + dialogs |
 | C: Ingredient Name | Add `stock_title` field to EditIngredientDialog. | TRIVIAL — 1 field addition |
 
 ### Normalization Implications
@@ -128,7 +147,10 @@ The Edit Ingredient dialog simply didn't include a `stock_title` field. Adding i
 - Food category create returns `{message, category_id}` — not the full category object. Must refetch list after create.
 - Food category update uses **POST** method — `api.js` must use `client.post()` not `client.put()`.
 - Addon create returns `{id, name, price}` (201) — flat, no wrapper.
-- Addon duplicate error is `{errors: [{message}]}` (409) — array format, different from food validation `{errors: {field: [msgs]}}`.
+- Addon update route is `/product/addon-update/{id}` (noun-verb) — NOT `/product/update-addon/{id}`.
+- Addon update uses **PUT** method — standard REST.
+- Addon 404 errors return `{errors: [{code, message}]}` (array), duplicate 409 also array format.
+- Addon validation 422 returns `{message, errors: {field: [msgs]}}` (object format) — same as recipes.
 
 ### Test Artifacts (Cleaned Up)
 
