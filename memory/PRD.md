@@ -96,10 +96,14 @@ Build a Central Inventory module for the MyGenie POS platform managing stock mov
 | Document | Purpose |
 |----------|---------|
 | `CR_REGISTRY.md` | Master tracker — all CRs/phases with lifecycle status |
-| `GATE_CONTROL_FRAMEWORK.md` | Stage gate criteria: PLANNING → FROZEN |
+| `GATE_CONTROL_FRAMEWORK.md` | Stage gate criteria: PLANNING → FROZEN + owner-mandated rules |
 | `DOCUMENT_INDEX.md` | Navigate all 90+ project docs |
-| `/app/README.md` | Project overview, architecture, setup, test accounts |
+| `/app/README.md` | Project overview, architecture, setup, test accounts, baseline status |
 | `/app/memory/test_credentials.md` | All test accounts with verified credentials |
+
+### Owner-Mandated Rules (Non-Negotiable)
+- **RULE 1:** No baseline freeze without: (a) QA passed, (b) Owner smoke test passed, (c) Owner explicit approval for UI + business logic
+- **RULE 2:** No Slice 6 work until ALL current baselines are FROZEN + owner gives explicit Slice 6 go-ahead
 
 ## Next Tasks
 1. P15-P20 closure documentation (Batch B)

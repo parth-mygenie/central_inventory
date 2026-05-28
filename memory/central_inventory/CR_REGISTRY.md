@@ -140,6 +140,12 @@
 
 > "Freeze can be declared only after P15-P20 closure docs + QA are complete and combined owner acceptance (S5 + P15-P20) is recorded. Until then, 8 baselines remain unfrozen."
 
+### Owner-Mandated Rules (from GATE_CONTROL_FRAMEWORK.md)
+
+**RULE 1 — Baseline Freeze:** No freeze without QA + Owner Smoke + Owner Explicit Approval (UI + business logic). All three mandatory. No exceptions.
+
+**RULE 2 — Slice 6 Entry:** No Slice 6 work until ALL current baselines are `FROZEN` and owner records explicit Slice 6 go-ahead. Agent must refuse if any baseline is still `IMPLEMENTED`/`QA_PASSED`/`SMOKE_PASSED`.
+
 ---
 
 ## Next Actions (Priority Order)

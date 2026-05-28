@@ -141,8 +141,13 @@ All mapping handled by `src/lib/terminology.js`. UI never displays raw backend t
 
 **Frozen: 6 | Smoke Passed: 1 | Implemented (needs QA): 6 | Planning: 1**
 
+**Owner-Mandated Rules:**
+- **RULE 1:** No baseline freeze without QA + Owner Smoke Test + Owner Explicit Approval (UI + business logic confirmed)
+- **RULE 2:** No Slice 6 work until ALL baselines are FROZEN and owner gives explicit go-ahead
+
 > Full baseline matrix: `CENTRAL_INVENTORY_CONSOLIDATED_STATUS_AND_BASELINE_FREEZE_REPORT.md`
-> Gate criteria: `GATE_CONTROL_FRAMEWORK.md`
+> Gate criteria + rules: `GATE_CONTROL_FRAMEWORK.md`
+> CR tracker: `CR_REGISTRY.md`
 
 ## Project Governance
 

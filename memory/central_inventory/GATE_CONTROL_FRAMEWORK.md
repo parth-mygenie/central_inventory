@@ -6,6 +6,43 @@
 
 ---
 
+## OWNER-MANDATED RULES (NON-NEGOTIABLE)
+
+### RULE 1: Baseline Freeze Prerequisites
+
+**No baseline can be declared FROZEN unless ALL three of the following are complete:**
+
+| # | Prerequisite | Description | Who Validates |
+|---|-------------|-------------|---------------|
+| 1 | **QA Passed** | Independent QA agent has validated all checks with zero critical defects | QA Agent |
+| 2 | **Owner Smoke Test Passed** | Owner (or owner-delegated smoke agent) has executed smoke checklist across all 3 roles | Owner / Smoke Agent |
+| 3 | **Owner Explicit Approval** | Owner has recorded a written acceptance statement covering both **UI correctness** and **business logic correctness** | Owner (human only) |
+
+**Enforcement:**
+- A Freeze Agent MUST verify all 3 prerequisites exist before declaring freeze
+- If any prerequisite is missing, freeze is BLOCKED — no exceptions, no implicit approvals
+- Automated QA alone is NOT sufficient — owner smoke + explicit approval are mandatory
+- The acceptance statement MUST explicitly confirm: "UI reviewed and approved" AND "Business logic reviewed and approved"
+
+### RULE 2: Slice 6 Entry Gate
+
+**No work on Slice 6 (or any new slice/CR beyond current scope) may begin until:**
+
+| # | Condition | Description |
+|---|-----------|-------------|
+| 1 | **All current baselines FROZEN** | Every item in CR Registry that is `IMPLEMENTED`, `QA_PASSED`, or `SMOKE_PASSED` must reach `FROZEN` |
+| 2 | **Owner gives final explicit approval** | Owner must record: "All current UI and business logic is approved. Proceed to Slice 6." |
+| 3 | **Freeze declaration exists** | `BASELINE_FREEZE_DECLARATION.md` created with full freeze manifest |
+| 4 | **CR Registry clean** | Zero items in `IMPLEMENTED` / `QA_PASSED` / `SMOKE_PASSED` status — everything is either `FROZEN` or `DEFERRED` |
+
+**Enforcement:**
+- Any agent asked to start Slice 6 work MUST first check CR Registry
+- If ANY baseline is not `FROZEN` or `DEFERRED`, the agent MUST refuse and redirect to freeze completion
+- Owner approval for Slice 6 is SEPARATE from baseline freeze approval — both are required
+- This rule prevents scope creep and ensures no unfinished work carries forward
+
+---
+
 ## Stage Pipeline
 
 ```
@@ -125,17 +162,30 @@ Every CR/phase MUST pass through each gate sequentially. No skipping.
 ## Gate 7: ACCEPTED → FROZEN
 
 **Who gates:** Freeze Agent
+**Prerequisite:** RULE 1 must be fully satisfied (see top of document)
 **Evidence required:**
 
 | # | Criteria | Evidence |
 |---|---------|----------|
-| 1 | All prior gates passed | Complete evidence chain |
-| 2 | No open defects for this scope | Defect register clear |
-| 3 | Regression verified | Existing features still work |
-| 4 | Freeze declaration created | `*_BASELINE_FREEZE_DECLARATION.md` |
-| 5 | Files/routes/modules explicitly listed as frozen | Freeze manifest |
-| 6 | Post-freeze rules documented | What's allowed vs forbidden |
-| 7 | CR Registry updated | Status → `FROZEN`, freeze date recorded |
+| 1 | **QA report exists with pass verdict** (RULE 1.1) | `*_QA_REPORT.md` with check-by-check matrix |
+| 2 | **Owner smoke test passed** (RULE 1.2) | `*_OWNER_SMOKE_RESULT.md` with 3-role coverage |
+| 3 | **Owner explicit approval recorded — UI + business logic** (RULE 1.3) | Acceptance statement explicitly confirming both UI and business logic |
+| 4 | All prior gates passed | Complete evidence chain from PLANNING through ACCEPTED |
+| 5 | No open defects for this scope | Defect register clear |
+| 6 | Regression verified | Existing frozen features still work |
+| 7 | Freeze declaration created | `*_BASELINE_FREEZE_DECLARATION.md` |
+| 8 | Files/routes/modules explicitly listed as frozen | Freeze manifest |
+| 9 | Post-freeze rules documented | What's allowed vs forbidden |
+| 10 | CR Registry updated | Status → `FROZEN`, freeze date recorded |
+
+**RULE 1 checkpoint (Freeze Agent must verify):**
+- [ ] QA report path: _______________
+- [ ] Owner smoke result path: _______________
+- [ ] Owner approval statement path: _______________
+- [ ] Approval explicitly mentions UI: YES / NO
+- [ ] Approval explicitly mentions business logic: YES / NO
+- [ ] All three confirmed? → Proceed to freeze
+- [ ] Any missing? → BLOCK freeze, document what's missing
 
 **Output:** Freeze declaration → status moves to `FROZEN` → code changes require new CR
 
@@ -161,6 +211,24 @@ Every CR/phase MUST pass through each gate sequentially. No skipping.
 3. QA the fix + regression
 4. Record in CR Registry
 5. Update freeze manifest
+
+---
+
+## Slice 6 Entry Gate (RULE 2 Enforcement)
+
+**This gate MUST be passed before any Slice 6 / new scope work begins.**
+
+| # | Checkpoint | How to Verify | Status |
+|---|-----------|--------------|--------|
+| 1 | CR Registry has ZERO items at `IMPLEMENTED` | `grep "IMPLEMENTED" CR_REGISTRY.md` returns 0 | NOT MET (7 items) |
+| 2 | CR Registry has ZERO items at `QA_PASSED` | `grep "QA_PASSED" CR_REGISTRY.md` returns 0 | NOT MET |
+| 3 | CR Registry has ZERO items at `SMOKE_PASSED` | `grep "SMOKE_PASSED" CR_REGISTRY.md` returns 0 | NOT MET (1 item) |
+| 4 | Every active baseline is `FROZEN` or `DEFERRED` | All rows checked | NOT MET |
+| 5 | `BASELINE_FREEZE_DECLARATION.md` exists | File exists in memory | NOT MET |
+| 6 | Owner recorded: "All current UI and business logic approved. Proceed to Slice 6." | Statement in acceptance doc | NOT MET |
+
+**If ANY checkpoint fails:** Agent MUST refuse Slice 6 work and return:
+> "BLOCKED by RULE 2: Cannot start Slice 6. The following baselines are not frozen: [list]. Owner Slice 6 approval not recorded."
 
 ---
 
