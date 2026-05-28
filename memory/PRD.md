@@ -87,11 +87,22 @@ Build a Central Inventory module for the MyGenie POS platform managing stock mov
 
 ## Current Status
 - **Consolidation Status**: `consolidation_complete_with_conflicts`
-- **Freeze Status**: `freeze_not_ready` (documentation gaps only)
+- **Freeze Status**: `freeze_not_ready` (documentation gaps only — 7 items at IMPLEMENTED)
+- **Frozen Baselines**: 6 (S1-S4, Seed Shutdown, POS Migration P1)
 - **Latest Report**: `CENTRAL_INVENTORY_CONSOLIDATED_STATUS_AND_BASELINE_FREEZE_REPORT.md`
 
+## Governance Layer (Created 28 May 2026)
+
+| Document | Purpose |
+|----------|---------|
+| `CR_REGISTRY.md` | Master tracker — all CRs/phases with lifecycle status |
+| `GATE_CONTROL_FRAMEWORK.md` | Stage gate criteria: PLANNING → FROZEN |
+| `DOCUMENT_INDEX.md` | Navigate all 90+ project docs |
+| `/app/README.md` | Project overview, architecture, setup, test accounts |
+| `/app/memory/test_credentials.md` | All test accounts with verified credentials |
+
 ## Next Tasks
-1. Create P15-P20 closure documentation
-2. Execute Seed Shutdown QA
-3. Record combined owner acceptance
+1. P15-P20 closure documentation (Batch B)
+2. P15-P20 formal QA
+3. Record combined S5+P15-P20 owner acceptance
 4. Declare baseline freeze
