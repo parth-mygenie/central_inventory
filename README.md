@@ -120,6 +120,30 @@ All mapping handled by `src/lib/terminology.js`. UI never displays raw backend t
 | `/procurement/new` | Add Stock (Vendor) | Central, Master |
 | `/transfer/:id` | Transfer Detail | All roles |
 
+## Baseline Status (28 May 2026)
+
+| Baseline | Status | Freeze Date | Evidence |
+|----------|--------|-------------|----------|
+| S1: Read-only Foundation | `FROZEN` | 23 May | Closure report + QA |
+| S2: UX Polish + Enterprise | `FROZEN` | 23 May | Closure report + QA |
+| S3: History & Ledger | `FROZEN` | 23 May | Closure report + QA |
+| S4: Transfer Write Flows | `FROZEN` | 23 May | Closure report + QA |
+| Seed Shutdown | `FROZEN` | 28 May | QA report 20/20, seed_data.py deleted |
+| POS API Context Migration P1 | `FROZEN` | 28 May | QA report 17/17 |
+| S5: Stock Adj / Wastage / Cleanup | `SMOKE_PASSED` | — | 55/57 QA + 44/44 smoke; owner acceptance pending |
+| P15/P16: Request-Line Lifecycle | `IMPLEMENTED` | — | Code + iteration tests; closure doc pending |
+| P17: Amend/Withdraw/Modification | `IMPLEMENTED` | — | Code + iteration tests; closure doc pending |
+| P17-Settings: Operational Settings | `IMPLEMENTED` | — | Code + iteration tests; closure doc pending |
+| P18: Vendor Management | `IMPLEMENTED` | — | Code + iteration tests; closure doc pending |
+| P19: Add Stock / Procurement | `IMPLEMENTED` | — | Code + iteration tests; closure doc pending |
+| P20: Stock Inventory Summary | `IMPLEMENTED` | — | Code + iteration tests; closure doc pending |
+| P21: Smart Dispatch Assist | `PLANNING` | — | Planning doc only, no code |
+
+**Frozen: 6 | Smoke Passed: 1 | Implemented (needs QA): 6 | Planning: 1**
+
+> Full baseline matrix: `CENTRAL_INVENTORY_CONSOLIDATED_STATUS_AND_BASELINE_FREEZE_REPORT.md`
+> Gate criteria: `GATE_CONTROL_FRAMEWORK.md`
+
 ## Project Governance
 
 | Document | Path | Purpose |

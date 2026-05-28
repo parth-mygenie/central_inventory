@@ -108,6 +108,40 @@
 
 ---
 
+## Baseline Freeze Summary
+
+> Quick-reference. Full matrix in `CENTRAL_INVENTORY_CONSOLIDATED_STATUS_AND_BASELINE_FREEZE_REPORT.md`
+
+### FROZEN (6 baselines — code locked, changes require new CR)
+
+| ID | Baseline | Frozen Date | QA Evidence |
+|----|----------|-------------|-------------|
+| S1 | Slice 1: Read-only Foundation (12 features) | 23 May 2026 | S1 QA report + iteration_7 |
+| S2 | Slice 2: UX Polish + Enterprise (12 items) | 23 May 2026 | Implementation report 12/12 |
+| S3 | Slice 3: History & Ledger (15 items) | 23 May 2026 | iteration_5 — 15/15 |
+| S4 | Slice 4: Transfer Write Flows (15 items) | 23 May 2026 | iteration_8 — 34/34 |
+| INF-01 | POS API Context Migration P1 | 28 May 2026 | POS_MIGRATION_P1_QA_REPORT — 17/17 |
+| INF-02 | Seed Shutdown | 28 May 2026 | SEED_SHUTDOWN_QA_REPORT — 20/20 |
+
+### NOT YET FROZEN (8 baselines — need to advance through gates)
+
+| ID | Baseline | Current Gate | Blocking Item |
+|----|----------|-------------|---------------|
+| S5 | Slice 5: Stock Adj/Wastage/Cleanup | `SMOKE_PASSED` | Owner acceptance not recorded |
+| P15 | Request-Line Lifecycle (part 1) | `IMPLEMENTED` | Closure doc + formal QA needed |
+| P16 | Request-Line Lifecycle (part 2) | `IMPLEMENTED` | Closure doc + formal QA needed |
+| P17-LC | Amend/Withdraw/Modification | `IMPLEMENTED` | Closure doc + formal QA needed |
+| P17-SET | Operational Settings | `IMPLEMENTED` | Closure doc + formal QA needed |
+| P18 | Vendor Management | `IMPLEMENTED` | Closure doc + formal QA needed |
+| P19 | Add Stock / Procurement | `IMPLEMENTED` | Closure doc + formal QA needed |
+| P20 | Stock Inventory Summary | `IMPLEMENTED` | Closure doc + formal QA needed |
+
+### Freeze Gate Statement
+
+> "Freeze can be declared only after P15-P20 closure docs + QA are complete and combined owner acceptance (S5 + P15-P20) is recorded. Until then, 8 baselines remain unfrozen."
+
+---
+
 ## Next Actions (Priority Order)
 
 1. **P15–P20 Closure Documentation** → moves 7 items from `IMPLEMENTED` to `QA_PASSED`
