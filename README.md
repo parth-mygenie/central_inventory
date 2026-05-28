@@ -122,28 +122,30 @@ All mapping handled by `src/lib/terminology.js`. UI never displays raw backend t
 
 ## Baseline Status (28 May 2026)
 
-| Baseline | Status | Owner Smoke | Owner Approval (UI+Biz) |
-|----------|--------|-------------|------------------------|
-| S1: Read-only Foundation | `QA_PASSED` | **NOT DONE** | **NOT DONE** |
-| S2: UX Polish + Enterprise | `QA_PASSED` | **NOT DONE** | **NOT DONE** |
-| S3: History & Ledger | `QA_PASSED` | **NOT DONE** | **NOT DONE** |
-| S4: Transfer Write Flows | `QA_PASSED` | **NOT DONE** | **NOT DONE** |
-| Seed Shutdown | `QA_PASSED` | **NOT DONE** | **NOT DONE** |
-| POS API Context Migration P1 | `QA_PASSED` | **NOT DONE** | **NOT DONE** |
-| S5: Stock Adj / Wastage / Cleanup | `SMOKE_PASSED` | Done (44/44) | **NOT DONE** |
-| P15/P16: Request-Line Lifecycle | `IMPLEMENTED` | **NOT DONE** | **NOT DONE** |
-| P17: Amend/Withdraw/Modification | `IMPLEMENTED` | **NOT DONE** | **NOT DONE** |
-| P17-Settings: Operational Settings | `IMPLEMENTED` | **NOT DONE** | **NOT DONE** |
-| P18: Vendor Management | `IMPLEMENTED` | **NOT DONE** | **NOT DONE** |
-| P19: Add Stock / Procurement | `IMPLEMENTED` | **NOT DONE** | **NOT DONE** |
-| P20: Stock Inventory Summary | `IMPLEMENTED` | **NOT DONE** | **NOT DONE** |
-| P21: Smart Dispatch Assist | `PLANNING` | — | — |
+| ID | Name | What | Status | QA | Smoke | Owner Approval |
+|----|------|------|--------|----|-------|----------------|
+| CI-010 | Read-Only Foundation | 6 screens + login + roles | `QA_PASSED` | Done | **NO** | **NO** |
+| CI-011 | UX Polish | Timeline, actions, pickers | `QA_PASSED` | Done | **NO** | **NO** |
+| CI-012 | History & Audit | History + Ledger + filters | `QA_PASSED` | Done | **NO** | **NO** |
+| CI-013 | Transfer Write Actions | Approve, dispatch, receive, forms | `QA_PASSED` | Done | **NO** | **NO** |
+| CI-014 | Stock Adj / Wastage | Adjustment, wastage, cleanup | `SMOKE_PASSED` | Done | Done | **NO** |
+| CI-020 | POS Login Context | Real POS profile for login | `QA_PASSED` | Done | **NO** | **NO** |
+| CI-021 | Seed Data Removal | All fake data removed | `QA_PASSED` | Done | **NO** | **NO** |
+| CI-030 | Line-Level Approval | Approve/reject per line | `IMPLEMENTED` | **NO** | **NO** | **NO** |
+| CI-031 | Dispute Resolution | Disputes + item editing | `IMPLEMENTED` | **NO** | **NO** | **NO** |
+| CI-032 | Amend/Withdraw/Modify | Lifecycle extensions | `IMPLEMENTED` | **NO** | **NO** | **NO** |
+| CI-033 | Operational Settings | Store policy config | `IMPLEMENTED` | **NO** | **NO** | **NO** |
+| CI-034 | Vendor Management | Vendor CRUD | `IMPLEMENTED` | **NO** | **NO** | **NO** |
+| CI-035 | Add Stock from Vendor | Procurement form | `IMPLEMENTED` | **NO** | **NO** | **NO** |
+| CI-036 | Stock Inventory Summary | Stock dashboard + hierarchy | `IMPLEMENTED` | **NO** | **NO** | **NO** |
 
-**FROZEN: 0 implementation baselines (3 planning docs only) | Needs owner action: 13 baselines**
+**FROZEN: 0 implementation baselines | Owner action needed: 14 baselines**
 
 **Owner-Mandated Rules:**
-- **RULE 1:** No baseline freeze without QA + Owner Smoke Test + Owner Explicit Approval (UI + business logic confirmed). No implicit. No assumed.
-- **RULE 2:** No Slice 6 work until ALL baselines are FROZEN and owner gives explicit go-ahead
+- **RULE 1:** No baseline freeze without QA + Owner Smoke Test + Owner Explicit Approval (UI + business logic). No implicit. No assumed.
+- **RULE 2:** No new work (CI-040+) until ALL baselines CI-010 to CI-036 are FROZEN + owner gives explicit go-ahead
+
+> CR Registry: `CR_REGISTRY.md` | Gate criteria: `GATE_CONTROL_FRAMEWORK.md`
 
 ## Project Governance
 
