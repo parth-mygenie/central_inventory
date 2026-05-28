@@ -196,13 +196,13 @@ The Central Inventory module is a multi-level inventory transfer management syst
 
 | Baseline / Workstream | Latest Controlling Doc | Code Evidence | QA Evidence | Freeze Status | Blocker | Next Action |
 |---|---|---|---|---|---|---|
-| **Slice 1: Read-only Foundation** | S1-4 Closure Report (23 May) | All 12 features present in code | `iteration_7.json` — 10/10 pass + S1 QA report | `baseline_frozen` | None | None |
-| **Slice 2: UX Polish + Enterprise** | S1-4 Closure Report (23 May) | All 12 features present | `iteration_7.json` + implementation report 12/12 | `baseline_frozen` | None | None |
-| **Slice 3: History & Ledger** | S1-4 Closure Report (23 May) | All 15 features present | `iteration_5.json` — 15/15 pass | `baseline_frozen` | None | None |
-| **Slice 4: Transfer Write Flows** | S1-4 Closure Report (23 May) | All 12 MH + 3 SH present | `iteration_8.json` — 34/34 pass | `baseline_frozen` | None | None |
+| **Slice 1: Read-only Foundation** | S1-4 Closure Report (23 May) | All 12 features present in code | `iteration_7.json` — 10/10 pass + S1 QA report | `baseline_not_frozen` | Owner smoke + explicit approval (UI+biz) not done — no implicit accepted | Owner smoke + approval |
+| **Slice 2: UX Polish + Enterprise** | S1-4 Closure Report (23 May) | All 12 features present | `iteration_7.json` + implementation report 12/12 | `baseline_not_frozen` | Owner smoke + explicit approval not done | Owner smoke + approval |
+| **Slice 3: History & Ledger** | S1-4 Closure Report (23 May) | All 15 features present | `iteration_5.json` — 15/15 pass | `baseline_not_frozen` | Owner smoke + explicit approval not done | Owner smoke + approval |
+| **Slice 4: Transfer Write Flows** | S1-4 Closure Report (23 May) | All 12 MH + 3 SH present | `iteration_8.json` — 34/34 pass | `baseline_not_frozen` | Owner smoke + explicit approval not done | Owner smoke + approval |
 | **Slice 5: Adj/Wastage/Cleanup** | S5 QA Report + Smoke Result (24 May) | All 7 must-have + 2 extras present | `S5_FINAL_QA_VALIDATION_REPORT` — 55/57 pass; Smoke — 44/44 pass | `baseline_partially_frozen` | Owner acceptance not recorded; code has evolved past S5 | Record acceptance or supersede |
-| **Seed Shutdown** | Seed Shutdown QA Report (28 May) | Verified — no seed in server.py; seed_data.py DELETED | 20/20 checks pass; all artifacts cleaned | `baseline_frozen` | None | None |
-| **POS API Context Migration P1** | POS Migration P1 QA Report (28 May) | POS profile call confirmed; 4 users verified | 17/17 checks pass; MongoDB persistence confirmed | `baseline_frozen` | None | None |
+| **Seed Shutdown** | Seed Shutdown QA Report (28 May) | Verified — no seed in server.py; seed_data.py DELETED | 20/20 checks pass; all artifacts cleaned | `baseline_not_frozen` | Owner smoke + explicit approval not done | Owner smoke + approval |
+| **POS API Context Migration P1** | POS Migration P1 QA Report (28 May) | POS profile call confirmed; 4 users verified | 17/17 checks pass; MongoDB persistence confirmed | `baseline_not_frozen` | Owner smoke + explicit approval not done | Owner smoke + approval |
 | **P15/P16: Request-Line Lifecycle** | AI/Plans + iterations 15-16 | Components exist in code | `iteration_15.json` + `iteration_16.json` — all pass; `test_p16_lifecycle.py` | `baseline_not_frozen` | No formal closure doc in memory | Create P15/P16 closure doc |
 | **P17: Amend/Withdraw/Modification** | AI/Plans + iterations 17-18 | TransferDetail enhanced; tests exist | `iteration_17.json` — 16/16 pass; `test_p17_lifecycle.py` | `baseline_not_frozen` | No formal closure doc in memory | Create P17 lifecycle closure doc |
 | **P17-Settings: Operational Settings** | AI/Plans + iteration 18 | `OperationalSettings.jsx` exists, route active | `iteration_18.json` — pass; `test_p17_p18_p19_features.py` | `baseline_not_frozen` | No formal closure doc in memory | Create P17-Settings closure doc |
@@ -221,28 +221,29 @@ The Central Inventory module is a multi-level inventory transfer management syst
 
 | Item | Evidence |
 |---|---|
-| Slice 1: Read-only Foundation (12 features) | Code + QA + closure report |
-| Slice 2: UX Polish + Enterprise (12 features) | Code + QA + closure report |
-| Slice 3: History & Ledger (15 features) | Code + QA + closure report |
-| Slice 4: Transfer Write Flows (12 MH + 3 SH) | Code + QA + closure report |
-| Business Rules Freeze (104 owner decisions) | Owner Answers Complete + Business Rule Freeze doc |
-| Terminology Mapping (Central Store/Master Store/Outlet) | Code verified + QA verified |
-| Login Context & Role Derivation | Code verified + POS profile active |
-| Screen Visibility Matrix | Code verified + expanded for P15-P20 |
+| CR-001: CR Requirement Planning | Planning doc — no implementation code |
+| CR-002: Business Rule & UX Field Freeze | Decision doc — no implementation code |
+| CR-003: Owner Answers Complete (104 decisions) | Decision record — no implementation code |
 
-### BUCKET B — Implemented but Not Frozen
+> **Note:** Under RULE 1, no implementation baseline is frozen. S1-S4, S5, INF-01/02 have QA evidence but lack owner smoke and/or explicit approval. Previous "frozen" claims were based on implicit acceptance — now corrected.
+
+### BUCKET B — Implemented, QA Passed, Not Frozen (need owner action)
 
 | Item | Implementation Evidence | Why Not Frozen |
 |---|---|---|
-| Slice 5 (Adj/Wastage/Cleanup) | Code + QA + Owner Smoke all pass | Owner acceptance never recorded; code moved past S5 |
-| Seed Shutdown | Code verified + QA'd (28 May) + artifacts deleted | `SEED_SHUTDOWN_QA_REPORT.md` — 20/20 pass. **MOVED TO BUCKET A** |
-| POS API Context Migration P1 | Code verified + QA'd (28 May) | `POS_MIGRATION_P1_QA_REPORT.md` — 17/17 pass. **MOVED TO BUCKET A** |
-| P15/P16 Request-Line Lifecycle | Code + iteration 15-16 tests pass | No formal closure doc in memory |
-| P17 Amend/Withdraw/Modification | Code + iteration 17 tests pass | No formal closure doc in memory |
-| P17-Settings Operational Settings | Code + iteration 18 tests pass | No formal closure doc in memory |
-| P18 Vendor Management | Code + iteration 18 tests pass | No formal closure doc in memory |
-| P19 Add Stock/Procurement | Code + iteration 18 tests pass | No formal closure doc in memory |
-| P20 Stock Inventory Summary | Code + iteration 19 tests pass (14/14) | No formal closure doc in memory |
+| Slice 1: Read-only Foundation | Code + QA report | Owner smoke NOT DONE + explicit approval NOT DONE |
+| Slice 2: UX Polish + Enterprise | Code + impl report 12/12 | Owner smoke NOT DONE + explicit approval NOT DONE |
+| Slice 3: History & Ledger | Code + iteration_5 15/15 | Owner smoke NOT DONE + explicit approval NOT DONE |
+| Slice 4: Transfer Write Flows | Code + iteration_8 34/34 | Owner smoke NOT DONE + explicit approval NOT DONE |
+| Seed Shutdown | Code + QA report 20/20 (28 May) | Owner smoke NOT DONE + explicit approval NOT DONE |
+| POS API Context Migration P1 | Code + QA report 17/17 (28 May) | Owner smoke NOT DONE + explicit approval NOT DONE |
+| Slice 5 (Adj/Wastage/Cleanup) | Code + QA 55/57 + Smoke 44/44 | Owner explicit approval NOT RECORDED (smoke done, approval missing) |
+| P15/P16 Request-Line Lifecycle | Code + iteration 15-16 tests pass | No formal closure doc + no QA + no smoke + no approval |
+| P17 Amend/Withdraw/Modification | Code + iteration 17 tests pass | No formal closure doc + no QA + no smoke + no approval |
+| P17-Settings Operational Settings | Code + iteration 18 tests pass | No formal closure doc + no QA + no smoke + no approval |
+| P18 Vendor Management | Code + iteration 18 tests pass | No formal closure doc + no QA + no smoke + no approval |
+| P19 Add Stock/Procurement | Code + iteration 18 tests pass | No formal closure doc + no QA + no smoke + no approval |
+| P20 Stock Inventory Summary | Code + iteration 19 tests pass (14/14) | No formal closure doc + no QA + no smoke + no approval |
 
 ### BUCKET C — Planned but Not Implemented
 

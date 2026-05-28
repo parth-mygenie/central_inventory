@@ -122,32 +122,28 @@ All mapping handled by `src/lib/terminology.js`. UI never displays raw backend t
 
 ## Baseline Status (28 May 2026)
 
-| Baseline | Status | Freeze Date | Evidence |
-|----------|--------|-------------|----------|
-| S1: Read-only Foundation | `FROZEN` | 23 May | Closure report + QA |
-| S2: UX Polish + Enterprise | `FROZEN` | 23 May | Closure report + QA |
-| S3: History & Ledger | `FROZEN` | 23 May | Closure report + QA |
-| S4: Transfer Write Flows | `FROZEN` | 23 May | Closure report + QA |
-| Seed Shutdown | `FROZEN` | 28 May | QA report 20/20, seed_data.py deleted |
-| POS API Context Migration P1 | `FROZEN` | 28 May | QA report 17/17 |
-| S5: Stock Adj / Wastage / Cleanup | `SMOKE_PASSED` | — | 55/57 QA + 44/44 smoke; owner acceptance pending |
-| P15/P16: Request-Line Lifecycle | `IMPLEMENTED` | — | Code + iteration tests; closure doc pending |
-| P17: Amend/Withdraw/Modification | `IMPLEMENTED` | — | Code + iteration tests; closure doc pending |
-| P17-Settings: Operational Settings | `IMPLEMENTED` | — | Code + iteration tests; closure doc pending |
-| P18: Vendor Management | `IMPLEMENTED` | — | Code + iteration tests; closure doc pending |
-| P19: Add Stock / Procurement | `IMPLEMENTED` | — | Code + iteration tests; closure doc pending |
-| P20: Stock Inventory Summary | `IMPLEMENTED` | — | Code + iteration tests; closure doc pending |
-| P21: Smart Dispatch Assist | `PLANNING` | — | Planning doc only, no code |
+| Baseline | Status | Owner Smoke | Owner Approval (UI+Biz) |
+|----------|--------|-------------|------------------------|
+| S1: Read-only Foundation | `QA_PASSED` | **NOT DONE** | **NOT DONE** |
+| S2: UX Polish + Enterprise | `QA_PASSED` | **NOT DONE** | **NOT DONE** |
+| S3: History & Ledger | `QA_PASSED` | **NOT DONE** | **NOT DONE** |
+| S4: Transfer Write Flows | `QA_PASSED` | **NOT DONE** | **NOT DONE** |
+| Seed Shutdown | `QA_PASSED` | **NOT DONE** | **NOT DONE** |
+| POS API Context Migration P1 | `QA_PASSED` | **NOT DONE** | **NOT DONE** |
+| S5: Stock Adj / Wastage / Cleanup | `SMOKE_PASSED` | Done (44/44) | **NOT DONE** |
+| P15/P16: Request-Line Lifecycle | `IMPLEMENTED` | **NOT DONE** | **NOT DONE** |
+| P17: Amend/Withdraw/Modification | `IMPLEMENTED` | **NOT DONE** | **NOT DONE** |
+| P17-Settings: Operational Settings | `IMPLEMENTED` | **NOT DONE** | **NOT DONE** |
+| P18: Vendor Management | `IMPLEMENTED` | **NOT DONE** | **NOT DONE** |
+| P19: Add Stock / Procurement | `IMPLEMENTED` | **NOT DONE** | **NOT DONE** |
+| P20: Stock Inventory Summary | `IMPLEMENTED` | **NOT DONE** | **NOT DONE** |
+| P21: Smart Dispatch Assist | `PLANNING` | — | — |
 
-**Frozen: 6 | Smoke Passed: 1 | Implemented (needs QA): 6 | Planning: 1**
+**FROZEN: 0 implementation baselines (3 planning docs only) | Needs owner action: 13 baselines**
 
 **Owner-Mandated Rules:**
-- **RULE 1:** No baseline freeze without QA + Owner Smoke Test + Owner Explicit Approval (UI + business logic confirmed)
+- **RULE 1:** No baseline freeze without QA + Owner Smoke Test + Owner Explicit Approval (UI + business logic confirmed). No implicit. No assumed.
 - **RULE 2:** No Slice 6 work until ALL baselines are FROZEN and owner gives explicit go-ahead
-
-> Full baseline matrix: `CENTRAL_INVENTORY_CONSOLIDATED_STATUS_AND_BASELINE_FREEZE_REPORT.md`
-> Gate criteria + rules: `GATE_CONTROL_FRAMEWORK.md`
-> CR tracker: `CR_REGISTRY.md`
 
 ## Project Governance
 

@@ -36,10 +36,10 @@
 
 | ID | CR / Phase | Description | Status | Impl Date | QA Date | Freeze Date | Controlling Doc | Notes |
 |----|-----------|-------------|--------|-----------|---------|-------------|----------------|-------|
-| S1 | Slice 1: Read-only Foundation | 12 features — 6 screens, role context, terminology, seed data | `FROZEN` | May 2026 | May 2026 | 23 May | `SLICE_1_TO_4_FINAL_ACCEPTANCE_AND_CLOSURE_REPORT.md` | |
-| S2 | Slice 2: UX Polish + Enterprise | 12 items — timeline, actions, date picker, visibility | `FROZEN` | May 2026 | May 2026 | 23 May | Same as S1 | |
-| S3 | Slice 3: History & Ledger | 15 items — /history route, 7 filters, search | `FROZEN` | May 2026 | May 2026 | 23 May | Same as S1 | |
-| S4 | Slice 4: Transfer Write Flows | 12 MH + 3 SH — approve, reject, dispatch, receive, cancel, forms | `FROZEN` | May 2026 | May 2026 | 23 May | Same as S1 | Owner smoke pending at time of report |
+| S1 | Slice 1: Read-only Foundation | 12 features — 6 screens, role context, terminology | `QA_PASSED` | May 2026 | May 2026 | — | `SLICE_1_TO_4_FINAL_ACCEPTANCE_AND_CLOSURE_REPORT.md` | **NEEDS: owner smoke + explicit approval (UI+biz logic) per RULE 1** |
+| S2 | Slice 2: UX Polish + Enterprise | 12 items — timeline, actions, date picker, visibility | `QA_PASSED` | May 2026 | May 2026 | — | Same as S1 | **NEEDS: owner smoke + explicit approval per RULE 1** |
+| S3 | Slice 3: History & Ledger | 15 items — /history route, 7 filters, search | `QA_PASSED` | May 2026 | May 2026 | — | Same as S1 | **NEEDS: owner smoke + explicit approval per RULE 1** |
+| S4 | Slice 4: Transfer Write Flows | 12 MH + 3 SH — approve, reject, dispatch, receive, cancel, forms | `QA_PASSED` | May 2026 | May 2026 | — | Same as S1 | **NEEDS: owner smoke + explicit approval per RULE 1** (scope approval exists, NOT acceptance) |
 
 ### Slice 5: Stock Adjustment & Wastage (24 May 2026)
 
@@ -59,8 +59,8 @@
 
 | ID | CR / Phase | Description | Status | Impl Date | QA Date | Freeze Date | Controlling Doc | Notes |
 |----|-----------|-------------|--------|-----------|---------|-------------|----------------|-------|
-| INF-01 | POS API Context Migration P1 | Login context from POS profile, MongoDB sessions | `FROZEN` | 24 May | 28 May | 28 May | `POS_MIGRATION_P1_QA_REPORT.md` | 17/17 QA pass |
-| INF-02 | Seed Shutdown | Remove all seed deps, delete seed_data.py | `FROZEN` | 25 May | 28 May | 28 May | `SEED_SHUTDOWN_QA_REPORT.md` | 20/20 QA pass, file deleted |
+| INF-01 | POS API Context Migration P1 | Login context from POS profile, MongoDB sessions | `QA_PASSED` | 24 May | 28 May | — | `POS_MIGRATION_P1_QA_REPORT.md` | 17/17 QA pass. **NEEDS: owner smoke + explicit approval per RULE 1** |
+| INF-02 | Seed Shutdown | Remove all seed deps, delete seed_data.py | `QA_PASSED` | 25 May | 28 May | — | `SEED_SHUTDOWN_QA_REPORT.md` | 20/20 QA pass. **NEEDS: owner smoke + explicit approval per RULE 1** |
 
 ### P15–P20: Extended Features (25–27 May 2026)
 
@@ -98,13 +98,15 @@
 
 | Status | Count |
 |--------|-------|
-| `FROZEN` | 9 (CR-001, CR-002, CR-003, S1, S2, S3, S4, INF-01, INF-02) |
-| `SMOKE_PASSED` | 1 (S5 — needs owner acceptance) |
-| `QA_PASSED` | 7 (S5 sub-phases — rolled into S5 overall) |
-| `IMPLEMENTED` | 7 (P15, P16, P17-LC, P17-SET, P18, P19, P20) |
+| `FROZEN` | 3 (CR-001, CR-002, CR-003 — planning/foundation docs only) |
+| `SMOKE_PASSED` | 1 (S5 — smoke done but owner explicit approval not recorded) |
+| `QA_PASSED` | 7 (S1, S2, S3, S4, INF-01, INF-02, S5-P0 — all need owner smoke + explicit approval) |
+| `IMPLEMENTED` | 7 (P15, P16, P17-LC, P17-SET, P18, P19, P20 — need closure doc + QA + smoke + approval) |
 | `PLANNING` | 1 (P21) |
 | `DEFERRED` | 11 (OI-001 through OI-016) |
 | `BLOCKED` | 1 (OI-008 — owner input needed) |
+
+**Zero implementation baselines are FROZEN. Under RULE 1, nothing freezes without owner explicit approval (UI + business logic).**
 
 ---
 
@@ -112,29 +114,40 @@
 
 > Quick-reference. Full matrix in `CENTRAL_INVENTORY_CONSOLIDATED_STATUS_AND_BASELINE_FREEZE_REPORT.md`
 
-### FROZEN (6 baselines — code locked, changes require new CR)
+### FROZEN (3 baselines — planning/foundation docs only)
 
-| ID | Baseline | Frozen Date | QA Evidence |
-|----|----------|-------------|-------------|
-| S1 | Slice 1: Read-only Foundation (12 features) | 23 May 2026 | S1 QA report + iteration_7 |
-| S2 | Slice 2: UX Polish + Enterprise (12 items) | 23 May 2026 | Implementation report 12/12 |
-| S3 | Slice 3: History & Ledger (15 items) | 23 May 2026 | iteration_5 — 15/15 |
-| S4 | Slice 4: Transfer Write Flows (15 items) | 23 May 2026 | iteration_8 — 34/34 |
-| INF-01 | POS API Context Migration P1 | 28 May 2026 | POS_MIGRATION_P1_QA_REPORT — 17/17 |
-| INF-02 | Seed Shutdown | 28 May 2026 | SEED_SHUTDOWN_QA_REPORT — 20/20 |
+| ID | Baseline | Frozen Date | Evidence |
+|----|----------|-------------|---------|
+| CR-001 | CR Requirement Planning | Jan 2026 | Planning doc complete |
+| CR-002 | Business Rule & UX Field Freeze | Jan 2026 | 96 decisions reconciled |
+| CR-003 | Owner Answers Complete | Jan 2026 | 104 decisions recorded |
 
-### NOT YET FROZEN (8 baselines — need to advance through gates)
+> Note: These are planning/foundation documents, not implementation code. They were created before RULE 1 existed. No code to smoke-test.
 
-| ID | Baseline | Current Gate | Blocking Item |
-|----|----------|-------------|---------------|
-| S5 | Slice 5: Stock Adj/Wastage/Cleanup | `SMOKE_PASSED` | Owner acceptance not recorded |
-| P15 | Request-Line Lifecycle (part 1) | `IMPLEMENTED` | Closure doc + formal QA needed |
-| P16 | Request-Line Lifecycle (part 2) | `IMPLEMENTED` | Closure doc + formal QA needed |
-| P17-LC | Amend/Withdraw/Modification | `IMPLEMENTED` | Closure doc + formal QA needed |
-| P17-SET | Operational Settings | `IMPLEMENTED` | Closure doc + formal QA needed |
-| P18 | Vendor Management | `IMPLEMENTED` | Closure doc + formal QA needed |
-| P19 | Add Stock / Procurement | `IMPLEMENTED` | Closure doc + formal QA needed |
-| P20 | Stock Inventory Summary | `IMPLEMENTED` | Closure doc + formal QA needed |
+### QA PASSED but NOT FROZEN (8 baselines — need owner smoke + explicit approval per RULE 1)
+
+| ID | Baseline | QA Evidence | Missing for Freeze |
+|----|----------|-------------|-------------------|
+| S1 | Slice 1: Read-only Foundation | S1 QA report | Owner smoke + explicit approval (UI + biz logic) |
+| S2 | Slice 2: UX Polish + Enterprise | Implementation report 12/12 | Owner smoke + explicit approval (UI + biz logic) |
+| S3 | Slice 3: History & Ledger | iteration_5 — 15/15 | Owner smoke + explicit approval (UI + biz logic) |
+| S4 | Slice 4: Transfer Write Flows | iteration_8 — 34/34 | Owner smoke + explicit approval (UI + biz logic) |
+| INF-01 | POS API Context Migration P1 | POS_MIGRATION_P1_QA_REPORT — 17/17 | Owner smoke + explicit approval |
+| INF-02 | Seed Shutdown | SEED_SHUTDOWN_QA_REPORT — 20/20 | Owner smoke + explicit approval |
+| S5 | Slice 5: Stock Adj/Wastage/Cleanup | S5 Final QA 55/57 + Smoke 44/44 | Owner explicit approval (UI + biz logic) — smoke done, approval not recorded |
+| S5-P0 | Slice 5 Phase 0: Baseline Lock | Planning approval exists | Owner smoke + explicit approval |
+
+### IMPLEMENTED but NOT QA'd (7 baselines — need closure docs + formal QA + smoke + approval)
+
+| ID | Baseline | Current Gate | Full Path to Freeze |
+|----|----------|-------------|---------------------|
+| P15 | Request-Line Lifecycle (part 1) | `IMPLEMENTED` | Closure doc → QA → Smoke → Owner Approval → Freeze |
+| P16 | Request-Line Lifecycle (part 2) | `IMPLEMENTED` | Same |
+| P17-LC | Amend/Withdraw/Modification | `IMPLEMENTED` | Same |
+| P17-SET | Operational Settings | `IMPLEMENTED` | Same |
+| P18 | Vendor Management | `IMPLEMENTED` | Same |
+| P19 | Add Stock / Procurement | `IMPLEMENTED` | Same |
+| P20 | Stock Inventory Summary | `IMPLEMENTED` | Same |
 
 ### Freeze Gate Statement
 

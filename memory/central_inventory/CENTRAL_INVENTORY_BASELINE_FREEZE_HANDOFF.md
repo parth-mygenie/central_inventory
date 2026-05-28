@@ -19,30 +19,42 @@ All core features (S1-S5 + P15-P20) are code-complete and test-verified. Freeze 
 
 ---
 
-## 3. Frozen Baselines (6)
+## 3. Frozen Baselines (3 — planning docs only, no implementation code)
 
-| Baseline | Status |
-|---|---|
-| Slice 1: Read-only Foundation | `baseline_frozen` |
-| Slice 2: UX Polish + Enterprise | `baseline_frozen` |
-| Slice 3: History & Ledger | `baseline_frozen` |
-| Slice 4: Transfer Write Flows | `baseline_frozen` |
-| Seed Shutdown | `baseline_frozen` (QA 28 May — 20/20 pass, seed_data.py deleted, all artifacts cleaned) |
-| POS API Context Migration P1 | `baseline_frozen` (QA 28 May — 17/17 pass, 4 users verified) |
+| Baseline | Status | Note |
+|---|---|---|
+| CR-001: CR Requirement Planning | `FROZEN` | Planning doc — no code to smoke-test |
+| CR-002: Business Rule & UX Field Freeze | `FROZEN` | Planning doc — no code to smoke-test |
+| CR-003: Owner Answers Complete | `FROZEN` | Decision record — no code to smoke-test |
 
 ---
 
-## 4. Non-Frozen Baselines (7)
+## 4. Non-Frozen Baselines (15 — all need owner action per RULE 1)
 
-| Baseline | Why Not Frozen | Blocking Item |
+### QA Passed — need owner smoke + explicit approval (8)
+
+| Baseline | QA Evidence | Missing |
 |---|---|---|
-| Slice 5: Adj/Wastage/Cleanup | Owner acceptance never recorded | Process gap |
-| P15/P16: Request-Line Lifecycle | No closure doc | Documentation gap |
-| P17: Amend/Withdraw/Modification | No closure doc | Documentation gap |
-| P17-Settings: Operational Settings | No closure doc | Documentation gap |
-| P18: Vendor Management | No closure doc | Documentation gap |
-| P19: Add Stock/Procurement | No closure doc | Documentation gap |
-| P20: Stock Inventory Summary | No closure doc | Documentation gap |
+| S1: Read-only Foundation | S1 QA report | Owner smoke + explicit approval (UI + biz logic) |
+| S2: UX Polish + Enterprise | Impl report 12/12 | Owner smoke + explicit approval (UI + biz logic) |
+| S3: History & Ledger | iteration_5 15/15 | Owner smoke + explicit approval (UI + biz logic) |
+| S4: Transfer Write Flows | iteration_8 34/34 | Owner smoke + explicit approval (UI + biz logic) |
+| INF-01: POS API Context Migration P1 | QA report 17/17 | Owner smoke + explicit approval |
+| INF-02: Seed Shutdown | QA report 20/20 | Owner smoke + explicit approval |
+| S5-P0: Slice 5 Baseline Lock | Planning approval | Owner smoke + explicit approval |
+| S5: Slice 5 Overall | QA 55/57 + Smoke 44/44 | Owner explicit approval (UI + biz logic) — smoke done |
+
+### Implemented — need closure doc + QA + smoke + approval (7)
+
+| Baseline | Missing |
+|---|---|
+| P15: Request-Line Lifecycle (part 1) | Closure doc + formal QA + owner smoke + explicit approval |
+| P16: Request-Line Lifecycle (part 2) | Same |
+| P17-LC: Amend/Withdraw/Modification | Same |
+| P17-SET: Operational Settings | Same |
+| P18: Vendor Management | Same |
+| P19: Add Stock / Procurement | Same |
+| P20: Stock Inventory Summary | Same |
 
 ---
 
@@ -51,15 +63,17 @@ All core features (S1-S5 + P15-P20) are code-complete and test-verified. Freeze 
 ### Documentation Blockers:
 - P15-P20 closure documentation not created
 - Open Items Register stale (23 May, doesn't reflect P15-P20)
-- PRD.md stale
 
 ### QA Blockers:
-- **RESOLVED** — Seed Shutdown QA complete (28 May, 20/20 pass)
-- **RESOLVED** — POS Context Migration P1 QA complete (28 May, 17/17 pass)
+- P15-P20 formal QA not executed
+- Seed Shutdown QA: DONE (28 May)
+- POS Migration P1 QA: DONE (28 May)
 
-### Process Blockers:
-- Slice 5 owner acceptance not recorded
-- No combined S5+P15-P20 acceptance exists
+### Owner Action Blockers (RULE 1 — cannot be bypassed):
+- **Owner smoke test not done** for S1, S2, S3, S4, INF-01, INF-02, P15-P20
+- **Owner smoke test done but approval not recorded** for S5
+- **Owner explicit approval (UI + business logic) not recorded** for ANY implementation baseline
+- No implicit or assumed approvals accepted
 
 ---
 
@@ -79,7 +93,7 @@ All core features (S1-S5 + P15-P20) are code-complete and test-verified. Freeze 
 
 ## 8. Owner-Facing Summary
 
-All Central Inventory features from Slices 1-5 plus enhancements P15 through P20 are **fully implemented and running** on the preview environment. The system is proxying to real POS preprod APIs with no seed data dependency.
+All Central Inventory features from Slices 1-5 plus enhancements P15 through P20 are **fully implemented and running** on the preview environment. The system is proxying to real POS preprod APIs with zero seed data.
 
 **What works today:**
 - Login with 3 roles (Central Store, Master Store, Outlet)
@@ -93,12 +107,20 @@ All Central Inventory features from Slices 1-5 plus enhancements P15 through P20
 - History & Ledger with 7 movement type filters
 - Hierarchy Summary with store drill-down
 
-**What's pending before freeze:**
-- Formal documentation and owner sign-off on features delivered 25-27 May
-- Independent QA validation of seed-free operation
-- Owner acceptance recording
+**What's blocking baseline freeze (RULE 1):**
+- **Owner has not smoke-tested** S1-S4, INF-01/02, P15-P20 (13 baselines)
+- **Owner has not recorded explicit approval** for any implementation baseline (UI + business logic)
+- S5 smoke is done (44/44 pass) but owner approval was never recorded
+- No implicit or assumed approvals are accepted
 
-**No code changes are needed.** The implementation is solid. Only documentation reconciliation and process sign-off remain.
+**What's blocking Slice 6 (RULE 2):**
+- Zero implementation baselines are frozen
+- Owner has not given Slice 6 go-ahead
+
+**Owner must:**
+1. Smoke-test all features across 3 roles
+2. Record explicit written approval: "UI reviewed and approved. Business logic reviewed and approved."
+3. Only then can baselines be frozen and Slice 6 work begin
 
 ---
 
