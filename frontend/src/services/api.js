@@ -653,6 +653,26 @@ function createAddonRecipe(payload) { return client.post("/proxy/v2/product/stor
 function updateAddonRecipe(id, payload) { return client.put(`/proxy/v2/product/update-addon-recipe/${id}`, payload); }
 function deleteAddonRecipe(id) { return client.delete(`/proxy/v2/product/delete-addon-recipe/${id}`); }
 
+// ── P22 Daily Consumption Report ──────────────────────────────────
+
+function getDailyConsumptionReport({ fromDate, toDate, restaurantIds, includeHierarchy } = {}) {
+  const payload = {};
+  if (fromDate) payload.from_date = fromDate;
+  if (toDate) payload.to_date = toDate;
+  if (restaurantIds?.length) payload.restaurant_ids = restaurantIds;
+  if (includeHierarchy) payload.include_hierarchy = true;
+  return client.post("/proxy/v2/report/daily-consumption-report", payload).then((resp) => {
+    const d = resp.data;
+    d.stock_summary = d.stock_summary || [];
+    d.stock_details = d.stock_details || [];
+    d.by_restaurant = d.by_restaurant || [];
+    d.hierarchy_scope = d.hierarchy_scope || [];
+    d.applied_restaurant_ids = d.applied_restaurant_ids || [];
+    d.date_range = d.date_range || [];
+    return resp;
+  });
+}
+
 const api = {
   setToken,
   login,
@@ -736,6 +756,8 @@ const api = {
   createAddonRecipe,
   updateAddonRecipe,
   deleteAddonRecipe,
+  // P22 Daily Consumption Report
+  getDailyConsumptionReport,
 };
 
 export default api;
