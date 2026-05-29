@@ -23,30 +23,30 @@ Central Inventory management app for MyGenie POS — multi-store hierarchy (Mast
 - Both services running via supervisor
 
 ### P22 Daily Consumption Report (May 29, 2026)
-**Files created/modified:**
-- `frontend/src/components/central-inventory/DailyConsumptionReport.jsx` — full report page
-- `frontend/src/hooks/useConsumptionReport.js` — data fetching hook
-- `frontend/src/services/api.js` — added `getDailyConsumptionReport`
-- `frontend/src/lib/screenVisibility.js` — added `scr-consumption-report` + updated nav (removed "Reports (soon)")
-- `frontend/src/App.js` — added `/reports/consumption` route
+- Full report page with date range filter, store multi-selector, hierarchy toggle
+- KPI cards, ingredient summary table, consumption details (collapsible), by-store rollup
+- Ingredient drill-down, loading/error/empty states
+- 12/12 frontend tests passed (100%)
 
-**Features:**
-- Date range filter with presets
-- Store multi-selector (master/central only, from hierarchy_scope)
-- "Include all stores" hierarchy toggle (master/central only)
-- KPI cards: Ingredients Tracked, Total Consumed, Stores Reporting, Period
-- Ingredient Summary Table with search, sort, negative stock warnings
-- Consumption Details Table (collapsible, sorted by date desc)
-- By Store Rollup section (multi-store mode only)
-- Ingredient drill-down (click summary row → filtered details)
-- Loading, error, empty states
-- 403 invalid_scope error handling
-- Quantities displayed as-is (strings with units, no aggregation of mixed units)
-
-**Testing:** 12/12 frontend tests passed (100%)
+### P23 Hierarchy Management — Planning Complete (May 29, 2026)
+- **24 API probes** against live POS API — all 6 endpoints validated
+- Created: `AI/Plans/phase3/P23_hierarchy_management_planning.md`
+- Created: `AI/Plans/api_implementation_status_p23_addendum.md`
+- Created: `AI/curls/p23_hierarchy_management_curls.sh`
+- 3 test entities created during probing (rid=787, 788, 789)
+- Implementation plan: 3 phases, ~11-14h total
 
 ## Backlog
-- P0: None
-- P1: PDF/CSV export for consumption report
-- P2: Chart visualization for consumption trends
-- P2: Ingredient drill-down to transfers (cross-reference)
+
+### P0 — None
+
+### P1 — P23 Implementation
+- Phase 1: Hierarchy list + create dialog (~5-6h)
+- Phase 2: Bundle push wizard + results viewer (~4-5h)
+- Phase 3: Push history table + pagination (~2-3h)
+
+### P2 — Enhancements
+- PDF/CSV export for consumption report
+- Chart visualization for consumption trends
+- Ingredient drill-down to transfers (cross-reference)
+- Child deletion/deactivation (no API found yet)
