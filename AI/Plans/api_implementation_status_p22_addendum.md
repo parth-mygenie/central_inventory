@@ -41,5 +41,12 @@ Only DemoFranchise2 (rid=784) has consumption data: 2 ingredients (Cooking Oil 2
 
 ### Implementation: ~6-8h (2 phases)
 
-Phase 1: Core report with date filter + tables (~4-5h)
-Phase 2: Multi-store controls + by_restaurant rollup (~2-3h)
+Phase 1: Core report with date filter + tables (~4-5h) — **DONE**
+Phase 2: Multi-store controls + by_restaurant rollup (~2-3h) — **DONE**
+
+### Implementation Status (29 May 2026)
+- Both phases implemented in single pass
+- 12/12 frontend tests passed (100%)
+- Files: DailyConsumptionReport.jsx, useConsumptionReport.js, api.js, screenVisibility.js, App.js
+- Sidebar "Reports (soon)" replaced with active "Consumption Report" link
+- Route: /reports/consumption
