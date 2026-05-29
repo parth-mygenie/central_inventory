@@ -7,7 +7,7 @@ Central Inventory module for MyGenie POS — multi-level stock management system
 - **Backend**: FastAPI (Python) — API proxy to MyGenie POS preprod APIs
 - **Frontend**: React 19 + Craco + Tailwind CSS + Radix UI
 - **Database**: MongoDB (via Motor async driver)
-- **Data**: All inventory/catalogue data from POS V2 API (preprod.mygenie.online)
+- **Data**: All inventory/catalogue/report data from POS V2 API (preprod.mygenie.online)
 
 ## What's Been Implemented
 
@@ -17,19 +17,19 @@ Central Inventory module for MyGenie POS — multi-level stock management system
 ### P20 Stock Inventory — IMPLEMENTED
 - Self-store inventory, KPI cards, table. 14/14 PASS
 
-### P21 Catalogue — FULLY IMPLEMENTED (28 May 2026)
-- **Inventory Catalogue**: Ingredients + Categories CRUD + ingredient rename with warning
-- **Product Catalogue**: Foods CRUD + Food Categories CRUD + Addons CRUD
-- **Recipe Management**: Recipe CRUD with IngredientComposer + Sub-recipes
-- **Addon-recipe Management**: CRUD + orphan detection
-- **Gap fixes**: Food category full CRUD (POST update quirk), Addon full CRUD (noun-verb route), Ingredient rename (stock_title)
-- **Testing: 17/17 frontend PASS, 30/30 backend PASS**
+### P21 Catalogue — FULLY IMPLEMENTED
+- Inventory, Products, Recipes, Sub-recipes, Addon-recipes + gap fixes (food cat CRUD, addon CRUD, ingredient rename)
+
+### P22 Daily Consumption Report — API VALIDATED + PLANNED (28 May 2026)
+- `POST /report/daily-consumption-report` — 9 probes, all modes validated
+- Legacy single-store, hierarchy multi-store, restaurant_ids filtering, scope enforcement
+- Full planning: `AI/Plans/phase3/P22_daily_consumption_report_planning.md`
 
 ## Prioritized Backlog
+- **P0:** P22 Implementation — Daily Consumption Report (~6-8h)
 - **P1:** P21 Smart Dispatch — destination stock intelligence (~8h)
 - **P1:** P20 Phase 3 — Hierarchy stock overview toggle (~1.5h)
-- **P2:** Advanced food fields (variations, addons linkage, allergens)
-- **P2:** Reports screen
+- **P2:** Advanced food fields, PDF/CSV export, chart visualization
 
 ## Test Credentials
 - Master: `abhishek@kalabahia.com` / `Qplazm@10` → rid=1
