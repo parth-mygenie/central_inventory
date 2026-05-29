@@ -49,6 +49,14 @@
 
 ### Implementation: ~11-14h (3 phases)
 
-Phase 1: Hierarchy list + create dialog (~5-6h)
-Phase 2: Bundle push wizard + results viewer (~4-5h)
-Phase 3: Push history table + pagination (~2-3h)
+Phase 1: Hierarchy list + create dialog (~5-6h) — **DONE**
+Phase 2: Bundle push wizard + results viewer (~4-5h) — **DONE**
+Phase 3: Push history table + pagination (~2-3h) — **DONE**
+
+### Implementation Status (29 May 2026)
+- All 3 phases implemented in single pass
+- 12/12 frontend tests passed (100%)
+- Files: HierarchyManagement.jsx, useHierarchyManagement.js, api.js, screenVisibility.js, Sidebar.jsx, App.js
+- Sidebar "Store Management" added with GitBranch icon (hidden for franchise)
+- Route: /hierarchy/manage
+- Master can push to nested franchises (via hierarchy-summary tree discovery)
