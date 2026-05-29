@@ -1,0 +1,72 @@
+{
+  "summary": "Comprehensive testing of SourceSelector per item row feature. All 15 backend API tests passed (100%). All 12 frontend features tested and working correctly. The fix for Request Stock selector persistence flow is verified - SourceSelector now appears per item row with proper segment/bucket fallback behavior.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_source_selector_flow.py",
+    "/app/backend/tests/test_request_stock_flow.py",
+    "/app/test_reports/pytest/source_selector_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "RequestStockForm.jsx correctly implements SourceSelector per item row with sourceSelector state per row",
+    "SourceSelector.jsx correctly handles 403 UNAUTHORIZED fallback to bucket mode with warning message",
+    "DirectDispatchForm.jsx correctly uses SourceSelector per item row (regression check passed)",
+    "Submit button correctly disabled until sourceSelector is selected for all item rows"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_source_selector_flow.py"
+  ],
+  "success_rate": {
+    "backend": "100% (15/15 pytest tests passed - 10 request flow + 5 source selector)",
+    "frontend": "100% (12/12 features tested)"
+  },
+  "test_credentials": {
+    "central_user": "owner@democentral2.com / Qplazm@10 (rid=782, type=central)",
+    "franchise_user": "owner@demofranchise4.com / Qplazm@10 (rid=786, type=franchise, parent=782)"
+  },
+  "seed_data_creation": "None - using real POS API via proxy",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "SourceSelector per item row feature fully tested. Key behaviors verified: (1) SourceSelector appears after item selection in both Request Stock and Direct Dispatch forms, (2) Franchise user sees bucket fallback with warning when source-options returns 403, (3) Central user sees segment picker for own store, (4) Submit button disabled until sourceSelector selected, (5) Request submission with bucket selector succeeds.",
+  "features_tested": {
+    "backend_api_tests": {
+      "source_options_returns_segments_for_own_store": "PASS - Central user gets segments for own store",
+      "source_options_returns_403_for_cross_store": "PASS - Franchise user gets 403 for parent store",
+      "request_with_bucket_selector_succeeds": "PASS - Request with filter_bucket selector creates transfer",
+      "request_without_source_selector_behavior": "PASS - Tested behavior without selector",
+      "dispatch_with_bucket_selector_succeeds": "PASS - Dispatch with bucket selector creates transfer"
+    },
+    "frontend_ui_tests": {
+      "1_central_login_works": "PASS - owner@democentral2.com logs in, shows DemoCentral2 Master Store",
+      "2_request_stock_form_loads": "PASS - Form loads at /request/new with source picker",
+      "3_source_picker_shows_sources": "PASS - Shows My Genie (Direct Parent) as default",
+      "4_catalog_items_load": "PASS - 4 items: Cooking Oil, maida, patri, red meat",
+      "5_source_selector_appears_after_item_selection": "PASS - SourceSelector component appears per item row",
+      "6_bucket_fallback_with_warning": "PASS - Shows 'Segment selection unavailable for cross-store requests' warning",
+      "7_bucket_options_available": "PASS - 4 bucket options: Without Batch & Expiry, With Batch & Expiry, etc.",
+      "8_submit_enabled_after_selector_chosen": "PASS - Submit button enabled after bucket selected",
+      "9_franchise_login_works": "PASS - owner@demofranchise4.com logs in, shows DemoFranchise4 Outlet",
+      "10_franchise_sees_3_sources": "PASS - DemoCentral2 (Direct Parent), My Genie (Upstream Central), DemoCentral1 (Sibling)",
+      "11_direct_dispatch_form_works": "PASS - Form loads with SourceSelector per item row",
+      "12_dispatch_segment_mode_works": "PASS - Segment mode shows 'Seg #35 — 1 avail' for own store"
+    }
+  },
+  "api_contracts_verified": {
+    "POST /api/proxy/v2/inventory-transfer/source-options": "Returns segments[] and filters{} for own store, 403 for cross-store",
+    "POST /api/proxy/v2/inventory-transfer/request": "Accepts source_selector with mode=filter_bucket or mode=segment_id",
+    "POST /api/proxy/v2/inventory-transfer/initiate": "Accepts source_selector for dispatch"
+  },
+  "key_fix_verified": {
+    "issue": "Frontend was hardcoding filter_bucket/without_batch_and_expiry selector for all request submissions",
+    "fix": "SourceSelector component now appears per item row, requiring explicit segment_id or filter_bucket selection",
+    "verification": "Tested both segment mode (for own store) and bucket fallback mode (for cross-store requests)"
+  }
+}
