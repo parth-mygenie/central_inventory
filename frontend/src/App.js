@@ -23,6 +23,7 @@ import ProductCatalogue from "@/components/central-inventory/ProductCatalogue";
 import RecipeCatalogue from "@/components/central-inventory/RecipeCatalogue";
 import AddonRecipeCatalogue from "@/components/central-inventory/AddonRecipeCatalogue";
 import DailyConsumptionReport from "@/components/central-inventory/DailyConsumptionReport";
+import HierarchyManagement from "@/components/central-inventory/HierarchyManagement";
 import { PermissionDenied } from "@/components/common/StateDisplays";
 
 /**
@@ -87,6 +88,7 @@ function AppRoutes() {
         <Route path="/catalogue/recipes" element={<RecipeCatalogue />} />
         <Route path="/catalogue/addon-recipes" element={<AddonRecipeCatalogue />} />
         <Route path="/reports/consumption" element={<DailyConsumptionReport />} />
+        <Route path="/hierarchy/manage" element={<HierarchyManagement />} />
         <Route path="/transfer/:id" element={<TransferDetail />} />
 
         {/* Catch-all → redirect to hub */}

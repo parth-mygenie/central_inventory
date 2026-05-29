@@ -15,6 +15,7 @@ import {
   UtensilsCrossed,
   BookOpen,
   Link2,
+  GitBranch,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -32,6 +33,7 @@ const ICON_MAP = {
   UtensilsCrossed,
   BookOpen,
   Link2,
+  GitBranch,
 };
 
 export default function Sidebar() {

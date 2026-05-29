@@ -653,6 +653,75 @@ function createAddonRecipe(payload) { return client.post("/proxy/v2/product/stor
 function updateAddonRecipe(id, payload) { return client.put(`/proxy/v2/product/update-addon-recipe/${id}`, payload); }
 function deleteAddonRecipe(id) { return client.delete(`/proxy/v2/product/delete-addon-recipe/${id}`); }
 
+// ── P23 Hierarchy Management ──────────────────────────────────────
+
+function getHierarchyList({ childType, limit, page } = {}) {
+  const params = new URLSearchParams();
+  if (limit) params.set("limit", limit);
+  if (page) params.set("page", page);
+  if (childType) params.set("child_type", childType);
+  return client.get(`/proxy/v2/franchise/list?${params.toString()}`).then((resp) => {
+    const d = resp.data?.data || resp.data;
+    // Normalize massive child objects to essential fields
+    if (d?.children) {
+      d.children = d.children.map(normalizeHierarchyChild);
+    }
+    return resp;
+  });
+}
+
+function getCreateMetadata() {
+  return client.get("/proxy/v2/franchise/create");
+}
+
+function createHierarchyChild({ name, email, phone, password, address, childType }) {
+  const payload = { name, email, phone, password, address };
+  if (childType) payload.child_type = childType;
+  return client.post("/proxy/v2/franchise/create", payload);
+}
+
+function getPushForm(childId) {
+  return client.get(`/proxy/v2/franchise/push-form/${childId}`);
+}
+
+function pushBundle(childId) {
+  return client.post(`/proxy/v2/franchise/push/${childId}`, { push_food_bundle: true });
+}
+
+function getHierarchyHistory({ limit, page } = {}) {
+  const payload = {};
+  if (limit) payload.limit = limit;
+  if (page) payload.page = page;
+  return client.post("/proxy/v2/franchise/history", payload);
+}
+
+/**
+ * Normalize a child restaurant from franchise/list.
+ * Raw objects have ~150 fields; extract only what UI needs.
+ */
+function normalizeHierarchyChild(raw) {
+  if (!raw) return raw;
+  return {
+    id: raw.id,
+    name: raw.name,
+    phone: raw.phone,
+    email: raw.email,
+    address: raw.address,
+    status: raw.status,
+    active: raw.active,
+    restaurantTypeFlag: raw.restaurant_type_flag,
+    parentRestaurantId: raw.parent_restaurant_id,
+    slug: raw.slug,
+    createdAt: raw.created_at,
+    vendor: raw.vendor ? {
+      id: raw.vendor.id,
+      name: raw.vendor.f_name,
+      email: raw.vendor.email,
+      phone: raw.vendor.phone,
+    } : null,
+  };
+}
+
 // ── P22 Daily Consumption Report ──────────────────────────────────
 
 function getDailyConsumptionReport({ fromDate, toDate, restaurantIds, includeHierarchy } = {}) {
@@ -758,6 +827,13 @@ const api = {
   deleteAddonRecipe,
   // P22 Daily Consumption Report
   getDailyConsumptionReport,
+  // P23 Hierarchy Management
+  getHierarchyList,
+  getCreateMetadata,
+  createHierarchyChild,
+  getPushForm,
+  pushBundle,
+  getHierarchyHistory,
 };
 
 export default api;

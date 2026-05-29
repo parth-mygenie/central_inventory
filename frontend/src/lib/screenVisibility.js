@@ -36,6 +36,7 @@ export const SCREEN_VISIBILITY = {
   "scr-procurement":       { master: FULL,    central: FULL,    franchise: HIDDEN },
   "scr-stock-inventory":   { master: FULL,    central: FULL,    franchise: FULL  },
   "scr-catalogue":         { master: FULL,    central: HIDDEN,  franchise: HIDDEN },
+  "scr-hierarchy-manage":  { master: FULL,    central: FULL,    franchise: HIDDEN },
   "scr-21-api-verify":     { master: HIDDEN,  central: HIDDEN,  franchise: HIDDEN }, // admin only
 };
 
@@ -80,6 +81,13 @@ export const NAV_ITEMS = [
     label: "Hierarchy Summary",
     path: "/hierarchy",
     icon: "Network",
+  },
+  {
+    id: "hierarchy-manage",
+    screen: "scr-hierarchy-manage",
+    label: "Store Management",
+    path: "/hierarchy/manage",
+    icon: "GitBranch",
   },
   {
     id: "pending-queues",
