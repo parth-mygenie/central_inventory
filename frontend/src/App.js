@@ -18,6 +18,7 @@ import OperationalSettings from "@/components/central-inventory/OperationalSetti
 import VendorManagement from "@/components/central-inventory/VendorManagement";
 import AddStockPurchaseForm from "@/components/central-inventory/AddStockPurchaseForm";
 import StockInventorySummary from "@/components/central-inventory/StockInventorySummary";
+import StockDetailPanel from "@/components/central-inventory/StockDetailPanel";
 import IngredientCatalogue from "@/components/central-inventory/IngredientCatalogue";
 import ProductCatalogue from "@/components/central-inventory/ProductCatalogue";
 import RecipeCatalogue from "@/components/central-inventory/RecipeCatalogue";
@@ -71,6 +72,7 @@ function AppRoutes() {
       >
         <Route path="/" element={<OperationsHub />} />
         <Route path="/inventory" element={<StockInventorySummary />} />
+        <Route path="/inventory/:id" element={<StockDetailPanel />} />
         <Route path="/hierarchy" element={<HierarchySummary />} />
         <Route path="/store/:id" element={<StoreDetail />} />
         <Route path="/queues" element={<PendingQueues />} />

@@ -481,7 +481,21 @@ function normalizeStockItem(item) {
   };
 }
 
-// ── Export ────────────────────────────────────────────────────────
+// ── P24 Stock Detail (FEFO Batch View) ────────────────────────────
+
+/**
+ * P24: Get FEFO stock detail for a single inventory item.
+ * Returns: summary, segments, quantity_reconciliation, consumption_summary, consumption_lines
+ */
+function getStockDetail(inventoryMasterId, { consumptionFrom, consumptionTo, consumptionLimit } = {}) {
+  const params = new URLSearchParams();
+  if (consumptionFrom) params.set("consumption_from", consumptionFrom);
+  if (consumptionTo) params.set("consumption_to", consumptionTo);
+  if (consumptionLimit) params.set("consumption_limit", consumptionLimit);
+  const queryString = params.toString();
+  const url = `/proxy/v2/inventory/stock-inventory/${inventoryMasterId}${queryString ? `?${queryString}` : ""}`;
+  return client.get(url);
+}
 
 // ── P17 Operational Settings ─────────────────────────────────────
 
@@ -787,6 +801,8 @@ const api = {
   addStockPurchase,
   // P20 Stock Inventory Summary
   getStockInventory,
+  // P24 Stock Detail (FEFO Batch View)
+  getStockDetail,
   // P21 Catalogue — Inventory
   getStockItemCategories,
   getStockItemCategoryById,

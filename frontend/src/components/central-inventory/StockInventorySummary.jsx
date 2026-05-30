@@ -30,6 +30,7 @@ import {
   ArrowLeft,
   CheckCircle2,
   Clock,
+  ChevronRight,
 } from "lucide-react";
 import { LoadingState, ErrorState, EmptyState } from "@/components/common/StateDisplays";
 
@@ -292,6 +293,7 @@ export default function StockInventorySummary() {
                 <TableHead className="text-xs text-right">Min Alert</TableHead>
                 <TableHead className="text-xs text-center">Status</TableHead>
                 <TableHead className="text-xs">Vendor</TableHead>
+                <TableHead className="text-xs w-8"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -299,7 +301,8 @@ export default function StockInventorySummary() {
                 <TableRow
                   key={item.id}
                   data-testid={`inventory-row-${item.id}`}
-                  className={item.is_low_stock ? "bg-red-50/40" : ""}
+                  className={`cursor-pointer transition-colors hover:bg-accent/50 ${item.is_low_stock ? "bg-red-50/40" : ""}`}
+                  onClick={() => navigate(`/inventory/${item.id}`)}
                 >
                   <TableCell className="py-2.5">
                     <span
@@ -348,6 +351,9 @@ export default function StockInventorySummary() {
                     <span className="text-xs text-muted-foreground">
                       {item.vendor_name || "—"}
                     </span>
+                  </TableCell>
+                  <TableCell className="py-2.5">
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </TableCell>
                 </TableRow>
               ))}
