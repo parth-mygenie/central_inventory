@@ -4,38 +4,37 @@
 Central Inventory management app for MyGenie POS — multi-store hierarchy (Master > Central > Franchise) with inventory transfers, stock management, catalogue, and reporting.
 
 ## Tech Stack
-- **Frontend**: React 19, Tailwind CSS 3, Radix UI, Recharts, React Router v7, React Hook Form, Zod, craco, Lucide icons, Axios
-- **Backend**: Python FastAPI, Motor (async MongoDB driver), httpx, Pydantic v2
-- **Database**: MongoDB (local)
-- **External**: Proxies to `preprod.mygenie.online` POS API
+- **Frontend**: React 19, Tailwind CSS 3, Radix UI, Recharts, React Router v7, craco, Lucide icons, Axios
+- **Backend**: Python FastAPI proxy to `preprod.mygenie.online` POS API
+- **Database**: MongoDB (local, session storage only)
 
 ## What's Been Implemented
 
 ### P22 Daily Consumption Report (May 29, 2026)
-- Full report page with date range filter, store multi-selector, hierarchy toggle
-- KPI cards, ingredient summary table, consumption details (collapsible), by-store rollup
-- Ingredient drill-down, loading/error/empty states
-- **12/12 frontend tests passed**
+- Full report page, 12/12 tests passed
 
 ### P23 Hierarchy Management (May 29, 2026)
-- **Files:** HierarchyManagement.jsx, useHierarchyManagement.js, api.js additions, screenVisibility.js, Sidebar.jsx, App.js
-- **Hierarchy List**: Tabbed view (All / Master Stores / Outlets) with type badges, pagination
-- **Create Child**: Dialog with form validation, child_type selector (Master→central+franchise, Central→franchise only)
-- **Bundle Push**: 3-step wizard (preview → confirm → results) with per-module breakdown + diagnostics
-- **Master nested push**: Master can push to franchises under centrals (full tree discovery via hierarchy-summary)
-- **Push History**: Collapsible section with paginated audit log
-- **Visibility**: Hidden for franchise actors
-- **12/12 frontend tests passed**
+- List + Create + Bundle Push + History, 12/12 tests passed
+
+### P24 FEFO Stock Detail — Planning Complete (May 29, 2026)
+- **19 API probes** against live POS API — new detail endpoint + wastage extensions validated
+- Created: `AI/Plans/phase3/P24_fefo_batch_stock_planning.md`
+- Created: `AI/Plans/api_implementation_status_p24_addendum.md`
+- Created: `AI/curls/p24_fefo_stock_detail_curls.sh`
+- FEFO scenario validated: killua→DemoFranchise3 transfer batches visible
+- Key finding: fefo_consumption_enabled appears OFF at DemoFranchise2 (consumption lacks batch allocations)
 
 ## Backlog
 
-### P0 — None
+### P0 — P24 Implementation
+- Phase 1: Stock detail panel + FEFO segments + reconciliation (~5-6h)
+- Phase 2: Consumption section with date filter + batch allocations (~3-4h)
+- Phase 3: Wastage report batch column + segment snapshot (~2-3h)
 
 ### P1
-- Child deletion/deactivation (no API found yet)
-- Multi-outlet batch push (loop from UI)
+- Multi-outlet batch push UI
+- Child deletion/deactivation
 
 ### P2
-- PDF/CSV export for consumption report
-- Chart visualization for consumption trends
-- Employee/role push modules
+- PDF/CSV export for reports
+- Chart visualizations
