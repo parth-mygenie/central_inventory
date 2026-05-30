@@ -15,37 +15,39 @@ Central Inventory management system with POS API proxy backend. Cloned from http
 - Auth via POS API login endpoint
 
 ## Core Features Implemented
-- P15/P16/P17: Transfer lifecycle (initiate, approve, dispatch, receive, reject, cancel, amend, withdraw, modification)
-- P18: Vendor management (CRUD)
-- P19: Procurement (add stock purchase)
+- P15/P16/P17: Transfer lifecycle
+- P18: Vendor management
+- P19: Procurement
 - P20: Stock Inventory Summary
 - P21: Catalogue (ingredients, products, recipes, addon-recipes)
 - P22: Daily Consumption Report
 - P23: Hierarchy Management
-- **P24**: FEFO Stock Detail UI (implemented Jan 2026)
-- **P25**: Wastage Report Validation (validated Jan 2026 — API-only, no frontend yet)
+- **P24**: FEFO Stock Detail UI (Jan 2026) — 21/21 tests passed
+- **P25**: Wastage Report Enhancement (Jan 2026) — 23/23 tests passed
 
 ## P24 Implementation (Jan 2026)
 - Row click drilldown from Stock Inventory Summary → `/inventory/:id`
 - Summary, Batch Inventory (FEFO segments), Reconciliation, Consumption History sections
-- 100% test pass rate (21/21 tests)
 
-## P25 Validation Findings (Jan 2026)
-- Both APIs confirmed working: `GET /inventory/wastage-reasons`, `POST /inventory/wastage-report`
-- All filters validated: date range, restaurant_ids, waste_type, food_id, has_batch, include_segments
-- P24 batch audit fields confirmed: source_type, segment_allocations, batch, expiry_date
-- 1 FEFO-audited record found, 7 legacy records
-- segment_snapshot returns live on-hand data (37 segments across hierarchy)
-- Full findings in `/app/AI/Plans/api_implementation_status_p25_addendum.md`
+## P25 Implementation (Jan 2026)
+- **api.js**: Added `getWastageReasons()`, extended `getWastageReport()` with P25 filters (wasteType, foodId, hasBatch, includeSegments), fixed normalizer to preserve full response
+- **useWastageReasons.js**: New hook fetching API-driven reasons with fallback to hardcoded list
+- **WastageReport.jsx**: Full rewrite with KPI cards (total records, net wastage, batch audited, physical count), filters (waste type dropdown, has-batch toggle), enhanced table (date, item, type badge, qty, unit, reason, batch, expiry, source type badge), expandable FEFO allocation details, summary footer
+- **WastageEntryForm.jsx**: Replaced hardcoded WASTAGE_REASONS with API-driven picker via useWastageReasons hook
+- Removed dead `recorded_by` column
 
-## Frontend Gaps Identified (P25)
-- G1-G7: WastageReport.jsx missing P24/P25 columns, filters, KPIs
-- G8-G9: WastageEntryForm.jsx uses hardcoded reasons instead of API
-- G10-G12: api.js missing functions and filter params
+## Files Added/Modified
+### P24
+- NEW: `StockDetailPanel.jsx`, `useStockDetail.js`
+- MOD: `api.js`, `App.js`, `StockInventorySummary.jsx`
+
+### P25
+- NEW: `useWastageReasons.js`
+- REWRITE: `WastageReport.jsx`, `WastageEntryForm.jsx`
+- MOD: `api.js` (getWastageReasons, extended getWastageReport)
 
 ## Prioritized Backlog
-- **P0**: P25 frontend implementation (wastage report enhancement + reason picker)
-- **P1**: Wastage report batch column + source_type badges
-- **P1**: Replace hardcoded reasons with API-driven picker
-- **P2**: Source restaurant name resolution (Store #ID → name)
-- **P2**: Consumption line pagination
+- **P1**: Wastage report segment_snapshot dashboard panel (include_segments toggle)
+- **P1**: Source restaurant name resolution (Store #ID → name)
+- **P2**: Consumption line pagination for high-volume items
+- **P2**: by_restaurant breakdown section in wastage report
