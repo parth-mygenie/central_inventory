@@ -22,31 +22,30 @@ Central Inventory management system with POS API proxy backend. Cloned from http
 - P21: Catalogue (ingredients, products, recipes, addon-recipes)
 - P22: Daily Consumption Report
 - P23: Hierarchy Management
+- **P24**: FEFO Stock Detail UI (implemented Jan 2026)
+- **P25**: Wastage Report Validation (validated Jan 2026 — API-only, no frontend yet)
 
-## What's Been Implemented (P24 - Jan 2026)
-- **P24 FEFO Stock Detail UI** — additive, read-only detail view
-  - Row click drilldown from Stock Inventory Summary → `/inventory/:id`
-  - Summary section: ingredient name, stock, unit, category, low stock badge
-  - Batch Inventory section: FEFO-ordered segments table with batch, qty, expiry, source store
-  - Expiry badges: expired (red), expiring soon (amber), healthy (green), no expiry (gray)
-  - Reconciliation section: aggregate vs segment totals with mismatch warning
-  - Consumption History: date-filtered consumption lines with expandable FEFO allocation details
-  - All data-testid attributes for testing
-  - 100% test pass rate (21/21 tests: 5 backend + 16 frontend)
+## P24 Implementation (Jan 2026)
+- Row click drilldown from Stock Inventory Summary → `/inventory/:id`
+- Summary, Batch Inventory (FEFO segments), Reconciliation, Consumption History sections
+- 100% test pass rate (21/21 tests)
 
-## Files Added/Modified (P24)
-- NEW: `/app/frontend/src/components/central-inventory/StockDetailPanel.jsx`
-- NEW: `/app/frontend/src/hooks/useStockDetail.js`
-- MODIFIED: `/app/frontend/src/services/api.js` (added `getStockDetail`)
-- MODIFIED: `/app/frontend/src/App.js` (added route `/inventory/:id`)
-- MODIFIED: `/app/frontend/src/components/central-inventory/StockInventorySummary.jsx` (clickable rows + chevron)
+## P25 Validation Findings (Jan 2026)
+- Both APIs confirmed working: `GET /inventory/wastage-reasons`, `POST /inventory/wastage-report`
+- All filters validated: date range, restaurant_ids, waste_type, food_id, has_batch, include_segments
+- P24 batch audit fields confirmed: source_type, segment_allocations, batch, expiry_date
+- 1 FEFO-audited record found, 7 legacy records
+- segment_snapshot returns live on-hand data (37 segments across hierarchy)
+- Full findings in `/app/AI/Plans/api_implementation_status_p25_addendum.md`
 
-## Constraints Followed
-- No modifications to: Transfer lifecycle (P15/P16/P17), Procurement (P18/P19), Inventory Summary (P20), Consumption Report (P22)
-- P24 is purely additive
-- Read-only — no stock mutations, no batch edits, no inventory updates
+## Frontend Gaps Identified (P25)
+- G1-G7: WastageReport.jsx missing P24/P25 columns, filters, KPIs
+- G8-G9: WastageEntryForm.jsx uses hardcoded reasons instead of API
+- G10-G12: api.js missing functions and filter params
 
-## Backlog
-- P0: Wastage report batch enhancement (Phase 3 of P24 plan)
-- P1: Source restaurant name resolution (currently shows Store #ID)
-- P2: Consumption line pagination for high-volume items
+## Prioritized Backlog
+- **P0**: P25 frontend implementation (wastage report enhancement + reason picker)
+- **P1**: Wastage report batch column + source_type badges
+- **P1**: Replace hardcoded reasons with API-driven picker
+- **P2**: Source restaurant name resolution (Store #ID → name)
+- **P2**: Consumption line pagination
