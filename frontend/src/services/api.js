@@ -431,20 +431,43 @@ function recordWastage(payload) {
 }
 
 /**
- * FIX: Response is an object with wastage_records array inside, not a flat array.
- * Normalize to return { data: { data: [...records] } } for frontend consumption.
+ * P25: Get store's configured wastage reasons (for picker dropdown).
+ * Falls back to master reasons (rid=0) if store has none.
  */
-function getWastageReport({ restaurantIds, fromDate, toDate } = {}) {
+function getWastageReasons() {
+  return client.get("/proxy/v2/inventory/wastage-reasons").then((resp) => {
+    const data = resp.data;
+    return { ...resp, data: data?.reasons || [] };
+  });
+}
+
+/**
+ * P25: Wastage report with full filter support.
+ * Preserves full response shape (summary, totals, by_restaurant, wastage_records, segment_snapshot).
+ */
+function getWastageReport({ restaurantIds, fromDate, toDate, wasteType, foodId, hasBatch, includeSegments } = {}) {
   const payload = {};
   if (restaurantIds) payload.restaurant_ids = restaurantIds;
-  if (fromDate) payload.from_date = fromDate;
-  if (toDate) payload.to_date = toDate;
+  if (fromDate) payload.start_date = fromDate;
+  if (toDate) payload.end_date = toDate;
+  if (wasteType) payload.waste_type = wasteType;
+  if (foodId) payload.food_id = foodId;
+  if (hasBatch) payload.has_batch = true;
+  if (includeSegments) payload.include_segments = true;
   return client.post("/proxy/v2/inventory/wastage-report", payload).then((resp) => {
-    const raw = resp.data;
-    // Normalize: extract wastage_records as the data array
-    if (raw && !Array.isArray(raw.data) && raw.wastage_records) {
-      resp.data = { ...raw, data: raw.wastage_records };
-    }
+    const d = resp.data;
+    d.summary = d.summary || { total_records: 0, total_loss: 0, total_gain: 0, net_wastage: 0, applied_restaurant_ids: [] };
+    d.totals = d.totals || {};
+    d.by_restaurant = d.by_restaurant || [];
+    d.wastage_records = d.wastage_records || [];
+    d.segment_snapshot = (d.segment_snapshot || []).map(s => ({
+      ...s,
+      cal_quantity: parseFloat(s.cal_quantity) || 0,
+      display_qty: parseFloat(s.display_qty) || 0,
+    }));
+    d.segment_snapshot_note = d.segment_snapshot_note || "";
+    // Backward compat: also set .data for old consumers
+    d.data = d.wastage_records;
     return resp;
   });
 }
@@ -790,6 +813,7 @@ const api = {
   adjustStockDecrease,
   adjustStockIncrease,
   recordWastage,
+  getWastageReasons,
   getWastageReport,
   // P17-Settings / P18-Vendors / P19-Procurement
   getOperationalSettings,

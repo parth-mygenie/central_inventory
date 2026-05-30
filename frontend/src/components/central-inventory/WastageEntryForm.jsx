@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLoginContext } from "@/hooks/useLoginContext";
 import { useWriteAction } from "@/hooks/useWriteAction";
+import { useWastageReasons } from "@/hooks/useWastageReasons";
 import api from "@/services/api";
 import { validateQuantityForUnit } from "@/lib/formatters";
-import { WASTAGE_REASONS } from "@/lib/reasonCategories";
 import SourceSelector from "./SourceSelector";
 import ConfirmActionDialog from "./ConfirmActionDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +20,7 @@ export default function WastageEntryForm() {
   const navigate = useNavigate();
   const { restaurantId, canDo } = useLoginContext();
   const { submitting, execute } = useWriteAction();
+  const { reasons: wastageReasons, loading: reasonsLoading, usingFallback } = useWastageReasons();
 
   const [items, setItems] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
@@ -46,12 +47,13 @@ export default function WastageEntryForm() {
   }, []);
 
   if (!canDo("record-wastage")) return <PermissionDenied />;
-  if (loadingData) return <LoadingState lines={4} />;
+  if (loadingData || reasonsLoading) return <LoadingState lines={4} />;
 
   const itemObj = items.find((i) => String(i.id) === String(selectedItem));
   const unit = itemObj?.unit || "";
   const qtyErr = quantity ? validateQuantityForUnit(quantity, unit) : null;
-  const finalReason = reason === "other" ? otherReason.trim() : WASTAGE_REASONS.find((r) => r.value === reason)?.label || "";
+  const selectedReasonObj = wastageReasons.find((r) => r.value === reason);
+  const finalReason = reason === "other" ? otherReason.trim() : (selectedReasonObj?.label || "");
 
   const isValid =
     selectedItem &&
@@ -159,13 +161,18 @@ export default function WastageEntryForm() {
           )}
 
           <div>
-            <Label className="text-xs">Reason *</Label>
+            <Label className="text-xs">
+              Reason *
+              {usingFallback && (
+                <span className="ml-1 text-[10px] text-amber-600 font-normal">(defaults)</span>
+              )}
+            </Label>
             <Select value={reason} onValueChange={setReason} disabled={submitting}>
               <SelectTrigger data-testid="wastage-reason-select">
                 <SelectValue placeholder="Select a reason" />
               </SelectTrigger>
               <SelectContent>
-                {WASTAGE_REASONS.map((r) => (
+                {wastageReasons.map((r) => (
                   <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
                 ))}
               </SelectContent>
