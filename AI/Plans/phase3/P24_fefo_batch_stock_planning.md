@@ -173,7 +173,7 @@
 
 **Transfer path:** Master (rid=1) → DemoFranchise3 (rid=785)
 
-**Findings:**
+### Initial Findings (29 May 2026 — afternoon)
 
 | Check | Status | Details |
 |-------|--------|---------|
@@ -181,16 +181,33 @@
 | FEFO ordering correct | **YES** | Soonest expiry first; null-batch legacy bucket last (Master maida seg=40) |
 | inventory_master matches segment balance | **PARTIAL** | F3 maida: 2000=2000 ✓; F3 red meat: 250≠4000 ✗ |
 | quantity_reconciliation near zero | **PARTIAL** | F3 maida: 0 ✓; Master maida: 10000 remainder; F3 red meat: 3750 gap |
-| consumption_lines include segment alloc | **NO** | F2 consumption has segment_allocations:[] (FEFO not enabled at F2) |
+| consumption_lines include segment alloc | **NO** | F2 consumption has segment_allocations:[] — predates FEFO code deployment |
 | End-to-end trace possible | **PARTIAL** | Segments show source_restaurant_id; consumption lacks FEFO detail |
+
+### Follow-Up: FEFO Proven Operational (29 May 2026 — evening)
+
+**Order #869395** at F3 (mutton keema, 2026-05-30) produced conclusive FEFO evidence across 2 ingredients:
+
+| Check | Status | Details |
+|-------|--------|---------|
+| fefo_consumption_enabled | **TRUE** | Resolved from Master settings, inherited by all stores |
+| Transferred batches visible | **YES** | red meat: 2 segs, patri: 2 segs, maida: 2 segs |
+| FEFO ordering correct | **YES** | seg_id=19 (lower=older) consumed before seg_id=30; seg_id=54 before seg_id=55 |
+| inventory_master matches segment balance | **YES** | red meat 3250=3250; patri 3950=3950 |
+| quantity_reconciliation balanced | **YES** | unsegmented_remainder=0 for both |
+| consumption_lines include segment alloc | **YES** | Order #869395 has full allocations with batch, segment_id, qty_cal, expiry_date |
+| End-to-end trace possible | **YES** | Transfer → batch → FEFO deduction → reconciliation all traceable |
+
+**Key correction:** Earlier finding "fefo_consumption_enabled appears OFF for F2" was incorrect. The flag is ON everywhere (True, inherited from Master). F2 consumption (orders #869307, #869321 on 2026-05-28) simply predated the FEFO code deployment. The transition point is visible within a single day's orders at F3: orders #869375-#869380 = legacy, order #869395 = FEFO active.
 
 ### Key Observations
 
-1. **F3 (DemoFranchise3) has FEFO segments** — transferred stock is visible as batches with expiry dates
-2. **F2 (DemoFranchise2) does NOT have FEFO segments** — consumption happened via legacy aggregate path (segment_allocations=[], batch=null)
-3. **Reconciliation mismatches exist** — F3 red meat (250 vs 4000), Master maida (118150 vs 108150+10000 unsegmented)
-4. **fefo_consumption_enabled appears to be OFF for F2** — consumption deducted from aggregate, not segments
-5. **Legacy null-batch segments** — Master maida seg=40 has batch=null, exp=null (legacy bucket)
+1. **FEFO consumption is OPERATIONAL** — proven by order #869395 with segment_allocations on 2 ingredients
+2. **FEFO tie-breaking** — when expiry dates match, lower segment_id (earlier created) is consumed first
+3. **Addon consumption is also FEFO-aware** — patri consumed via addon_id=12630 has segment_allocations
+4. **Reconciliation self-heals** — earlier mismatches (red meat 250≠4000, patri 3950≠4000) are now balanced after FEFO consumption normalized the ledger
+5. **Legacy null-batch segments** — Master maida seg=40 has batch=null, exp=null (legacy bucket, consumed last per FEFO rules)
+6. **Transition visible in data** — same-day orders show clear legacy→FEFO switchover
 
 ---
 

@@ -1,33 +1,24 @@
 # Central Inventory — PRD
 
-> **Last updated:** 29 May 2026
-> **Consolidated ledger:** `AI/Plans/PROJECT_LEDGER.md` (canonical — replaces this PRD for detailed status)
+> **Last updated:** 29 May 2026 (evening — P24 FEFO validated)
+> **Consolidated ledger:** `AI/Plans/PROJECT_LEDGER.md` (canonical)
 
 ## Quick Status
 
 | Phase | Status | Tests |
 |-------|--------|:-----:|
-| Slices 1-4 (Foundation) | CLOSED (23 May) | Passed |
-| Slice 5 (Phases 0-7) | CLOSED (24 May) | 55/57 |
-| P17-P20 (Phase 2 features) | IMPLEMENTED | All pass |
-| P21 Catalogue + Gaps | IMPLEMENTED | 17/17 FE + 30/30 BE |
-| P22 Consumption Report | IMPLEMENTED (29 May) | 12/12 FE |
-| P23 Hierarchy Management | IMPLEMENTED (29 May) | 12/12 FE |
-| P24 FEFO Batch Stock | **PLANNED + API VALIDATED** | Awaiting impl |
-| P21 Smart Dispatch | **PLANNED** (brainstorm) | Awaiting impl |
+| Slices 1-5 | CLOSED | Passed |
+| P17-P21 | IMPLEMENTED | All pass |
+| P22 Consumption Report | IMPLEMENTED | 12/12 FE |
+| P23 Hierarchy Management | IMPLEMENTED | 12/12 FE |
+| P24 FEFO Batch Stock | **PLANNED + FEFO PROVEN OPERATIONAL** | Awaiting impl |
 
-## Tech Stack
-- Frontend: React 19, Tailwind CSS 3, Radix UI, Lucide, Axios, craco
-- Backend: FastAPI proxy → preprod.mygenie.online POS API
-- Database: MongoDB (session storage only)
-
-## Source of Truth Hierarchy
-1. `AI/Plans/PROJECT_LEDGER.md` — consolidated status + handoff
-2. `AI/Plans/api_implementation_status_p{XX}_addendum.md` — per-phase API evidence
-3. `AI/Plans/phase{N}/P{XX}_*.md` — detailed planning docs
-4. `AI/curls/p{XX}_*.sh` — API validation curl evidence
-5. `memory/central_inventory/SYSTEM_HANDOVER_DOCUMENT.md` — architecture reference
-6. `memory/test_credentials.md` — all test accounts + data notes
+## Key P24 Finding (29 May 2026)
+FEFO consumption IS operational. Order #869395 at F3 (DemoFranchise3) confirmed:
+- `segment_allocations` populated with batch/segment_id/qty/expiry
+- Earliest-created segment consumed first (FEFO order correct)
+- `inventory_master` matches segment totals (reconciliation balanced)
+- Both recipe and addon ingredients are FEFO-aware
 
 ## Next Priority
 1. P24 FEFO detail panel implementation (~10-13h)

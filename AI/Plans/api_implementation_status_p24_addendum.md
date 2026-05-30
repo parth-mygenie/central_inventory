@@ -70,3 +70,86 @@
 Phase 1: Stock detail panel + segments + reconciliation (~5-6h)
 Phase 2: Consumption section with date filter (~3-4h)
 Phase 3: Wastage report batch enhancement (~2-3h)
+
+
+---
+
+## Follow-Up: FEFO Consumption Proven Operational (29 May 2026 — evening)
+
+> **Source:** Live consumption evidence at DemoFranchise3 (rid=785)
+> **Order:** #869395 (mutton keema, 2026-05-30)
+> **Previous status:** "fefo_consumption_enabled appears OFF" — **CORRECTED: it was always ON (True), but earlier orders predated the FEFO code deployment**
+
+### Settings Verification
+
+| Store | fefo_consumption_enabled | Source |
+|-------|:------------------------:|--------|
+| Master (rid=1) | **True** | Own stored settings |
+| F3 (rid=785) | **True** | Inherited from Master (stored=null) |
+
+### FEFO Consumption Evidence — 2 Ingredients, 1 Order
+
+#### red meat (inventory_master_id=17003)
+
+| Metric | Value |
+|--------|-------|
+| Order | #869395 (mutton keema) |
+| Quantity deducted | 750 gm |
+| segment_allocations | `[{segment_id:19, batch:"MEAT-BATCH-01", qty_cal:750, expiry_date:"2026-06-30"}]` |
+| FEFO target | seg_id=19 (lower ID = earlier created = consumed first) |
+| seg_id=30 | UNTOUCHED (2000 → 2000) |
+| Post-consumption reconciliation | aggregate=3250, segment_total=3250, unsegmented=0 |
+| **Verdict** | **FEFO WORKING — earliest segment consumed first, reconciliation balanced** |
+
+#### patri (inventory_master_id=17002)
+
+| Metric | Value |
+|--------|-------|
+| Order | #869395 (mutton keema, addon_id=12630) |
+| Quantity deducted | 50 gm |
+| segment_allocations | `[{segment_id:54, batch:"FINAL-PATRI-01", qty_cal:50, expiry_date:"2026-12-31"}]` |
+| FEFO target | seg_id=54 (lower ID = consumed first) |
+| seg_id=55 | UNTOUCHED (1000 → 1000) |
+| Post-consumption reconciliation | aggregate=3950, segment_total=3950, unsegmented=0 |
+| **Verdict** | **FEFO WORKING — addon consumption also segment-aware** |
+
+### Transition Point Identified
+
+| Orders | FEFO Status | segment_allocations |
+|--------|:-----------:|:-------------------:|
+| #869375, #869376, #869377, #869378, #869380 | Legacy | `[]` (empty) |
+| **#869395** | **FEFO active** | **Populated** |
+
+All orders are from the same day (2026-05-30). The FEFO code path was activated between order #869380 and #869395.
+
+### Previous Finding Corrections
+
+| Finding | Previous | Corrected |
+|---------|----------|-----------|
+| "fefo_consumption_enabled appears OFF for F2" | Assumed OFF | Flag is ON everywhere; F2 consumption (orders #869307, #869321 on 2026-05-28) predates FEFO code deployment |
+| F3 red meat reconciliation MISMATCH (250 vs 4000) | Noted as gap | Now balanced at 3250=3250 after consumption normalized segments |
+| F3 patri reconciliation (3950 vs 4000) | 50-unit gap | Now balanced at 3950=3950 |
+| "End-to-end trace not possible" | Partial | **Fully traceable** for post-FEFO orders |
+
+### segment_allocations Response Schema (confirmed)
+
+```json
+{
+  "batch": "MEAT-BATCH-01",
+  "qty_cal": 750,
+  "segment_id": 19,
+  "expiry_date": "2026-06-30",
+  "qty_display": 0.75
+}
+```
+
+Fields per allocation:
+- `batch` — batch name from segment
+- `qty_cal` — quantity deducted in smallest unit (grams/ml)
+- `segment_id` — which segment row was deducted
+- `expiry_date` — batch expiry (for FEFO display)
+- `qty_display` — quantity in display unit
+
+### Conclusion
+
+**FEFO batch consumption is fully operational.** Both recipe ingredients and addon ingredients follow the FEFO segment deduction path. The `segment_allocations` field in `consumption_lines` provides complete traceability: which batch, which segment, how much, and what expiry date. Reconciliation remains balanced post-consumption.

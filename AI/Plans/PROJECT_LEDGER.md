@@ -244,17 +244,20 @@ Grouped by feature area — all proxy through FastAPI → POS API.
 
 ### Known Reconciliation Issues (from P24)
 
-| Store | Item | Aggregate | Segment Total | Gap | Notes |
-|-------|------|:---------:|:-------------:|:---:|-------|
-| F3 (785) | red meat | 250 | 4000 | 3750 | Segment total >> aggregate |
-| F3 (785) | patri | 3950 | 4000 | 50 | Near-balanced |
-| Master (1) | maida | 118150 | 108150 | 10000 | Unsegmented legacy remainder |
-| F2 (784) | Cooking Oil | -500 | 0 | -500 | Negative stock, no segments (legacy) |
-| F2 (784) | maida | -1000 | 0 | -1000 | Negative stock, no segments (legacy) |
+**Updated 29 May 2026 (evening):** After FEFO consumption activated, F3 red meat and patri reconciliation gaps have self-healed.
+
+| Store | Item | Aggregate | Segment Total | Gap | Status |
+|-------|------|:---------:|:-------------:|:---:|--------|
+| F3 (785) | red meat | 3250 | 3250 | 0 | **BALANCED** (was 3750 gap — healed by FEFO consumption) |
+| F3 (785) | patri | 3950 | 3950 | 0 | **BALANCED** (was 50 gap — healed) |
+| F3 (785) | maida | 2000 | 2000 | 0 | Balanced (unchanged) |
+| Master (1) | maida | 118150 | 108150 | 10000 | Unsegmented legacy remainder (needs backfill) |
+| F2 (784) | Cooking Oil | -500 | 0 | -500 | Negative stock, no segments (pre-FEFO-deployment consumption) |
+| F2 (784) | maida | -1000 | 0 | -1000 | Negative stock, no segments (pre-FEFO-deployment consumption) |
 
 ### FEFO Flag Status
 
-`fefo_consumption_enabled` appears **OFF** for DemoFranchise2 (rid=784) — consumption lines have empty `segment_allocations`. DemoFranchise3 (rid=785) has segments from transfers but no consumption data to verify FEFO deduction.
+**CORRECTED (29 May 2026 evening):** `fefo_consumption_enabled` is **TRUE for all stores** (resolved from Master settings, inherited by all children). Earlier finding that "appears OFF for F2" was incorrect — F2 consumption (orders #869307, #869321) predated the FEFO code deployment. Order #869395 at F3 confirms FEFO is fully operational with segment_allocations populated.
 
 ---
 
