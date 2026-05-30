@@ -1,26 +1,23 @@
-# Central Inventory — PRD
+# Central Inventory - PRD
 
-> **Last updated:** 29 May 2026 (evening — P24 FEFO validated)
-> **Consolidated ledger:** `AI/Plans/PROJECT_LEDGER.md` (canonical)
+## Problem Statement
+Pull repo https://github.com/parth-mygenie/central_inventory.git (branch: 30_5_26_1), wipe existing /app, and run as-is.
 
-## Quick Status
+## Tech Stack
+- **Backend**: Python FastAPI + Motor (async MongoDB driver) + httpx
+- **Frontend**: React 19 + Tailwind CSS + Radix UI + CRACO + Recharts
+- **Database**: MongoDB
+- **Key Libraries**: axios, react-router-dom, zod, react-hook-form, lucide-react, sonner
 
-| Phase | Status | Tests |
-|-------|--------|:-----:|
-| Slices 1-5 | CLOSED | Passed |
-| P17-P21 | IMPLEMENTED | All pass |
-| P22 Consumption Report | IMPLEMENTED | 12/12 FE |
-| P23 Hierarchy Management | IMPLEMENTED | 12/12 FE |
-| P24 FEFO Batch Stock | **PLANNED + FEFO PROVEN OPERATIONAL** | Awaiting impl |
+## Architecture
+- Backend acts as a proxy to MyGenie preprod APIs (V1 auth, V2 vendor employee endpoints)
+- Frontend is a central inventory management dashboard
+- MongoDB stores token sessions and status checks
 
-## Key P24 Finding (29 May 2026)
-FEFO consumption IS operational. Order #869395 at F3 (DemoFranchise3) confirmed:
-- `segment_allocations` populated with batch/segment_id/qty/expiry
-- Earliest-created segment consumed first (FEFO order correct)
-- `inventory_master` matches segment totals (reconciliation balanced)
-- Both recipe and addon ingredients are FEFO-aware
+## What's Been Implemented
+- [Jan 2026] Cloned repo from GitHub branch `30_5_26_1`, restored platform .env files, installed all dependencies, both services running successfully.
 
-## Next Priority
-1. P24 FEFO detail panel implementation (~10-13h)
-2. P20 hierarchy toggle (~3-4h)
-3. P21 smart dispatch Phase 1 (~4-5h)
+## Status
+- Backend: RUNNING (API responding at /api/)
+- Frontend: COMPILED with warnings only (no errors)
+- App accessible at preview URL
