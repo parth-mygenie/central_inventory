@@ -47,6 +47,7 @@ export default function PendingQueues() {
   const [readyToDispatch, setReadyToDispatch] = useState([]);
   const [transferDetails, setTransferDetails] = useState({});
   const [ownStock, setOwnStock] = useState([]);
+  const [requesterHealth, setRequesterHealth] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sortBy, setSortBy] = useState("oldest");
@@ -85,6 +86,30 @@ export default function PendingQueues() {
           }
         });
         setTransferDetails(details);
+
+        // Fetch requester store health (hierarchy-detail per unique requester)
+        const uniqueRequesters = [...new Set(approvals.map(a => a.from_restaurant_id).filter(Boolean))];
+        if (uniqueRequesters.length > 0) {
+          const healthResults = await Promise.allSettled(
+            uniqueRequesters.slice(0, 6).map(rid => api.getHierarchyDetail({ storeRestaurantId: rid }))
+          );
+          const healthMap = {};
+          healthResults.forEach((r, i) => {
+            if (r.status === "fulfilled") {
+              const hd = r.value?.data?.data || r.value?.data;
+              const items = hd?.child_stock_summary || [];
+              let outCount = 0, lowCount = 0, adequateCount = 0;
+              items.forEach(item => {
+                const qty = parseFloat(item.display_quantity) || 0;
+                if (qty === 0) outCount++;
+                else if (item.is_low_stock) lowCount++;
+                else adequateCount++;
+              });
+              healthMap[String(uniqueRequesters[i])] = { outCount, lowCount, adequateCount, totalItems: items.length };
+            }
+          });
+          setRequesterHealth(healthMap);
+        }
       }
 
       // Ready to dispatch
@@ -231,6 +256,26 @@ export default function PendingQueues() {
             </table>
           </div>
         )}
+
+        {/* Requester store health mini-bar */}
+        {(() => {
+          const health = requesterHealth[String(item.from_restaurant_id)];
+          if (!health) return null;
+          const reqName = restaurantMap[String(item.from_restaurant_id)]?.name || fromName;
+          const hasUrgent = health.outCount >= 2;
+          return (
+            <div className={`flex items-center gap-2 px-4 py-1.5 text-[10px] border-t border-border/30 ${hasUrgent ? "bg-red-50/50" : "bg-muted/10"}`} data-testid={`req-health-${id}`}>
+              <span className="text-muted-foreground">{reqName} store health:</span>
+              {health.outCount > 0 && (
+                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-500" /><strong className={hasUrgent ? "text-red-700" : ""}>{health.outCount} out</strong></span>
+              )}
+              {health.lowCount > 0 && (
+                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-500" />{health.lowCount} low</span>
+              )}
+              <span className="text-muted-foreground">{health.adequateCount} adequate</span>
+            </div>
+          );
+        })()}
 
         {/* Card Footer */}
         <div className="flex items-center justify-between px-4 py-2.5 bg-muted/20 border-t border-border/30">

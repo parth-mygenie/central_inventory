@@ -238,7 +238,7 @@ export default function ApproveWaveDialog({ open, onOpenChange, transfer, onSubm
                                         {expiryDays != null && expiryDays > 30 && (
                                           <span className="text-[8px] px-1 py-0 rounded bg-muted text-muted-foreground">Exp {expiryDays}d</span>
                                         )}
-                                        {isFefo && <span className="text-[8px] font-semibold px-1 py-0 rounded bg-blue-100 text-blue-700">FEFO</span>}
+                                        {isFefo && <span className="text-[8px] font-semibold px-1 py-0 rounded bg-blue-100 text-blue-700">FEFO Recommended</span>}
                                       </span>
                                     </SelectItem>
                                   );

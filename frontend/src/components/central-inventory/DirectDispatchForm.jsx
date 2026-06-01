@@ -85,18 +85,41 @@ export default function DirectDispatchForm() {
         const minQty = parseFloat(item.min_qty_alert) || 0;
         const gap = minQty > 0 ? Math.max(0, minQty - qty) : 0;
         const ownItem = ownStock.find(s => (s.stock_title || "").toLowerCase() === (item.stock_title || "").toLowerCase());
+        const ownQty = ownItem?.display_qty ?? 0;
+        const afterDispatch = gap > 0 ? Math.round((ownQty - gap) * 100) / 100 : ownQty;
         return {
           ...item,
           currentQty: qty,
           minQty,
           gap,
-          ownQty: ownItem?.display_qty ?? 0,
+          ownQty,
           ownUnit: ownItem?.display_unit || item.unit || "",
+          afterDispatch,
         };
       })
       .filter((item) => item.gap > 0 || item.currentQty === 0)
       .sort((a, b) => b.gap - a.gap);
   }, [destStock, ownStock]);
+
+  // Check for duplicate dispatch today
+  const [todayDispatchWarning, setTodayDispatchWarning] = useState("");
+  useEffect(() => {
+    if (!selectedDest) { setTodayDispatchWarning(""); return; }
+    api.getTransferHistory().then(resp => {
+      const hist = resp.data?.data || resp.data || [];
+      const todayStr = new Date().toISOString().split("T")[0];
+      const todayDispatches = (Array.isArray(hist) ? hist : []).filter(t =>
+        String(t.to_restaurant_id) === String(selectedDest) &&
+        t.status === "dispatched" &&
+        (t.dispatched_at || t.created_at || "").startsWith(todayStr)
+      );
+      if (todayDispatches.length > 0) {
+        setTodayDispatchWarning(`You already dispatched to this store today (${todayDispatches.length} transfer${todayDispatches.length > 1 ? "s" : ""})`);
+      } else {
+        setTodayDispatchWarning("");
+      }
+    }).catch(() => {});
+  }, [selectedDest]);
 
   if (!canDo("dispatch")) return <PermissionDenied />;
   if (loadingData) return <LoadingState lines={4} />;
@@ -186,6 +209,13 @@ export default function DirectDispatchForm() {
               />
             ) : null;
           })()}
+          {/* Duplicate dispatch warning */}
+          {todayDispatchWarning && (
+            <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-md text-xs mt-2" data-testid="duplicate-dispatch-warning">
+              <AlertTriangle className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+              <span className="text-amber-700 font-medium">{todayDispatchWarning}</span>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -208,6 +238,7 @@ export default function DirectDispatchForm() {
                     <TableHead className="text-[10px] text-right">Min Threshold</TableHead>
                     <TableHead className="text-[10px] text-right">Gap</TableHead>
                     <TableHead className="text-[10px] text-right">Your Stock</TableHead>
+                    <TableHead className="text-[10px] text-right">Your Stock After</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -225,6 +256,10 @@ export default function DirectDispatchForm() {
                         <TableCell className="text-xs text-right tabular-nums text-muted-foreground">{item.minQty} {item.unit}</TableCell>
                         <TableCell className="text-xs text-right tabular-nums font-semibold text-amber-700">{item.gap > 0 ? item.gap : "—"} {item.gap > 0 ? item.unit : ""}</TableCell>
                         <TableCell className={`text-xs text-right tabular-nums ${item.ownQty === 0 ? "text-red-600" : ""}`}>{item.ownQty} {item.ownUnit}</TableCell>
+                        <TableCell className={`text-xs text-right tabular-nums font-mono ${item.afterDispatch < 0 ? "text-red-600 font-semibold" : "text-muted-foreground"}`}>
+                          {item.afterDispatch} {item.ownUnit}
+                          {item.afterDispatch < 0 && <span className="text-[9px] ml-1">(insufficient)</span>}
+                        </TableCell>
                       </TableRow>
                     );
                   })}
