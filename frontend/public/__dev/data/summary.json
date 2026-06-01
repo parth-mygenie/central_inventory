@@ -1,0 +1,106 @@
+{
+  "generated_at": "2026-06-01T06:49:14.127Z",
+  "project": "Central Inventory",
+  "repo": "parth-mygenie/central_inventory",
+  "branch": "10-may",
+  "totals": {
+    "items": 38,
+    "crs": 22,
+    "bugs": 16,
+    "debt": 19
+  },
+  "crs_by_status": {
+    "CLOSED": 17,
+    "PLANNED": 3,
+    "PROPOSED": 2
+  },
+  "bugs_by_status": {
+    "ACCEPTED": 11,
+    "DEFERRED": 2,
+    "RESOLVED": 2,
+    "OPEN": 1
+  },
+  "bugs_by_severity": {
+    "LOW": 9,
+    "MEDIUM": 4,
+    "INFO": 2,
+    "HIGH": 1
+  },
+  "debt_by_type": {
+    "CR": 19
+  },
+  "sprints": [
+    {
+      "key": "S0",
+      "name": "Pre-Governance (Retroactive)",
+      "status": "closed",
+      "start": "2026-01-01",
+      "end": "2026-05-29",
+      "goal": "All work done before governance layer existed. Retroactively registered.",
+      "cr_count": 14,
+      "bug_count": 15
+    },
+    {
+      "key": "S1",
+      "name": "Governance Setup",
+      "status": "closed",
+      "start": "2026-05-31",
+      "end": "2026-05-31",
+      "goal": "Establish governance layer, seed registries, build dev dashboard, clear doc debt.",
+      "cr_count": 1,
+      "bug_count": 0
+    },
+    {
+      "key": "S2",
+      "name": "Intelligent UI Implementation",
+      "status": "closed",
+      "start": "2026-06-01",
+      "end": "2026-06-01",
+      "goal": "Implement intelligence layer across all screens per Phase 7 frozen spec. Sprint A+B+C + polish + code review fixes.",
+      "cr_count": 2,
+      "bug_count": 1
+    }
+  ],
+  "signoff_pending": 16,
+  "owner_signoff_breakdown": {
+    "pending": [
+      "CR-001",
+      "CR-002",
+      "CR-003",
+      "CR-004",
+      "CR-005",
+      "CR-006",
+      "CR-007",
+      "CR-008",
+      "CR-009",
+      "CR-010",
+      "CR-011",
+      "CR-012",
+      "CR-013",
+      "CR-014",
+      "CR-021",
+      "CR-022"
+    ],
+    "done": [
+      "CR-019"
+    ],
+    "waived": [
+      "BUG-001",
+      "BUG-002",
+      "BUG-003",
+      "BUG-004",
+      "BUG-005",
+      "BUG-006",
+      "BUG-007",
+      "BUG-008",
+      "BUG-009",
+      "BUG-010",
+      "BUG-011",
+      "BUG-012",
+      "BUG-013",
+      "BUG-014",
+      "BUG-015",
+      "BUG-016"
+    ]
+  }
+}

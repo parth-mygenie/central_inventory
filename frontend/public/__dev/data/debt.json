@@ -1,0 +1,281 @@
+[
+  {
+    "type": "CR",
+    "id": "CR-001",
+    "title": "Slice 1 — Read-only Screens (Hub, Hierarchy, Store Detail, Login)",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "sprint_name": "Pre-Governance (Retroactive)",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-002",
+    "title": "Slice 2 — Pending Queues, Transfer Detail, Status Timeline",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "sprint_name": "Pre-Governance (Retroactive)",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-003",
+    "title": "Slice 3 — History & Ledger, Date/Status Filters",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "sprint_name": "Pre-Governance (Retroactive)",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-004",
+    "title": "Slice 4 — Transfer Write Flows (Dispatch, Request, Approve, Reject, Receive, Cancel)",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "sprint_name": "Pre-Governance (Retroactive)",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-005",
+    "title": "Slice 5 — Stock Adjustment, Wastage, Source Selector, Seed Shutdown",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "sprint_name": "Pre-Governance (Retroactive)",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-006",
+    "title": "P17 — Amend / Withdraw / Modification",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "sprint_name": "Pre-Governance (Retroactive)",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-007",
+    "title": "P17-Settings — Operational Settings CRUD",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "sprint_name": "Pre-Governance (Retroactive)",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-008",
+    "title": "P18 — Vendor Management CRUD",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "sprint_name": "Pre-Governance (Retroactive)",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-009",
+    "title": "P19 — Add Stock / Procurement",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "sprint_name": "Pre-Governance (Retroactive)",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-010",
+    "title": "P20 — Stock Inventory Summary (Self-Store)",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "sprint_name": "Pre-Governance (Retroactive)",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-011",
+    "title": "P21 — Catalogue CRUD (Ingredient/Product/Recipe/Addon-Recipe)",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "sprint_name": "Pre-Governance (Retroactive)",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-012",
+    "title": "P21-Gaps — Food Category + Addon CRUD + Ingredient Rename",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "sprint_name": "Pre-Governance (Retroactive)",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-013",
+    "title": "P22 — Daily Consumption Report",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "sprint_name": "Pre-Governance (Retroactive)",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-014",
+    "title": "P23 — Hierarchy Management + Bundle Push",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "sprint_name": "Pre-Governance (Retroactive)",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-015",
+    "title": "P24 — FEFO Batch Stock Detail Panel",
+    "status": "PLANNED",
+    "severity": null,
+    "sprint_key": null,
+    "sprint_name": "Unassigned",
+    "debt_reasons": [
+      "Session-Start: MISSING",
+      "Code-Gate: MISSING",
+      "QA-Report: MISSING",
+      "Owner-Signoff: MISSING"
+    ],
+    "missing_count": 4,
+    "pending_count": 0
+  },
+  {
+    "type": "CR",
+    "id": "CR-016",
+    "title": "P20-Phase2 — Stock Inventory Hierarchy Toggle",
+    "status": "PLANNED",
+    "severity": null,
+    "sprint_key": null,
+    "sprint_name": "Unassigned",
+    "debt_reasons": [
+      "Session-Start: MISSING",
+      "Impact-Analysis: MISSING",
+      "Impl-Plan: MISSING",
+      "Code-Gate: MISSING",
+      "QA-Report: MISSING",
+      "Owner-Signoff: MISSING"
+    ],
+    "missing_count": 6,
+    "pending_count": 0
+  },
+  {
+    "type": "CR",
+    "id": "CR-018",
+    "title": "P25 — Wastage Report Enhancements",
+    "status": "PLANNED",
+    "severity": null,
+    "sprint_key": null,
+    "sprint_name": "Unassigned",
+    "debt_reasons": [
+      "Session-Start: MISSING",
+      "Impact-Analysis: MISSING",
+      "Impl-Plan: MISSING",
+      "Code-Gate: MISSING",
+      "QA-Report: MISSING",
+      "Owner-Signoff: MISSING"
+    ],
+    "missing_count": 6,
+    "pending_count": 0
+  },
+  {
+    "type": "CR",
+    "id": "CR-021",
+    "title": "Intelligent UI Implementation — Sprint A+B+C + Polish",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S2",
+    "sprint_name": "Intelligent UI Implementation",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-022",
+    "title": "Code Quality Review Fixes — Security + React Patterns",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S2",
+    "sprint_name": "Intelligent UI Implementation",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  }
+]

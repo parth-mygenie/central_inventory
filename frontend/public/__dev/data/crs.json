@@ -1,0 +1,2034 @@
+[
+  {
+    "type": "CR",
+    "id": "CR-001",
+    "title": "Slice 1 — Read-only Screens (Hub, Hierarchy, Store Detail, Login)",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "phase": "Slice 1",
+    "files": [
+      "OperationsHub.jsx",
+      "HierarchySummary.jsx",
+      "StoreDetail.jsx",
+      "LoginPage.jsx",
+      "AppHeader.jsx",
+      "ContextSelector.jsx",
+      "api.js",
+      "terminology.js",
+      "screenVisibility.js"
+    ],
+    "notes": "Foundation screens. Read-only. Terminology adapter built. Screen visibility matrix established.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_CR_REQUIREMENT_PLANNING.md",
+          "memory/central_inventory/CENTRAL_INVENTORY_BUSINESS_RULE_AND_UX_FIELD_FREEZE.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_FRONTEND_SLICE_1_HANDOVER.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_FRONTEND_SLICE_1_QA_VALIDATION_REPORT.md",
+          "memory/central_inventory/CENTRAL_INVENTORY_FRONTEND_SLICE_1_QA_CHECKLIST.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "paths": [],
+        "tags": [
+          "AWAITING-OWNER"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 6,
+      "total": 7,
+      "pct": 86
+    },
+    "doc_count": 5,
+    "is_debt": true,
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "CR",
+    "id": "CR-002",
+    "title": "Slice 2 — Pending Queues, Transfer Detail, Status Timeline",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "phase": "Slice 2",
+    "files": [
+      "PendingQueues.jsx",
+      "TransferDetail.jsx",
+      "StatusTimeline.jsx",
+      "useCentralInventoryRealtime.js"
+    ],
+    "notes": "Operational inbox. Three queue tabs. Transfer detail with contextual actions.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_2_IMPLEMENTATION_PLANNING_HANDOVER.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_2_UX_REVIEW_AND_PLANNING.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_2_IMPLEMENTATION_PLAN.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_2_QA_HANDOVER.md",
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_2_IMPLEMENTATION_REPORT.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "paths": [],
+        "tags": [
+          "AWAITING-OWNER"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 6,
+      "total": 7,
+      "pct": 86
+    },
+    "doc_count": 5,
+    "is_debt": true,
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "CR",
+    "id": "CR-003",
+    "title": "Slice 3 — History & Ledger, Date/Status Filters",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "phase": "Slice 3",
+    "files": [
+      "HistoryLedger.jsx"
+    ],
+    "notes": "Transfer history with filters. Stock ledger view. Date range support.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_3_PLANNING_HANDOVER.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_3_HISTORY_LEDGER_PLANNING.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_3_HISTORY_LEDGER_PLANNING.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_3_QA_HANDOVER.md",
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_3_IMPLEMENTATION_REPORT.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "paths": [],
+        "tags": [
+          "AWAITING-OWNER"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 6,
+      "total": 7,
+      "pct": 86
+    },
+    "doc_count": 5,
+    "is_debt": true,
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "CR",
+    "id": "CR-004",
+    "title": "Slice 4 — Transfer Write Flows (Dispatch, Request, Approve, Reject, Receive, Cancel)",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "phase": "Slice 4",
+    "files": [
+      "DirectDispatchForm.jsx",
+      "RequestStockForm.jsx",
+      "ApproveWaveDialog.jsx",
+      "ReceiveDialog.jsx",
+      "useWriteAction.js",
+      "transferActions.js"
+    ],
+    "notes": "All transfer mutation flows. Source selector. Confirmation dialogs. 52/52 API tests pass.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_4_PLANNING_HANDOVER.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_4_WRITE_FLOW_PLANNING.md",
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_4_PLANNING_HANDOVER.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_4_IMPLEMENTATION_PLAN.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_4_QA_HANDOVER.md",
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_4_IMPLEMENTATION_REPORT.md",
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_1_TO_4_FINAL_ACCEPTANCE_AND_CLOSURE_REPORT.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "paths": [],
+        "tags": [
+          "AWAITING-OWNER"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 6,
+      "total": 7,
+      "pct": 86
+    },
+    "doc_count": 7,
+    "is_debt": true,
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "CR",
+    "id": "CR-005",
+    "title": "Slice 5 — Stock Adjustment, Wastage, Source Selector, Seed Shutdown",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "phase": "Slice 5",
+    "files": [
+      "StockAdjustmentForm.jsx",
+      "WastageEntryForm.jsx",
+      "WastageReport.jsx",
+      "reasonCategories.js"
+    ],
+    "notes": "7 phases. Stock adjustment (Central-only), wastage (all roles), wastage report, seed data shutdown, POS API migration. 55/57 QA pass.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_5_PHASE_0_APPROVAL_AND_BASELINE_LOCK.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_5_SCOPE_PLANNING.md",
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_5_SCOPE_PLANNING_HANDOVER.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_5_IMPLEMENTATION_PLANNING_HANDOVER.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_5_IMPLEMENTATION_PLAN.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_5_FINAL_QA_VALIDATION_REPORT.md",
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_5_FINAL_ACCEPTANCE_RECOMMENDATION.md",
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_5_OWNER_SMOKE_RESULT.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "paths": [],
+        "tags": [
+          "AWAITING-OWNER"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 6,
+      "total": 7,
+      "pct": 86
+    },
+    "doc_count": 8,
+    "is_debt": true,
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "CR",
+    "id": "CR-006",
+    "title": "P17 — Amend / Withdraw / Modification",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "phase": "P17",
+    "files": [
+      "TransferDetail.jsx",
+      "api.js"
+    ],
+    "notes": "Transfer edit/amend by source. Withdraw flow. Status reset on edit.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/phase2/P17_amend_withdraw_modification_plan.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/phase2/P17_amend_withdraw_modification_plan.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/api_implementation_status_p17_addendum.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "paths": [],
+        "tags": [
+          "AWAITING-OWNER"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 6,
+      "total": 7,
+      "pct": 86
+    },
+    "doc_count": 3,
+    "is_debt": true,
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "CR",
+    "id": "CR-007",
+    "title": "P17-Settings — Operational Settings CRUD",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "phase": "P17-Settings",
+    "files": [
+      "OperationalSettings.jsx",
+      "api.js"
+    ],
+    "notes": "Settings management screen. Lateral transfer toggle. Config CRUD.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/phase2/P17P18P19_settings_vendors_procurement_plan.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/phase2/P17P18P19_settings_vendors_procurement_plan.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/api_implementation_status_p17p18p19_addendum.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "paths": [],
+        "tags": [
+          "AWAITING-OWNER"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 6,
+      "total": 7,
+      "pct": 86
+    },
+    "doc_count": 3,
+    "is_debt": true,
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "CR",
+    "id": "CR-008",
+    "title": "P18 — Vendor Management CRUD",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "phase": "P18",
+    "files": [
+      "VendorManagement.jsx",
+      "api.js"
+    ],
+    "notes": "Vendor list, create, edit, delete.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/phase2/P17P18P19_settings_vendors_procurement_plan.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/phase2/P17P18P19_settings_vendors_procurement_plan.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/api_implementation_status_p17p18p19_addendum.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "paths": [],
+        "tags": [
+          "AWAITING-OWNER"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 6,
+      "total": 7,
+      "pct": 86
+    },
+    "doc_count": 3,
+    "is_debt": true,
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "CR",
+    "id": "CR-009",
+    "title": "P19 — Add Stock / Procurement",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "phase": "P19",
+    "files": [
+      "AddStockPurchaseForm.jsx",
+      "api.js"
+    ],
+    "notes": "Procurement form with vendor, batch, expiry, unit selection.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/phase2/P17P18P19_settings_vendors_procurement_plan.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/phase2/P17P18P19_settings_vendors_procurement_plan.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/api_implementation_status_p17p18p19_addendum.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "paths": [],
+        "tags": [
+          "AWAITING-OWNER"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 6,
+      "total": 7,
+      "pct": 86
+    },
+    "doc_count": 3,
+    "is_debt": true,
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "CR",
+    "id": "CR-010",
+    "title": "P20 — Stock Inventory Summary (Self-Store)",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "phase": "P20",
+    "files": [
+      "StockInventorySummary.jsx",
+      "useStockInventory.js",
+      "api.js"
+    ],
+    "notes": "Self-store inventory view. 14/14 FE + 11/11 BE tests pass. Hierarchy toggle deferred.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/phase2/P20_stock_inventory_summary_plan.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/phase2/P20_stock_inventory_summary_plan.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/api_implementation_status_p20_implementation_addendum.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "paths": [],
+        "tags": [
+          "AWAITING-OWNER"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 6,
+      "total": 7,
+      "pct": 86
+    },
+    "doc_count": 3,
+    "is_debt": true,
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "CR",
+    "id": "CR-011",
+    "title": "P21 — Catalogue CRUD (Ingredient/Product/Recipe/Addon-Recipe)",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "phase": "P21",
+    "files": [
+      "IngredientCatalogue.jsx",
+      "ProductCatalogue.jsx",
+      "RecipeCatalogue.jsx",
+      "AddonRecipeCatalogue.jsx",
+      "useCatalogueCrud.js",
+      "api.js"
+    ],
+    "notes": "Full CRUD for 4 catalogue types. 17/17 FE + 19/19 BE tests pass.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/phase3/P21_catalogue_planning.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/phase3/P21_catalogue_planning.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/api_implementation_status_p21_catalogue_implementation_addendum.md",
+          "AI/Plans/api_implementation_status_p21_catalogue_addendum.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "paths": [],
+        "tags": [
+          "AWAITING-OWNER"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 6,
+      "total": 7,
+      "pct": 86
+    },
+    "doc_count": 4,
+    "is_debt": true,
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "CR",
+    "id": "CR-012",
+    "title": "P21-Gaps — Food Category + Addon CRUD + Ingredient Rename",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "phase": "P21-Gaps",
+    "files": [
+      "ItemEditorDialog.jsx",
+      "api.js"
+    ],
+    "notes": "Gap closure. 17/17 FE + 30/30 BE tests pass.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/api_implementation_status_p21_catalogue_gaps_addendum.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/api_implementation_status_p21_catalogue_gaps_addendum.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/api_implementation_status_p21_gaps_implementation_addendum.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "paths": [],
+        "tags": [
+          "AWAITING-OWNER"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 6,
+      "total": 7,
+      "pct": 86
+    },
+    "doc_count": 3,
+    "is_debt": true,
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "CR",
+    "id": "CR-013",
+    "title": "P22 — Daily Consumption Report",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "phase": "P22",
+    "files": [
+      "DailyConsumptionReport.jsx",
+      "useConsumptionReport.js",
+      "api.js"
+    ],
+    "notes": "Consumption report with date filter, role scoping. 12/12 FE tests pass.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/phase3/P22_daily_consumption_report_planning.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/phase3/P22_daily_consumption_report_planning.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/api_implementation_status_p22_addendum.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "paths": [],
+        "tags": [
+          "AWAITING-OWNER"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 6,
+      "total": 7,
+      "pct": 86
+    },
+    "doc_count": 3,
+    "is_debt": true,
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "CR",
+    "id": "CR-014",
+    "title": "P23 — Hierarchy Management + Bundle Push",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "phase": "P23",
+    "files": [
+      "HierarchyManagement.jsx",
+      "useHierarchyManagement.js",
+      "api.js"
+    ],
+    "notes": "Hierarchy CRUD, franchise push, store creation. 12/12 FE tests pass.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/phase3/P23_hierarchy_management_planning.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/phase3/P23_hierarchy_management_planning.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/api_implementation_status_p23_addendum.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "paths": [],
+        "tags": [
+          "AWAITING-OWNER"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 6,
+      "total": 7,
+      "pct": 86
+    },
+    "doc_count": 3,
+    "is_debt": true,
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "CR",
+    "id": "CR-015",
+    "title": "P24 — FEFO Batch Stock Detail Panel",
+    "status": "PLANNED",
+    "severity": null,
+    "sprint_key": null,
+    "phase": "P24",
+    "files": [],
+    "notes": "API validated (19 probes). 3-phase implementation planned. ~10-13h estimate.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "MISSING",
+        "paths": [],
+        "tags": []
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/phase3/P24_fefo_batch_stock_planning.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/api_implementation_status_p24_addendum.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/phase3/P24_fefo_batch_stock_planning.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "MISSING",
+        "paths": [],
+        "tags": []
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "MISSING",
+        "paths": [],
+        "tags": []
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "MISSING",
+        "paths": [],
+        "tags": []
+      }
+    ],
+    "completeness": {
+      "done": 3,
+      "total": 7,
+      "pct": 43
+    },
+    "doc_count": 3,
+    "is_debt": true,
+    "debt_reasons": [
+      "Session-Start: MISSING",
+      "Code-Gate: MISSING",
+      "QA-Report: MISSING",
+      "Owner-Signoff: MISSING"
+    ],
+    "sprint_name": "Unassigned"
+  },
+  {
+    "type": "CR",
+    "id": "CR-016",
+    "title": "P20-Phase2 — Stock Inventory Hierarchy Toggle",
+    "status": "PLANNED",
+    "severity": null,
+    "sprint_key": null,
+    "phase": "P20-Phase2",
+    "files": [],
+    "notes": "Cross-store stock comparison. API validated. ~3-4h estimate.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "MISSING",
+        "paths": [],
+        "tags": []
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/phase2/P20_stock_inventory_summary_plan.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "MISSING",
+        "paths": [],
+        "tags": []
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "MISSING",
+        "paths": [],
+        "tags": []
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "MISSING",
+        "paths": [],
+        "tags": []
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "MISSING",
+        "paths": [],
+        "tags": []
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "MISSING",
+        "paths": [],
+        "tags": []
+      }
+    ],
+    "completeness": {
+      "done": 1,
+      "total": 7,
+      "pct": 14
+    },
+    "doc_count": 1,
+    "is_debt": true,
+    "debt_reasons": [
+      "Session-Start: MISSING",
+      "Impact-Analysis: MISSING",
+      "Impl-Plan: MISSING",
+      "Code-Gate: MISSING",
+      "QA-Report: MISSING",
+      "Owner-Signoff: MISSING"
+    ],
+    "sprint_name": "Unassigned"
+  },
+  {
+    "type": "CR",
+    "id": "CR-017",
+    "title": "P21-Smart — Smart Dispatch / Request Assistance",
+    "status": "PROPOSED",
+    "severity": null,
+    "sprint_key": null,
+    "phase": "P21-Smart",
+    "files": [],
+    "notes": "Brainstorm-level planning only. Low-stock suggestions on dispatch form. ~10-15h estimate.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "MISSING",
+        "paths": [],
+        "tags": []
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/phase3/P21_smart_dispatch_request_assistance.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "MISSING",
+        "paths": [],
+        "tags": []
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "MISSING",
+        "paths": [],
+        "tags": []
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "MISSING",
+        "paths": [],
+        "tags": []
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "MISSING",
+        "paths": [],
+        "tags": []
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "MISSING",
+        "paths": [],
+        "tags": []
+      }
+    ],
+    "completeness": {
+      "done": 1,
+      "total": 7,
+      "pct": 14
+    },
+    "doc_count": 1,
+    "is_debt": false,
+    "debt_reasons": [
+      "Session-Start: MISSING",
+      "Impact-Analysis: MISSING",
+      "Impl-Plan: MISSING",
+      "Code-Gate: MISSING",
+      "QA-Report: MISSING",
+      "Owner-Signoff: MISSING"
+    ],
+    "sprint_name": "Unassigned"
+  },
+  {
+    "type": "CR",
+    "id": "CR-018",
+    "title": "P25 — Wastage Report Enhancements",
+    "status": "PLANNED",
+    "severity": null,
+    "sprint_key": null,
+    "phase": "P25",
+    "files": [],
+    "notes": "Enhanced wastage report features. API validated.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "MISSING",
+        "paths": [],
+        "tags": []
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/api_implementation_status_p25_addendum.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "MISSING",
+        "paths": [],
+        "tags": []
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "MISSING",
+        "paths": [],
+        "tags": []
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "MISSING",
+        "paths": [],
+        "tags": []
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "MISSING",
+        "paths": [],
+        "tags": []
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "MISSING",
+        "paths": [],
+        "tags": []
+      }
+    ],
+    "completeness": {
+      "done": 1,
+      "total": 7,
+      "pct": 14
+    },
+    "doc_count": 1,
+    "is_debt": true,
+    "debt_reasons": [
+      "Session-Start: MISSING",
+      "Impact-Analysis: MISSING",
+      "Impl-Plan: MISSING",
+      "Code-Gate: MISSING",
+      "QA-Report: MISSING",
+      "Owner-Signoff: MISSING"
+    ],
+    "sprint_name": "Unassigned"
+  },
+  {
+    "type": "CR",
+    "id": "CR-019",
+    "title": "Intelligent UI Freeze — Screen Intelligence Layer",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S1",
+    "phase": "UI Freeze",
+    "files": [],
+    "notes": "ALL 24 screens approved. Phase 7 frozen. Implementation handed off to CR-021.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "DONE",
+        "tags": [],
+        "paths": [
+          "control/sessions/INTELLIGENT_UI_FREEZE_PHASE_0_1.md"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "tags": [],
+        "paths": [
+          "control/sessions/INTELLIGENT_UI_FREEZE_PHASE_0_1.md"
+        ]
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "tags": [],
+        "paths": [
+          "control/sessions/INTELLIGENT_UI_FREEZE_PHASE_2_FLOW_B.md",
+          "control/sessions/INTELLIGENT_UI_FREEZE_PHASE_3_FLOW_B.md"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "tags": [],
+        "paths": [
+          "control/sessions/INTELLIGENT_UI_FREEZE_MASTER_PROGRESS.md"
+        ]
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "DONE",
+        "tags": [],
+        "paths": [
+          "control/sessions/INTELLIGENT_UI_FREEZE_PHASE_7_FINAL_FREEZE.md"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "tags": [],
+        "paths": [
+          "control/sessions/INTELLIGENT_UI_FREEZE_PHASE_6_QA_REVIEW.md"
+        ]
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "DONE",
+        "tags": [
+          "OWNER-APPROVED"
+        ],
+        "paths": [
+          "control/sessions/ui_review/OWNER_UI_APPROVAL_CHECKLIST.md"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 8,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "Governance Setup"
+  },
+  {
+    "type": "CR",
+    "id": "CR-020",
+    "title": "Daily Intelligence Digest (SMS + WhatsApp + Email)",
+    "status": "PROPOSED",
+    "severity": null,
+    "sprint_key": null,
+    "phase": "Future",
+    "files": [],
+    "notes": "Auto-generated daily summary: expiring items, stale approvals, stores needing restocking. Channels: SMS, WhatsApp, Email. Owner confirmed: next phase, not now.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "MISSING",
+        "tags": [],
+        "paths": []
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "MISSING",
+        "tags": [],
+        "paths": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "MISSING",
+        "tags": [],
+        "paths": []
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "MISSING",
+        "tags": [],
+        "paths": []
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "MISSING",
+        "tags": [],
+        "paths": []
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "MISSING",
+        "tags": [],
+        "paths": []
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "MISSING",
+        "tags": [],
+        "paths": []
+      }
+    ],
+    "completeness": {
+      "done": 0,
+      "total": 7,
+      "pct": 0
+    },
+    "doc_count": 0,
+    "is_debt": false,
+    "debt_reasons": [
+      "Session-Start: MISSING",
+      "Intake: MISSING",
+      "Impact-Analysis: MISSING",
+      "Impl-Plan: MISSING",
+      "Code-Gate: MISSING",
+      "QA-Report: MISSING",
+      "Owner-Signoff: MISSING"
+    ],
+    "sprint_name": "Unassigned"
+  },
+  {
+    "type": "CR",
+    "id": "CR-021",
+    "title": "Intelligent UI Implementation — Sprint A+B+C + Polish",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S2",
+    "phase": "Implementation",
+    "files": [
+      "OperationsHub.jsx",
+      "StockInventorySummary.jsx",
+      "StockDetailPanel.jsx",
+      "HistoryLedger.jsx",
+      "StatusTimeline.jsx",
+      "PendingQueues.jsx",
+      "TransferDetail.jsx",
+      "ReceiveDialog.jsx",
+      "ApproveWaveDialog.jsx",
+      "DisputeResolutionDialog.jsx",
+      "SourceSelector.jsx",
+      "StockAdjustmentForm.jsx",
+      "WastageEntryForm.jsx",
+      "OperationalSettings.jsx",
+      "VendorManagement.jsx",
+      "WastageReport.jsx",
+      "IngredientCatalogue.jsx",
+      "DailyConsumptionReport.jsx",
+      "HierarchyManagement.jsx",
+      "DirectDispatchForm.jsx",
+      "RequestStockForm.jsx",
+      "useStockIntelligence.js",
+      "StockIntelligenceBar.jsx",
+      "PostSubmitConfirmation.jsx",
+      "StoreHealthStrip.jsx",
+      "FulfillmentVerdict.jsx",
+      "formatters.js",
+      "AddStockPurchaseForm.jsx",
+      "ProductCatalogue.jsx",
+      "RecipeCatalogue.jsx",
+      "AddonRecipeCatalogue.jsx",
+      "HierarchySummary.jsx",
+      "StoreDetail.jsx"
+    ],
+    "notes": "Retroactive registration. 22+ screens upgraded, 6 new files, 26 modified. 55/55 tests PASS + 6 additional screen fixes + Procurement 3-mode upgrade. Governance gap: work started without CR registration.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "DONE",
+        "tags": [
+          "RETROACTIVE"
+        ],
+        "paths": [
+          "control/sessions/CR021_SESSION_START.md"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "tags": [
+          "RETROACTIVE"
+        ],
+        "paths": [
+          "control/sessions/INTELLIGENT_UI_FREEZE_PHASE_7_FINAL_FREEZE.md"
+        ]
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "tags": [
+          "RETROACTIVE"
+        ],
+        "paths": [
+          "control/sessions/ui_review/UI_UX_FINAL_DESIGN_REVIEW_REPORT.md"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "tags": [
+          "RETROACTIVE"
+        ],
+        "paths": [
+          "control/sessions/INTELLIGENT_UI_FREEZE_PHASE_7_FINAL_FREEZE.md"
+        ]
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "DONE",
+        "tags": [
+          "RETROACTIVE"
+        ],
+        "paths": [
+          "control/sessions/ui_review/OWNER_UI_APPROVAL_CHECKLIST.md"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "tags": [],
+        "paths": [
+          "test_reports/iteration_27.json",
+          "test_reports/iteration_28.json",
+          "test_reports/iteration_29.json",
+          "test_reports/iteration_30.json"
+        ]
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "tags": [
+          "AWAITING-OWNER"
+        ],
+        "paths": []
+      }
+    ],
+    "completeness": {
+      "done": 6,
+      "total": 7,
+      "pct": 86
+    },
+    "doc_count": 9,
+    "is_debt": true,
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "Intelligent UI Implementation"
+  },
+  {
+    "type": "CR",
+    "id": "CR-022",
+    "title": "Code Quality Review Fixes — Security + React Patterns",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S2",
+    "phase": "Code Review",
+    "files": [
+      "test_central_inventory_api.py",
+      "test_p12_p14_contract.py",
+      "test_p17_p18_p19_features.py",
+      "test_p21_catalogue.py",
+      "test_p21_catalogue_gaps.py",
+      "test_p25_wastage_report.py",
+      "test_source_selector_flow.py",
+      "test_request_stock_flow.py",
+      "test_p20_stock_inventory.py",
+      "test_p17_lifecycle.py",
+      "test_slice4_write_apis.py",
+      "useWriteAction.js",
+      "useLoginContext.js",
+      "api.js",
+      "seed_data.py",
+      "StateDisplays.jsx",
+      "ReceiveDialog.jsx",
+      "DisputeResolutionDialog.jsx",
+      "DirectDispatchForm.jsx",
+      "RequestStockForm.jsx",
+      "WastageReport.jsx",
+      "StockDetailPanel.jsx",
+      "IngredientComposer.jsx",
+      "TransferDetail.jsx",
+      "StoreDetail.jsx"
+    ],
+    "notes": "Retroactive registration. Hardcoded secrets removed, array-index keys fixed, stale closure fixed, empty catches logged.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "DONE",
+        "tags": [
+          "RETROACTIVE"
+        ],
+        "paths": [
+          "control/sessions/CR022_SESSION_START.md"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "tags": [
+          "RETROACTIVE"
+        ],
+        "paths": [
+          "control/sessions/CR022_SESSION_START.md"
+        ]
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "tags": [
+          "LOW-RISK-FIXES"
+        ],
+        "paths": []
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "tags": [
+          "LOW-RISK-FIXES"
+        ],
+        "paths": []
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "tags": [
+          "LOW-RISK-FIXES"
+        ],
+        "paths": []
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "tags": [],
+        "paths": [
+          "test_reports/iteration_30.json"
+        ]
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "tags": [
+          "AWAITING-OWNER"
+        ],
+        "paths": []
+      }
+    ],
+    "completeness": {
+      "done": 6,
+      "total": 7,
+      "pct": 86
+    },
+    "doc_count": 3,
+    "is_debt": true,
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "Intelligent UI Implementation"
+  }
+]

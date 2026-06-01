@@ -1,0 +1,1389 @@
+[
+  {
+    "type": "BUG",
+    "id": "BUG-001",
+    "title": "Read-only mode banner still shows after write flows implemented",
+    "status": "ACCEPTED",
+    "severity": "LOW",
+    "sprint_key": "S0",
+    "phase": "Slice 1-4",
+    "files": [
+      "AppHeader.jsx"
+    ],
+    "notes": "Cosmetic. Text update deferred. Write flows work regardless.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_1_TO_4_FINAL_ACCEPTANCE_AND_CLOSURE_REPORT.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 1,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-002",
+    "title": "Transfer History lacks store type badges",
+    "status": "ACCEPTED",
+    "severity": "LOW",
+    "sprint_key": "S0",
+    "phase": "Slice 3",
+    "files": [
+      "HistoryLedger.jsx"
+    ],
+    "notes": "Backend limitation. History API doesn't return restaurant_type. Store names shown correctly.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_1_TO_4_FINAL_ACCEPTANCE_AND_CLOSURE_REPORT.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 1,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-003",
+    "title": "Stock Ledger N+1 API calls (lazy-loads transfer details)",
+    "status": "DEFERRED",
+    "severity": "MEDIUM",
+    "sprint_key": "S0",
+    "phase": "Slice 3",
+    "files": [
+      "HistoryLedger.jsx"
+    ],
+    "notes": "Acceptable at current scale. Needs dedicated ledger API from backend for production.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_1_TO_4_FINAL_ACCEPTANCE_AND_CLOSURE_REPORT.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 1,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-004",
+    "title": "Before/After quantity always shows dash",
+    "status": "ACCEPTED",
+    "severity": "MEDIUM",
+    "sprint_key": "S0",
+    "phase": "Slice 3",
+    "files": [
+      "HistoryLedger.jsx"
+    ],
+    "notes": "Backend limitation. No before/after data in API. Owner approved (Q-S3-010: A).",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_1_TO_4_FINAL_ACCEPTANCE_AND_CLOSURE_REPORT.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 1,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-005",
+    "title": "Actor names display as numeric IDs instead of names",
+    "status": "ACCEPTED",
+    "severity": "LOW",
+    "sprint_key": "S0",
+    "phase": "Slice 3",
+    "files": [
+      "HistoryLedger.jsx",
+      "TransferDetail.jsx"
+    ],
+    "notes": "Backend limitation. No user name resolution API. Owner approved (Q-S3-007: A).",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_1_TO_4_FINAL_ACCEPTANCE_AND_CLOSURE_REPORT.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 1,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-006",
+    "title": "filter_bucket source selector may fail with batched stock",
+    "status": "ACCEPTED",
+    "severity": "LOW",
+    "sprint_key": "S0",
+    "phase": "Slice 4",
+    "files": [
+      "DirectDispatchForm.jsx"
+    ],
+    "notes": "Warning shown to users. Segment mode is default and 100% reliable.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_1_TO_4_FINAL_ACCEPTANCE_AND_CLOSURE_REPORT.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 1,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-007",
+    "title": "Stock Adjustment has no history/traceability API",
+    "status": "ACCEPTED",
+    "severity": "MEDIUM",
+    "sprint_key": "S0",
+    "phase": "Slice 5",
+    "files": [
+      "StockAdjustmentForm.jsx"
+    ],
+    "notes": "No adjustment history API exists. Accepted risk per Implementation Plan Risk #3.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_5_FINAL_QA_VALIDATION_REPORT.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 1,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-008",
+    "title": "Wastage ledger rows empty in preprod (no wastage recorded yet)",
+    "status": "ACCEPTED",
+    "severity": "LOW",
+    "sprint_key": "S0",
+    "phase": "Slice 5",
+    "files": [
+      "HistoryLedger.jsx"
+    ],
+    "notes": "Expected. deriveWastageEntries() ready for when data exists.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_5_FINAL_QA_VALIDATION_REPORT.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 1,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-009",
+    "title": "Wastage Report may error for Master/Outlet roles",
+    "status": "ACCEPTED",
+    "severity": "LOW",
+    "sprint_key": "S0",
+    "phase": "Slice 5",
+    "files": [
+      "WastageReport.jsx"
+    ],
+    "notes": "Preprod API scope restriction. Error state with Retry is correct UX.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_5_FINAL_QA_VALIDATION_REPORT.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 1,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-010",
+    "title": "add-stock increase API payload estimated (may need runtime adjustment)",
+    "status": "ACCEPTED",
+    "severity": "MEDIUM",
+    "sprint_key": "S0",
+    "phase": "Slice 5",
+    "files": [
+      "api.js"
+    ],
+    "notes": "Decrease verified_ready. Increase payload estimated from docs.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_5_FINAL_QA_VALIDATION_REPORT.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 1,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-011",
+    "title": "Edit Transfer button was noop (resolved in P17)",
+    "status": "RESOLVED",
+    "severity": "LOW",
+    "sprint_key": "S0",
+    "phase": "P17",
+    "files": [
+      "TransferDetail.jsx"
+    ],
+    "notes": "Was OI-001. Resolved by CR-006 (P17 Amend/Withdraw).",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_POST_SLICE_4_OPEN_ITEMS_REGISTER.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/api_implementation_status_p17_addendum.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 2,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-012",
+    "title": "Parent store resolution uses hierarchy heuristic",
+    "status": "DEFERRED",
+    "severity": "LOW",
+    "sprint_key": "S0",
+    "phase": "Slice 4",
+    "files": [
+      "DirectDispatchForm.jsx",
+      "RequestStockForm.jsx"
+    ],
+    "notes": "Works with current data. May need refinement for complex hierarchies.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_1_TO_4_FINAL_ACCEPTANCE_AND_CLOSURE_REPORT.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 1,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-013",
+    "title": "Date range filter is client-side only (seed data ignores params)",
+    "status": "ACCEPTED",
+    "severity": "LOW",
+    "sprint_key": "S0",
+    "phase": "Slice 3",
+    "files": [
+      "HistoryLedger.jsx"
+    ],
+    "notes": "Works with real POS API. Seed data (now removed) was the cause.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_1_TO_4_FINAL_ACCEPTANCE_AND_CLOSURE_REPORT.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 1,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-014",
+    "title": "Test entities 787/788/789 created in live POS during P23 probing",
+    "status": "OPEN",
+    "severity": "INFO",
+    "sprint_key": "S0",
+    "phase": "P23",
+    "files": [],
+    "notes": "Created during API investigation. Still exist in POS preprod. Need cleanup.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/PROJECT_LEDGER.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 1,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-015",
+    "title": "Negative stock exists in legacy data",
+    "status": "ACCEPTED",
+    "severity": "INFO",
+    "sprint_key": "S0",
+    "phase": "Pre-existing",
+    "files": [],
+    "notes": "Legacy data from before strict enforcement. Does not affect new transfers. May confuse stock reports.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/SYSTEM_HANDOVER_DOCUMENT.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 1,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-016",
+    "title": "display_qty string causes TypeError in arithmetic operations",
+    "status": "RESOLVED",
+    "severity": "HIGH",
+    "sprint_key": "S2",
+    "phase": "Sprint C",
+    "files": [
+      "StockAdjustmentForm.jsx",
+      "WastageEntryForm.jsx"
+    ],
+    "notes": "POS API returns display_qty as string. Arithmetic without Number() wrapper caused toFixed() TypeError. Fixed by wrapping in Number().",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "DONE",
+        "tags": [
+          "RETROACTIVE"
+        ],
+        "paths": [
+          "control/sessions/BUG016_SESSION_START.md"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "tags": [],
+        "paths": [
+          "control/sessions/BUG016_SESSION_START.md"
+        ]
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "tags": [],
+        "paths": []
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "tags": [],
+        "paths": []
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "tags": [],
+        "paths": []
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "tags": [],
+        "paths": [
+          "test_reports/iteration_29.json"
+        ]
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "tags": [
+          "BUG-FIX"
+        ],
+        "paths": []
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 3,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "Intelligent UI Implementation"
+  }
+]
