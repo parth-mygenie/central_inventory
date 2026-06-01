@@ -139,10 +139,16 @@ export default function PendingQueues() {
 
     // Fulfillment check
     let fulfillableCount = 0;
+    let insufficientItems = [];
     lines.forEach((l) => {
       const qty = l.requestedDisplayQty ?? l.quantity ?? 0;
       const myItem = ownStock.find((s) => s.stock_title === l.stock_title);
-      if (myItem && myItem.display_qty >= qty) fulfillableCount++;
+      if (myItem && myItem.display_qty >= qty) {
+        fulfillableCount++;
+      } else {
+        const have = myItem?.display_qty ?? 0;
+        if (have < qty) insufficientItems.push({ title: l.stock_title, have, need: qty });
+      }
     });
 
     return (
@@ -201,7 +207,15 @@ export default function PendingQueues() {
                         <span className="font-medium">{l.stock_title}</span>
                         <span className="text-muted-foreground ml-1">{l.unit}</span>
                       </td>
-                      <td className="px-4 py-2 tabular-nums font-mono">{qty} {l.unit}</td>
+                      <td className="px-4 py-2 tabular-nums font-mono">
+                        <span>{qty} {l.unit}</span>
+                        {myItem && myQty > 0 && myQty < qty && (
+                          <span className="text-red-600 text-[10px] ml-1">(has {myQty})</span>
+                        )}
+                        {myItem && myQty === 0 && (
+                          <span className="text-red-600 text-[10px] ml-1">(has 0)</span>
+                        )}
+                      </td>
                       <td className="px-4 py-2">
                         <span className={`tabular-nums ${myQty === 0 ? "text-red-600 font-semibold" : insufficient ? "text-amber-600" : "text-muted-foreground"}`}>
                           {myQty} {myItem?.display_unit || l.unit}
@@ -220,15 +234,30 @@ export default function PendingQueues() {
 
         {/* Card Footer */}
         <div className="flex items-center justify-between px-4 py-2.5 bg-muted/20 border-t border-border/30">
-          <span className="text-[10px] text-muted-foreground">
-            {lines.length} item{lines.length !== 1 ? "s" : ""} · Requested by {fromName}
-          </span>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[10px] text-muted-foreground">
+              {lines.length} item{lines.length !== 1 ? "s" : ""} · Requested by {fromName}
+            </span>
+            {insufficientItems.length > 0 && (
+              <span className="text-[10px] text-red-600 font-medium" data-testid={`insufficient-warning-${id}`}>
+                {insufficientItems[0].title}: insufficient stock ({insufficientItems[0].have} of {insufficientItems[0].need} requested)
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+            <Button variant="outline" size="sm" className="h-7 text-[10px] text-red-600 border-red-200 hover:bg-red-50" data-testid={`reject-btn-${id}`} onClick={() => navigate(`/transfer/${id}`)}>
+              Reject
+            </Button>
             <Button variant="outline" size="sm" className="h-7 text-[10px]" onClick={() => navigate(`/transfer/${id}`)}>
               View Details
             </Button>
-            <Button variant="default" size="sm" className="h-7 text-[10px]" onClick={() => navigate(`/transfer/${id}`)}>
-              Approve
+            {lines.length > 1 && (
+              <Button variant="outline" size="sm" className="h-7 text-[10px]" onClick={() => navigate(`/transfer/${id}`)}>
+                Partial Approve
+              </Button>
+            )}
+            <Button variant="default" size="sm" className="h-7 text-[10px]" data-testid={`approve-btn-${id}`} onClick={() => navigate(`/transfer/${id}`)}>
+              Approve All
             </Button>
           </div>
         </div>

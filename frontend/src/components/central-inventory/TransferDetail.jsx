@@ -394,7 +394,9 @@ export default function TransferDetail() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
         <Card>
           <CardContent className="py-3 px-4">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">From</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">
+              From {String(data.from_restaurant_id) === String(restaurantId) ? "(Source — You)" : ""}
+            </p>
             <div className="flex items-center gap-2">
               <span data-testid="transfer-from-name" className="text-sm font-semibold">{fromName}</span>
               {fromType && <StoreTypeBadge backendType={fromType} />}
@@ -403,7 +405,9 @@ export default function TransferDetail() {
         </Card>
         <Card>
           <CardContent className="py-3 px-4">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">To</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">
+              To {String(data.to_restaurant_id) !== String(restaurantId) ? "(Requester)" : "(You)"}
+            </p>
             <div className="flex items-center gap-2">
               <span data-testid="transfer-to-name" className="text-sm font-semibold">{toName}</span>
               {toType && <StoreTypeBadge backendType={toType} />}
@@ -413,6 +417,14 @@ export default function TransferDetail() {
       </div>
 
       {/* C1: Requester Store Snapshot + Approval Impact (Central only, requested/approved status) */}
+      {isTopLevel && ["requested", "approved", "partially_approved"].includes(data.status) && snapshotLoading && requesterStock.length === 0 && (
+        <Card className="mb-4">
+          <CardContent className="py-6 px-4 text-center">
+            <Loader2 className="h-4 w-4 animate-spin mx-auto mb-2 text-muted-foreground" />
+            <p className="text-xs text-muted-foreground">Loading requester store snapshot...</p>
+          </CardContent>
+        </Card>
+      )}
       {isTopLevel && ["requested", "approved", "partially_approved"].includes(data.status) && requesterStock.length > 0 && (
         <>
           {/* REQUESTER STORE SNAPSHOT */}
@@ -558,15 +570,7 @@ export default function TransferDetail() {
           </Card>
         </>
       )}
-      {isTopLevel && ["requested", "approved", "partially_approved"].includes(data.status) && snapshotLoading && (
-        <Card className="mb-4">
-          <CardContent className="py-6 px-4 text-center">
-            <Loader2 className="h-4 w-4 animate-spin mx-auto mb-2 text-muted-foreground" />
-            <p className="text-xs text-muted-foreground">Loading requester store snapshot...</p>
-          </CardContent>
-        </Card>
-      )}
-
+      {/* Transfer metadata */}
       <Card className="mb-4">
         <CardContent className="py-3 px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

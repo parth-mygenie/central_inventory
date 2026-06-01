@@ -162,9 +162,7 @@ export default function OperationsHub() {
         </p>
       </div>
 
-      {loading ? (
-        <LoadingState lines={4} />
-      ) : error ? (
+      {error && !loading ? (
         <ErrorState message={error} onRetry={refresh} />
       ) : (
         <>
@@ -227,6 +225,7 @@ export default function OperationsHub() {
           )}
 
           {/* ── Priority KPI Cards ────────────────────────── */}
+          {loading && <div className="flex items-center gap-2 mb-3 text-xs text-muted-foreground"><RefreshCw className="h-3 w-3 animate-spin" /> Loading intelligence data...</div>}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
             {canDo("approve") && (
               <Card
@@ -316,6 +315,12 @@ export default function OperationsHub() {
           </div>
 
           {/* ── Store Health Grid (Central only) ──────────── */}
+          {isTopLevel && storeHealthLoading && (
+            <div className="mb-5">
+              <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Store Health Across Hierarchy</h2>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground py-4"><RefreshCw className="h-3 w-3 animate-spin" /> Computing store health...</div>
+            </div>
+          )}
           {isTopLevel && storeHealth.length > 0 && (
             <div className="mb-5">
               <div className="flex items-center justify-between mb-2">
