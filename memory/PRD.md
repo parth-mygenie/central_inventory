@@ -68,12 +68,37 @@ Pull code from GitHub repo `Abhi-mygenie/central-iventory.git` branch `02-june`,
 ### DEFERRED
 - B10/G-017: Vendor purchase history (no API exists)
 
-### Performance Optimization (P1)
+### 2026-06-01 (Session 2, Part 2): P1 Preview Gap Fixes
+**4 feature areas fixed:**
+
+1. **PendingQueues — Requester Store Health Mini-bar**
+   - Each approval card now shows health bar below item table
+   - "StoreName store health: ●X out ●X low X adequate"
+   - Urgent stores (>=2 out) get red background highlight
+   - Data fetched via batch hierarchy-detail per unique requester
+
+2. **DirectDispatchForm — YOUR STOCK AFTER Projection + Duplicate Warning**
+   - "What This Store Needs" table now includes "Your Stock After" column
+   - Negative projections in red with "(insufficient)" label
+   - Duplicate dispatch warning: "You already dispatched to this store today (N transfers)"
+
+3. **ReceiveDialog — Dispatched vs Requested Comparison** (already implemented, verified)
+   - Per-line "Dispatched: X" vs "Requested: X" with match/mismatch badges
+   - "After receiving" summary showing stock additions
+   - Partial receive toggle with per-line accept/reject
+
+4. **ApproveWaveDialog — FEFO Auto-select + Badges** (already implemented, verified)
+   - Segments sorted by expiry (FEFO order)
+   - "FEFO Recommended" badge on nearest-expiry segment
+   - Expiry day badges (Exp 15d, Exp 180d)
+   - Over-approve warning when qty exceeds segment availability
+
+**Test Results:** 13/13 features PASS (iteration_35)
 - N+1 API calls for store health grid (6 hierarchy-detail calls per store)
 - stock-inventory API queued behind other calls causing 15s delay
 - Consider: API response caching, parallel batching, or summary endpoint
 
-### Remaining Preview Gaps (P2)
+### Performance Optimization (P1)
 - PendingQueues: Requester store health mini-bar per card (3 out / 1 low / 0 adequate)
 - PendingQueues: "X out-of-stock items not in this request" cross-ref warning
 - Direct Dispatch: "WHAT THIS STORE NEEDS" auto-detect table verification needed
