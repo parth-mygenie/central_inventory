@@ -1,7 +1,7 @@
 # Central Inventory — PRD
 
 ## Original Problem Statement
-Pull code from GitHub repo `Abhi-mygenie/central-iventory.git` branch `01-june`, deploy, and continue development. Fix 18 API-mismatch bugs (CR-023) identified in UI audit.
+Pull code from GitHub repo `Abhi-mygenie/central-iventory.git` branch `02-june`, deploy, and build/run the app. Systematic screen-by-screen audit to fix gaps between live app and frozen preview HTML specs.
 
 ## Architecture
 - **Frontend:** React 19 + Tailwind + Radix UI + craco (port 3000)
@@ -23,58 +23,74 @@ Pull code from GitHub repo `Abhi-mygenie/central-iventory.git` branch `01-june`,
 
 ## What's Been Implemented
 
-### 2026-06-01: Code deployed from GitHub
+### 2026-06-01 (Session 1): Code deployed from GitHub (02-june branch)
 - All 24 screens present in codebase
-- 13 screens fully upgraded with intelligence
-- 7 screens partially upgraded
-
-### 2026-06-01: Audit & Data Seed
-- Identified 18 API-mismatch bugs
+- CR-023 bug fixes already in code (17 of 18 bugs fixed)
 - ChocolateHut data seeded (158 items, stock, batches, transfers)
-- DELETE proxy bug fixed
 
-### 2026-06-01: CR-023 Complete (17 of 18 bugs fixed)
+### 2026-06-01 (Session 2): Screen-by-Screen Audit & Fixes
+**Problem found:** Despite CR-023 code being present, live screens had issues:
+- Operations Hub stuck on skeleton loaders (15+ seconds before rendering)
+- Transfer Detail "Requester Store Snapshot" stuck on "Loading..."
+- Missing preview features: Reject/Partial Approve buttons, FROM/TO labels, insufficient stock warnings
 
-**Batch 1 (A1, B1):** Store Health Grid
-- Created `useRestaurantMap.js` hook
-- Fixed OperationsHub: `children` → `stores`, added hierarchy-detail batch calls for health
+**Fixes applied:**
 
-**Batch 2 (B2, B3, B4):** Restaurant Names
-- PendingQueues: real names via restaurantMap
-- TransferDetail: FROM/TO names with type badges
-- HistoryLedger: merged restaurantMap into historyNameMap
+1. **OperationsHub — Progressive Loading**
+   - Removed full-page skeleton gate behind `loading` state
+   - Shows greeting, KPI cards (0 while loading), Quick Actions immediately
+   - "Loading intelligence data..." and "Computing store health..." indicators
+   - Full data renders progressively as APIs respond (~15s)
 
-**Batch 3 (C1):** Transfer Detail Intelligence
-- Requester Store Snapshot (stat cards + item table with OUT/LOW/OK badges)
-- Approval Impact on Your Stock (projection table)
+2. **PendingQueues — Missing Preview Features**
+   - Added **Reject** button (red styled) on each approval card
+   - Added **Partial Approve** button (for multi-item transfers)
+   - Renamed "Approve" to **"Approve All"**
+   - Added **insufficient stock warning** in card footer
+   - Added **(has X)** annotations on QTY REQUESTED column for items requester already has
 
-**Batch 4 (B9, C2):** Consumption + Dispatch Intelligence
-- DailyConsumptionReport: Current Stock, Days of Cover, Trend columns
-- DirectDispatchForm: "What This Store Needs" auto-detect table
+3. **TransferDetail — FROM/TO Labels + Snapshot Fix**
+   - FROM card now shows **(Source — You)** when viewer is source
+   - TO card now shows **(Requester)** or **(You)** based on context
+   - Requester Store Snapshot loading indicator moved above metadata card
+   - Snapshot renders with 4 stat cards + item table + OK/OUT/LOW badges
+   - "X out-of-stock items not in this request" warning working
+   - Approval Impact table with Requested / Your Stock / After Approval
 
-**Batch 5 (C3, C4, B5):** Dialogs + Hierarchy Health
-- ReceiveDialog: dispatched vs requested comparison + receiving summary
-- ApproveWaveDialog: FEFO expiry badges + auto-select nearest expiry + over-approve warning
-- HierarchySummary: OUT OF STOCK / LOW STOCK / ADEQUATE health columns
-
-**Batch 6 (B6, B7, B8, B11, C5, C6):** Catalogues + Polish
-- IngredientCatalogue: "Recipes" column via cross-ref
-- ProductCatalogue: "Has Recipe" from actual recipe data
-- RecipeCatalogue + AddonRecipeCatalogue: Cost Mapped from ingredient prices
-- HierarchyManagement: real Push Status via push-form API
-- DisputeResolutionDialog: impact explanation text
-- SourceSelector: "Available: X" for selected segment
+**Test Results:** 11/11 features PASS (iteration_34)
 
 ## Prioritized Backlog
 
 ### P0 — COMPLETE
-- All 17 fixable bugs from CR-023 resolved
+- All 17 fixable CR-023 bugs resolved
+- Screen-by-screen audit fixes applied
 
 ### DEFERRED
 - B10/G-017: Vendor purchase history (no API exists)
+
+### Performance Optimization (P1)
+- N+1 API calls for store health grid (6 hierarchy-detail calls per store)
+- stock-inventory API queued behind other calls causing 15s delay
+- Consider: API response caching, parallel batching, or summary endpoint
+
+### Remaining Preview Gaps (P2)
+- PendingQueues: Requester store health mini-bar per card (3 out / 1 low / 0 adequate)
+- PendingQueues: "X out-of-stock items not in this request" cross-ref warning
+- Direct Dispatch: "WHAT THIS STORE NEEDS" auto-detect table verification needed
+- ReceiveDialog: dispatched vs requested comparison
+- ApproveWaveDialog: FEFO auto-select + expiry badges
+- Consumption Report: Days of Cover / Trend columns
+- Catalogues: Has Recipe / Cost Mapped from cross-ref
 
 ### Backend Gaps (External team)
 - G-013: PO number generation
 - G-014: Invoice OCR endpoint
 - G-015: Excel parsing endpoint
 - G-017: Vendor purchase history API
+
+### Future CRs
+- CR-015: FEFO Batch Stock Detail Panel (P0)
+- CR-016: Stock Inventory Hierarchy Toggle (P1)
+- CR-017: Smart Dispatch/Request Assistance (P1)
+- CR-018: Wastage Report Enhancements (P2)
+- CR-020: Daily Intelligence Digest (Future)
