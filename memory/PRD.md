@@ -88,6 +88,24 @@ Key changes:
 
 **Test Results:** 12/12 features PASS (iteration_38)
 
+### 2026-06-02 (Session 3, Part 3): Direct Dispatch — Intelligent Dispatch PO
+**File: `DirectDispatchForm.jsx` — full rewrite**
+
+11 gaps filled (6 preview B5 + 5 new intelligence):
+- **P1**: Needs table IS the dispatch form — integrated Qty to Send + Source Segment picker per row (no more disconnected sections)
+- **P2**: "You'll retain X%" projection text next to Your Stock After
+- **P3**: "You only have X kg" per-item red warning when qty exceeds own stock
+- **P4**: Order summary card with "N items to DemoFranchise1"
+- **P5**: "A PO will be auto-generated" note under submit
+- **P6**: Review warnings — "qty exceeds your stock — reduce to max X"
+- **N1**: Coverage period selector [3d/7d/10d/30d]
+- **N2**: Consumption-based qty (when data available)
+- **N3**: Threshold fallback — gap = min - dest_stock, capped at own stock
+- **N4**: Tight filter — only items that need dispatching
+- **N5**: Stat cards — Need Dispatching / Partially Covered / Fully Covered / In This Dispatch
+
+**Test Results:** 12/12 features PASS (iteration_39)
+
 ## Prioritized Backlog
 
 ### P0 — COMPLETE
