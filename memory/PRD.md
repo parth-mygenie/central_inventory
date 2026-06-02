@@ -74,6 +74,20 @@ Pull code from GitHub repo `Abhi-mygenie/central-iventory.git` branch `02-june`,
 
 **Test Results:** 12/12 features PASS (iteration_37)
 
+### 2026-06-02 (Session 3, Part 2): Coverage-Based Intelligent PO
+**Upgraded RequestStockForm.jsx from "dump all low-stock" to smart coverage-based ordering**
+
+Key changes:
+- **Coverage period selector**: [3d] [7d] [10d] [30d] — user picks how many days to stock for
+- **Consumption-based ordering** (when data available): avg_daily × coverage_days - current_stock = order_qty
+- **Threshold-based fallback** (when no consumption data): gap = min_qty_alert - current_stock
+- **Tight filter**: Only shows items that genuinely need ordering (min_qty > 0 AND stock < min) — reduced from 173 → 4 items
+- **Smart default qty**: gap-to-min (100 kg, 500 kg) instead of "1"
+- **Stat cards recalculated**: Need Ordering / Partially Covered / Fully Covered / In This PO
+- **Sort by urgency**: most critical items first
+
+**Test Results:** 12/12 features PASS (iteration_38)
+
 ## Prioritized Backlog
 
 ### P0 — COMPLETE
