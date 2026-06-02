@@ -59,6 +59,21 @@ Pull code from GitHub repo `Abhi-mygenie/central-iventory.git` branch `02-june`,
 
 **Test Results:** 11/11 features PASS (iteration_34)
 
+### 2026-06-02 (Session 3): Request Stock — Intelligent PO
+**File: `RequestStockForm.jsx` — full rewrite**
+
+8 gaps filled matching Preview B1:
+- G1: "Suggested Reorder" / "Manual Request" mode toggle tabs
+- G2: 4 stat cards (Out of Stock / Low Stock / Adequate / Suggested)
+- G3: Suggested Items table — auto-detected from own stock cross-referenced with source catalog. Columns: checkbox, Item, Category, Your Stock (OUT/LOW badges), Source Avail, editable Order Qty, Suggestion
+- G4: Category group header rows ("Bulk & Fountain — 5 items")
+- G5: Source availability per item with inline display
+- G6: "⚠ N pending requests with this source" warning
+- G7: Order summary card with selected items
+- G8: Source stock cross-validation ("Qty exceeds source availability")
+
+**Test Results:** 12/12 features PASS (iteration_37)
+
 ## Prioritized Backlog
 
 ### P0 — COMPLETE

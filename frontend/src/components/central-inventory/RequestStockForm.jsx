@@ -164,7 +164,9 @@ export default function RequestStockForm() {
         qty: gap > 0 ? String(gap) : (minQty > 0 ? String(minQty) : "1"),
         included: true,
       };
-    }).filter(Boolean).sort((a, b) => {
+    }).filter(Boolean)
+      .filter((item, idx, arr) => arr.findIndex(x => x.id === item.id) === idx) // deduplicate by source_inventory_master_id
+      .sort((a, b) => {
       if (a.isOut && !b.isOut) return -1;
       if (!a.isOut && b.isOut) return 1;
       return b.gap - a.gap;
