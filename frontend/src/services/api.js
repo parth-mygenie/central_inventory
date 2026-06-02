@@ -27,6 +27,8 @@ function setToken(token) {
   } else {
     delete client.defaults.headers.common["Authorization"];
   }
+  // Clear cache on token change (new user session)
+  if (!token) _cacheStore.clear();
 }
 
 // Eagerly restore token from localStorage on module load
@@ -35,6 +37,108 @@ try {
   const stored = localStorage.getItem("ci_token");
   if (stored) setToken(stored);
 } catch (e) { console.warn("[api] Failed to restore token from localStorage:", e); }
+
+// ── Response Cache Layer ─────────────────────────────────────────
+//
+// In-memory cache for read endpoints. Reduces 71 API calls across
+// 4 navigations down to ~17 by deduplicating identical requests
+// within a TTL window.
+//
+// Rules:
+// - Only read endpoints are cached (never writes/mutations)
+// - Cache key = fnName + JSON.stringify(args)
+// - TTL per endpoint category (30-60s)
+// - Mutations invalidate related cache groups
+// - In-flight dedup: concurrent identical calls share one promise
+
+const _cacheStore = new Map();    // key → { data, expiry }
+const _inflightMap = new Map();   // key → Promise (dedup concurrent calls)
+
+const TTL = {
+  LONG: 60000,    // 60s — hierarchy-summary, stock-inventory, inventory-master
+  MEDIUM: 45000,  // 45s — hierarchy-detail, transfer-details, source-options
+  SHORT: 30000,   // 30s — pending-queues, history
+};
+
+function _cacheKey(name, args) {
+  try { return name + ":" + JSON.stringify(args); }
+  catch { return name + ":noargs"; }
+}
+
+function _cacheGet(key) {
+  const entry = _cacheStore.get(key);
+  if (!entry) return null;
+  if (Date.now() > entry.expiry) { _cacheStore.delete(key); return null; }
+  return entry.data;
+}
+
+function _cacheSet(key, data, ttl) {
+  _cacheStore.set(key, { data, expiry: Date.now() + ttl });
+}
+
+/** Wrap an API call with cache + in-flight dedup */
+function _cached(name, ttl, fn) {
+  return function (...args) {
+    const key = _cacheKey(name, args);
+
+    // Return cached if valid
+    const cached = _cacheGet(key);
+    if (cached) return Promise.resolve(cached);
+
+    // Dedup in-flight: if same call is already pending, piggyback on it
+    if (_inflightMap.has(key)) return _inflightMap.get(key);
+
+    // Make the actual call
+    const promise = fn.apply(this, args).then((result) => {
+      _cacheSet(key, result, ttl);
+      _inflightMap.delete(key);
+      return result;
+    }).catch((err) => {
+      _inflightMap.delete(key);
+      throw err;
+    });
+
+    _inflightMap.set(key, promise);
+    return promise;
+  };
+}
+
+/** Invalidate cache entries matching a prefix pattern */
+function _invalidateCache(patterns) {
+  for (const key of _cacheStore.keys()) {
+    if (patterns.some(p => key.startsWith(p))) {
+      _cacheStore.delete(key);
+    }
+  }
+}
+
+/** Invalidate all transfer-related caches (after any mutation) */
+function _invalidateTransferCaches() {
+  _invalidateCache([
+    "getPendingQueues:",
+    "getTransferHistory:",
+    "getTransferDetails:",
+    "getHierarchyDetail:",
+    "getStockInventory:",
+    "getSourceOptions:",
+  ]);
+}
+
+/** Invalidate all inventory/catalogue caches (after stock mutations) */
+function _invalidateStockCaches() {
+  _invalidateCache([
+    "getStockInventory:",
+    "getInventoryMaster:",
+    "getHierarchyDetail:",
+    "getStockDetail:",
+  ]);
+}
+
+/** Invalidate all caches (nuclear option — used by manual refresh) */
+function invalidateAll() {
+  _cacheStore.clear();
+  _inflightMap.clear();
+}
 
 // ── Response normalizers (shared contract layer) ─────────────────
 
@@ -179,7 +283,7 @@ function login(email, password) {
  * FIX: POS requires store_type as mandatory.
  * Default to "franchise" if caller doesn't provide storeType.
  */
-function getHierarchySummary({ storeType, fromDate, toDate } = {}) {
+function _getHierarchySummary({ storeType, fromDate, toDate } = {}) {
   const payload = {
     store_type: storeType || "franchise",
   };
@@ -187,8 +291,9 @@ function getHierarchySummary({ storeType, fromDate, toDate } = {}) {
   if (toDate) payload.to_date = toDate;
   return client.post("/proxy/v2/inventory-transfer/hierarchy-summary", payload);
 }
+const getHierarchySummary = _cached("getHierarchySummary", TTL.LONG, _getHierarchySummary);
 
-function getHierarchyDetail({ storeRestaurantId, selectedStockTitle, selectedUnitId, transactionsStockTitle, fromDate, toDate } = {}) {
+function _getHierarchyDetail({ storeRestaurantId, selectedStockTitle, selectedUnitId, transactionsStockTitle, fromDate, toDate } = {}) {
   const payload = {};
   if (storeRestaurantId) payload.store_restaurant_id = storeRestaurantId;
   if (selectedStockTitle) payload.selected_stock_title = selectedStockTitle;
@@ -197,7 +302,6 @@ function getHierarchyDetail({ storeRestaurantId, selectedStockTitle, selectedUni
   if (fromDate) payload.from_date = fromDate;
   if (toDate) payload.to_date = toDate;
   return client.post("/proxy/v2/inventory-transfer/hierarchy-detail", payload).then((resp) => {
-    // Normalize stock summary and batch items
     const data = resp.data?.data || resp.data;
     if (data?.child_stock_summary) {
       data.child_stock_summary = data.child_stock_summary.map(normalizeStockSummaryItem);
@@ -208,12 +312,14 @@ function getHierarchyDetail({ storeRestaurantId, selectedStockTitle, selectedUni
     return resp;
   });
 }
+const getHierarchyDetail = _cached("getHierarchyDetail", TTL.MEDIUM, _getHierarchyDetail);
 
 // ── Pending Queues ───────────────────────────────────────────────
 
-function getPendingQueues() {
+function _getPendingQueues() {
   return client.post("/proxy/v2/inventory-transfer/pending-queues", {});
 }
+const getPendingQueues = _cached("getPendingQueues", TTL.SHORT, _getPendingQueues);
 
 // ── Transfer ─────────────────────────────────────────────────────
 
@@ -221,7 +327,7 @@ function getPendingQueues() {
  * FIX: POS returns { data: { transfer: {...}, lines: [...] } }.
  * Normalize to flat object with embedded lines.
  */
-function getTransferDetails(transferId) {
+function _getTransferDetails(transferId) {
   return client.get(`/proxy/v2/inventory-transfer/details/${transferId}`).then((resp) => {
     const raw = resp.data?.data || resp.data;
     const normalized = normalizeTransfer(raw);
@@ -237,12 +343,13 @@ function getTransferDetails(transferId) {
     return resp;
   });
 }
+const getTransferDetails = _cached("getTransferDetails", TTL.MEDIUM, _getTransferDetails);
 
 /**
  * FIX: POS history items have resolution_meta as JSON string and missing restaurant names.
  * Parse resolution_meta for each item.
  */
-function getTransferHistory({ fromDate, toDate, status, limit, page } = {}) {
+function _getTransferHistory({ fromDate, toDate, status, limit, page } = {}) {
   const payload = {};
   if (fromDate) payload.from_date = fromDate;
   if (toDate) payload.to_date = toDate;
@@ -257,6 +364,7 @@ function getTransferHistory({ fromDate, toDate, status, limit, page } = {}) {
     return resp;
   });
 }
+const getTransferHistory = _cached("getTransferHistory", TTL.SHORT, _getTransferHistory);
 
 // ── Source Options ────────────────────────────────────────────────
 
@@ -264,31 +372,35 @@ function getTransferHistory({ fromDate, toDate, status, limit, page } = {}) {
  * FIX: POS requires source_inventory_master_id + from_restaurant_id.
  * Frontend was sending inventory_master_id + restaurant_id.
  */
-function getSourceOptions({ inventoryMasterId, restaurantId } = {}) {
+function _getSourceOptions({ inventoryMasterId, restaurantId } = {}) {
   const payload = {};
   if (inventoryMasterId) payload.source_inventory_master_id = inventoryMasterId;
   if (restaurantId) payload.from_restaurant_id = restaurantId;
   return client.post("/proxy/v2/inventory-transfer/source-options", payload);
 }
+const getSourceOptions = _cached("getSourceOptions", TTL.MEDIUM, _getSourceOptions);
 
 // ── Inventory ────────────────────────────────────────────────────
 
-function getInventoryMaster() {
+function _getInventoryMaster() {
   return client.get("/proxy/v2/inventory/get-inventory-master");
 }
+const getInventoryMaster = _cached("getInventoryMaster", TTL.LONG, _getInventoryMaster);
 
 // ── Franchise ────────────────────────────────────────────────────
 
-function getFranchiseList(limit = 25) {
+function _getFranchiseList(limit = 25) {
   return client.get(`/proxy/v2/franchise/list?limit=${limit}`);
 }
+const getFranchiseList = _cached("getFranchiseList", TTL.LONG, _getFranchiseList);
 
-function getFranchiseHistory({ fromDate, toDate } = {}) {
+function _getFranchiseHistory({ fromDate, toDate } = {}) {
   const payload = {};
   if (fromDate) payload.from_date = fromDate;
   if (toDate) payload.to_date = toDate;
   return client.post("/proxy/v2/franchise/history", payload);
 }
+const getFranchiseHistory = _cached("getFranchiseHistory", TTL.SHORT, _getFranchiseHistory);
 
 // ── Write APIs (Slice 4 — Transfers) ─────────────────────────────
 
@@ -297,7 +409,7 @@ function initiateTransfer({ fromRestaurantId, toRestaurantId, items }) {
     from_restaurant_id: fromRestaurantId,
     to_restaurant_id: toRestaurantId,
     items,
-  });
+  }).then(r => { _invalidateTransferCaches(); _invalidateStockCaches(); return r; });
 }
 
 /**
@@ -323,11 +435,11 @@ function requestCatalog(sourceRestaurantId) {
 function requestStock({ items, fromRestaurantId }) {
   const payload = { items };
   if (fromRestaurantId) payload.from_restaurant_id = fromRestaurantId;
-  return client.post("/proxy/v2/inventory-transfer/request", payload);
+  return client.post("/proxy/v2/inventory-transfer/request", payload).then(r => { _invalidateTransferCaches(); return r; });
 }
 
 function approveTransfer(transferId) {
-  return client.post(`/proxy/v2/inventory-transfer/approve/${transferId}`, {});
+  return client.post(`/proxy/v2/inventory-transfer/approve/${transferId}`, {}).then(r => { _invalidateTransferCaches(); return r; });
 }
 
 /** P16: Partial approve with approval_lines + segments per line */
@@ -335,29 +447,29 @@ function approveTransferPartial(transferId, { approvalLines, defaultRemainderPol
   return client.post(`/proxy/v2/inventory-transfer/approve/${transferId}`, {
     approval_lines: approvalLines,
     default_remainder_policy: defaultRemainderPolicy,
-  });
+  }).then(r => { _invalidateTransferCaches(); return r; });
 }
 
 /** P16: Cancel hold on partially_approved transfer — pass line_ids for targeted cancel */
 function cancelRemainder(transferId, lineIds) {
   const payload = {};
   if (lineIds && lineIds.length > 0) payload.line_ids = lineIds;
-  return client.post(`/proxy/v2/inventory-transfer/approve/${transferId}/cancel-remainder`, payload);
+  return client.post(`/proxy/v2/inventory-transfer/approve/${transferId}/cancel-remainder`, payload).then(r => { _invalidateTransferCaches(); return r; });
 }
 
 /** P17: Amend request — franchise replaces lines in-place (status=requested, type=request only) */
 function amendRequest(transferId, items) {
-  return client.post(`/proxy/v2/inventory-transfer/request/${transferId}/amend`, { items });
+  return client.post(`/proxy/v2/inventory-transfer/request/${transferId}/amend`, { items }).then(r => { _invalidateTransferCaches(); return r; });
 }
 
 /** P17: Withdraw request — terminal status (status=requested, type=request only) */
 function withdrawRequest(transferId) {
-  return client.post(`/proxy/v2/inventory-transfer/request/${transferId}/withdraw`, {});
+  return client.post(`/proxy/v2/inventory-transfer/request/${transferId}/withdraw`, {}).then(r => { _invalidateTransferCaches(); return r; });
 }
 
 /** P17: Request modification — creates child transfer (post-approval, type=request only) */
 function requestModification(transferId, items) {
-  return client.post(`/proxy/v2/inventory-transfer/request/${transferId}/modification`, { items });
+  return client.post(`/proxy/v2/inventory-transfer/request/${transferId}/modification`, { items }).then(r => { _invalidateTransferCaches(); return r; });
 }
 
 /** P16: Resolve receive dispute (central/sender only) */
@@ -365,23 +477,23 @@ function resolveDispute(transferId, { accept, note }) {
   return client.post(`/proxy/v2/inventory-transfer/receive-dispute/${transferId}/resolve`, {
     accept,
     note,
-  });
+  }).then(r => { _invalidateTransferCaches(); return r; });
 }
 
 function rejectTransfer(transferId, payload) {
-  return client.post(`/proxy/v2/inventory-transfer/reject/${transferId}`, payload);
+  return client.post(`/proxy/v2/inventory-transfer/reject/${transferId}`, payload).then(r => { _invalidateTransferCaches(); return r; });
 }
 
 function dispatchTransfer(transferId) {
-  return client.post(`/proxy/v2/inventory-transfer/dispatch/${transferId}`, {});
+  return client.post(`/proxy/v2/inventory-transfer/dispatch/${transferId}`, {}).then(r => { _invalidateTransferCaches(); _invalidateStockCaches(); return r; });
 }
 
 function receiveTransfer(transferId, payload = {}) {
-  return client.post(`/proxy/v2/inventory-transfer/receive/${transferId}`, payload);
+  return client.post(`/proxy/v2/inventory-transfer/receive/${transferId}`, payload).then(r => { _invalidateTransferCaches(); _invalidateStockCaches(); return r; });
 }
 
 function cancelTransfer(transferId, payload) {
-  return client.post(`/proxy/v2/inventory-transfer/cancel/${transferId}`, payload);
+  return client.post(`/proxy/v2/inventory-transfer/cancel/${transferId}`, payload).then(r => { _invalidateTransferCaches(); _invalidateStockCaches(); return r; });
 }
 
 // ── Stock Adjustment APIs (Slice 5) ──────────────────────────────
@@ -397,7 +509,7 @@ function adjustStockDecrease(payload) {
     source_selector: payload.sourceSelector,
     reason: payload.reason,
     restaurant_id: payload.restaurantId,
-  });
+  }).then(r => { _invalidateStockCaches(); return r; });
 }
 
 /**
@@ -410,7 +522,7 @@ function adjustStockIncrease(payload) {
     unit: payload.unit,
     reason: payload.reason,
     vendor_id: payload.vendorId || payload.restaurantId,
-  });
+  }).then(r => { _invalidateStockCaches(); return r; });
 }
 
 // ── Wastage APIs ─────────────────────────────────────────────────
@@ -427,7 +539,7 @@ function recordWastage(payload) {
     source_selector: payload.sourceSelector,
     reason: payload.reason,
     restaurant_id: payload.restaurantId,
-  });
+  }).then(r => { _invalidateStockCaches(); return r; });
 }
 
 /**
@@ -479,7 +591,7 @@ function getWastageReport({ restaurantIds, fromDate, toDate, wasteType, foodId, 
  * CAUTION: This is for summary/dashboard only.
  * Do NOT use for request flow source catalog (use requestCatalog instead).
  */
-function getStockInventory() {
+function _getStockInventory() {
   return client.get("/proxy/v2/inventory/stock-inventory").then((resp) => {
     const data = resp.data;
     if (data?.current_stocks) {
@@ -488,6 +600,7 @@ function getStockInventory() {
     return resp;
   });
 }
+const getStockInventory = _cached("getStockInventory", TTL.LONG, _getStockInventory);
 
 /**
  * P20: Normalize stock-inventory item.
@@ -510,7 +623,7 @@ function normalizeStockItem(item) {
  * P24: Get FEFO stock detail for a single inventory item.
  * Returns: summary, segments, quantity_reconciliation, consumption_summary, consumption_lines
  */
-function getStockDetail(inventoryMasterId, { consumptionFrom, consumptionTo, consumptionLimit } = {}) {
+function _getStockDetail(inventoryMasterId, { consumptionFrom, consumptionTo, consumptionLimit } = {}) {
   const params = new URLSearchParams();
   if (consumptionFrom) params.set("consumption_from", consumptionFrom);
   if (consumptionTo) params.set("consumption_to", consumptionTo);
@@ -519,14 +632,16 @@ function getStockDetail(inventoryMasterId, { consumptionFrom, consumptionTo, con
   const url = `/proxy/v2/inventory/stock-inventory/${inventoryMasterId}${queryString ? `?${queryString}` : ""}`;
   return client.get(url);
 }
+const getStockDetail = _cached("getStockDetail", TTL.MEDIUM, _getStockDetail);
 
 // ── P17 Operational Settings ─────────────────────────────────────
 
-function getOperationalSettings(restaurantId) {
+function _getOperationalSettings(restaurantId) {
   const payload = {};
   if (restaurantId) payload.restaurant_id = restaurantId;
   return client.post("/proxy/v2/inventory-transfer/operational-settings/get", payload);
 }
+const getOperationalSettings = _cached("getOperationalSettings", TTL.LONG, _getOperationalSettings);
 
 function updateOperationalSettings(restaurantId, settings) {
   return client.post("/proxy/v2/inventory-transfer/operational-settings/update", {
@@ -537,7 +652,7 @@ function updateOperationalSettings(restaurantId, settings) {
 
 // ── P18 Vendor Management ────────────────────────────────────────
 
-function getVendors() {
+function _getVendors() {
   return client.get("/proxy/v2/inventory/get-vendor").then((resp) => {
     // Normalize: POS returns raw array, wrap in data if needed
     if (Array.isArray(resp.data)) {
@@ -546,23 +661,24 @@ function getVendors() {
     return resp;
   });
 }
+const getVendors = _cached("getVendors", TTL.LONG, _getVendors);
 
 function addVendor(payload) {
-  return client.post("/proxy/v2/inventory/add-vendor", payload);
+  return client.post("/proxy/v2/inventory/add-vendor", payload).then(r => { _invalidateCache(["getVendors:"]); return r; });
 }
 
 function updateVendor(id, payload) {
-  return client.put(`/proxy/v2/inventory/update-vendor/${id}`, payload);
+  return client.put(`/proxy/v2/inventory/update-vendor/${id}`, payload).then(r => { _invalidateCache(["getVendors:"]); return r; });
 }
 
 function deleteVendor(id) {
-  return client.delete(`/proxy/v2/inventory/vendor-delete/${id}`);
+  return client.delete(`/proxy/v2/inventory/vendor-delete/${id}`).then(r => { _invalidateCache(["getVendors:"]); return r; });
 }
 
 // ── P19 Add Stock (Procurement) ──────────────────────────────────
 
 function addStockPurchase(inventoryMasterId, payload) {
-  return client.post(`/proxy/v2/inventory/add-stock/${inventoryMasterId}`, payload);
+  return client.post(`/proxy/v2/inventory/add-stock/${inventoryMasterId}`, payload).then(r => { _invalidateStockCaches(); return r; });
 }
 
 // ── P21 Catalogue — Inventory Categories ─────────────────────────
@@ -781,6 +897,7 @@ function getDailyConsumptionReport({ fromDate, toDate, restaurantIds, includeHie
 
 const api = {
   setToken,
+  invalidateAll,
   login,
   getHierarchySummary,
   getHierarchyDetail,
