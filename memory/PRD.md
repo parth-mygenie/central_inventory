@@ -98,6 +98,28 @@ Pull code from GitHub repo `Abhi-mygenie/central-iventory.git` branch `02-june`,
 - stock-inventory API queued behind other calls causing 15s delay
 - Consider: API response caching, parallel batching, or summary endpoint
 
+### 2026-06-02 (Session 2, Part 3): Performance Optimization — API Cache Layer
+**Single-file change: `frontend/src/services/api.js`**
+
+- Added in-memory cache with TTL-based expiration and in-flight deduplication
+- TTL categories: LONG (60s) for hierarchy-summary/stock-inventory, MEDIUM (45s) for hierarchy-detail/transfer-details, SHORT (30s) for pending-queues/history
+- All write/mutation endpoints invalidate relevant caches
+- Cache cleared on logout (token change)
+- `invalidateAll()` exported for manual refresh buttons
+
+**Measured results (4-navigation session):**
+| Before | After | Reduction |
+|:------:|:-----:|:---------:|
+| 71 API calls | 20 API calls | **72% fewer calls** |
+
+**Per-screen breakdown:**
+- Operations Hub: 23 → 12 calls (StrictMode dedup)
+- Hub → Queues: 16 → 5 new calls
+- Queues → Detail: 10 → 1 new call
+- Back to Hub: 22 → 2 new calls (nearly instant)
+
+**Test Results:** 8/8 features PASS (iteration_36)
+
 ### Performance Optimization (P1)
 - PendingQueues: Requester store health mini-bar per card (3 out / 1 low / 0 adequate)
 - PendingQueues: "X out-of-stock items not in this request" cross-ref warning
