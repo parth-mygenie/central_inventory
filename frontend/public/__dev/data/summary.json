@@ -1,18 +1,19 @@
 {
-  "generated_at": "2026-06-01T06:49:14.127Z",
+  "generated_at": "2026-06-02T05:27:36.178Z",
   "project": "Central Inventory",
   "repo": "parth-mygenie/central_inventory",
-  "branch": "10-may",
+  "branch": "02-june",
   "totals": {
-    "items": 38,
-    "crs": 22,
+    "items": 41,
+    "crs": 25,
     "bugs": 16,
-    "debt": 19
+    "debt": 22
   },
   "crs_by_status": {
     "CLOSED": 17,
     "PLANNED": 3,
-    "PROPOSED": 2
+    "PROPOSED": 2,
+    "QA": 3
   },
   "bugs_by_status": {
     "ACCEPTED": 11,
@@ -27,7 +28,7 @@
     "HIGH": 1
   },
   "debt_by_type": {
-    "CR": 19
+    "CR": 22
   },
   "sprints": [
     {
@@ -59,9 +60,19 @@
       "goal": "Implement intelligence layer across all screens per Phase 7 frozen spec. Sprint A+B+C + polish + code review fixes.",
       "cr_count": 2,
       "bug_count": 1
+    },
+    {
+      "key": "S3",
+      "name": "API Reality Check + Intelligent PO",
+      "status": "active",
+      "start": "2026-06-01",
+      "end": null,
+      "goal": "Fix 18 API-mismatch bugs (CR-023), add API cache (CR-024), build coverage-based Intelligent PO for Request Stock + Direct Dispatch (CR-025)",
+      "cr_count": 3,
+      "bug_count": 0
     }
   ],
-  "signoff_pending": 16,
+  "signoff_pending": 19,
   "owner_signoff_breakdown": {
     "pending": [
       "CR-001",
@@ -79,7 +90,10 @@
       "CR-013",
       "CR-014",
       "CR-021",
-      "CR-022"
+      "CR-022",
+      "CR-023",
+      "CR-024",
+      "CR-025"
     ],
     "done": [
       "CR-019"

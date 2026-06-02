@@ -2030,5 +2030,226 @@
       "Owner-Signoff: PENDING"
     ],
     "sprint_name": "Intelligent UI Implementation"
+  },
+  {
+    "type": "CR",
+    "id": "CR-023",
+    "title": "API Reality Check, Data Seed & Intelligence Gap Fix",
+    "status": "QA",
+    "severity": null,
+    "sprint_key": "S3",
+    "phase": "Code Gate PASSED → Batch 1 Implementation",
+    "files": [
+      "hooks/useRestaurantMap.js",
+      "OperationsHub.jsx",
+      "PendingQueues.jsx",
+      "TransferDetail.jsx",
+      "HistoryLedger.jsx",
+      "DailyConsumptionReport.jsx",
+      "DirectDispatchForm.jsx",
+      "ReceiveDialog.jsx",
+      "ApproveWaveDialog.jsx",
+      "HierarchySummary.jsx",
+      "IngredientCatalogue.jsx",
+      "ProductCatalogue.jsx",
+      "RecipeCatalogue.jsx",
+      "AddonRecipeCatalogue.jsx",
+      "HierarchyManagement.jsx",
+      "DisputeResolutionDialog.jsx",
+      "SourceSelector.jsx"
+    ],
+    "notes": "Fix 18 API-mismatch bugs from audit. Proper control gate this time.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "DONE",
+        "path": "control/sessions/CR023_SESSION_START.md"
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/CR023_ARTIFACT_1_INTAKE.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "control/sessions/CR023_ARTIFACT_2_IMPACT_ANALYSIS.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "path": "control/sessions/CR023_ARTIFACT_3_IMPLEMENTATION_PLAN.md"
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "DONE",
+        "path": "control/sessions/CR023_ARTIFACT_4_CODE_GATE.md"
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "path": "test_reports/iteration_34.json"
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 6,
+      "total": 7,
+      "pct": 86
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "CR",
+    "id": "CR-024",
+    "title": "API Response Cache — Performance Optimization",
+    "status": "QA",
+    "severity": null,
+    "sprint_key": "S3",
+    "phase": "Performance",
+    "files": [
+      "frontend/src/services/api.js"
+    ],
+    "notes": "In-memory cache with TTL. 71→20 API calls (72% reduction). Gate waived (velocity exception).",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "memory/PRD.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "memory/PRD.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "path": "memory/PRD.md"
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "path": "test_reports/iteration_36.json"
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 6,
+      "total": 7,
+      "pct": 86
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "CR",
+    "id": "CR-025",
+    "title": "Coverage-Based Intelligent PO — Request Stock + Direct Dispatch",
+    "status": "QA",
+    "severity": null,
+    "sprint_key": "S3",
+    "phase": "Intelligence",
+    "files": [
+      "frontend/src/components/central-inventory/RequestStockForm.jsx",
+      "frontend/src/components/central-inventory/DirectDispatchForm.jsx"
+    ],
+    "notes": "Coverage selector (3/7/10/30d), consumption-based ordering, threshold fallback, integrated dispatch table. Gate waived (velocity exception).",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "memory/PRD.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "memory/PRD.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "path": "memory/PRD.md"
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "path": "test_reports/iteration_39.json"
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 6,
+      "total": 7,
+      "pct": 86
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
   }
 ]

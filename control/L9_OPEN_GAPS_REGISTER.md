@@ -1,6 +1,6 @@
 # L9 — Open Gaps Register
 
-> **Updated:** 2026-06-01 (Session closing)
+> **Updated:** 2026-06-02 (Post CR-023/024/025)
 
 ---
 
@@ -22,29 +22,36 @@
 | **G-014** | **Invoice OCR/AI extraction** | **Procurement Upload Invoice tab** | **P1** | **OPEN — UI ready, shows "Coming Soon"** |
 | **G-015** | **Excel/CSV parsing** | **Procurement Excel import** | **P2** | **OPEN — Upload zone ready, pending backend** |
 | G-016 | Invoice number storage | Duplicate detection | P2 | OPEN |
-| **G-017** | **Vendor purchase history API (last_purchase_date, avg_order_value, total_orders)** | **VendorManagement intelligence** | **P2** | **NEW — No workaround. Registered in CR-023** |
+| **G-017** | **Vendor purchase history API** | **VendorManagement intelligence** | **P2** | **OPEN — No workaround** |
 
-## Implementation Gaps — AUDIT REVISION (CR-023)
+## Implementation Gaps — Status After CR-023/024/025
 
-Previous agent marked IG-001 through IG-011 as "DONE". CR-023 audit found several were not actually
-working due to API field mismatches. Corrected status below:
+| # | Item | Status | Notes |
+|---|------|:------:|-------|
+| IG-001 | Catalogue vendor column | DONE | |
+| IG-002 | Consumption days-of-cover | DONE | CR-025 consumption-based coverage |
+| IG-003 | Hierarchy push status | DONE | CR-023 Batch 6 |
+| IG-004 | Request low-stock suggestions | **DONE** | CR-025 Intelligent PO replaces basic banner |
+| IG-005 | Dispatch destination health | **DONE** | CR-025 integrated dispatch table |
+| IG-006 | Procurement 3-mode UI | DONE | AI/Excel blocked on G-014/G-015 |
+| IG-007 | Product Has Recipe column | DONE | CR-023 Batch 6 |
+| IG-008 | Recipe Cost Mapped column | DONE | CR-023 Batch 6 |
+| IG-009 | Addon-Recipe Cost Mapped | DONE | CR-023 Batch 6 |
+| IG-010 | Hierarchy Summary health | DONE | CR-023 Batch 5 |
+| IG-011 | Store Detail health strip | DONE | |
 
-| # | Item | Previous | Actual Status |
-|---|------|:--------:|:------:|
-| IG-001 | Catalogue vendor column | DONE | DONE (confirmed) |
-| IG-002 | Consumption days-of-cover | DONE | **NOT WORKING** — API lacks `days_of_cover` field. Fix in CR-023 Batch 4 (B9) |
-| IG-003 | Hierarchy push status | DONE | **NOT WORKING** — API lacks push fields. Fix in CR-023 Batch 6 (B11) |
-| IG-004 | Request low-stock suggestions | DONE | PARTIAL — basic banner present, full Intelligent PO missing |
-| IG-005 | Dispatch destination health | DONE | PARTIAL — StoreHealthStrip present, auto-detect missing. Fix in CR-023 Batch 4 (C2) |
-| IG-006 | Procurement 3-mode UI | DONE | DONE (AI/Excel blocked on G-014/G-015) |
-| IG-007 | Product Has Recipe column | DONE | **NOT WORKING** — API lacks `has_recipe`. Fix in CR-023 Batch 6 (B6) |
-| IG-008 | Recipe Cost Mapped column | DONE | **NOT WORKING** — API lacks `cost_mapped`. Fix in CR-023 Batch 6 (B7) |
-| IG-009 | Addon-Recipe Cost Mapped | DONE | **NOT WORKING** — same as IG-008. Fix in CR-023 Batch 6 (B7) |
-| IG-010 | Hierarchy Summary health | DONE | **NOT WORKING** — API lacks health fields. Fix in CR-023 Batch 5 (B5) |
-| IG-011 | Store Detail health strip | DONE | DONE (confirmed) |
+## Performance — RESOLVED (CR-024)
 
-## Bugs Fixed
+| Metric | Before | After |
+|--------|:------:|:-----:|
+| Operations Hub → Queues → Detail → Hub | 71 API calls | 20 calls (72% reduction) |
+| `stock-inventory` calls per session | 8x | 1x (cached 60s) |
+| Back-navigation to Hub | 22 new calls | 2 calls (from cache) |
 
-| # | Issue | Status |
-|---|-------|:------:|
-| BUG-016 | display_qty string arithmetic TypeError | FIXED |
+## Remaining Preview Gaps (P2)
+
+| Screen | Gap | Blocked By |
+|--------|-----|-----------|
+| DailyConsumptionReport | Trend column (compare current vs previous period) | Needs 2 consumption API calls |
+| ProductCatalogue | "Has Recipe" computed column | Cross-ref recipe data |
+| VendorManagement | Purchase history intelligence | G-017 (backend) |

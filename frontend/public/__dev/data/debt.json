@@ -277,5 +277,47 @@
     ],
     "missing_count": 0,
     "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-023",
+    "title": "API Reality Check, Data Seed & Intelligence Gap Fix",
+    "status": "QA",
+    "severity": null,
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-024",
+    "title": "API Response Cache — Performance Optimization",
+    "status": "QA",
+    "severity": null,
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-025",
+    "title": "Coverage-Based Intelligent PO — Request Stock + Direct Dispatch",
+    "status": "QA",
+    "severity": null,
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
   }
 ]

@@ -1,6 +1,6 @@
 # L1 — Control Dashboard (Project Status)
 
-> **Updated:** 2026-06-01 (CR-023 Code Gate passed — Batch 1 implementation next)
+> **Updated:** 2026-06-02 (CR-024 + CR-025 complete, pending owner signoff)
 
 ---
 
@@ -8,55 +8,44 @@
 
 | Field | Value |
 |-------|-------|
-| **Branch** | `01-june` (deployed from GitHub) |
-| **Deploy URL** | `https://api-sync-staging.preview.emergentagent.com` |
-| **Active Sprint** | **S3 — CR-023: API Reality Check & Intelligence Gap Fix** |
-| **UI Freeze Status** | PHASE 7 FROZEN — Implementation **PARTIAL** (see audit below) |
-| **Implementation Status** | 13/24 screens fully done, 7 partial, 4 not done — 18 bugs found |
+| **Branch** | `02-june` (deployed from GitHub) |
+| **Deploy URL** | `https://7d067d86-11d0-4171-9ae2-57e426a47f39.preview.emergentagent.com` |
+| **Active Sprint** | **S3 — API Reality Check + Intelligent PO** |
+| **UI Freeze Status** | PHASE 7 FROZEN — Implementation **SUBSTANTIAL** (see below) |
+| **Implementation Status** | 24/24 screens present, CR-023 fixes applied, Intelligent PO built |
 | **Data** | ChocolateHut — 158 inventory items seeded via API |
 | **Dev Dashboard** | `/__dev/index.html` |
 | **UI Previews** | `/__dev/previews/*.html` (9 files) |
-| **UI Review** | `control/sessions/ui_review/` (7 review documents) |
 
-## CR-021 Audit Finding (June 1, 2026)
+## Sprint S3 — Active Work
 
-Previous agent claimed "ALL 22+ screens upgraded — 55/55 tests PASS". Audit revealed:
-- **55/55 tests only covered the implemented subset**, not the frozen spec
-- **18 API-mismatch bugs** found: wrong field names, missing API fields, intelligence code never written
-- **Control gate was bypassed** — CR-021 registered retroactively, Artifacts 0-4 skipped
-- See: `control/sessions/CR023_ARTIFACT_1_INTAKE.md` for full bug registry
+### CR-023: API Reality Check & Intelligence Gap Fix — **QA**
+- 17 of 18 bugs fixed (B10 deferred — no vendor history API)
+- Progressive loading on Operations Hub (no more skeleton blocking)
+- PendingQueues: Reject/Approve All buttons, requester health mini-bar, insufficient warnings
+- TransferDetail: FROM/TO labels, Requester Store Snapshot, Approval Impact
+- All artifact 0-5 DONE. **Artifact 6 (Owner Signoff) PENDING**
 
-## Active Work: CR-023
+### CR-024: API Response Cache — **QA**
+- In-memory cache with TTL (30-60s) in `api.js` (single file change)
+- 71 → 20 API calls across 4-navigation session (72% reduction)
+- In-flight dedup + auto-invalidation on mutations
+- Gate waived (velocity exception). **Owner Signoff PENDING**
 
-| Artifact | Status | Path |
-|----------|:------:|------|
-| 0 Session-Start | DONE | `control/sessions/CR023_SESSION_START.md` |
-| 1 Intake (18 bugs) | DONE | `control/sessions/CR023_ARTIFACT_1_INTAKE.md` |
-| 2 Impact Analysis | DONE | `control/sessions/CR023_ARTIFACT_2_IMPACT_ANALYSIS.md` |
-| 3 Implementation Plan | DONE | `control/sessions/CR023_ARTIFACT_3_IMPLEMENTATION_PLAN.md` |
-| 4 Code Gate | DONE | `control/sessions/CR023_ARTIFACT_4_CODE_GATE.md` |
-| 5 QA Report | PENDING | — |
-| 6 Owner Signoff | PENDING | — |
+### CR-025: Coverage-Based Intelligent PO — **QA**
+- Request Stock: Coverage selector (3/7/10/30d), consumption-based ordering with threshold fallback, category-grouped suggested items, source cross-validation. 173 → 4 items (smart filter)
+- Direct Dispatch: Integrated dispatch table with inline Source Segment picker, "You'll retain X%" projection, review warnings, order summary
+- Gate waived (velocity exception). **Owner Signoff PENDING**
 
-### Batch Execution Tracker
+## Registry: 25 CRs, 16 BUGs, 3 Sprints (S0-S2 closed, S3 active)
 
-| Batch | Scope | Bugs | Owner Smoke Test | Status |
-|:-----:|-------|------|:----------------:|:------:|
-| 1 | useRestaurantMap + OperationsHub Store Health | A1, B1 | PENDING | **NEXT** |
-| 2 | Restaurant names: Queues, TransferDetail, History | B2, B3, B4 | PENDING | BLOCKED |
-| 3 | TransferDetail Store Snapshot + Impact Summary | C1 | PENDING | BLOCKED |
-| 4 | Consumption intelligence + DirectDispatch auto-detect | B9, C2 | PENDING | BLOCKED |
-| 5 | ReceiveDialog + ApproveWaveDialog FEFO + HierarchySummary | C3, C4, B5 | PENDING | BLOCKED |
-| 6 | Catalogues + HierarchyMgmt + Dialog polish | B6-B8, B11, C5, C6 | PENDING | BLOCKED |
+## Owner Signoff Pending
 
-## Previous Implementation (S2 — CR-021, now audited)
-
-| Sprint | Scope | Tests | Actual Status |
-|--------|-------|:-----:|:------:|
-| Sprint A | Hub, Inventory, Detail, History, Timeline | 21/21 | PARTIAL — Hub store health broken |
-| Sprint B | Queues, PO format, Modals, SourceSelector | 18/18 | PARTIAL — names missing, snapshots missing |
-| Sprint C | Adjustment, Wastage, Settings, Vendors | 11/11 | PARTIAL — vendor intelligence missing |
-| Polish | Catalogues, Consumption, Hierarchy, Request, Dispatch | 5/5 | PARTIAL — cross-ref/consumption missing |
+- **CR-021** — Sprint A+B+C Intelligence Implementation
+- **CR-022** — Code Quality Review Fixes
+- **CR-023** — API Reality Check & Intelligence Gap Fix
+- **CR-024** — API Response Cache
+- **CR-025** — Coverage-Based Intelligent PO
 
 ## Backend Gaps
 
@@ -67,9 +56,7 @@ Previous agent claimed "ALL 22+ screens upgraded — 55/55 tests PASS". Audit re
 | G-015 | Excel parsing endpoint | P2 | Excel zone pending |
 | G-012 | Catalog category fields | P1 | Open |
 | G-016 | Invoice storage | P2 | Open |
-| **G-017** | **Vendor purchase history API** | **P2** | **NEW — registered in CR-023** |
-
-## Registry: 23 CRs, 16 BUGs, 3 Sprints (S0-S2 closed, S3 active)
+| G-017 | Vendor purchase history API | P2 | Open |
 
 ## Quick Links
 
@@ -81,8 +68,4 @@ Previous agent claimed "ALL 22+ screens upgraded — 55/55 tests PASS". Audit re
 | L8 Credentials | `control/L8_ACCESS_REGISTRY.md` |
 | L9 Gaps | `control/L9_OPEN_GAPS_REGISTER.md` |
 | Registry | `control/registry.json` |
-| CR-023 Intake | `control/sessions/CR023_ARTIFACT_1_INTAKE.md` |
-| CR-023 Impact | `control/sessions/CR023_ARTIFACT_2_IMPACT_ANALYSIS.md` |
-| CR-023 Impl Plan | `control/sessions/CR023_ARTIFACT_3_IMPLEMENTATION_PLAN.md` |
-| CR-023 Code Gate | `control/sessions/CR023_ARTIFACT_4_CODE_GATE.md` |
 | Phase 7 Freeze | `control/sessions/INTELLIGENT_UI_FREEZE_PHASE_7_FINAL_FREEZE.md` |
