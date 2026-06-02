@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLoginContext } from "@/hooks/useLoginContext";
 import { useWriteAction } from "@/hooks/useWriteAction";
@@ -14,7 +14,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LoadingState, PermissionDenied } from "@/components/common/StateDisplays";
-import { ArrowLeft, Plus, Trash2, Loader2, SendHorizonal, AlertCircle, Store, Info, AlertTriangle, Package, Zap } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Loader2, SendHorizonal, AlertCircle, Store, Info, AlertTriangle, Package, Zap, Calendar } from "lucide-react";
 
 const RELATION_LABELS = {
   direct_parent: "Direct Parent",
@@ -22,13 +22,20 @@ const RELATION_LABELS = {
   sibling_central: "Sibling",
 };
 
+const COVERAGE_OPTIONS = [
+  { value: 3, label: "3 days" },
+  { value: 7, label: "7 days" },
+  { value: 10, label: "10 days" },
+  { value: 30, label: "30 days" },
+];
+
 export default function RequestStockForm() {
   const navigate = useNavigate();
   const { canDo } = useLoginContext();
   const { submitting, execute } = useWriteAction();
 
-  // G1: Mode toggle
   const [mode, setMode] = useState("suggested");
+  const [coverageDays, setCoverageDays] = useState(7);
 
   // Step 1: Sources
   const [sources, setSources] = useState([]);
@@ -36,25 +43,45 @@ export default function RequestStockForm() {
   const [loadingSources, setLoadingSources] = useState(true);
   const [sourcesError, setSourcesError] = useState(null);
 
-  // Step 2: Catalog from selected source
+  // Step 2: Catalog
   const [catalog, setCatalog] = useState([]);
   const [catalogSource, setCatalogSource] = useState(null);
   const [loadingCatalog, setLoadingCatalog] = useState(false);
   const [catalogError, setCatalogError] = useState(null);
 
-  // Step 3: Manual mode item rows
+  // Manual mode rows
   const [rows, setRows] = useState([emptyRow()]);
 
-  // Own stock for intelligence
+  // Intelligence data
   const [ownStock, setOwnStock] = useState([]);
+  const [consumption, setConsumption] = useState([]);
+  const [consumptionDays, setConsumptionDays] = useState(0);
+  const [pendingRequestCount, setPendingRequestCount] = useState(0);
+
+  // Fetch own stock + consumption on mount
   useEffect(() => {
-    api.getStockInventory()
-      .then(r => setOwnStock(r.data?.current_stocks || []))
-      .catch(() => {});
+    const thirtyAgo = new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0];
+    const today = new Date().toISOString().split("T")[0];
+    Promise.allSettled([
+      api.getStockInventory(),
+      api.getDailyConsumptionReport({ fromDate: thirtyAgo, toDate: today }),
+    ]).then(([stockResp, consResp]) => {
+      if (stockResp.status === "fulfilled") {
+        setOwnStock(stockResp.value.data?.current_stocks || []);
+      }
+      if (consResp.status === "fulfilled") {
+        const d = consResp.value.data;
+        setConsumption(d?.stock_summary || []);
+        const dr = d?.date_range || [];
+        if (dr.length === 2) {
+          const diff = Math.max(1, Math.ceil((new Date(dr[1]) - new Date(dr[0])) / 86400000));
+          setConsumptionDays(diff);
+        }
+      }
+    });
   }, []);
 
-  // G6: Pending request count for selected source
-  const [pendingRequestCount, setPendingRequestCount] = useState(0);
+  // Pending request count
   useEffect(() => {
     if (!selectedSourceId) { setPendingRequestCount(0); return; }
     api.getTransferHistory().then(resp => {
@@ -68,42 +95,29 @@ export default function RequestStockForm() {
     }).catch(() => {});
   }, [selectedSourceId]);
 
-  // Load request-sources on mount
+  // Load sources
   useEffect(() => {
     let cancelled = false;
     setLoadingSources(true);
-    setSourcesError(null);
     api.requestSources()
       .then((resp) => {
         if (cancelled) return;
-        const data = resp.data?.data || resp.data;
-        const list = data?.sources || [];
+        const list = (resp.data?.data || resp.data)?.sources || [];
         setSources(list);
         const def = list.find((s) => s.is_direct_parent) || list[0];
         if (def) setSelectedSourceId(def.restaurant_id);
       })
-      .catch((err) => {
-        if (cancelled) return;
-        setSourcesError(err?.response?.data?.message || "Failed to load request sources");
-      })
+      .catch((err) => { if (!cancelled) setSourcesError(err?.response?.data?.message || "Failed to load sources"); })
       .finally(() => { if (!cancelled) setLoadingSources(false); });
     return () => { cancelled = true; };
   }, []);
 
-  // Load catalog when source changes
+  // Load catalog on source change
   useEffect(() => {
-    if (!selectedSourceId) {
-      setCatalog([]);
-      setCatalogSource(null);
-      return;
-    }
+    if (!selectedSourceId) { setCatalog([]); setCatalogSource(null); return; }
     let cancelled = false;
     setLoadingCatalog(true);
-    setCatalogError(null);
-    setCatalog([]);
-    setCatalogSource(null);
-    setRows([emptyRow()]);
-
+    setCatalog([]); setCatalogSource(null); setRows([emptyRow()]);
     api.requestCatalog(selectedSourceId)
       .then((resp) => {
         if (cancelled) return;
@@ -111,69 +125,98 @@ export default function RequestStockForm() {
         setCatalog(data?.items || []);
         setCatalogSource(data?.source_restaurant || null);
       })
-      .catch((err) => {
-        if (cancelled) return;
-        setCatalogError(err?.response?.data?.message || "Failed to load catalog");
-      })
+      .catch((err) => { if (!cancelled) setCatalogError(err?.response?.data?.message || "Failed to load catalog"); })
       .finally(() => { if (!cancelled) setLoadingCatalog(false); });
     return () => { cancelled = true; };
   }, [selectedSourceId]);
 
-  // G2 + G3: Compute stock health stats + suggested items
-  const stockHealth = useMemo(() => {
-    if (!ownStock.length) return { outCount: 0, lowCount: 0, adequateCount: 0, total: 0 };
-    let outCount = 0, lowCount = 0, adequateCount = 0;
-    ownStock.forEach(item => {
-      const qty = item.display_qty ?? item.cal_quantity ?? 0;
-      if (qty === 0) outCount++;
-      else if (item.is_low_stock) lowCount++;
-      else adequateCount++;
+  // Build consumption lookup: ingredient_name → avg_daily
+  const consumptionMap = useMemo(() => {
+    if (!consumption.length || consumptionDays <= 0) return {};
+    const map = {};
+    consumption.forEach(item => {
+      const name = (item.ingredient_name || "").toLowerCase();
+      const consumed = parseFloat(item.total_consumed) || 0;
+      if (name && consumed > 0) {
+        map[name] = consumed / consumptionDays;
+      }
     });
-    return { outCount, lowCount, adequateCount, total: ownStock.length };
-  }, [ownStock]);
+    return map;
+  }, [consumption, consumptionDays]);
 
-  // G3: Suggested items — cross-ref ownStock (low/out) with catalog (source availability)
+  const hasConsumptionData = Object.keys(consumptionMap).length > 0;
+
+  // Core intelligence: compute suggested items based on coverage period
   const suggestedItems = useMemo(() => {
     if (!ownStock.length || !catalog.length) return [];
-    const lowOrOut = ownStock.filter(s => s.is_low_stock || (s.display_qty ?? 0) === 0);
-    return lowOrOut.map(item => {
-      const catalogItem = catalog.find(c =>
-        (c.stock_title || "").toLowerCase() === (item.stock_title || "").toLowerCase()
-      );
+
+    return ownStock.map(item => {
+      const name = (item.stock_title || "").toLowerCase();
+      const catalogItem = catalog.find(c => (c.stock_title || "").toLowerCase() === name);
       if (!catalogItem) return null;
-      const yourQty = item.display_qty ?? 0;
+
+      const currentStock = item.display_qty ?? 0;
       const minQty = item.min_qty_alert ?? 0;
-      const gap = minQty > 0 ? Math.max(0, minQty - yourQty) : 0;
+      const avgDaily = consumptionMap[name] || 0;
       const sourceAvail = catalogItem.available_display_qty ?? null;
-      const isOut = yourQty === 0;
-      const isLow = item.is_low_stock && yourQty > 0;
       const category = catalogItem.category_name || item.category_name || "Uncategorized";
+
+      let orderQty = 0;
+      let daysOfCover = null;
+      let suggestion = "";
+      let urgency = 0; // higher = more urgent
+
+      if (avgDaily > 0) {
+        // Consumption-based: order for coverage period
+        daysOfCover = currentStock / avgDaily;
+        const projectedNeed = avgDaily * coverageDays;
+        orderQty = Math.max(0, Math.ceil((projectedNeed - currentStock) * 100) / 100);
+
+        if (orderQty > 0) {
+          if (daysOfCover < 1) {
+            suggestion = `< 1 day cover, ordering ${orderQty} for ${coverageDays} days`;
+            urgency = 100;
+          } else {
+            suggestion = `~${Math.round(daysOfCover)} days cover, ordering for ${coverageDays} days`;
+            urgency = 50 + (coverageDays - daysOfCover);
+          }
+        }
+      } else if (minQty > 0 && currentStock < minQty) {
+        // Threshold-based fallback
+        orderQty = Math.ceil((minQty - currentStock) * 100) / 100;
+        suggestion = `Gap to min: ${orderQty} ${item.display_unit || ""}`;
+        urgency = currentStock === 0 ? 80 : 40;
+      }
+      // else: no consumption, no threshold, or already stocked → skip
+
+      if (orderQty <= 0) return null;
+
       return {
         id: catalogItem.source_inventory_master_id,
         stockTitle: item.stock_title,
         unit: catalogItem.unit || catalogItem.display_unit || item.display_unit || "",
         unitId: catalogItem.unit_id || null,
         category,
-        yourQty,
+        currentStock,
         minQty,
-        gap,
+        avgDaily,
+        daysOfCover,
         sourceAvail,
-        isOut,
-        isLow,
-        suggestedQty: gap > 0 ? gap : (minQty > 0 ? minQty : 1),
-        qty: gap > 0 ? String(gap) : (minQty > 0 ? String(minQty) : "1"),
+        orderQty,
+        suggestion,
+        urgency,
+        isOut: currentStock === 0,
+        isLow: item.is_low_stock && currentStock > 0,
+        qty: String(orderQty),
         included: true,
       };
-    }).filter(Boolean)
-      .filter((item, idx, arr) => arr.findIndex(x => x.id === item.id) === idx) // deduplicate by source_inventory_master_id
-      .sort((a, b) => {
-      if (a.isOut && !b.isOut) return -1;
-      if (!a.isOut && b.isOut) return 1;
-      return b.gap - a.gap;
-    });
-  }, [ownStock, catalog]);
+    })
+      .filter(Boolean)
+      .filter((item, idx, arr) => arr.findIndex(x => x.id === item.id) === idx)
+      .sort((a, b) => b.urgency - a.urgency);
+  }, [ownStock, catalog, consumptionMap, coverageDays]);
 
-  // G3: State for editable suggested items
+  // Editable state for suggested rows
   const [suggestedRows, setSuggestedRows] = useState([]);
   useEffect(() => {
     setSuggestedRows(suggestedItems.map(item => ({ ...item })));
@@ -187,7 +230,7 @@ export default function RequestStockForm() {
     });
   };
 
-  // G4: Group suggested items by category
+  // Group by category
   const groupedSuggested = useMemo(() => {
     const groups = {};
     suggestedRows.forEach((item, idx) => {
@@ -199,6 +242,32 @@ export default function RequestStockForm() {
   }, [suggestedRows]);
 
   const includedSuggested = suggestedRows.filter(r => r.included && Number(r.qty) > 0);
+
+  // Stat cards: recompute based on coverage
+  const coverageStats = useMemo(() => {
+    let needOrdering = 0, partiallyCovered = 0, fullyCovered = 0;
+    ownStock.forEach(item => {
+      const name = (item.stock_title || "").toLowerCase();
+      const currentStock = item.display_qty ?? 0;
+      const avgDaily = consumptionMap[name] || 0;
+      const minQty = item.min_qty_alert ?? 0;
+
+      if (avgDaily > 0) {
+        const daysOfCover = currentStock / avgDaily;
+        if (daysOfCover < 1) needOrdering++;
+        else if (daysOfCover < coverageDays) partiallyCovered++;
+        else fullyCovered++;
+      } else if (minQty > 0) {
+        if (currentStock === 0) needOrdering++;
+        else if (currentStock < minQty) partiallyCovered++;
+        else fullyCovered++;
+      } else {
+        if (currentStock === 0) needOrdering++;
+        else fullyCovered++;
+      }
+    });
+    return { needOrdering, partiallyCovered, fullyCovered, total: ownStock.length };
+  }, [ownStock, consumptionMap, coverageDays]);
 
   if (!canDo("request-stock")) return <PermissionDenied />;
   if (loadingSources) return <LoadingState lines={4} />;
@@ -246,11 +315,9 @@ export default function RequestStockForm() {
     });
   };
 
-  // Submit handler — works for both modes
   const handleSubmit = () => {
     const isDefaultParent = selectedSource?.is_direct_parent;
     let payloadItems;
-
     if (mode === "suggested") {
       payloadItems = includedSuggested.map(r => ({
         source_inventory_master_id: Number(r.id),
@@ -269,9 +336,7 @@ export default function RequestStockForm() {
         };
       });
     }
-
     if (payloadItems.length === 0) return;
-
     execute(
       () => api.requestStock({
         items: payloadItems,
@@ -288,7 +353,6 @@ export default function RequestStockForm() {
     );
   };
 
-  // Validation per mode
   const manualValid = rows.length > 0 && submitAllowed && rows.every(
     (r) => r.itemId && Number(r.quantity) > 0 && !validateQuantityForUnit(r.quantity, r.unit)
   );
@@ -305,40 +369,73 @@ export default function RequestStockForm() {
         </div>
       </div>
       <p className="text-xs text-muted-foreground mb-4">
-        {mode === "suggested" ? "Items below minimum stock detected. Review and submit" : "Manually select items to request"}
+        {mode === "suggested"
+          ? hasConsumptionData
+            ? `Ordering for ${coverageDays}-day coverage based on consumption patterns`
+            : "Items below minimum threshold. Review and submit"
+          : "Manually select items to request"}
       </p>
 
-      {/* G2: Stock health stat cards */}
-      {ownStock.length > 0 && (
-        <div className="grid grid-cols-4 gap-2 mb-4" data-testid="stock-health-stats">
-          <Card className={stockHealth.outCount > 0 ? "border-l-[3px] border-l-red-500" : ""}>
-            <CardContent className="py-2.5 px-3 text-center">
-              <p className={`text-xl font-bold tabular-nums ${stockHealth.outCount > 0 ? "text-red-600" : ""}`}>{stockHealth.outCount}</p>
-              <p className="text-[9px] text-muted-foreground uppercase">Out of Stock</p>
-            </CardContent>
-          </Card>
-          <Card className={stockHealth.lowCount > 0 ? "border-l-[3px] border-l-amber-500" : ""}>
-            <CardContent className="py-2.5 px-3 text-center">
-              <p className={`text-xl font-bold tabular-nums ${stockHealth.lowCount > 0 ? "text-amber-600" : ""}`}>{stockHealth.lowCount}</p>
-              <p className="text-[9px] text-muted-foreground uppercase">Low Stock</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="py-2.5 px-3 text-center">
-              <p className="text-xl font-bold tabular-nums">{stockHealth.adequateCount}</p>
-              <p className="text-[9px] text-muted-foreground uppercase">Adequate</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="py-2.5 px-3 text-center">
-              <p className="text-xl font-bold tabular-nums">{suggestedRows.filter(r => r.included).length}</p>
-              <p className="text-[9px] text-muted-foreground uppercase">Suggested</p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      {/* Coverage period selector */}
+      <Card className="mb-4" data-testid="coverage-selector-card">
+        <CardContent className="py-3 px-4">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-1.5">
+              <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="text-xs font-medium">Order for:</span>
+            </div>
+            <div className="flex gap-1.5" data-testid="coverage-period-selector">
+              {COVERAGE_OPTIONS.map(opt => (
+                <Button
+                  key={opt.value}
+                  variant={coverageDays === opt.value ? "default" : "outline"}
+                  size="sm"
+                  className="h-7 text-xs px-3"
+                  onClick={() => setCoverageDays(opt.value)}
+                  data-testid={`coverage-${opt.value}d`}
+                >
+                  {opt.label}
+                </Button>
+              ))}
+            </div>
+            {!hasConsumptionData && (
+              <span className="text-[10px] text-muted-foreground bg-muted px-2 py-1 rounded" data-testid="no-consumption-note">
+                No consumption data — using threshold-based ordering
+              </span>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Step 1: Source Picker */}
+      {/* Stat cards */}
+      <div className="grid grid-cols-4 gap-2 mb-4" data-testid="stock-health-stats">
+        <Card className={coverageStats.needOrdering > 0 ? "border-l-[3px] border-l-red-500" : ""}>
+          <CardContent className="py-2.5 px-3 text-center">
+            <p className={`text-xl font-bold tabular-nums ${coverageStats.needOrdering > 0 ? "text-red-600" : ""}`}>{coverageStats.needOrdering}</p>
+            <p className="text-[9px] text-muted-foreground uppercase">Need Ordering</p>
+          </CardContent>
+        </Card>
+        <Card className={coverageStats.partiallyCovered > 0 ? "border-l-[3px] border-l-amber-500" : ""}>
+          <CardContent className="py-2.5 px-3 text-center">
+            <p className={`text-xl font-bold tabular-nums ${coverageStats.partiallyCovered > 0 ? "text-amber-600" : ""}`}>{coverageStats.partiallyCovered}</p>
+            <p className="text-[9px] text-muted-foreground uppercase">Partially Covered</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="py-2.5 px-3 text-center">
+            <p className="text-xl font-bold tabular-nums">{coverageStats.fullyCovered}</p>
+            <p className="text-[9px] text-muted-foreground uppercase">Fully Covered</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="py-2.5 px-3 text-center">
+            <p className="text-xl font-bold tabular-nums">{suggestedRows.filter(r => r.included).length}</p>
+            <p className="text-[9px] text-muted-foreground uppercase">In This PO</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Source Picker */}
       <SourcePicker
         sources={sources}
         selectedSourceId={selectedSourceId}
@@ -348,7 +445,7 @@ export default function RequestStockForm() {
         disabled={submitting}
       />
 
-      {/* G1: Mode toggle */}
+      {/* Mode toggle */}
       {catalog.length > 0 && (
         <div className="mb-4">
           <Tabs value={mode} onValueChange={setMode}>
@@ -367,7 +464,7 @@ export default function RequestStockForm() {
         </div>
       )}
 
-      {/* Step 2 + 3 */}
+      {/* Content */}
       {loadingCatalog ? (
         <LoadingState lines={3} />
       ) : catalogError ? (
@@ -380,12 +477,14 @@ export default function RequestStockForm() {
         </CardContent></Card>
       ) : catalog.length > 0 ? (
         <>
-          {/* ═══ SUGGESTED REORDER MODE ═══ */}
           {mode === "suggested" && (
             <>
               {suggestedRows.length === 0 ? (
                 <Card className="mb-4"><CardContent className="py-6 text-center text-muted-foreground text-sm">
-                  All items are adequately stocked. Switch to Manual Request to order specific items.
+                  {hasConsumptionData
+                    ? `All items have sufficient stock for ${coverageDays}-day coverage.`
+                    : "No items below threshold. All items are adequately stocked."}
+                  {" "}Switch to Manual Request for specific items.
                 </CardContent></Card>
               ) : (
                 <Card className="mb-4 border-l-[3px] border-l-amber-500" data-testid="suggested-items-table">
@@ -393,9 +492,13 @@ export default function RequestStockForm() {
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-xs font-medium uppercase tracking-wider flex items-center gap-1.5 text-amber-700">
                         <AlertTriangle className="h-3.5 w-3.5" />
-                        Suggested Items ({suggestedRows.length})
+                        {hasConsumptionData
+                          ? `Reorder for ${coverageDays}-Day Coverage (${suggestedRows.length} items)`
+                          : `Items Below Threshold (${suggestedRows.length})`}
                       </CardTitle>
-                      <span className="text-[10px] text-muted-foreground">Auto-detected from your stock levels</span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {hasConsumptionData ? "Based on consumption patterns" : "Based on min stock thresholds"}
+                      </span>
                     </div>
                   </CardHeader>
                   <CardContent className="py-0 px-0">
@@ -407,6 +510,7 @@ export default function RequestStockForm() {
                             <TableHead className="text-[10px]">Item</TableHead>
                             <TableHead className="text-[10px]">Category</TableHead>
                             <TableHead className="text-[10px] text-right">Your Stock</TableHead>
+                            {hasConsumptionData && <TableHead className="text-[10px] text-right">Days Cover</TableHead>}
                             <TableHead className="text-[10px] text-right">Source Avail</TableHead>
                             <TableHead className="text-[10px] text-right w-24">Order Qty</TableHead>
                             <TableHead className="text-[10px]">Suggestion</TableHead>
@@ -415,9 +519,8 @@ export default function RequestStockForm() {
                         <TableBody>
                           {groupedSuggested.map(([category, items]) => (
                             <React.Fragment key={`group-${category}`}>
-                              {/* G4: Category group header */}
                               <TableRow className="bg-muted/40">
-                                <TableCell colSpan={7} className="py-1.5 px-4">
+                                <TableCell colSpan={hasConsumptionData ? 8 : 7} className="py-1.5 px-4">
                                   <span className="text-[11px] font-semibold">{category}</span>
                                   <span className="text-[10px] text-muted-foreground ml-2">{items.length} item{items.length !== 1 ? "s" : ""}</span>
                                 </TableCell>
@@ -442,23 +545,24 @@ export default function RequestStockForm() {
                                     <TableCell className="text-xs text-muted-foreground">{item.category}</TableCell>
                                     <TableCell className="text-xs text-right">
                                       <span className={`tabular-nums ${item.isOut ? "text-red-600 font-semibold" : item.isLow ? "text-amber-600 font-semibold" : ""}`}>
-                                        {item.yourQty} {item.unit}
+                                        {item.currentStock} {item.unit}
                                       </span>
-                                      {item.isOut && (
-                                        <Badge variant="destructive" className="ml-1 text-[8px] px-1 py-0">OUT</Badge>
-                                      )}
-                                      {item.isLow && !item.isOut && (
-                                        <Badge className="ml-1 text-[8px] px-1 py-0 bg-amber-100 text-amber-700 border-amber-200">LOW</Badge>
-                                      )}
+                                      {item.isOut && <Badge variant="destructive" className="ml-1 text-[8px] px-1 py-0">OUT</Badge>}
+                                      {item.isLow && !item.isOut && <Badge className="ml-1 text-[8px] px-1 py-0 bg-amber-100 text-amber-700 border-amber-200">LOW</Badge>}
                                     </TableCell>
+                                    {hasConsumptionData && (
+                                      <TableCell className="text-xs text-right">
+                                        {item.daysOfCover != null ? (
+                                          <span className={`tabular-nums font-mono ${item.daysOfCover < 1 ? "text-red-600 font-semibold" : item.daysOfCover < coverageDays ? "text-amber-600" : ""}`}>
+                                            {item.daysOfCover < 1 ? "< 1d" : `~${Math.round(item.daysOfCover)}d`}
+                                          </span>
+                                        ) : <span className="text-muted-foreground">—</span>}
+                                      </TableCell>
+                                    )}
                                     <TableCell className="text-xs text-right">
                                       {item.sourceAvail != null ? (
-                                        <span className={`tabular-nums ${item.sourceAvail === 0 ? "text-red-600" : ""}`}>
-                                          {item.sourceAvail} {item.unit}
-                                        </span>
-                                      ) : (
-                                        <span className="text-muted-foreground">—</span>
-                                      )}
+                                        <span className={`tabular-nums ${item.sourceAvail === 0 ? "text-red-600" : ""}`}>{item.sourceAvail} {item.unit}</span>
+                                      ) : <span className="text-muted-foreground">—</span>}
                                     </TableCell>
                                     <TableCell className="text-right">
                                       <Input
@@ -472,9 +576,7 @@ export default function RequestStockForm() {
                                       <span className="text-[10px] text-muted-foreground ml-1">{item.unit}</span>
                                     </TableCell>
                                     <TableCell className="text-xs">
-                                      {item.gap > 0 && (
-                                        <span className="text-muted-foreground">Gap to min: {item.gap}</span>
-                                      )}
+                                      <span className="text-muted-foreground">{item.suggestion}</span>
                                       {exceedsSource && (
                                         <p className="text-[10px] text-amber-600 font-medium mt-0.5" data-testid={`source-warn-${item._idx}`}>
                                           Source has only {item.sourceAvail}
@@ -489,13 +591,12 @@ export default function RequestStockForm() {
                         </TableBody>
                       </Table>
                     </div>
-                    {/* G8: Source stock cross-validation warnings */}
                     {suggestedRows.some(r => r.included && r.sourceAvail != null && Number(r.qty) > r.sourceAvail) && (
                       <div className="px-4 py-2 border-t border-border/50 bg-amber-50/50">
                         <p className="text-[10px] text-amber-700 flex items-center gap-1">
                           <AlertTriangle className="h-3 w-3 shrink-0" />
                           {suggestedRows.filter(r => r.included && r.sourceAvail != null && Number(r.qty) > r.sourceAvail).map(r =>
-                            `${r.stockTitle} qty (${r.qty} ${r.unit}) exceeds source availability (${r.sourceAvail} ${r.unit})`
+                            `${r.stockTitle} (${r.qty} ${r.unit}) exceeds source (${r.sourceAvail} ${r.unit})`
                           ).join("; ")}
                         </p>
                       </div>
@@ -509,10 +610,11 @@ export default function RequestStockForm() {
                 </Card>
               )}
 
-              {/* G7: Order summary */}
+              {/* Order summary */}
               {includedSuggested.length > 0 && (
                 <Card className="mb-4" data-testid="order-summary">
                   <CardContent className="py-3 px-4">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">Order Summary</p>
                     <div className="flex flex-wrap gap-x-4 gap-y-1 mb-2">
                       {includedSuggested.map(r => (
                         <span key={r.id} className="text-xs tabular-nums">
@@ -520,23 +622,18 @@ export default function RequestStockForm() {
                         </span>
                       ))}
                     </div>
-                    <p className="text-[10px] text-muted-foreground">{includedSuggested.length} item{includedSuggested.length !== 1 ? "s" : ""}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {includedSuggested.length} item{includedSuggested.length !== 1 ? "s" : ""}
+                      {hasConsumptionData ? ` · ${coverageDays}-day coverage` : " · threshold-based"}
+                    </p>
                   </CardContent>
                 </Card>
               )}
             </>
           )}
 
-          {/* ═══ MANUAL REQUEST MODE ═══ */}
           {mode === "manual" && (
-            <ItemsCard
-              rows={rows}
-              catalog={catalog}
-              addRow={addRow}
-              removeRow={removeRow}
-              updateRow={updateRow}
-              submitting={submitting}
-            />
+            <ItemsCard rows={rows} catalog={catalog} addRow={addRow} removeRow={removeRow} updateRow={updateRow} submitting={submitting} />
           )}
 
           <Button data-testid="request-submit" onClick={handleSubmit} disabled={!allValid || submitting} className="w-full">
@@ -570,47 +667,30 @@ function SourcePicker({ sources, selectedSourceId, onSourceChange, canSubmitToSe
         <CardTitle className="text-xs uppercase tracking-wider text-muted-foreground">Request From</CardTitle>
       </CardHeader>
       <CardContent className="py-0 px-4 pb-3">
-        <Select
-          value={selectedSourceId ? String(selectedSourceId) : ""}
-          onValueChange={(v) => onSourceChange(Number(v))}
-          disabled={disabled}
-        >
-          <SelectTrigger data-testid="request-source-select" className="text-xs">
-            <SelectValue placeholder="Select source store" />
-          </SelectTrigger>
+        <Select value={selectedSourceId ? String(selectedSourceId) : ""} onValueChange={(v) => onSourceChange(Number(v))} disabled={disabled}>
+          <SelectTrigger data-testid="request-source-select" className="text-xs"><SelectValue placeholder="Select source store" /></SelectTrigger>
           <SelectContent>
             {sources.map((src) => (
               <SelectItem key={src.restaurant_id} value={String(src.restaurant_id)} data-testid={`source-option-${src.restaurant_id}`}>
                 <span className="flex items-center gap-1.5">
                   <Store className="h-3 w-3 flex-shrink-0" />
-                  {src.name} ({mapRestaurantType(src.restaurant_type)})
-                  <span className="text-muted-foreground ml-1">
-                    — {RELATION_LABELS[src.relation] || src.relation}
-                  </span>
-                  {!src.can_submit_request && (
-                    <span className="text-destructive text-[10px] ml-1">(blocked)</span>
-                  )}
+                  {src.name} ({mapRestaurantType(src.restaurant_type)}) — {RELATION_LABELS[src.relation] || src.relation}
+                  {!src.can_submit_request && <span className="text-destructive text-[10px] ml-1">(blocked)</span>}
                 </span>
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
-
-        {/* G6: Pending requests warning */}
         {pendingRequestCount > 0 && (
           <div className="mt-2 flex items-center gap-1.5 text-[11px] text-amber-700 bg-amber-50 rounded p-2" data-testid="pending-requests-warning">
             <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />
             <span>{pendingRequestCount} pending request{pendingRequestCount > 1 ? "s" : ""} with this source</span>
           </div>
         )}
-
         {!canSubmitToSelected && selectedSourceId && (
           <div className="mt-2 flex items-start gap-1.5 text-[11px] text-amber-700 bg-amber-50 rounded p-2" data-testid="cross-branch-warning">
             <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
-            <span>
-              Cross-branch requests to this store are currently disabled.
-              Contact your Central Store administrator to enable cross-branch transfers.
-            </span>
+            <span>Cross-branch requests to this store are currently disabled.</span>
           </div>
         )}
       </CardContent>
@@ -621,21 +701,10 @@ function SourcePicker({ sources, selectedSourceId, onSourceChange, canSubmitToSe
 function ItemsCard({ rows, catalog, addRow, removeRow, updateRow, submitting }) {
   return (
     <Card className="mb-4">
-      <CardHeader className="py-2.5 px-4">
-        <CardTitle className="text-xs uppercase tracking-wider text-muted-foreground">Items</CardTitle>
-      </CardHeader>
+      <CardHeader className="py-2.5 px-4"><CardTitle className="text-xs uppercase tracking-wider text-muted-foreground">Items</CardTitle></CardHeader>
       <CardContent className="py-0 px-4 space-y-3 pb-4">
         {rows.map((row, idx) => (
-          <ItemRow
-            key={`item-${idx}-${row.itemId || 'empty'}`}
-            idx={idx}
-            row={row}
-            catalog={catalog}
-            totalRows={rows.length}
-            removeRow={removeRow}
-            updateRow={updateRow}
-            submitting={submitting}
-          />
+          <ItemRow key={`item-${idx}-${row.itemId || 'empty'}`} idx={idx} row={row} catalog={catalog} totalRows={rows.length} removeRow={removeRow} updateRow={updateRow} submitting={submitting} />
         ))}
         <Button type="button" variant="outline" size="sm" onClick={addRow} disabled={submitting} data-testid="request-add-item" className="text-xs">
           <Plus className="h-3.5 w-3.5 mr-1" /> Add Item
@@ -649,32 +718,20 @@ function ItemRow({ idx, row, catalog, totalRows, removeRow, updateRow, submittin
   const qtyErr = row.quantity && validateQuantityForUnit(row.quantity, row.unit);
   const selectedItem = catalog.find((i) => String(i.source_inventory_master_id) === String(row.itemId));
   const exceedsSource = selectedItem?.available_display_qty != null && Number(row.quantity) > selectedItem.available_display_qty;
-
   return (
     <div className="border rounded-md p-3 space-y-2" data-testid={`request-item-row-${idx}`}>
       <div className="flex justify-between items-center">
         <span className="text-[10px] text-muted-foreground">Item {idx + 1}</span>
         {totalRows > 1 && (
-          <button type="button" onClick={() => removeRow(idx)} className="text-destructive hover:text-destructive/80" disabled={submitting} data-testid={`request-remove-item-${idx}`}>
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
+          <button type="button" onClick={() => removeRow(idx)} className="text-destructive hover:text-destructive/80" disabled={submitting} data-testid={`request-remove-item-${idx}`}><Trash2 className="h-3.5 w-3.5" /></button>
         )}
       </div>
-      <Select
-        value={row.itemId ? String(row.itemId) : ""}
-        onValueChange={(v) => updateRow(idx, "itemId", v)}
-        disabled={submitting}
-      >
-        <SelectTrigger data-testid={`request-item-select-${idx}`} className="text-xs">
-          <SelectValue placeholder="Select item from source" />
-        </SelectTrigger>
+      <Select value={row.itemId ? String(row.itemId) : ""} onValueChange={(v) => updateRow(idx, "itemId", v)} disabled={submitting}>
+        <SelectTrigger data-testid={`request-item-select-${idx}`} className="text-xs"><SelectValue placeholder="Select item from source" /></SelectTrigger>
         <SelectContent>
           {catalog.map((item) => (
             <SelectItem key={item.source_inventory_master_id} value={String(item.source_inventory_master_id)}>
-              {item.stock_title} ({item.unit || item.display_unit})
-              {item.available_display_qty != null && (
-                <span className="text-muted-foreground"> — {item.available_display_qty} avail</span>
-              )}
+              {item.stock_title} ({item.unit || item.display_unit}){item.available_display_qty != null && <span className="text-muted-foreground"> — {item.available_display_qty} avail</span>}
             </SelectItem>
           ))}
         </SelectContent>
@@ -682,19 +739,11 @@ function ItemRow({ idx, row, catalog, totalRows, removeRow, updateRow, submittin
       <div className="grid grid-cols-2 gap-2">
         <div>
           <Label className="text-[10px]">Quantity *</Label>
-          <Input
-            data-testid={`request-qty-${idx}`}
-            type="number" min="0" step="any"
-            value={row.quantity}
-            onChange={(e) => updateRow(idx, "quantity", e.target.value)}
-            className={`h-7 text-xs ${exceedsSource ? "border-amber-400" : ""}`}
-            disabled={submitting}
-          />
+          <Input data-testid={`request-qty-${idx}`} type="number" min="0" step="any" value={row.quantity} onChange={(e) => updateRow(idx, "quantity", e.target.value)} className={`h-7 text-xs ${exceedsSource ? "border-amber-400" : ""}`} disabled={submitting} />
           {qtyErr && <p className="text-[10px] text-destructive mt-0.5">{qtyErr}</p>}
           {selectedItem?.available_display_qty != null && (
             <p className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1" data-testid={`request-avail-hint-${idx}`}>
-              <Info className="h-3 w-3" />
-              Source has ~{selectedItem.available_display_qty} {selectedItem.unit || selectedItem.display_unit}
+              <Info className="h-3 w-3" /> Source has ~{selectedItem.available_display_qty} {selectedItem.unit || selectedItem.display_unit}
             </p>
           )}
           {exceedsSource && (
