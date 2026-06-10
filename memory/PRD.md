@@ -1,42 +1,44 @@
 # Central Inventory — PRD
 
 ## Original Problem Statement
-P26 API Validation — G-012 (Request Catalog Categories), G-013 (Reference Codes), and history regression fix. Full smoke validation across complete transfer lifecycles.
+P27 End-to-End Smoke Validation — Pricing, selling prices, shipping, lateral transfers, cost valuation, inward audit, negative tests across complete transfer lifecycle.
 
 ## Architecture
 - **Frontend**: React 19 + CRACO + Tailwind CSS 3 + Radix UI + shadcn/ui
 - **Backend**: FastAPI proxy → preprod.mygenie.online POS API
 - **Database**: MongoDB (local session cache only)
 
-## P26 Validation Timeline
+## Validation History
 
 | Date | Session | Result |
 |------|---------|--------|
-| 9 June 2026 | Initial G-012/G-013 probe | G-012 ✅, G-013 🔴 write blocker |
-| 9 June 2026 | Revalidation post-fix | G-012 ✅, G-013 ✅ (write fixed) |
-| 9 June 2026 | Impact analysis | History regression: `id` field missing, 14 keys dropped |
-| 9 June 2026 | Post-deploy probe | History still broken (fix not deployed) |
-| 10 June 2026 | **Full smoke validation** | **ALL PASS — 20/20 checks, both lifecycles complete** |
+| 9 Jun | P26 Initial | G-012 ✅, G-013 🔴 write blocker |
+| 9 Jun | P26 Revalidation | G-012 ✅, G-013 ✅ |
+| 9 Jun | P26 Impact analysis | History regression documented |
+| 10 Jun | P26 Smoke (post-deploy) | 20/20 PASS, history fix confirmed |
+| 10 Jun | P26 Frontend blueprint | 11 files, 4 phases planned |
+| **10 Jun** | **P27 Smoke** | **Pricing ✅, Lateral 🔴 BLOCKED, price_required ⚠️** |
 
-## Current Status: ✅ ALL CLEAR
-- History regression fix deployed — 26/26 keys on all 16 rows
-- `id === transfer_id` confirmed
-- reference_code: generated, unique, persistent, consistent across lifecycle
-- Both direct dispatch and request flow lifecycles validated end-to-end
+## P27 Status: 🟡 CONDITIONAL READY
+- Core pricing chain: ✅ request→estimate→approve(sell+ship)→dispatch→receive→audit→valuation
+- Lateral approval: 🔴 BLOCKED (`pending_lateral_approval` stuck)
+- `transfer_selling_price_required`: ⚠️ Not enforced
 
-## Addenda
-- `AI/Plans/api_implementation_status_p26_addendum.md` — pre-fix findings
-- `AI/Plans/api_implementation_status_p26_revalidation_addendum.md` — post-fix confirmation
-- `AI/Plans/p26_undefined_transfer_impact_analysis.md` — regression impact analysis
-- `AI/Plans/api_implementation_status_p26_smoke_validation.md` — full smoke validation (current)
-
-## Frontend Action Items (P0)
-1. Add `resolveTransferId(t) = t.id ?? t.transfer_id` defensive pattern
-2. Replace `formatPO(t.id)` with `reference_code` display
-3. Add `items_count ?? line_count` fallback for PendingQueues
-4. G-012: Category grouping UI in RequestStockForm step 2
+## Hierarchy Created
+- 804 Osaka Central (central, parent=798) — `owner@osakacentral.com`
+- 805 Nagoya Central (central, parent=798) — `owner@nagoyacentral.com`
 
 ## Backlog
-- P24 FEFO batch stock detail panel
-- P20 hierarchy toggle
-- P21 Smart Dispatch
+### P0 — Blockers
+1. Fix lateral approval path
+2. Wire `transfer_selling_price_required` enforcement
+
+### P1 — Frontend (from P26 blueprint)
+3. API normalizer (`transfer_id→id`)
+4. `reference_code` display
+5. Pricing fields display (selling, shipping, estimated)
+6. G-012 category grouping
+
+### P2 — Deferred
+7. Central re-sell policy validation (needs lateral fix)
+8. P24 FEFO batch stock detail panel
