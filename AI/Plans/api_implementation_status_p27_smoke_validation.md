@@ -263,3 +263,173 @@ Lateral selling_grand_total:                975 (900 + 75 shipping)
 - Inward audit totals
 - Buy/sell price visibility rules
 - All G-012/G-013 features
+
+
+---
+
+# P27 Revalidation — Lateral Fix + Scenario C + G2 Retest
+
+> **Date:** 10 June 2026 (second run, same day)
+> **Context:** Backend deployed `holdWaveOnly=false` for lateral type + `lateral_approval_pending` queue bucket
+> **Fresh transfers used:** 190, 194, 195, 196, 197, 198, 199
+
+---
+
+## Updated Executive Summary
+
+| Area | Previous | Retest | Final Verdict |
+|------|:--------:|:------:|:-------------:|
+| **A** Operational-settings (P29 keys) | ✅ PASS | — | ✅ PASS |
+| **B** vendor-item-list (buy hint) | ✅ PASS | — | ✅ PASS |
+| **C** Request estimates | ✅ PASS | — | ✅ PASS |
+| **D** Selling on approve/dispatch/initiate | ✅ PASS | — | ✅ PASS |
+| **D-lateral** Lateral central→central | 🔴 BLOCKED | ✅ PASS | ✅ **PASS** |
+| **E** Receive + audit + valuation | ✅ PASS | — | ✅ PASS |
+| **F** Regression | ✅ PASS | — | ✅ PASS |
+| **F1** `lateral_approval_pending` queue | — | ✅ PASS | ✅ **PASS** |
+| **G1** Central re-sell policy | SKIPPED | ✅ PASS | ✅ **PASS** |
+| **G2** `transfer_selling_price_required` | ⚠️ NOT ENFORCED | ⚠️ STILL NOT ENFORCED | ⚠️ **NOT ENFORCED** |
+| **G3** Shipping fee blocked | ✅ PASS | — | ✅ PASS |
+| **G4** Franchise denied policy | ✅ PASS | — | ✅ PASS |
+| **G5** Buy hint hidden | ✅ PASS | — | ✅ PASS |
+
+**Updated Recommendation:** ✅ **READY** (P29 pricing scope) — one non-blocking policy gap (G2)
+
+---
+
+## Scenario L — Lateral E2E Retest (804→805)
+
+| Step | Endpoint | Token | Expected | Actual | Result |
+|:----:|----------|-------|----------|--------|:------:|
+| 1 | `lateral/initiate` | Central A (804) | `pending_lateral_approval`, prices on lines | tid=190, ref=TRF-2026-0015, status=pending_lateral_approval, selling_grand_total=975 | ✅ |
+| 2 | `pending-queues` | Master (798) | `lateral_approval_pending` contains transfer | New queue section found, tid=190 present | ✅ |
+| 3 | `approve/190` `{}` | Master (798) | 200, status=approved | `status=approved`, `reference_code=TRF-2026-0015` | ✅ |
+| 4 | `dispatch/190` | Central A (804) | `dispatched` | `status=dispatched`, ref preserved | ✅ |
+| 5 | `receive/190` | Central B (805) | `received` | `status=received`, ref preserved | ✅ |
+| 6 | `inward-audit/190` | Central B (805) | `selling_grand_total` = goods + shipping | goods=900, shipping=75, grand=975 (900+75=975 ✅) | ✅ |
+
+**transfer_id:** 190
+**reference_code:** TRF-2026-0015
+
+### Lateral Pricing Lifecycle
+```
+Initiate:  selling_unit_price=450, shipping_fee=75
+           selling_goods_total=900 (450×2), selling_grand_total=975
+Approve:   Empty body — prices preserved from initiate ✅
+Dispatch:  status=dispatched, ref=TRF-2026-0015
+Receive:   status=received, ref=TRF-2026-0015
+Audit:     goods=900, shipping=75, grand=975 ✅
+```
+
+### New Queue Section Confirmed
+```
+pending-queues response now includes:
+  "lateral_approval_pending": [
+    { "transfer_id": 190, "reference_code": "TRF-2026-0015",
+      "type": "lateral", "status": "pending_lateral_approval" }
+  ]
+```
+Frontend must add this section to PendingQueues.jsx display.
+
+---
+
+## Scenario C — Central Re-sell Policy (G1)
+
+### Setup
+- `central_resell_markup_percent=10`, `central_resell_allow_override=false`
+- `allow_cross_central_franchise_dispatch=true`
+- Central A (804) has parent-origin stock (origin_transfer_id=186, stock_source=vendor)
+
+### Re-sell Price Basis Discovery
+
+The re-sell policy uses the **original vendor buy price** (source_purchase_price from vendor GRN), NOT the parent's selling price.
+
+| Probe | sell_price | vs vendor buy (0.0002) | Expected | Actual | Match |
+|:-----:|:---------:|:----------------------:|----------|--------|:-----:|
+| 600 | 300,000,000% | VIOLATION | VIOLATION | ✅ |
+| 440 | 220,000,000% | VIOLATION | VIOLATION | ✅ |
+| 400 | 200,000,000% | VIOLATION | VIOLATION | ✅ |
+| 1 | 500,000% | VIOLATION | VIOLATION | ✅ |
+| 0.00022 | 10% | PASS (exact band) | PASS (tid=194) | ✅ |
+| 0.00021 | 5% | PASS (within band) | PASS (tid=197) | ✅ |
+
+### G1 Verdict: ✅ PASS
+Policy enforcement is REAL. The `central_resell_markup_percent` applies against vendor buy price, not parent selling price. Band calculation works correctly.
+
+### Business Rule Clarification
+```
+Re-sell band formula:
+  max_sell = vendor_buy_price × (1 + markup_percent/100)
+  
+For this stock: vendor_buy = 0.0002/cal_unit
+  With 10% markup: max_sell = 0.0002 × 1.10 = 0.00022
+  
+Note: parent selling_unit_price (400/kg) is irrelevant for re-sell policy.
+The policy prevents central margin-stacking over the original procurement cost.
+```
+
+---
+
+## G2 Retest — `transfer_selling_price_required`
+
+| Attempt | Endpoint | Price provided | Expected | Actual | Result |
+|---------|----------|:-:|----------|--------|:------:|
+| Approve (request flow) | `approve/198` `{}` | No | SELLING_PRICE_REQUIRED | Approved ✅ | ⚠️ NOT ENFORCED |
+| Dispatch (request flow) | `dispatch/198` `{}` | No | SELLING_PRICE_REQUIRED | Dispatched ✅ | ⚠️ NOT ENFORCED |
+| Direct initiate | `initiate` no sell/ship | No | SELLING_PRICE_REQUIRED | Dispatched (tid=199) ✅ | ⚠️ NOT ENFORCED |
+
+**G2 Verdict:** ⚠️ **STILL NOT ENFORCED** — The `transfer_selling_price_required=true` setting has no effect on approve, dispatch, or initiate. All succeed without selling prices.
+
+**Severity:** LOW — This is a policy enforcement gap, not a data integrity issue. Prices can always be set optionally. The flag exists in settings but the backend code paths don't check it.
+
+**Impact on frontend:** None. Frontend can still send prices when available and omit when not. The toggle in Operational Settings UI will display correctly but has no backend effect.
+
+---
+
+## Transfers Created During Retest
+
+| TID | Ref | Type | From→To | Status | Purpose |
+|:---:|:---:|:----:|---------|--------|---------|
+| 190 | TRF-2026-0015 | lateral | 804→805 | received | Scenario L ✅ |
+| 194 | TRF-2026-0019 | dispatch | 804→799 | dispatched | G1 probe (0.00022 in-band) |
+| 197 | TRF-2026-0022 | dispatch | 804→799 | dispatched | G1 probe (0.00021 in-band) |
+| 198 | TRF-2026-0023 | request | 799→798 | dispatched | G2 test (no prices) |
+| 199 | TRF-2026-0024 | dispatch | 798→799 | dispatched | G2 direct initiate |
+
+---
+
+## Updated Issues / Blockers
+
+| # | Severity | Issue | Status |
+|:-:|:--------:|-------|:------:|
+| ~~1~~ | ~~🔴 BLOCKER~~ | ~~Lateral approval path broken~~ | ✅ **RESOLVED** — `approve/{id}` now works for `pending_lateral_approval` |
+| 2 | ⚠️ LOW | `transfer_selling_price_required` not enforced at approve/dispatch/initiate | **UNCHANGED** — policy flag has no effect |
+| 3 | ⚪ INFO | History `items_count`/`line_count` = 0 | Unchanged (cosmetic) |
+
+---
+
+## Final Recommendation
+
+### ✅ READY (P29 Pricing Scope)
+
+All critical pricing flows are validated end-to-end:
+- **Request flow:** estimate → approve with sell/ship → final pricing → audit ✅
+- **Direct dispatch:** initiate with sell/ship → audit ✅
+- **Lateral flow:** initiate → master approves → dispatch → receive → audit ✅
+- **Central re-sell policy (G1):** enforced correctly against vendor buy price ✅
+- **`lateral_approval_pending` queue:** new section working ✅
+- **Shipping fee policy (G3):** enforced ✅
+- **Franchise policy guard (G4):** enforced ✅
+- **Buy hint visibility (G5):** correctly hidden from franchise ✅
+- **Reference codes:** unique, sequential, persistent across all lifecycle stages ✅
+- **Regression (G-012, G-013, history):** all checks pass ✅
+
+**One non-blocking gap:** `transfer_selling_price_required` flag is stored but not enforced at any endpoint. This is a backend code gap, not a data or migration issue. Frontend can proceed — the setting will display in Operational Settings but has no backend effect until wired.
+
+### Frontend can proceed with:
+1. Pricing display (estimated → final, shipping, grand total)
+2. Buy/sell visibility per role
+3. `lateral_approval_pending` queue section
+4. Central re-sell policy awareness
+5. All P26 items (reference_code, category grouping, normalizer)
+

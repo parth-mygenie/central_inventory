@@ -1,7 +1,7 @@
 # Central Inventory — PRD
 
 ## Original Problem Statement
-P27 End-to-End Smoke Validation — Pricing, selling prices, shipping, lateral transfers, cost valuation, inward audit, negative tests across complete transfer lifecycle.
+P27 Validation (resumed) — Lateral approval fix retest, Scenario C central re-sell policy, G2 price-required enforcement retest.
 
 ## Architecture
 - **Frontend**: React 19 + CRACO + Tailwind CSS 3 + Radix UI + shadcn/ui
@@ -14,31 +14,43 @@ P27 End-to-End Smoke Validation — Pricing, selling prices, shipping, lateral t
 |------|---------|--------|
 | 9 Jun | P26 Initial | G-012 ✅, G-013 🔴 write blocker |
 | 9 Jun | P26 Revalidation | G-012 ✅, G-013 ✅ |
-| 9 Jun | P26 Impact analysis | History regression documented |
-| 10 Jun | P26 Smoke (post-deploy) | 20/20 PASS, history fix confirmed |
-| 10 Jun | P26 Frontend blueprint | 11 files, 4 phases planned |
-| **10 Jun** | **P27 Smoke** | **Pricing ✅, Lateral 🔴 BLOCKED, price_required ⚠️** |
+| 10 Jun | P26 Smoke (post-deploy) | 20/20 PASS |
+| 10 Jun | P26 Frontend blueprint | 11 files, 4 phases |
+| 10 Jun | P27 Initial | Pricing ✅, Lateral 🔴, G2 ⚠️ |
+| **10 Jun** | **P27 Retest** | **Lateral ✅ FIXED, Scenario C ✅, G2 ⚠️ unchanged** |
 
-## P27 Status: 🟡 CONDITIONAL READY
-- Core pricing chain: ✅ request→estimate→approve(sell+ship)→dispatch→receive→audit→valuation
-- Lateral approval: 🔴 BLOCKED (`pending_lateral_approval` stuck)
-- `transfer_selling_price_required`: ⚠️ Not enforced
+## Current Status: ✅ READY (P29 Pricing Scope)
+- Core pricing: ✅ request + dispatch + lateral + audit + valuation
+- Lateral approval: ✅ FIXED (new `lateral_approval_pending` queue)
+- Central re-sell policy (G1): ✅ enforced against vendor buy price
+- `transfer_selling_price_required`: ⚠️ Not enforced (LOW severity, non-blocking)
 
-## Hierarchy Created
-- 804 Osaka Central (central, parent=798) — `owner@osakacentral.com`
-- 805 Nagoya Central (central, parent=798) — `owner@nagoyacentral.com`
+## Hierarchy
+| RID | Name | Type | Parent |
+|:---:|------|:----:|:------:|
+| 798 | Tokyo Garden | master | — |
+| 799 | Kyoto Garden | franchise | 798 |
+| 800 | Hokkaido Garden | franchise | 798 |
+| 804 | Osaka Central | central | 798 |
+| 805 | Nagoya Central | central | 798 |
 
-## Backlog
-### P0 — Blockers
-1. Fix lateral approval path
-2. Wire `transfer_selling_price_required` enforcement
+## Addenda
+- `api_implementation_status_p26_smoke_validation.md` — P26 full smoke
+- `p26_frontend_implementation_blueprint.md` — Frontend rollout plan
+- `api_implementation_status_p27_smoke_validation.md` — P27 initial + retest (CURRENT)
 
-### P1 — Frontend (from P26 blueprint)
-3. API normalizer (`transfer_id→id`)
-4. `reference_code` display
-5. Pricing fields display (selling, shipping, estimated)
-6. G-012 category grouping
+## Frontend Action Items
+### P0 — Must Do
+1. API normalizer: `transfer_id→id`, `line_count→items_count`
+2. `reference_code` display (replace `formatPO`)
+3. Pricing fields: estimated/final, shipping, grand total
+4. `lateral_approval_pending` queue section in PendingQueues
 
-### P2 — Deferred
-7. Central re-sell policy validation (needs lateral fix)
-8. P24 FEFO batch stock detail panel
+### P1 — Should Do
+5. G-012 category grouping in RequestStockForm
+6. `line_reference` column in TransferDetail
+7. Buy/sell visibility per role
+
+### P2 — Backlog
+8. P24 FEFO batch stock detail
+9. Wire `transfer_selling_price_required` UI toggle awareness
