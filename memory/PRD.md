@@ -1,44 +1,18 @@
 # Central Inventory — PRD
 
 ## Problem Statement
-End-to-end validation of P30 M0 Production Flow: vendor purchase → manufacture → transfer → receive → cost chain.
+End-to-end validation of P30 M0 production flow including mixed-vendor cost model through the full chain: vendor → manufacture → transfer → POS sale.
 
-## Tech Stack
-- **Frontend**: React 19 + Tailwind + craco
-- **Backend**: FastAPI proxy → preprod.mygenie.online
-- **POS API**: Restaurant 806 (german fluid, master)
+## Key Finding
+**Cross-segment production cost bug:** When a production run consumes raw material from multiple FEFO segments (different vendors/prices), `line_cost` uses the first segment's unit price for the entire quantity, not a weighted average. Under-counts by ₹4.675 per 155-cookie batch in test case.
 
-## Validation Completed (2026-06-13)
-
-### Phase 1: Setup ✅
-- 5-store hierarchy (master + 2 centrals + 2 franchises)
-- 44 ingredients, 4 sub-recipes
-- 2 vendors purchasing same items at different prices
-
-### Phase 2: Production ✅
-- 7 production runs with full FEFO cost tracing
-- Unit costs: ₹1.26 – ₹2.78 per piece depending on source batch prices
-- Production audit: segment-level allocation per ingredient
-
-### Phase 3: Transfers ✅ (post B1/B2/B3 fixes)
-- Direct dispatch: Master→Franchise, Master→Central, Central→Franchise
-- Request flow: all lifecycle states (request, approve, partial approve, dispatch, receive, amend, withdraw, modify, reject, cancel remainder)
-- Cross-central request (franchise@CA → CB)
-- 2-hop chain: Master→Central A→Franchise (batch/expiry preserved)
-- Segment creation at destination with source traceability
-
-### Phase 4: Cost Chain
-- Layer 1 (Vendor): Purchase prices per kg tracked in stock_item
-- Layer 2 (Manufacture): Production costs from FEFO segment prices
-- Layer 3 (Transfer): selling_unit_price=NULL (not required by settings)
-- Layer 4 (Resale): Central markup not applied (0%)
-- Layer 5 (POS Sale): Elachi ₹20/pc + 5% tax via food item 206254
-
-## Remaining Gaps
-- Old segments (pre-B3) have null unit_id → can't dispatch from them
-- Transfer selling price not populated (settings allow skip)
-- filter_bucket mode for direct dispatch still broken
-- Consumption test with POS orders deferred (user will confirm stores)
+## Completed Validation
+- 5-store hierarchy, 2 vendors at different prices, 44 ingredients, 4 sub-recipes
+- 8 production runs with full FEFO cost tracing  
+- 12+ transfers: direct dispatch, request flow, partial approval, 2-hop chain, cross-central
+- Mixed-vendor FG batch produced, transferred to both franchise stores
+- POS consumption confirmed at 809 (order 939863) and 810 (order 939865)
+- FEFO respected at all levels: production, transfer, POS consumption
 
 ## Full Report
 `/app/AI/Plans/P30_M0_PRODUCTION_VALIDATION_REPORT.md`
