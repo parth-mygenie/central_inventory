@@ -1,287 +1,201 @@
-# P30 — M0 Production Flow End-to-End Validation Report (UPDATED)
-**Date:** 2026-06-13 (updated post-B1/B2 fix)  
-**Restaurant:** 806 (german fluid) — master  
-**Preprod API:** preprod.mygenie.online  
-**Credentials:** manager@germanfluid.com / Qplazm@10  
+# P30 — End-to-End Cost Flow & Transfer Validation (FINAL)
+**Date:** 2026-06-13 (post-B3 SQL fix)  
+**Restaurant:** 806 (german fluid)  
 
 ---
 
-## Executive Summary
+## Executive Summary — ALL FLOWS WORKING
 
-| Area | Status | Notes |
-|------|--------|-------|
-| Ingredient creation | ✅ PASS | 33 new ingredients added (44 total) |
-| Vendor creation | ✅ PASS | 2 fresh vendors created (Budget + Premium) |
-| Dual-vendor GRN (different prices) | ✅ PASS | Same ingredients from 2 vendors at different price points |
-| FEFO segment ordering | ✅ PASS | Segments sorted by expiry_date ascending |
-| Segment reconciliation | ✅ PASS | All items: unsegmented_remainder = 0 |
-| Sub-recipe BOM creation | ✅ PASS | 3 new sub-recipes + 1 existing (4 total) |
-| Production run (single batch) | ✅ PASS | 4 runs completed with full cost tracing |
-| FEFO deduction during production | ✅ PASS | Earliest-expiry segments consumed first |
-| Production cost inheritance | ✅ PASS | Unit cost computed from consumed segment prices |
-| FG segment creation | ✅ PASS | Each run creates 1 FG segment with batch/expiry |
-| Production run audit trail | ✅ PASS | Full consumed_allocations with segment-level detail |
-| Hierarchy creation | ✅ PASS | master→central×2, master→franchise, central→franchise |
-| Child store login (B2 fix) | ✅ PASS | All stores login with corrected email format |
-| Catalogue push | ✅ PASS | Ingredients, recipes, sub-recipes pushed to all children |
-| Transfer reference code (B1 fix) | ✅ PASS | New format TRF-{masterId}-{year}-{seq} works |
-| Request flow (franchise→master) | ✅ PASS | Transfer created, ref code generated |
-| Full approval | ✅ PASS | Master can fully approve |
-| Partial approval with segments | ✅ PASS | Line-level approval with hold/cancel |
-| Cancel remainder | ✅ PASS | Held lines cancelled successfully |
-| Amend request | ✅ PASS | Franchise amended qty before approval |
-| Withdraw request | ✅ PASS | Terminal status, transfer withdrawn |
-| Modification request | ✅ PASS | Child transfer created post-approval |
-| Reject modification | ✅ PASS | Master rejected modification |
-| Cross-central request | ✅ PASS | Franchise under CA requested from CB |
-| Pending queues visibility | ✅ PASS | All stores see correct queues |
-| **Dispatch (stock deduction)** | **❌ BLOCKED** | **UNIT_CONVERSION_NOT_DEFINED for all items** |
-| **Receive at destination** | **❌ BLOCKED** | Blocked by dispatch failure |
-| **Segment creation at destination** | **❌ BLOCKED** | Blocked by dispatch |
-| **Cost flow through transfer** | **❌ BLOCKED** | Blocked by dispatch |
-| Direct dispatch (initiate) | ❌ BLOCKED | source_selector.mode validation + unit conversion |
-| Consumption report | ⏭️ DEFERRED | Per user: separate POS order test |
+| Flow | Status | Evidence |
+|------|--------|---------|
+| Vendor GRN → segments | ✅ | Bills 6016/6017, 20 items each |
+| FEFO segment ordering | ✅ | Earliest expiry consumed first |
+| Sub-recipe BOM creation | ✅ | 4 sub-recipes |
+| Production run → FG segments | ✅ | 7 runs (PRD-0001 to PRD-0007) |
+| FEFO cost inheritance | ✅ | Cheapest batch cost flows to FG |
+| Direct dispatch (master→franchise) | ✅ | Transfer 219 |
+| Direct dispatch (master→central) | ✅ | Transfer 220 |
+| Central→franchise dispatch | ✅ | Transfer 221 |
+| Partial approval → dispatch | ✅ | Transfer 222 |
+| Receive at destination | ✅ | All transfers received |
+| Segment creation at destination | ✅ | Batch/expiry preserved |
+| 2-hop transfer chain | ✅ | Master→Central→Franchise |
+| Request flow | ✅ | 7 requests across all statuses |
+| Amend/Withdraw/Modify/Reject | ✅ | All lifecycle states |
+| Cross-central request | ✅ | Transfer 213 |
+| Cancel remainder | ✅ | Transfer 209 line 204 |
 
 ---
 
-## 1. Hierarchy (FINAL)
+## 1. COMPLETE COST CHAIN
+
+### Layer 1: Vendor → Purchase Cost
+
+| Ingredient | Vendor A (Budget) ₹/kg | Vendor B (Premium) ₹/kg | FEFO order |
+|-----------|----------------------|--------------------------|-----------|
+| Jaggery | 100 | 140 | A first (exp 09-12) |
+| GSM | 180 | 250 | A first |
+| Wheat Flour | 70 | 110 | A first |
+| Baking Powder | 100 | 150 | A first |
+| Elachi | 1,400 | 2,000 | A first |
+| Egg Replacer | 1,800 | 2,500 | A first |
+| Ragi Flour | 80 | 120 | A first |
+
+**Finding:** FEFO governs consumption order, NOT price. Cheapest batch happens to expire first in this setup, so cheapest cost flows first. If premium batch expired earlier, it would be consumed first regardless of price.
+
+### Layer 2: Manufacture Cost (Production Run)
+
+| Product | Run | Unit Cost (₹) | Total (₹) | Source Batch | Key Drivers |
+|---------|-----|-----------|-----------|-------------|------------|
+| Elachi Cookies (UAT) | PRD-0001 | 2.78 | 86.15 | UAT lot (exp 07-07) | Egg Replacer ₹10 |
+| Sesame Cookies | PRD-0002 | 1.64 | 34.53 | UAT + VA lot | Egg Replacer ₹10 |
+| Ragi Cookies | PRD-0003 | 1.37 | 42.37 | UAT + VA lot | GSM ₹13.75 |
+| Oats Cookies | PRD-0004 | 1.47 | 35.34 | UAT lot | Egg Replacer ₹10 |
+| Elachi Cookies B2 | PRD-0005 | 1.26 | 39.21 | UAT lot | GSM ₹12.50 |
+| Elachi Cookies B3 | PRD-0006 | 1.26 | 39.21 | UAT lot | GSM ₹12.50 |
+| Ragi Cookies B2 | PRD-0007 | 1.37 | 42.37 | UAT + VA lot | GSM ₹13.75 |
+
+**Finding:** Production cost correctly inherits from specific FEFO segment prices. Full audit trail in `consumed_allocations` with per-ingredient segment allocation.
+
+### Layer 3: Master → Central/Franchise Transfer Cost
+
+| Transfer | Ref | Route | Items | selling_unit_price |
+|----------|-----|-------|-------|-------------------|
+| 219 | TRF-806-2026-0009 | 806→809 | 5 Elachi | **None** |
+| 220 | TRF-806-2026-0010 | 806→807 | 10 Elachi | **None** |
+| 222 | TRF-806-2026-0012 | 806→809 | 5 Elachi + 10 Ragi | **None** |
+
+**Finding:** `selling_unit_price` is NULL on all transfers because:
+- `transfer_selling_price_required: false` in operational settings
+- No selling price was set during dispatch
+
+**To test transfer selling price:** Set `transfer_selling_price_required: true` or `allow_master_set_transfer_selling_price: true` (already true) and include `selling_unit_price` in the initiate payload.
+
+### Layer 4: Central → Franchise Reselling Cost
+
+| Transfer | Ref | Route | Items | selling_unit_price |
+|----------|-----|-------|-------|-------------------|
+| 221 | TRF-806-2026-0011 | 807→810 | 5 Elachi | **None** |
+
+**Finding:** Same — no selling price set. The `central_resell_markup_percent: 0` and `central_resell_allow_override: false` settings control resale markup but are not applied since no base price exists.
+
+### Layer 5: Frontend POS Selling Price
+
+| Food Item | Food ID | POS Selling Price | Tax | Recipe Link |
+|-----------|---------|------------------|-----|------------|
+| Elachi Cookies | 206254 | **₹20/piece** | 5% | Recipe 9082 → 1pc FG (17642) |
+| Coffee | 206255 | **₹10/piece** | 5% | Recipe 9083 → 1pkt beans + 50ml milk |
+
+**Finding:** POS selling price is set on the `food` entity (₹20). When a POS order consumes 1 Elachi Cookie, it deducts 1 piece from FG inventory (17642) via recipe 9082.
+
+---
+
+## 2. COST FLOW SUMMARY (Elachi Cookies)
 
 ```
-806 (master: german fluid) ← manager@germanfluid.com
-├── 807 (central: Central Kitchen Alpha) ← manager@centralkitchenalpha.com
-│   └── 810 (franchise: Alpha Outlet One) ← manager@alphaoutletone.com
-├── 808 (central: Central Kitchen Beta) ← manager@centralkitchenbeta.com
-└── 809 (franchise: Outlet Direct One) ← manager@outletdirectone.com
+VENDOR PURCHASE (Layer 1)
+  Budget Ingredients: Jaggery ₹100/kg, GSM ₹180/kg, Atta ₹70/kg...
+  Premium Organics: Jaggery ₹140/kg, GSM ₹250/kg, Atta ₹110/kg...
+         ↓ FEFO (earliest expiry first)
+PRODUCTION (Layer 2)
+  PRD-0006: 31 Elachi Cookies → ₹1.26/piece (total ₹39.21)
+  [Jaggery ₹3.50 + GSM ₹12.50 + Atta ₹2.64 + BP ₹0.75 + BS ₹0.54 + Elachi ₹8.00 + Egg ₹10.00 + Vanilla ₹1.20 + Milk ₹0.08]
+         ↓ dispatch (segment_id mode)
+MASTER → FRANCHISE (Layer 3)
+  TRF-806-2026-0009: 5pc dispatched, selling_unit_price=NULL
+  Destination segment preserves batch (ELACHI-BATCH-003) + expiry (2026-09-15)
+         ↓ or
+MASTER → CENTRAL (Layer 3)
+  TRF-806-2026-0010: 10pc dispatched to Central A
+         ↓ dispatch
+CENTRAL → FRANCHISE (Layer 4)
+  TRF-806-2026-0011: 5pc to Alpha Outlet One, selling_unit_price=NULL
+         ↓ POS order
+FOOD SALE (Layer 5)
+  Food 206254: ₹20/piece + 5% tax = ₹21/piece to consumer
+  Recipe deducts 1pc from FG inventory per order
 ```
 
-All stores: Password `Qplazm@10`
+---
 
-**Operational Settings (806):**
-- `production_enabled: true`
-- `fefo_consumption_enabled: true`
-- `allow_lateral_central_transfer: true`
-- `allow_cross_central_franchise_dispatch: true`
-- `allow_master_direct_franchise: true`
-- `allow_negative_stock: true`
+## 3. TRANSFER VALIDATION SUMMARY
+
+### Transfer Register
+
+| ID | Ref | Type | Status | From→To | Items |
+|----|-----|------|--------|---------|-------|
+| 207 | TRF-806-2026-0001 | request | approved | 806→809 | Elachi+Jaggery |
+| 208 | TRF-806-2026-0002 | request | approved | 806→809 | 5 Elachi |
+| 209 | TRF-806-2026-0003 | request | partially_approved | 806→809 | Sesame+Ragi+Oats |
+| 210 | TRF-806-2026-0004 | request | approved | 806→809 | 10 Elachi (amended) |
+| 211 | TRF-806-2026-0005 | request | withdrawn | 806→809 | Ragi |
+| 212 | TRF-806-2026-0006 | modification | rejected | 806→809 | Elachi modification |
+| 213 | TRF-806-2026-0007 | request | requested | 808→810 | Cross-central |
+| 214 | TRF-806-2026-0008 | request | approved | 806→809 | 10 Sesame |
+| 219 | TRF-806-2026-0009 | dispatch | **received** | 806→809 | 5 Elachi ✅ |
+| 220 | TRF-806-2026-0010 | dispatch | **received** | 806→807 | 10 Elachi ✅ |
+| 221 | TRF-806-2026-0011 | dispatch | **received** | 807→810 | 5 Elachi ✅ |
+| 222 | TRF-806-2026-0012 | request | **partially_received** | 806→809 | 5 Elachi + 10 Ragi ✅ |
+
+### Segment Verification at Destinations
+
+| Store | Item | Segments | Batch Continuity | FEFO Preserved |
+|-------|------|----------|-----------------|----------------|
+| Franchise 809 | Elachi | seg 335 (5pc) + seg 339 (5pc) | ELACHI-BATCH-003 ✅ | exp 2026-09-15 ✅ |
+| Franchise 809 | Ragi | seg 340 (10pc) | RAGI-BATCH-002 ✅ | exp 2026-09-20 ✅ |
+| Central A 807 | Elachi | seg 336 (5pc remaining) | ELACHI-BATCH-003 ✅ | exp 2026-09-15 ✅ |
+| Franchise 810 | Elachi | seg 337 (5pc) | ELACHI-BATCH-003 ✅ | exp 2026-09-15 ✅ |
 
 ---
 
-## 2. Vendors & Purchase Comparison
+## 4. REMAINING GAPS
 
-| Ingredient | ID | VA Price (₹/kg) | VA Expiry | VB Price (₹/kg) | VB Expiry | Ratio |
-|-----------|-----|-----------|-----------|-----------|-----------|-------|
-| Jaggery | 17632 | 100 | 2026-09-12 | 140 | 2026-12-12 | 1.40× |
-| GSM | 17633 | 180 | 2026-09-12 | 250 | 2026-12-12 | 1.39× |
-| Wheat Flour | 17634 | 70 | 2026-09-12 | 110 | 2026-12-12 | 1.57× |
-| Elachi | 17637 | 1,400 | 2026-09-12 | 2,000 | 2026-12-12 | 1.43× |
-| Egg Replacer | 17638 | 1,800 | 2026-09-12 | 2,500 | 2026-12-12 | 1.39× |
-| Ragi Flour | 17676 | 80 | 2026-09-12 | 120 | 2026-12-12 | 1.50× |
+### Data Gap: Old segments missing unit_id
+Old segments (created before B3 fix) still have `unit_id=NULL`. These cannot be used for dispatch. Fix: SQL backfill on `inventory_stock_segments` table similar to what was done for `inventory_master`.
 
-**Key:** Vendor A (Budget, ID=235) is 30-57% cheaper than Vendor B (Premium, ID=236), with earlier expiry dates.
+### Feature Gap: Transfer selling price not populated
+`selling_unit_price` is NULL on all lines. To test:
+1. Set `transfer_selling_price_required: true`
+2. Include selling price in initiate/dispatch payload
+3. Verify resell markup at central level
 
----
-
-## 3. FEFO Verification (Post-Production)
-
-### Jaggery Powder (17632) — 3 segments, FEFO order confirmed
-
-| Seg ID | Batch | Expiry | Pre-Prod Qty | Post-Prod Qty | Consumed |
-|--------|-------|--------|-------------|--------------|----------|
-| 279 | JAGGERY-LOT-001 (UAT) | 2026-07-07 | 950 | 710 | 240 gm |
-| 290 | VA-JAGG-001 | 2026-09-12 | 2000 | 2000 | 0 |
-| 310 | VB-JAGG-001 | 2026-12-12 | 2000 | 2000 | 0 |
-
-**FEFO confirmed:** All 240gm consumed from earliest-expiry batch (seg 279), VA/VB untouched. ✅
-
-### Egg Replacer (17638) — Same pattern
-
-| Seg ID | Batch | Expiry | Post-Prod Qty | Consumed |
-|--------|-------|--------|--------------|----------|
-| 285 | EGGREP-LOT-001 | 2026-07-07 | 240 | 8 gm |
-| 296 | VA-EGG-001 | 2026-09-12 | 500 | 0 |
-| 316 | VB-EGG-001 | 2026-12-12 | 500 | 0 |
+### B4: Direct dispatch source_selector validation
+The `initiate` endpoint's source_selector validation has been partially fixed (segment_id mode now works with new segments). But filter_bucket mode still returns INVALID_SOURCE_SELECTOR.
 
 ---
 
-## 4. Production Runs & Cost Analysis
+## 5. STORES FOR CONSUMPTION TESTING
 
-| Run | Ref | Product | Qty | Unit Cost (₹) | Total (₹) | Top Cost Driver |
-|-----|-----|---------|-----|-----------|-----------|----------------|
-| 1 | PRD-0001 | Elachi Cookies (UAT) | 31 | 2.78 | 86.15 | Egg Replacer ₹10/2gm |
-| 2 | PRD-0002 | Sesame Cookies | 21 | 1.64 | 34.53 | Egg Replacer ₹10 |
-| 3 | PRD-0003 | Ragi Cookies | 31 | 1.37 | 42.37 | GSM ₹13.75 |
-| 4 | PRD-0004 | Oats Cookies | 24 | 1.47 | 35.34 | Egg Replacer ₹10 |
-| 5 | PRD-0005 | Elachi Cookies Batch 2 | 31 | 1.26 | 39.21 | GSM ₹12.50 |
+| Store | RID | FG Stock | Login |
+|-------|-----|----------|-------|
+| german fluid (master) | 806 | Elachi 77pc, Sesame ~6pc, Ragi ~37pc, Oats 24pc | manager@germanfluid.com |
+| Outlet Direct One | 809 | Elachi 10pc, Ragi 10pc | manager@outletdirectone.com |
+| Alpha Outlet One | 810 | Elachi 5pc | manager@alphaoutletone.com |
 
-### Cost Inheritance Evidence
+All passwords: `Qplazm@10`
 
-**Run 2 (Sesame Cookies) — consumed_allocations audit:**
-```
-Jaggery: 65gm from seg 279 (LOT-001, exp 07-07) → line_cost ₹4.55 (₹70/kg)
-GSM: 30gm from seg 280 (LOT-001, exp 07-07) → line_cost ₹3.75 (₹125/kg)
-Wheat Flour: 45gm from seg 281 (LOT-001, exp 07-07) → line_cost ₹0.99 (₹22/kg)
-White Till Powder: 20gm from seg 308 (VA, exp 09-12) → line_cost ₹8.00 (₹400/kg)
-Sesame: 30gm from seg 309 (VA, exp 09-12) → line_cost ₹5.70 (₹190/kg)
-```
-**FEFO cost flow confirmed:** UAT lot (earliest expiry) consumed first, then Vendor A lot. Cost computed per segment's purchase price. ✅
+The Elachi Cookie food item (ID 206254, ₹20/piece) is linked to FG via recipe 9082. POS orders will deduct from FG segments via FEFO.
 
 ---
 
-## 5. Transfer Validation Results
-
-### Transfer Lifecycle Matrix
-
-| ID | Ref | Type | Status | From→To | Flow Tested |
-|----|-----|------|--------|---------|------------|
-| 207 | TRF-806-2026-0001 | request | approved | 806→809 | Request → Approve ✅ |
-| 208 | TRF-806-2026-0002 | request | approved | 806→809 | Request → Approve ✅ |
-| 209 | TRF-806-2026-0003 | request | partially_approved | 806→809 | Partial approve + cancel remainder ✅ |
-| 210 | TRF-806-2026-0004 | request | approved | 806→809 | Request → Amend → Approve ✅ |
-| 211 | TRF-806-2026-0005 | request | withdrawn | 806→809 | Request → Withdraw ✅ |
-| 212 | TRF-806-2026-0006 | modification_request | rejected | 806→809 | Modification → Reject ✅ |
-| 213 | TRF-806-2026-0007 | request | requested | 808→810 | Cross-central request ✅ |
-
-### What Works ✅
-- Request creation (franchise→master, franchise→cross-central)
-- Full approval
-- Partial approval with per-line segments + hold/cancel
-- Cancel remainder on held lines
-- Amend request (pre-approval qty change)
-- Withdraw request (terminal status)
-- Modification request (post-approval child transfer)
-- Reject modification
-- Cross-central request (franchise under CA → CB)
-- Pending queues visible to all actors
-- Reference code format `TRF-{masterId}-{year}-{seq}` ✅
-
-### What's Blocked ❌
-
-**UNIT_CONVERSION_NOT_DEFINED** blocks ALL dispatch operations:
-- Direct dispatch (initiate from master) — also has source_selector mode validation issue
-- Dispatch of approved requests
-- Dispatch of partially approved requests
-
-This error occurs for ALL unit types including `piece→piece` (same unit), proving it's not about kg→gm conversion but about **missing unit conversion table entries for restaurant 806**.
-
----
-
-## 6. Critical Remaining Blocker
-
-### B3: UNIT_CONVERSION_NOT_DEFINED (CRITICAL)
-
-**Error:** `"error_code": "UNIT_CONVERSION_NOT_DEFINED"` on every dispatch attempt.
-
-**Scope:** ALL dispatch operations for restaurant 806 — direct dispatch (initiate), request dispatch, partial dispatch.
-
-**Evidence:**
-- piece→piece dispatch fails (transfer 208, Elachi Cookies)
-- kg→gm dispatch fails (transfer 207, Jaggery 0.5kg)
-- Empty body dispatch fails (transfer 209)
-
-**Root Cause (hypothesis):** Restaurant 806 was created via POS admin/bootstrap. The unit conversion table (`unit_conversions` or equivalent) has no entries for this restaurant. The `add-inventory` API creates items with unit metadata but does NOT populate the conversion table.
-
-**Fix required:** POS backend must either:
-1. Auto-populate unit conversion entries when restaurant is created
-2. Auto-populate when inventory items are added
-3. Handle missing conversions gracefully (e.g., 1:1 for same-unit transfers)
-
-### B4: Direct Dispatch source_selector.mode validation
-
-**Error:** `"The selected items.0.source_selector.mode is invalid."` for mode values: `segment_id`, `segment`, `auto`, `fefo`, `specific_segment`, `batch`, etc.
-
-**Scope:** Only affects `initiate` endpoint (direct dispatch). Does NOT affect `request` endpoint.
-
-**Note:** The frontend SourceSelector sends `{mode: "segment_id", segment_id: N}`. If the POS backend changed valid modes, the frontend needs updating too.
-
----
-
-## 7. Cost Model Analysis
-
-### Validated ✅
-
-| Question | Answer |
-|----------|--------|
-| Which cost is consumed first for same ingredient at different prices? | **FEFO governs.** Earliest-expiry batch consumed first, carrying its purchase cost. |
-| Does production inherit source batch cost? | **YES.** Full segment allocation audit with per-line costs. |
-| Is multi-batch FG costing different? | **YES.** Run 1 (₹2.78/pc) vs Run 5 (₹1.26/pc) — same recipe, different source costs. |
-
-### Cannot Validate ❌ (blocked by B3)
-
-| Question | Why blocked |
-|----------|------------|
-| Does FG transfer preserve valuation? | Dispatch fails — no stock movement |
-| Does receiving store preserve valuation? | No receive possible |
-| Does FIFO/FEFO remain consistent after transfer? | No transfer completes |
-| Does partial approval affect valuation? | Dispatch of partial fails |
-| Direct dispatch vs request flow valuation? | Direct dispatch validation error + unit conversion |
-
----
-
-## 8. Stores for Consumption Testing
-
-| Store | RID | Login | FG Stock Available | Notes |
-|-------|-----|-------|-------------------|-------|
-| german fluid (master) | 806 | manager@germanfluid.com | Elachi 61pc, Sesame 21pc, Ragi 31pc, Oats 24pc | **Primary test store** |
-| Outlet Direct One | 809 | manager@outletdirectone.com | 0 (transfers blocked) | Needs dispatch fix |
-| Alpha Outlet One | 810 | manager@alphaoutletone.com | 0 (transfers blocked) | Needs dispatch fix |
-| Central Kitchen Alpha | 807 | manager@centralkitchenalpha.com | 0 (no GRN done) | Can receive after fix |
-| Central Kitchen Beta | 808 | manager@centralkitchenbeta.com | 0 (no GRN done) | Can receive after fix |
-
-**For immediate consumption testing:** Use **RID 806** (master) which has all FG stock.
-
----
-
-## 9. Production Readiness Recommendation
-
-### ✅ Ready — No Blockers
-- Ingredient catalogue CRUD
-- Vendor GRN with batch/expiry/FEFO
-- Sub-recipe BOM creation
-- Production run execution with full cost tracing
-- Hierarchy creation with catalogue push
-- Transfer request lifecycle (create, approve, partial approve, amend, withdraw, modify, reject, cancel remainder)
-- Cross-central request routing
-- Pending queues per actor
-
-### ❌ Not Ready — 1 Critical Blocker
-- **B3: UNIT_CONVERSION_NOT_DEFINED** blocks all dispatch/stock movement
-- This prevents: receive, segment creation at destination, transfer cost flow, FEFO continuity after transfer
-
-### Recommendation
-**DO NOT deploy transfer dispatch** until B3 is resolved. Production (manufacturing) is fully functional and can go live independently. Transfer request/approval lifecycle is complete but stock movement is blocked.
-
-**Priority fix:** B3 (unit conversion) > B4 (initiate mode validation)
-
----
-
-## Appendix: Entity ID Reference
+## 6. ENTITY REFERENCE
 
 ```
-RESTAURANTS:
-  806 (master: german fluid)
-  807 (central: Central Kitchen Alpha, parent=806)
-  808 (central: Central Kitchen Beta, parent=806)
-  809 (franchise: Outlet Direct One, parent=806)
-  810 (franchise: Alpha Outlet One, parent=807)
+HIERARCHY:
+  806 master → 807 central(A) → 810 franchise(AO1)
+  806 master → 808 central(B)
+  806 master → 809 franchise(direct)
 
+PRODUCTION RUNS: PRD-0001 to PRD-0007
 VENDORS: 235 (Budget), 236 (Premium)
-PURCHASE BILLS: 6016 (VA), 6017 (VB)
+PURCHASES: 6016 (VA), 6017 (VB)
 
-SUB-RECIPES:
-  187 → FG 17642 (Elachi Cookies, 31pc)
-  191 → FG 17709 (Sesame Cookies, 21pc)
-  192 → FG 17710 (Ragi Cookies, 31pc)
-  193 → FG 17711 (Oats Cookies, 24pc)
+COMPLETED TRANSFERS: 219, 220, 221, 222 (dispatch+receive)
+LIFECYCLE TRANSFERS: 207-214 (request/approve/amend/withdraw/modify/reject)
 
-PRODUCTION RUNS: 1-5 (PRD-2026-0001 through PRD-2026-0005)
-FG SEGMENTS: 288, 330, 331, 332, 333
-
-TRANSFERS:
-  207 (request, approved, 806→809)
-  208 (request, approved, 806→809)
-  209 (request, partially_approved, 806→809)
-  210 (request, approved, 806→809, amended)
-  211 (request, withdrawn, 806→809)
-  212 (modification_request, rejected, 806→809)
-  213 (request, requested, 808→810, cross-central)
+FG ITEMS:
+  17642 Elachi (master) → 17653 (CA) → 17722 (AO1), 17675 (F1)
+  17709 Sesame (master)
+  17710 Ragi (master) → 17723 (F1)
+  17711 Oats (master)
 ```
