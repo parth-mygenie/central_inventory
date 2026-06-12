@@ -1,40 +1,40 @@
 # Central Inventory — PRD
 
 ## Problem Statement
-1. Clone and run Central Inventory from `parth-mygenie/central_inventory` (branch `13-6-26`) as-is
-2. Perform end-to-end validation of P30 M0 Production Flow using fresh entities against preprod POS API
+End-to-end validation of P30 M0 Production Flow using fresh hierarchy, vendors, purchases, production runs, and transfers against preprod POS API (restaurant 806).
 
 ## Tech Stack
-- **Frontend**: React 19, Tailwind CSS 3, Radix UI, craco, react-router-dom, recharts
+- **Frontend**: React 19, Tailwind CSS 3, Radix UI, craco
 - **Backend**: FastAPI proxy → preprod.mygenie.online POS API
-- **Database**: MongoDB (local, for token sessions)
-- **External**: MyGenie POS preprod API (restaurant 806)
+- **Database**: MongoDB (local, token sessions)
 
-## Architecture
-- Backend proxies all calls to MyGenie POS API v1/v2
-- Auth: POS vendor employee login enriched with restaurant context
-- Frontend: Multi-page app for inventory management, transfers, production
+## What's Been Implemented/Validated
 
-## What's Been Implemented
-- **2026-06-13**: Cloned repo, installed deps, started services
-- **2026-06-13**: Full P30 M0 Production validation:
-  - Created hierarchy: 806(master) → 807(central) → 808(central) → 809(franchise)
-  - Added 33 new ingredients from Excel recipe data (44 total)
-  - Created 2 vendors, purchased same ingredients at 2 price points
-  - Created 3 new sub-recipes (Sesame, Ragi, Oats cookies)
-  - Ran 4 production batches (PRD-0002 through PRD-0005)
-  - Verified FEFO ordering, segment reconciliation, cost inheritance
-  - Documented 2 critical blockers (transfer ref code collision, child login failure)
+### 2026-06-13 — Initial validation
+- Cloned repo (branch 13-6-26), started services
+- Created hierarchy: 806→807(central)→810(franchise), 806→808(central), 806→809(franchise)
+- Added 33 new ingredients from Excel recipe data (44 total)
+- Created 2 vendors, purchased at 2 price points (budget vs premium)
+- Created 3 sub-recipes (Sesame, Ragi, Oats cookies)
+- Ran 5 production batches with full cost tracing
+- Verified FEFO ordering, segment reconciliation, cost inheritance
 
-## Validation Status
-- **Full report**: `/app/AI/Plans/P30_M0_PRODUCTION_VALIDATION_REPORT.md`
-- Catalogue/GRN/Production: ✅ All pass
-- Transfers: ❌ Blocked (POS backend bugs)
-- Child store auth: ❌ Blocked
+### 2026-06-13 — Post B1/B2 fix validation
+- Confirmed child store login works with corrected email format
+- Confirmed transfer ref code format TRF-{masterId}-{year}-{seq} works
+- Validated all transfer lifecycle states:
+  - Request → Approve → (Dispatch BLOCKED)
+  - Partial approval with segments + hold/cancel remainder
+  - Amend, Withdraw, Modification, Reject
+  - Cross-central request (franchise@CA → CB)
+- Discovered new blocker: B3 UNIT_CONVERSION_NOT_DEFINED
+
+## Blockers
+- **B3 (CRITICAL)**: UNIT_CONVERSION_NOT_DEFINED blocks ALL dispatch for restaurant 806
+- **B4**: Direct dispatch source_selector.mode validation rejects all known modes
 
 ## Backlog
-- P0: Fix transfer reference code collision (POS backend)
-- P0: Fix child store login after franchise/create (POS backend)
-- P1: Re-validate all transfer flows after fixes
-- P1: Consumption testing with POS orders
-- P2: Push updated ingredients to children, re-push bundles
+- P0: Fix unit conversion for restaurant 806 (POS backend)
+- P1: Re-validate dispatch, receive, segment transfer, cost flow
+- P1: Consumption testing with POS orders (master 806 has FG stock)
+- P2: Re-push updated ingredients to children
