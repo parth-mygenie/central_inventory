@@ -1,27 +1,40 @@
-# Central Inventory - PRD
+# Central Inventory — PRD
 
 ## Problem Statement
-Clone and run the Central Inventory app from `https://github.com/parth-mygenie/central_inventory.git` (branch `13-6-26`) as-is on Emergent platform.
+1. Clone and run Central Inventory from `parth-mygenie/central_inventory` (branch `13-6-26`) as-is
+2. Perform end-to-end validation of P30 M0 Production Flow using fresh entities against preprod POS API
 
 ## Tech Stack
-- **Frontend**: React 19, Tailwind CSS 3, Radix UI, craco, react-router-dom, recharts, shadcn/ui
-- **Backend**: FastAPI, Motor (async MongoDB driver), httpx (proxy to MyGenie POS API)
-- **Database**: MongoDB (local)
-- **External APIs**: MyGenie POS preprod API (auth + V2 proxy)
+- **Frontend**: React 19, Tailwind CSS 3, Radix UI, craco, react-router-dom, recharts
+- **Backend**: FastAPI proxy → preprod.mygenie.online POS API
+- **Database**: MongoDB (local, for token sessions)
+- **External**: MyGenie POS preprod API (restaurant 806)
 
 ## Architecture
-- Backend acts as a proxy to MyGenie's preprod POS API (`preprod.mygenie.online`)
-- Auth flow: Login via `/api/proxy/auth/login` → proxies to MyGenie auth → enriches with restaurant context
-- Generic V2 proxy: `/api/proxy/v2/{path}` → passes through to MyGenie V2 API
-- Frontend: Multi-page app with login, operations hub, inventory management, hierarchy, stock transfers, wastage tracking, catalogue management, etc.
+- Backend proxies all calls to MyGenie POS API v1/v2
+- Auth: POS vendor employee login enriched with restaurant context
+- Frontend: Multi-page app for inventory management, transfers, production
 
 ## What's Been Implemented
-- **2026-01-XX**: Cloned repo from GitHub (branch `13-6-26`), installed all dependencies, restored `.env` files, started services. App running as-is with no modifications.
+- **2026-06-13**: Cloned repo, installed deps, started services
+- **2026-06-13**: Full P30 M0 Production validation:
+  - Created hierarchy: 806(master) → 807(central) → 808(central) → 809(franchise)
+  - Added 33 new ingredients from Excel recipe data (44 total)
+  - Created 2 vendors, purchased same ingredients at 2 price points
+  - Created 3 new sub-recipes (Sesame, Ragi, Oats cookies)
+  - Ran 4 production batches (PRD-0002 through PRD-0005)
+  - Verified FEFO ordering, segment reconciliation, cost inheritance
+  - Documented 2 critical blockers (transfer ref code collision, child login failure)
 
-## Status
-- Backend: RUNNING (FastAPI on port 8001)
-- Frontend: RUNNING (React on port 3000, compiled successfully)
-- App loads login page successfully
+## Validation Status
+- **Full report**: `/app/AI/Plans/P30_M0_PRODUCTION_VALIDATION_REPORT.md`
+- Catalogue/GRN/Production: ✅ All pass
+- Transfers: ❌ Blocked (POS backend bugs)
+- Child store auth: ❌ Blocked
 
 ## Backlog
-- No modifications requested. Running as-is per user instructions.
+- P0: Fix transfer reference code collision (POS backend)
+- P0: Fix child store login after franchise/create (POS backend)
+- P1: Re-validate all transfer flows after fixes
+- P1: Consumption testing with POS orders
+- P2: Push updated ingredients to children, re-push bundles
