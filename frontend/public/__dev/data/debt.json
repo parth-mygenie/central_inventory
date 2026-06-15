@@ -635,5 +635,22 @@
     ],
     "missing_count": 0,
     "pending_count": 2
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-036",
+    "title": "App-Wide Consumption Unit Mismatch — gm values displayed/calculated as kg (causes 1000x over-ordering in PO Create)",
+    "status": "OPEN",
+    "severity": "CRITICAL",
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "Impl-Plan: PENDING",
+      "Code-Gate: PENDING",
+      "QA-Report: PENDING",
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 4
   }
 ]

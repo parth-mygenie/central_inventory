@@ -4754,6 +4754,70 @@
           "path": null
         }
       ]
+    },
+    {
+      "type": "BUG",
+      "id": "BUG-036",
+      "title": "App-Wide Consumption Unit Mismatch \u2014 gm values displayed/calculated as kg (causes 1000x over-ordering in PO Create)",
+      "status": "OPEN",
+      "severity": "CRITICAL",
+      "sprint_key": "S3",
+      "phase": "Cross-cutting (Inward + Production + Outward)",
+      "files": [
+        "frontend/src/lib/formatters.js",
+        "frontend/src/components/central-inventory/PurchaseOrderCreate.jsx",
+        "frontend/src/components/central-inventory/IngredientCatalogue.jsx",
+        "frontend/src/components/central-inventory/DirectDispatchForm.jsx",
+        "frontend/src/components/central-inventory/RequestStockForm.jsx",
+        "frontend/src/hooks/useProductionRun.js",
+        "frontend/src/components/central-inventory/StockInventorySummary.jsx",
+        "frontend/src/components/central-inventory/StockDetailPanel.jsx"
+      ],
+      "notes": "4 bug sub-classes: (1) .toFixed(1) precision truncation, (2) gm value with kg label + unit-mismatched calculations in PO Create, (3) parseFloat/Number unit stripping in Dispatch/Request/Production, (4) ambiguous unit scale in StockInventory expanded row. Root cause: POS API returns consumption in base unit (gm/ml) but frontend uses display unit (kg/ltr) without conversion. Related: BUG-029, BUG-030, G-020.",
+      "artifact_refs": [
+        {
+          "artifact": 0,
+          "label": "Session-Start",
+          "status": "WAIVED",
+          "path": null
+        },
+        {
+          "artifact": 1,
+          "label": "Intake",
+          "status": "DONE",
+          "path": "control/sessions/BUG036_ARTIFACT_1_INTAKE.md"
+        },
+        {
+          "artifact": 2,
+          "label": "Impact-Analysis",
+          "status": "DONE",
+          "path": "control/sessions/BUG036_ARTIFACT_2_IMPACT_ANALYSIS.md"
+        },
+        {
+          "artifact": 3,
+          "label": "Impl-Plan",
+          "status": "PENDING",
+          "path": null
+        },
+        {
+          "artifact": 4,
+          "label": "Code-Gate",
+          "status": "PENDING",
+          "path": null
+        },
+        {
+          "artifact": 5,
+          "label": "QA-Report",
+          "status": "PENDING",
+          "path": null
+        },
+        {
+          "artifact": 6,
+          "label": "Owner-Signoff",
+          "status": "PENDING",
+          "path": null
+        }
+      ]
     }
   ]
 }

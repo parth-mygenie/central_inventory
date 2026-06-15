@@ -78,7 +78,15 @@
 | CR-034 | Recipe API Contract Fix | QA |
 | BUG-018→028 | 11 bugs | QA_PASS |
 
-## Registry: 35 CRs, 35 BUGs, 4 Sprints (S0-S2 closed, S3 active)
+## Newly Registered — Needs Planning/Implementation
+
+| Item | Title | Status | Severity |
+|------|-------|:------:|:--------:|
+| **BUG-036** | App-Wide Consumption Unit Mismatch (gm→kg) | **OPEN** | **P0 CRITICAL** |
+
+**BUG-036 summary:** POS API returns consumption in base unit (gm), frontend uses display unit (kg) without conversion. PO Create suggests 258 kg instead of ~0 for Whole Wheat Flour. Affects 8 files, 6 screens. Intake + Impact Analysis complete. Awaiting Gate 3 (Impl Plan) + Gate 4 (Owner GO).
+
+## Registry: 35 CRs, 36 BUGs, 4 Sprints (S0-S2 closed, S3 active)
 
 ## Quick Links
 
