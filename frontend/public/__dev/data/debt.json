@@ -645,12 +645,11 @@
     "sprint_key": "S3",
     "sprint_name": "API Reality Check + Intelligent PO",
     "debt_reasons": [
-      "Impl-Plan: PENDING",
       "Code-Gate: PENDING",
       "QA-Report: PENDING",
       "Owner-Signoff: PENDING"
     ],
     "missing_count": 0,
-    "pending_count": 4
+    "pending_count": 3
   }
 ]

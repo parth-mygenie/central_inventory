@@ -2516,8 +2516,8 @@
       {
         "artifact": 3,
         "label": "Impl-Plan",
-        "status": "PENDING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/BUG036_ARTIFACT_3_IMPLEMENTATION_PLAN.md"
       },
       {
         "artifact": 4,
@@ -2539,14 +2539,13 @@
       }
     ],
     "completeness": {
-      "done": 3,
+      "done": 4,
       "total": 7,
-      "pct": 43
+      "pct": 57
     },
     "doc_count": 0,
     "is_debt": true,
     "debt_reasons": [
-      "Impl-Plan: PENDING",
       "Code-Gate: PENDING",
       "QA-Report: PENDING",
       "Owner-Signoff: PENDING"

@@ -1,7 +1,7 @@
 # Central Inventory - PRD
 
 ## Original Problem Statement
-Clone central_inventory repo (branch: 15-6-implementation-v1), run it, execute QA, investigate & register consumption display bug.
+Clone central_inventory repo (branch: 15-6-implementation-v1), run it, execute QA, investigate, register & plan consumption display bug fix.
 
 ## Architecture
 - **Backend**: FastAPI proxy-only layer → preprod.mygenie.online POS API
@@ -18,20 +18,30 @@ Clone central_inventory repo (branch: 15-6-implementation-v1), run it, execute Q
 
 ### Session 3 — INVESTIGATION
 - Found 4 bug classes across 8 files, 6 screens
-- Root cause: POS API returns consumption in gm, frontend uses kg without conversion
 
-### Session 4 — INTAKE + IMPACT ANALYSIS (BUG-036)
-- Registered BUG-036 (P0 CRITICAL) in registry.json
-- Created Gate 1 (Intake): `control/sessions/BUG036_ARTIFACT_1_INTAKE.md`
-- Created Gate 2 (Impact Analysis): `control/sessions/BUG036_ARTIFACT_2_IMPACT_ANALYSIS.md`
-- Updated L1 Control Dashboard
+### Session 4 — INTAKE (Gate 1) + IMPACT ANALYSIS (Gate 2)
+- BUG-036 registered P0 CRITICAL in registry.json
+- Artifacts: BUG036_ARTIFACT_1_INTAKE.md, BUG036_ARTIFACT_2_IMPACT_ANALYSIS.md
+
+### Session 5 — PLANNING (Gate 3)
+- Complete implementation plan with exact code diffs for all 8 files
+- Artifact: BUG036_ARTIFACT_3_IMPLEMENTATION_PLAN.md
+- 8 edits, verification matrix (9 test cases), risk register, post-code checklist
 - Dashboard data regenerated and verified
 
-## Prioritized Backlog
-- **P0**: BUG-036 — Gate 3 (Implementation Plan) + Gate 4 (Owner GO) + Gate 5 (Code)
-- **P2**: BUG-034 backend API for active/inactive toggle (pending backend team)
+## Current Pipeline State
+
+| Gate | Status |
+|------|--------|
+| Gate 1 (Intake) | ✅ DONE |
+| Gate 2 (Impact Analysis) | ✅ DONE |
+| Gate 3 (Implementation Plan) | ✅ DONE |
+| Gate 4 (Owner GO) | ⏳ AWAITING |
+| Gate 5 (Code) | — |
+| Gate 6 (QA) | — |
+| Gate 7 (Smoke) | — |
 
 ## Next Tasks
-- Gate 3: Implementation Plan for BUG-036 (8 files, ~20 line-level edits)
-- Gate 4: Owner GO
-- Gate 5: Implementation
+- Gate 4: Owner GO to proceed with implementation
+- Gate 5: Code 8 files per implementation plan
+- Gate 6: QA — 9 verification tests
