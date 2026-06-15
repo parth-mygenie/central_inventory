@@ -1,31 +1,34 @@
 # Central Inventory - PRD
 
 ## Original Problem Statement
-Wipe current /app, pull https://github.com/parth-mygenie/central_inventory.git (branch: 15-6-implementation-v1), and get it running. Then execute QA Gate 6 testing on Sprint S3 implementation batch.
+Clone central_inventory repo (branch: 15-6-implementation-v1), run it, execute QA, then investigate consumption display bug.
 
 ## Architecture
-- **Backend**: FastAPI (Python) proxy-only layer forwarding to preprod.mygenie.online POS API
-- **Frontend**: React 19 + CRACO + Tailwind CSS + Radix UI + React Router v7 + Recharts
-- **Database**: MongoDB (local, for session/token storage only)
-- **Pattern**: Zero business logic in backend — all data from POS API
+- **Backend**: FastAPI proxy-only layer → preprod.mygenie.online POS API
+- **Frontend**: React 19 + CRACO + Tailwind CSS + Radix UI + React Router v7
+- **Database**: MongoDB (local, token sessions only)
 
-## What's Been Implemented
+## What's Been Done
+
 ### Session 1 (June 15, 2026) — Deployment
-- Cloned repo from `15-6-implementation-v1` branch
-- Preserved `.git` and `.emergent` folders
-- Installed all dependencies, services running
+- Cloned repo, installed deps, services running
 
 ### Session 2 (June 15, 2026) — QA Gate 6
-- Executed full QA test suite: 50 test cases
-- **7 BUG fixes (BUG-029→035)**: All PASS
-- **9 CRs re-verified**: All PASS  
-- **5 regression checks**: All PASS
-- QA Report: `control/sessions/QA_SPRINT_S3_ARTIFACT_5_QA_REPORT.md`
+- 50/50 tests passed for Sprint S3 batch
+
+### Session 3 (June 15, 2026) — INVESTIGATION: Consumption Unit Mismatch
+- **Found 4 bug classes across 8 files, 6 screens:**
+  - Bug Class 1: Display precision (.toFixed(1) truncation) — IngredientCatalogue, StockInventorySummary
+  - Bug Class 2: Unit mismatch gm→kg (CRITICAL) — PurchaseOrderCreate causes 1000x over-ordering
+  - Bug Class 3: Unit stripping parseFloat/Number NaN — DirectDispatchForm, RequestStockForm, useProductionRun
+  - Bug Class 4: Ambiguous unit scale — StockInventorySummary expanded row
+- Full report: `control/sessions/INVESTIGATION_CONSUMPTION_UNIT_MISMATCH.md`
 
 ## Prioritized Backlog
-- P0: None
-- P1: CR-034 write API full integration testing (deferred to smoke)
-- P2: BUG-034 backend API for active/inactive toggle (pending backend team)
+- **P0**: PurchaseOrderCreate unit mismatch fix (prevents 1000x over-ordering)
+- **P1**: useProductionRun Number() NaN fix (consumption data lost)
+- **P1**: DirectDispatchForm / RequestStockForm unit normalization
+- **P2**: IngredientCatalogue / StockInventorySummary display precision (3 decimals + Option A fallback)
 
 ## Next Tasks
-- SMOKE FACILITATOR role for owner verification of all Sprint S3 items
+- PLANNING or IMPLEMENTATION for consumption unit mismatch fix across 8 files
