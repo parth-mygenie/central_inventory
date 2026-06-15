@@ -301,8 +301,8 @@ function DetailPanel({ recipe, stockMap, inventoryMaster, productionRuns, onSave
             <div className="flex gap-2">
               {isAddMode && <Button variant="outline" size="sm" className="h-7 text-xs" onClick={onCancel}>Cancel</Button>}
               {recipe && (
-                {/* BUG-034: Replace delete with active/inactive toggle */}
                 <div className="flex items-center gap-2" data-testid="toggle-subrecipe-active">
+                  {/* BUG-034: Replace delete with active/inactive toggle */}
                   <span className="text-[10px] text-muted-foreground">Active</span>
                   <Switch checked={true} onCheckedChange={() => toast({ title: "Status toggle saved", description: "Backend API pending — will sync when available." })} />
                 </div>
