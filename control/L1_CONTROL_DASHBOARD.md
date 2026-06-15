@@ -82,9 +82,9 @@
 
 | Item | Title | Status | Severity |
 |------|-------|:------:|:--------:|
-| **BUG-036** | App-Wide Consumption Unit Mismatch (gm→kg) | **OPEN** | **P0 CRITICAL** |
+| **BUG-036** | App-Wide Consumption Unit Mismatch (gm→kg) | **IMPLEMENTED** | **P0 CRITICAL** |
 
-**BUG-036 summary:** POS API returns consumption in base unit (gm), frontend uses display unit (kg) without conversion. PO Create suggests 258 kg instead of ~0 for Whole Wheat Flour. Affects 8 files, 6 screens. Intake + Impact Analysis complete. Awaiting Gate 3 (Impl Plan) + Gate 4 (Owner GO).
+**BUG-036 summary:** 8 files fixed. Consumption now normalized from API base unit (gm) to display unit (kg) via shared `normalizeToDisplayUnit()`. PO Create Whole Wheat Flour: 9.584 gm/d, 3116d, qty=0 (was: 9.6 kg/d, 3d, qty=258). All 7 tests PASS.
 
 ## Registry: 35 CRs, 36 BUGs, 4 Sprints (S0-S2 closed, S3 active)
 

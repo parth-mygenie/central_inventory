@@ -101,6 +101,18 @@
 
 ## Key Dependencies
 
+### BUG-036: App-Wide Consumption Unit Mismatch (2026-06-15)
+| File | Change |
+|------|--------|
+| `frontend/src/lib/formatters.js` | Added `parseConsumedQty`, `normalizeToDisplayUnit`, `smartConsumptionDisplay` |
+| `frontend/src/components/central-inventory/PurchaseOrderCreate.jsx` | Unit normalization in By Vendor + By Item Need modes |
+| `frontend/src/components/central-inventory/IngredientCatalogue.jsx` | Shared import, Option A display fallback |
+| `frontend/src/components/central-inventory/DirectDispatchForm.jsx` | parseConsumedQty + normalizeToDisplayUnit |
+| `frontend/src/components/central-inventory/RequestStockForm.jsx` | parseConsumedQty + normalizeToDisplayUnit |
+| `frontend/src/hooks/useProductionRun.js` | parseConsumedQty (fixes Number() NaN) |
+| `frontend/src/components/central-inventory/ProductionRunForm.jsx` | Object-format consumptionMap handling |
+| `frontend/src/components/central-inventory/StockInventorySummary.jsx` | 3 decimal precision display |
+
 | Component | Depends On |
 |-----------|-----------|
 | All frontend components | `api.js` (with cache), `terminology.js`, `useLoginContext.js` |
