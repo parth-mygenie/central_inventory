@@ -1,0 +1,119 @@
+{
+  "summary": "P17 Amend/Withdraw/Modification Frontend Implementation Testing Complete. All 16 features tested and verified. Backend proxy health check passes. Login works for both central and franchise users. All P17 components working correctly: Amend Request button, Withdraw button, Request Modification button, ItemEditorDialog, parent transfer link, withdrawn status in timeline and history, modification type badges.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "PendingQueues/History",
+        "issues": ["From/To columns show 'Unknown' when POS API doesn't return restaurant names - this is expected behavior based on API contract"]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_p17_lifecycle.py",
+    "/app/test_reports/pytest/p17_lifecycle_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "api.js amendRequest correctly calls POST /proxy/v2/inventory-transfer/request/{id}/amend with items payload",
+    "api.js withdrawRequest correctly calls POST /proxy/v2/inventory-transfer/request/{id}/withdraw with empty payload",
+    "api.js requestModification correctly calls POST /proxy/v2/inventory-transfer/request/{id}/modification with items payload",
+    "api.js enrichTransferMeta correctly adds parentTransferId, isModificationRequest, isWithdrawn fields",
+    "transferActions.js correctly shows amend/withdraw only for status=requested AND type=request AND user is destination",
+    "transferActions.js correctly shows modification for post-approval statuses (approved, partially_approved, dispatched, partially_received) AND type=request AND user is destination",
+    "transferActions.js correctly includes 'withdrawn' in terminal statuses list (no actions)",
+    "terminology.js STATUS_CONFIG.withdrawn has correct grey styling (bg-slate-100 text-slate-700)",
+    "terminology.js TYPE_LABELS.modification_request = 'Modification'",
+    "StatusTimeline.jsx correctly renders withdrawn branch step with Ban icon and slate ring color",
+    "ItemEditorDialog.jsx correctly loads catalog from request-catalog endpoint and seeds from existing lines",
+    "TransferDetail.jsx correctly renders parent transfer link for modification_request transfers",
+    "TransferDetail.jsx handleAmend opens ItemEditorDialog with correct title and submit label",
+    "TransferDetail.jsx handleWithdraw opens destructive confirm dialog with correct warning message",
+    "TransferDetail.jsx handleModification opens ItemEditorDialog and navigates to child transfer on success",
+    "PendingQueues.jsx correctly renders 'Modification' badge for modification_request type",
+    "HistoryLedger.jsx correctly uses TYPE_LABELS with amber styling for modification_request"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_p17_lifecycle.py"
+  ],
+  "success_rate": {
+    "backend": "100% (32/32 pytest tests passed)",
+    "frontend": "100% (16/16 features tested)"
+  },
+  "test_credentials": {
+    "central_user": "owner@democentral2.com / Qplazm@10 (rid=782, type=central, Master Store in UI)",
+    "franchise_user": "owner@demofranchise4.com / Qplazm@10 (rid=786, type=franchise, Outlet in UI)"
+  },
+  "seed_data_creation": "None - using real POS API via proxy",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "P17 Amend/Withdraw/Modification frontend fully tested. Key transfers for testing: #111 (status=requested, shows Amend/Withdraw buttons for franchise), #117 (status=approved, shows Request Modification button for franchise), #118 (modification_request type, shows parent link to #117), #116 (status=withdrawn, shows grey badge and withdrawn timeline step). All P17 components verified: ItemEditorDialog (shared for amend+modification), ConfirmActionDialog (for withdraw), parent transfer link, StatusTimeline withdrawn branch, TYPE_LABELS in PendingQueues and HistoryLedger.",
+  "features_tested": {
+    "1_backend_proxy_health": "PASS - GET /api/ returns 'Central Inventory API Proxy' message",
+    "2_frontend_compiles": "PASS - No white screen, React root has content",
+    "3_login_central_user": "PASS - owner@democentral2.com login successful, rid=782, type=central",
+    "4_login_franchise_user": "PASS - owner@demofranchise4.com login successful, rid=786, type=franchise",
+    "5_amend_button_visibility": "PASS - Amend Request button visible on Transfer #111 (status=requested, type=request, franchise user)",
+    "6_withdraw_button_visibility": "PASS - Withdraw button visible on Transfer #111 (status=requested, type=request, franchise user)",
+    "7_modification_button_visibility": "PASS - Request Modification button visible on Transfer #117 (status=approved, type=request, franchise user)",
+    "8_amend_dialog_opens": "PASS - ItemEditorDialog opens with title 'Amend Request #111', loads catalog, seeds from existing lines",
+    "9_withdraw_dialog_opens": "PASS - ConfirmActionDialog opens with destructive warning 'This will permanently withdraw this request'",
+    "10_modification_dialog_opens": "PASS - ItemEditorDialog opens with title 'Request Modification — Transfer #117', correct description",
+    "11_parent_transfer_link": "PASS - Transfer #118 shows 'Modification of Transfer #117' link",
+    "12_withdrawn_status_in_history": "PASS - History shows 'Withdrawn' status badges for #116, #96",
+    "13_modification_type_in_history": "PASS - History shows 'Modification' type badges for #119, #118, #102",
+    "14_action_visibility_central_user": "PASS - Central user on Transfer #111 sees Approve/Reject, NOT Amend/Withdraw/Modification",
+    "15_refresh_buttons_work": "PASS - Refresh buttons present on TransferDetail and History",
+    "16_terminology_config": "PASS - STATUS_CONFIG.withdrawn and TYPE_LABELS.modification_request exist with correct values"
+  },
+  "ui_verification": {
+    "transfer_111_requested_franchise": {
+      "status_badge": "Requested (amber)",
+      "timeline": "Requested → Approved → Dispatched → Received",
+      "actions": "Amend Request, Withdraw (red destructive)"
+    },
+    "transfer_117_approved_franchise": {
+      "status_badge": "Approved (blue)",
+      "timeline": "Requested → Approved → Dispatched → Received",
+      "line_status": "Approved badge on maida line",
+      "qty_breakdown": "Req: 0.3, Appr: 0.3",
+      "actions": "Request Modification"
+    },
+    "transfer_118_modification_request": {
+      "status_badge": "Approved (blue)",
+      "type_badge": "Modification (amber)",
+      "parent_link": "Modification of Transfer #117",
+      "timeline": "Requested → Approved → Dispatched → Received"
+    },
+    "transfer_111_requested_central": {
+      "status_badge": "Requested (amber)",
+      "actions": "Approve All, Partial Approve, Reject (NO Amend/Withdraw/Modification)"
+    },
+    "amend_dialog": {
+      "title": "Amend Request #111",
+      "description": "Replace all items in this request. Existing lines will be removed.",
+      "item_selector": "Dropdown with catalog items (maida (kg) — 0.1 avail)",
+      "buttons": "Cancel, Amend Request"
+    },
+    "withdraw_dialog": {
+      "title": "Withdraw Request #111?",
+      "description": "This will permanently withdraw this request. This action cannot be undone — the request will be removed from the approval queue.",
+      "buttons": "Cancel, Withdraw Request (destructive)"
+    },
+    "modification_dialog": {
+      "title": "Request Modification — Transfer #117",
+      "description": "Request additional or changed quantities. A new modification request will be created for central approval.",
+      "buttons": "Cancel, Submit Modification"
+    },
+    "history_ledger": {
+      "modification_badges": "3 transfers with 'Modification' type badge (amber)",
+      "withdrawn_badges": "3 transfers with 'Withdrawn' status badge (grey)",
+      "status_filter": "Withdrawn pill in status filter bar"
+    }
+  }
+}
