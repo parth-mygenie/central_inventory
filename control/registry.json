@@ -4410,6 +4410,118 @@
         { "artifact": 5, "label": "QA-Report", "status": "DONE", "path": "test_reports/iteration_55.json" },
         { "artifact": 6, "label": "Owner-Signoff", "status": "PENDING", "path": null }
       ]
+    },
+    {
+      "type": "BUG",
+      "id": "BUG-029",
+      "title": "Raw Material Master — Consumption still 0.0 kg/day (ingredient_id join mismatch with consumption API)",
+      "status": "PLANNED",
+      "severity": "HIGH",
+      "sprint_key": "S3",
+      "phase": "Raw Material Master",
+      "files": ["frontend/src/components/central-inventory/IngredientCatalogue.jsx"],
+      "notes": "Residual from BUG-027 fix. daily-consumption-report returns ingredient_id that doesn't match inventory_master_id from stock-inventory. Whole Wheat Flour: 0.0 kg/day, 3116d. Need to join by ingredient_name fallback or investigate ID mapping.",
+      "artifact_refs": [
+        { "artifact": 1, "label": "Intake", "status": "DONE", "path": "control/sessions/SESSION_CLOSE_20260615_HANDOVER.md" },
+        { "artifact": 5, "label": "QA-Report", "status": "PENDING", "path": null },
+        { "artifact": 6, "label": "Owner-Signoff", "status": "PENDING", "path": null }
+      ]
+    },
+    {
+      "type": "BUG",
+      "id": "BUG-030",
+      "title": "PO Create — Residual: send rate=0 to API, display_qty not cal_quantity, consumption/DoC wrong, search missing on By Item Need",
+      "status": "PLANNED",
+      "severity": "HIGH",
+      "sprint_key": "S3",
+      "phase": "Purchase Order",
+      "files": ["frontend/src/components/central-inventory/PurchaseOrderCreate.jsx"],
+      "notes": "6 sub-issues: (2a) Expected Rate display-only, always send 0 to API for both modes, (2b) Stock shows cal_quantity (29865 kg) not display_qty (29.87 kg), (2c) DoC shows 995d — same consumption bug, (2d) Search bar only on By Vendor not By Item Need, (2e/2f) Same display_qty+DoC on By Item Need.",
+      "artifact_refs": [
+        { "artifact": 1, "label": "Intake", "status": "DONE", "path": "control/sessions/SESSION_CLOSE_20260615_HANDOVER.md" },
+        { "artifact": 5, "label": "QA-Report", "status": "PENDING", "path": null },
+        { "artifact": 6, "label": "Owner-Signoff", "status": "PENDING", "path": null }
+      ]
+    },
+    {
+      "type": "BUG",
+      "id": "BUG-031",
+      "title": "RM Stock page — Remove All/FG tabs (RM only), hide Sub Recipe from category filter",
+      "status": "PLANNED",
+      "severity": "MEDIUM",
+      "sprint_key": "S3",
+      "phase": "Stock Inventory",
+      "files": ["frontend/src/components/central-inventory/StockInventorySummary.jsx"],
+      "notes": "2 sub-issues: (3a) /inventory?type=raw should only show Raw Materials tab — remove All(75) and Finished Goods(31) tabs, (3b) Categories filter dropdown shows 'Sub Recipe (31)' — should be hidden.",
+      "artifact_refs": [
+        { "artifact": 1, "label": "Intake", "status": "DONE", "path": "control/sessions/SESSION_CLOSE_20260615_HANDOVER.md" },
+        { "artifact": 5, "label": "QA-Report", "status": "PENDING", "path": null },
+        { "artifact": 6, "label": "Owner-Signoff", "status": "PENDING", "path": null }
+      ]
+    },
+    {
+      "type": "BUG",
+      "id": "BUG-032",
+      "title": "Stock Inventory expanded row — Expiry Risk inline date, hide Adjust Stock, load FEFO segments",
+      "status": "PLANNED",
+      "severity": "HIGH",
+      "sprint_key": "S3",
+      "phase": "Stock Inventory",
+      "files": ["frontend/src/components/central-inventory/StockInventorySummary.jsx"],
+      "notes": "3 sub-issues: (4) Expiry Risk column shows 'View detail' — should show closest batch expiry date inline, (5a) Hide 'Adjust Stock' quick action button from expanded row, (5b) Expanded row shows 'No segments' but full detail has FEFO segments — load segments in expanded view.",
+      "artifact_refs": [
+        { "artifact": 1, "label": "Intake", "status": "DONE", "path": "control/sessions/SESSION_CLOSE_20260615_HANDOVER.md" },
+        { "artifact": 5, "label": "QA-Report", "status": "PENDING", "path": null },
+        { "artifact": 6, "label": "Owner-Signoff", "status": "PENDING", "path": null }
+      ]
+    },
+    {
+      "type": "BUG",
+      "id": "BUG-033",
+      "title": "Stock Inventory Quick Actions — Dispatch/Wastage don't pre-select ingredient",
+      "status": "PLANNED",
+      "severity": "MEDIUM",
+      "sprint_key": "S3",
+      "phase": "Stock Inventory",
+      "files": ["frontend/src/components/central-inventory/StockInventorySummary.jsx", "frontend/src/components/central-inventory/DirectDispatchForm.jsx", "frontend/src/components/central-inventory/WastageEntryForm.jsx"],
+      "notes": "2 sub-issues: (6a) Clicking Dispatch from expanded row should pre-select the ingredient on DirectDispatchForm, (6b) Clicking Record Wastage should pre-select the ingredient on WastageEntryForm. Navigation state needs to carry inventory_master_id + stock_title.",
+      "artifact_refs": [
+        { "artifact": 1, "label": "Intake", "status": "DONE", "path": "control/sessions/SESSION_CLOSE_20260615_HANDOVER.md" },
+        { "artifact": 5, "label": "QA-Report", "status": "PENDING", "path": null },
+        { "artifact": 6, "label": "Owner-Signoff", "status": "PENDING", "path": null }
+      ]
+    },
+    {
+      "type": "BUG",
+      "id": "BUG-034",
+      "title": "Sub-Recipe Master — Delete button → Active/Inactive toggle (backend API pending)",
+      "status": "PLANNED",
+      "severity": "MEDIUM",
+      "sprint_key": "S3",
+      "phase": "Sub-Recipe Master",
+      "files": ["frontend/src/components/central-inventory/SubRecipeMaster.jsx"],
+      "notes": "Replace red 'Delete' button with active/inactive toggle switch (same pattern as Categories tab BUG-026 fix). Backend flag needed — API will be provided later. UI stub with toast.",
+      "artifact_refs": [
+        { "artifact": 1, "label": "Intake", "status": "DONE", "path": "control/sessions/SESSION_CLOSE_20260615_HANDOVER.md" },
+        { "artifact": 5, "label": "QA-Report", "status": "PENDING", "path": null },
+        { "artifact": 6, "label": "Owner-Signoff", "status": "PENDING", "path": null }
+      ]
+    },
+    {
+      "type": "BUG",
+      "id": "BUG-035",
+      "title": "Production History — Consumed Ingredients Qty shows dash, should show batch total with unit normalization",
+      "status": "PLANNED",
+      "severity": "MEDIUM",
+      "sprint_key": "S3",
+      "phase": "Production",
+      "files": ["frontend/src/components/central-inventory/ProductionHistory.jsx"],
+      "notes": "2 sub-issues: (8a) Ingredient-level Qty shows '—' but batch-level shows 1000.00 — should sum batches and show total at ingredient level without expanding, (8b) Normalize units when summing across batches (e.g. gm+kg → kg).",
+      "artifact_refs": [
+        { "artifact": 1, "label": "Intake", "status": "DONE", "path": "control/sessions/SESSION_CLOSE_20260615_HANDOVER.md" },
+        { "artifact": 5, "label": "QA-Report", "status": "PENDING", "path": null },
+        { "artifact": 6, "label": "Owner-Signoff", "status": "PENDING", "path": null }
+      ]
     }
   ]
 }

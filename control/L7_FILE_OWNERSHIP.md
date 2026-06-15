@@ -1,6 +1,6 @@
 # L7 — File Ownership (Frozen vs Active)
 
-> **Updated:** 2026-06-14 (CR-030 complete)
+> **Updated:** 2026-06-15 (BUG-026/027/028 implemented, BUG-029→035 registered)
 
 ---
 
@@ -75,6 +75,24 @@
 | `PurchaseOrderCreate.jsx` **(NEW)** | By Vendor + By Item Need + multi-PO auto-group |
 | `PurchaseOrderDetail.jsx` **(NEW)** | Detail + card-per-line receive + stock context columns |
 | `App.js` | MODIFIED — 3 PO routes + 3 imports |
+
+### BUG-026/027/028: Raw Material + PO Fixes (2 files modified, 2026-06-15)
+| File | Change |
+|------|--------|
+| `IngredientCatalogue.jsx` | MODIFIED — +isSubRecipeItem filter, +filterRawCategories, +parseQtyString, +normalizeToDisplayUnit, +consumptionMap from daily-consumption-report, +usageMap from recipes+sub-recipes, CategoriesTab Switch toggle, "Used In" column |
+| `PurchaseOrderCreate.jsx` | MODIFIED — +rawMaterialItems filter, +vendorSearch, column renames (Daily Consumption, Days Will Last), vendor picker for no-history, read-only Expected Rate |
+
+### BUG-029→035: Registered for Next Session (0 files modified yet)
+| File | Planned Bugs |
+|------|-------------|
+| `IngredientCatalogue.jsx` | BUG-029 (consumption join fix) |
+| `PurchaseOrderCreate.jsx` | BUG-030 (rate=0, display_qty, search) |
+| `StockInventorySummary.jsx` | BUG-031, BUG-032, BUG-033 |
+| `DirectDispatchForm.jsx` | BUG-033 (pre-select ingredient) |
+| `WastageEntryForm.jsx` | BUG-033 (pre-select ingredient) |
+| `SubRecipeMaster.jsx` | BUG-034 (delete → toggle) |
+| `ProductionHistory.jsx` | BUG-035 (ingredient qty total) |
+
 
 ### Orphaned Files (not deleted, not imported)
 | File | Reason |
