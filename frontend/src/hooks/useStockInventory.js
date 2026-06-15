@@ -55,7 +55,7 @@ export function useStockInventory({ staleAfterMs = 5 * 60 * 1000, initialStockTy
     let cancelled = false;
     const loadSegments = async () => {
       try {
-        const resp = await api.getStockInventory({ includeSegments: true, segmentLimit: 5, includeConsumption: true });
+        const resp = await api.getStockInventory({ includeSegments: true, segmentLimit: 5 });
         if (cancelled) return;
         const data = resp.data;
         setStocks(data.current_stocks || []);
