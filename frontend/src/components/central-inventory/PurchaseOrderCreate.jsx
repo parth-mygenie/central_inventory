@@ -11,12 +11,18 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { LoadingState, ErrorState, EmptyState } from "@/components/common/StateDisplays";
-import { ShoppingCart, ArrowLeft, Loader2, Check, ShieldX, ArrowRight, AlertTriangle, Package } from "lucide-react";
+import { ShoppingCart, ArrowLeft, Loader2, Check, ShieldX, ArrowRight, AlertTriangle, Package, Search, Info, UserPlus } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "@/hooks/use-toast";
 
 function formatCurrency(n) {
   if (n == null || isNaN(n)) return "\u20B90";
   return `\u20B9${Number(n).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
+}
+
+/** Helper: check if an inventory item is a sub-recipe */
+function isSubRecipeItem(item) {
+  return item.is_sub_recipe === true || (item.category_name || "").toLowerCase() === "sub recipe" || !!item.subrecipe_id;
 }
 
 /** Compute cheapest vendor for an item from purchase data */
@@ -66,6 +72,10 @@ export default function PurchaseOrderCreate() {
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [step, setStep] = useState("select"); // select | items | review
+  const [vendorSearch, setVendorSearch] = useState(""); // search for By Vendor items
+
+  // Filter sub-recipes from inventory
+  const rawMaterialItems = useMemo(() => inventoryItems.filter((i) => !isSubRecipeItem(i)), [inventoryItems]);
 
   const fetchData = useCallback(async () => {
     setLoading(true); setError(null);
@@ -96,7 +106,7 @@ export default function PurchaseOrderCreate() {
     const vendorObj = vendors.find((v) => String(v.id) === vendorId);
     const vendorName = vendorObj?.vendor_name || "";
 
-    const newLines = inventoryItems.map((item) => {
+    const newLines = rawMaterialItems.map((item) => {
       // This vendor's records for this item
       const records = purchaseData.filter((r) => (r.vendor_id === Number(vendorId) || r.Vendor_Name === vendorName) && (r.ingredient_id === item.id || r.Ingredient_Name === item.stock_title) && Number(r.stock_quantity_raw) > 0);
       const totalAmt = records.reduce((s, r) => s + (Number(r.Amount) || 0), 0);
@@ -158,13 +168,13 @@ export default function PurchaseOrderCreate() {
 
   const toggleVendorLine = (idx) => setVendorLines((p) => p.map((l, i) => i === idx ? { ...l, checked: !l.checked } : l));
   const updateVendorLine = (idx, f, v) => setVendorLines((p) => p.map((l, i) => i === idx ? { ...l, [f]: v } : l));
-  const checkedVendorLines = useMemo(() => vendorLines.filter((l) => l.checked && Number(l.ordered_qty) > 0 && Number(l.expected_rate) > 0), [vendorLines]);
+  const checkedVendorLines = useMemo(() => vendorLines.filter((l) => l.checked && Number(l.ordered_qty) > 0), [vendorLines]);
   const vendorTotal = useMemo(() => checkedVendorLines.reduce((s, l) => s + Number(l.ordered_qty) * Number(l.expected_rate), 0), [checkedVendorLines]);
 
   // ── By Item Need Mode ──
   const initNeedLines = useCallback(() => {
-    if (!inventoryItems.length) return;
-    const lines = inventoryItems.map((item) => {
+    if (!rawMaterialItems.length) return;
+    const lines = rawMaterialItems.map((item) => {
       const qty = Number(item.cal_quantity) || 0;
       const isLow = item.is_low_stock;
       const isEmpty = qty === 0;
@@ -207,7 +217,7 @@ export default function PurchaseOrderCreate() {
       };
     }).sort((a, b) => a.urgency - b.urgency);
     setNeedLines(lines);
-  }, [inventoryItems, purchaseData, vendors]);
+  }, [rawMaterialItems, purchaseData, vendors]);
 
   useEffect(() => { if (mode === "item" && needLines.length === 0) initNeedLines(); }, [mode, needLines.length, initNeedLines]);
 
@@ -251,10 +261,10 @@ export default function PurchaseOrderCreate() {
 
   // KPIs for By Item Need
   const needKPIs = useMemo(() => {
-    const oos = inventoryItems.filter((i) => (Number(i.cal_quantity) || 0) === 0).length;
-    const low = inventoryItems.filter((i) => i.is_low_stock && (Number(i.cal_quantity) || 0) > 0).length;
-    return { oos, low, total: inventoryItems.length };
-  }, [inventoryItems]);
+    const oos = rawMaterialItems.filter((i) => (Number(i.cal_quantity) || 0) === 0).length;
+    const low = rawMaterialItems.filter((i) => i.is_low_stock && (Number(i.cal_quantity) || 0) > 0).length;
+    return { oos, low, total: rawMaterialItems.length };
+  }, [rawMaterialItems]);
 
   // ── Submit ──
   const handleSubmitVendor = async () => {
@@ -430,6 +440,13 @@ export default function PurchaseOrderCreate() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input data-testid="po-vendor-search" placeholder="Search items..." value={vendorSearch} onChange={(e) => setVendorSearch(e.target.value)} className="pl-8 h-8 text-xs" />
+          </div>
+
           <Card><CardContent className="py-0 px-0">
             <Table>
               <TableHeader><TableRow>
@@ -441,15 +458,16 @@ export default function PurchaseOrderCreate() {
                 <TableHead className="text-[10px] text-right">Stock</TableHead>
                 <TableHead className="text-[10px] text-right">DoC</TableHead>
                 <TableHead className="text-[10px] text-right">Qty</TableHead>
-                <TableHead className="text-[10px] text-right">Rate</TableHead>
+                <TableHead className="text-[10px] text-right">Expected Rate</TableHead>
                 <TableHead className="text-[10px] text-right">Total</TableHead>
               </TableRow></TableHeader>
               <TableBody>
-                {vendorLines.map((l, idx) => {
+                {vendorLines.filter((l) => !vendorSearch.trim() || (l.stock_title || "").toLowerCase().includes(vendorSearch.toLowerCase())).map((l, idx) => {
+                  const realIdx = vendorLines.indexOf(l);
                   const t = Number(l.ordered_qty || 0) * Number(l.expected_rate || 0);
                   return (
                     <TableRow key={l.inventory_master_id} data-testid={`po-vline-${l.inventory_master_id}`} className={l.checked ? "bg-primary/5" : ""}>
-                      <TableCell className="py-1.5"><Checkbox checked={l.checked} onCheckedChange={() => toggleVendorLine(idx)} /></TableCell>
+                      <TableCell className="py-1.5"><Checkbox checked={l.checked} onCheckedChange={() => toggleVendorLine(realIdx)} /></TableCell>
                       <TableCell className="py-1.5 text-xs">
                         <span className="font-medium">{l.stock_title}</span>
                         {l.current_qty === 0 && <Badge variant="destructive" className="text-[8px] px-1 py-0 ml-1">OOS</Badge>}
@@ -461,7 +479,7 @@ export default function PurchaseOrderCreate() {
                       <TableCell className="py-1.5 text-[10px]">
                         {l.isCheapest ? <span className="text-emerald-600">{"\u2713"} This vendor</span> :
                          l.cheapestVendorName ? <span className="text-amber-600">{l.cheapestVendorName} {formatCurrency(l.cheapestRate)}</span> :
-                         <span className="text-muted-foreground">\u2014</span>}
+                         <span className="text-muted-foreground">{"\u2014"}</span>}
                       </TableCell>
                       <TableCell className="py-1.5 text-xs text-right tabular-nums">{l.current_qty} {l.unit}</TableCell>
                       <TableCell className="py-1.5 text-xs text-right">
@@ -469,8 +487,8 @@ export default function PurchaseOrderCreate() {
                           {l.daysOfCover !== null ? `${l.daysOfCover}d` : "\u2014"}
                         </span>
                       </TableCell>
-                      <TableCell className="py-1.5"><Input type="number" value={l.ordered_qty} onChange={(e) => updateVendorLine(idx, "ordered_qty", e.target.value)} className="h-7 text-xs w-16 ml-auto text-right" disabled={!l.checked} /></TableCell>
-                      <TableCell className="py-1.5"><Input type="number" value={l.expected_rate} onChange={(e) => updateVendorLine(idx, "expected_rate", e.target.value)} className="h-7 text-xs w-16 ml-auto text-right" disabled={!l.checked} /></TableCell>
+                      <TableCell className="py-1.5"><Input type="number" value={l.ordered_qty} onChange={(e) => updateVendorLine(realIdx, "ordered_qty", e.target.value)} className="h-7 text-xs w-16 ml-auto text-right" disabled={!l.checked} /></TableCell>
+                      <TableCell className="py-1.5 text-xs text-right font-mono text-muted-foreground">{l.expected_rate ? formatCurrency(Number(l.expected_rate)) : "\u20B90"}</TableCell>
                       <TableCell className="py-1.5 text-xs text-right font-mono">{l.checked && t > 0 ? formatCurrency(t) : "\u2014"}</TableCell>
                     </TableRow>
                   );
@@ -560,10 +578,14 @@ export default function PurchaseOrderCreate() {
                 <TableHead className="text-[10px] w-8"></TableHead>
                 <TableHead className="text-[10px]">Item</TableHead>
                 <TableHead className="text-[10px] text-right">Stock</TableHead>
-                <TableHead className="text-[10px] text-right">Daily</TableHead>
-                <TableHead className="text-[10px] text-right">Days</TableHead>
+                <TableHead className="text-[10px] text-right">Daily Consumption</TableHead>
+                <TableHead className="text-[10px] text-right">
+                  <TooltipProvider><Tooltip><TooltipTrigger asChild>
+                    <span className="flex items-center justify-end gap-0.5">Days Will Last <Info className="h-2.5 w-2.5 text-muted-foreground" /></span>
+                  </TooltipTrigger><TooltipContent className="max-w-xs"><p className="text-xs">Current Stock ÷ Avg Daily Consumption (estimated from purchase history over the last year)</p></TooltipContent></Tooltip></TooltipProvider>
+                </TableHead>
                 <TableHead className="text-[10px]">Best Vendor</TableHead>
-                <TableHead className="text-[10px] text-right">Rate</TableHead>
+                <TableHead className="text-[10px] text-right">Expected Rate</TableHead>
                 <TableHead className="text-[10px]">Other Vendors</TableHead>
                 <TableHead className="text-[10px] text-right">Qty</TableHead>
               </TableRow></TableHeader>
@@ -592,9 +614,18 @@ export default function PurchaseOrderCreate() {
                             <SelectItem key={vo.vendorId} value={String(vo.vendorId)}>{vo.vendorName} {formatCurrency(vo.rate)}</SelectItem>
                           ))}</SelectContent>
                         </Select>
-                      ) : <span className="text-[10px] text-muted-foreground">No history</span>}
+                      ) : (
+                        <Select value={l.selectedVendorId} onValueChange={(v) => updateNeedLine(idx, "selectedVendorId", v)}>
+                          <SelectTrigger className="h-7 text-[10px] w-36">
+                            <SelectValue placeholder={<span className="flex items-center gap-1 text-muted-foreground"><UserPlus className="h-3 w-3" />Pick vendor</span>} />
+                          </SelectTrigger>
+                          <SelectContent>{vendors.map((v) => (
+                            <SelectItem key={v.id} value={String(v.id)}>{v.vendor_name}</SelectItem>
+                          ))}</SelectContent>
+                        </Select>
+                      )}
                     </TableCell>
-                    <TableCell className="py-1.5"><Input type="number" value={l.expected_rate} onChange={(e) => updateNeedLine(idx, "expected_rate", e.target.value)} className="h-7 text-[10px] w-16 ml-auto text-right" disabled={!l.checked} /></TableCell>
+                    <TableCell className="py-1.5 text-xs text-right font-mono text-muted-foreground">{l.expected_rate ? formatCurrency(Number(l.expected_rate)) : "\u20B90"}</TableCell>
                     <TableCell className="py-1.5 text-[10px] text-muted-foreground">
                       {(l.otherVendors || []).map((ov, i) => (
                         <span key={i}>{ov.vendorName} {formatCurrency(ov.rate)}{i < (l.otherVendors || []).length - 1 ? ", " : ""}</span>

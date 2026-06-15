@@ -11,8 +11,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Search, Plus, Pencil, Trash2, Loader2, Beaker, FolderOpen, AlertTriangle, ChevronDown, ChevronRight, Save, X } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Switch } from "@/components/ui/switch";
+import { Search, Plus, Pencil, Loader2, Beaker, FolderOpen, AlertTriangle, ChevronDown, ChevronRight, Save, X, Info } from "lucide-react";
 import { LoadingState, ErrorState, EmptyState } from "@/components/common/StateDisplays";
 import { toast } from "@/hooks/use-toast";
 
@@ -34,30 +36,54 @@ function getItemStatus(item) {
   return "ok";
 }
 
+/** Helper: check if an inventory item is a sub-recipe (Finished Good) */
+function isSubRecipeItem(item) {
+  return item.is_sub_recipe === true || (item.category_name || "").toLowerCase() === "sub recipe" || !!item.subrecipe_id;
+}
+
+/** Helper: filter categories to exclude "Sub Recipe" */
+function filterRawCategories(categories) {
+  return categories.filter((c) => (c.category_name || "").toLowerCase() !== "sub recipe");
+}
+
+/** Helper: parse "5 gm" or "1.2 kg" → { value: number, unit: string } */
+function parseQtyString(str) {
+  if (!str) return { value: 0, unit: "" };
+  const parts = String(str).trim().split(/\s+/);
+  return { value: parseFloat(parts[0]) || 0, unit: parts[1] || "" };
+}
+
+/** Helper: convert consumption qty to display unit for comparison */
+function normalizeToDisplayUnit(value, fromUnit, toUnit) {
+  if (!fromUnit || !toUnit || fromUnit === toUnit) return value;
+  const f = fromUnit.toLowerCase();
+  const t = toUnit.toLowerCase();
+  if (f === "gm" && t === "kg") return value / 1000;
+  if (f === "kg" && t === "gm") return value * 1000;
+  if (f === "ml" && t === "ltr") return value / 1000;
+  if (f === "ltr" && t === "ml") return value * 1000;
+  return value; // no conversion available
+}
+
 /** Intelligence panel for expanded ingredient row */
-function IngredientIntelligence({ item, purchaseData, childStoreCount }) {
+function IngredientIntelligence({ item, purchaseData, consumptionMap, childStoreCount }) {
   const intel = useMemo(() => {
     const records = purchaseData.filter((r) => r.Ingredient_Name === item.stock_title || r.ingredient_id === item.id);
-    if (records.length === 0) return null;
 
-    // Avg purchase rate
+    // Avg purchase rate from vendor history
     const totalAmt = records.reduce((s, r) => s + (Number(r.Amount) || 0), 0);
     const totalQty = records.reduce((s, r) => s + (Number(r.stock_quantity_raw) || 0), 0);
     const avgRate = totalQty > 0 ? totalAmt / totalQty : 0;
 
-    // Consumption rate — estimate from purchase data frequency
-    const sortedByDate = [...records].sort((a, b) => new Date(a.Purchase_Date) - new Date(b.Purchase_Date));
-    let dailyConsumption = 0;
-    if (sortedByDate.length >= 2) {
-      const firstDate = new Date(sortedByDate[0].Purchase_Date);
-      const lastDate = new Date(sortedByDate[sortedByDate.length - 1].Purchase_Date);
-      const days = Math.max(1, (lastDate - firstDate) / (1000 * 60 * 60 * 24));
-      dailyConsumption = totalQty / days;
-    }
+    // Daily consumption from consumption report (accurate, production-based)
+    const consumption = consumptionMap[item.id] || null;
+    const dailyConsumption = consumption ? consumption.dailyQty : 0;
+    const consumptionUnit = consumption ? consumption.unit : (item.unit || "");
 
-    // Days of stock
-    const currentQty = Number(item.cal_quantity) || 0;
-    const daysOfStock = dailyConsumption > 0 ? Math.floor(currentQty / dailyConsumption) : null;
+    // Days of stock — use display_qty (same scale as display unit)
+    const currentQty = Number(item.display_qty) || 0;
+    const dailyInDisplayUnit = dailyConsumption > 0 ? normalizeToDisplayUnit(dailyConsumption, consumptionUnit, item.unit || item.display_unit || "") : 0;
+    const daysOfStock = dailyInDisplayUnit > 0 ? Math.floor(currentQty / dailyInDisplayUnit) : null;
 
     // Vendor price comparison
     const byVendor = {};
@@ -74,11 +100,13 @@ function IngredientIntelligence({ item, purchaseData, childStoreCount }) {
 
     const maxRate = vendorRates.length > 0 ? vendorRates[vendorRates.length - 1].rate : 1;
 
-    return { avgRate, dailyConsumption, daysOfStock, vendorRates, maxRate };
-  }, [item, purchaseData]);
+    return { avgRate, dailyConsumption: dailyInDisplayUnit, daysOfStock, vendorRates, maxRate };
+  }, [item, purchaseData, consumptionMap]);
 
-  if (!intel) {
-    return <p className="text-xs text-muted-foreground py-3">No purchase history for this ingredient.</p>;
+  const hasAnyData = intel.avgRate > 0 || intel.dailyConsumption > 0 || intel.vendorRates.length > 0;
+
+  if (!hasAnyData) {
+    return <p className="text-xs text-muted-foreground py-3">No purchase or consumption history for this ingredient.</p>;
   }
 
   return (
@@ -138,6 +166,7 @@ function IngredientIntelligence({ item, purchaseData, childStoreCount }) {
 
 /** Inline edit form for expanded row */
 function InlineEditForm({ item, categories, onSave, onCancel }) {
+  const rawCategories = useMemo(() => filterRawCategories(categories), [categories]);
   const [form, setForm] = useState({
     stock_title: item.stock_title || "",
     category_id: String(item.category_id || ""),
@@ -182,7 +211,7 @@ function InlineEditForm({ item, categories, onSave, onCancel }) {
         <Label className="text-[10px]">Category</Label>
         <Select value={form.category_id} onValueChange={(v) => update("category_id", v)}>
           <SelectTrigger className="h-7 text-xs" data-testid="edit-ing-cat"><SelectValue placeholder="Select" /></SelectTrigger>
-          <SelectContent>{categories.map((c) => <SelectItem key={c.id} value={String(c.id)}>{c.category_name}</SelectItem>)}</SelectContent>
+          <SelectContent>{rawCategories.map((c) => <SelectItem key={c.id} value={String(c.id)}>{c.category_name}</SelectItem>)}</SelectContent>
         </Select>
       </div>
       <div className="grid grid-cols-2 gap-2">
@@ -217,6 +246,7 @@ function InlineEditForm({ item, categories, onSave, onCancel }) {
 
 /** Inline add form shown at top of table */
 function InlineAddForm({ categories, onSaved, onCancel }) {
+  const rawCategories = useMemo(() => filterRawCategories(categories), [categories]);
   const [title, setTitle] = useState("");
   const [catId, setCatId] = useState("");
   const [unit, setUnit] = useState("kg");
@@ -253,7 +283,7 @@ function InlineAddForm({ categories, onSaved, onCancel }) {
             <Label className="text-[10px]">Category *</Label>
             <Select value={catId} onValueChange={setCatId}>
               <SelectTrigger className="h-7 text-xs" data-testid="add-ing-cat"><SelectValue placeholder="Select" /></SelectTrigger>
-              <SelectContent>{categories.map((c) => <SelectItem key={c.id} value={String(c.id)}>{c.category_name}</SelectItem>)}</SelectContent>
+              <SelectContent>{rawCategories.map((c) => <SelectItem key={c.id} value={String(c.id)}>{c.category_name}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div>
@@ -293,8 +323,10 @@ function IngredientsTab() {
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
   const [recipeMap, setRecipeMap] = useState({});
+  const [usageMap, setUsageMap] = useState({});
   const [childStoreCount, setChildStoreCount] = useState(0);
   const [purchaseData, setPurchaseData] = useState([]);
+  const [consumptionMap, setConsumptionMap] = useState({});
   const [expandedId, setExpandedId] = useState(null);
   const [addMode, setAddMode] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -307,13 +339,37 @@ function IngredientsTab() {
         api.getStockInventory(),
         api.getStockItemCategories(),
         api.getRecipeList(),
+        api.getSubRecipeList(),
       ];
       if (isTopLevel) fetches.push(api.getHierarchyList({ limit: 100 }));
       const results = await Promise.all(fetches);
-      const [invResp, catResp, recResp] = results;
-      setIngredients(invResp.data?.current_stocks || []);
+      const [invResp, catResp, recResp, subRecResp] = results;
+      // Filter out sub-recipe items — only show raw materials
+      const allItems = invResp.data?.current_stocks || [];
+      setIngredients(allItems.filter((i) => !isSubRecipeItem(i)));
       setCategories(catResp.data || []);
+
+      // Build combined usage map: ingredient_id → count of recipes + sub-recipes that use it
       const recipes = recResp.data || [];
+      const subRecipes = subRecResp.data || [];
+      const uMap = {}; // keyed by inventory_master_id
+      // Count recipe usage (by ingredient id)
+      recipes.forEach((r) => {
+        (r.ingredients || []).forEach((ing) => {
+          const ingId = ing.id || ing.ingredient_id || ing.inventory_master_id;
+          if (ingId) uMap[ingId] = (uMap[ingId] || 0) + 1;
+        });
+      });
+      // Count sub-recipe usage (by ingredient id)
+      subRecipes.forEach((sr) => {
+        (sr.ingredients || sr.ingredient || []).forEach((ing) => {
+          const ingId = ing.id || ing.ingredient_id || ing.inventory_master_id;
+          if (ingId) uMap[ingId] = (uMap[ingId] || 0) + 1;
+        });
+      });
+      setUsageMap(uMap);
+
+      // Legacy recipeMap by name (fallback)
       const rMap = {};
       recipes.forEach((r) => {
         (r.ingredients || []).forEach((ing) => {
@@ -321,9 +377,16 @@ function IngredientsTab() {
           if (key) rMap[key] = (rMap[key] || 0) + 1;
         });
       });
+      subRecipes.forEach((sr) => {
+        (sr.ingredients || sr.ingredient || []).forEach((ing) => {
+          const key = (ing.stock_title || ing.ingredient_name || ing.name || "").toLowerCase();
+          if (key) rMap[key] = (rMap[key] || 0) + 1;
+        });
+      });
       setRecipeMap(rMap);
-      if (isTopLevel && results[3]) {
-        const children = results[3].data?.data?.children || results[3].data?.children || [];
+
+      if (isTopLevel && results[4]) {
+        const children = results[4].data?.data?.children || results[4].data?.children || [];
         setChildStoreCount(children.length);
       }
     } catch (e) { setError(e?.message || "Failed to load"); }
@@ -340,8 +403,39 @@ function IngredientsTab() {
     } catch (e) { console.warn("[IngredientCatalogue] purchase data:", e); }
   }, [restaurantId]);
 
+  // Load real consumption data from daily-consumption-report
+  const loadConsumptionData = useCallback(async () => {
+    try {
+      const toDate = new Date();
+      const fromDate = new Date();
+      fromDate.setDate(fromDate.getDate() - 14); // 14-day window
+      const resp = await api.getDailyConsumptionReport({
+        fromDate: fromDate.toISOString().split("T")[0],
+        toDate: toDate.toISOString().split("T")[0],
+      });
+      const details = resp.data?.stock_details || [];
+      const days = 14;
+      // Aggregate by ingredient_id
+      const cMap = {};
+      details.forEach((d) => {
+        const ingId = d.ingredient_id;
+        if (!ingId) return;
+        const parsed = parseQtyString(d.quantity_deducted);
+        if (!cMap[ingId]) cMap[ingId] = { totalQty: 0, unit: parsed.unit };
+        cMap[ingId].totalQty += parsed.value;
+      });
+      // Convert to daily rate
+      const result = {};
+      Object.entries(cMap).forEach(([id, data]) => {
+        result[id] = { dailyQty: data.totalQty / days, unit: data.unit, totalQty: data.totalQty };
+      });
+      setConsumptionMap(result);
+    } catch (e) { console.warn("[IngredientCatalogue] consumption data:", e); }
+  }, []);
+
   useEffect(() => { load(); }, [load]);
   useEffect(() => { loadPurchaseData(); }, [loadPurchaseData]);
+  useEffect(() => { loadConsumptionData(); }, [loadConsumptionData]);
 
   const uniqueCategories = useMemo(() => {
     const cats = [...new Set(ingredients.map((i) => i.category_name).filter(Boolean))];
@@ -408,7 +502,10 @@ function IngredientsTab() {
                 <TableHead className="text-[10px]">Unit</TableHead>
                 <TableHead className="text-[10px] text-right">Min Alert</TableHead>
                 <TableHead className="text-[10px] text-center">Status</TableHead>
-                <TableHead className="text-[10px] text-center">Recipes</TableHead>
+                <TableHead className="text-[10px] text-center">
+                  <TooltipProvider><Tooltip><TooltipTrigger asChild><span className="flex items-center justify-center gap-0.5">Used In <Info className="h-2.5 w-2.5 text-muted-foreground" /></span></TooltipTrigger>
+                    <TooltipContent><p className="text-xs">Count of recipes + sub-recipes using this ingredient</p></TooltipContent></Tooltip></TooltipProvider>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -427,7 +524,7 @@ function IngredientsTab() {
                       <TableCell className="py-2 text-xs text-right tabular-nums text-muted-foreground">{item.min_qty_alert} {item.min_unit_alert}</TableCell>
                       <TableCell className="py-2 text-center"><StatusBadge item={item} /></TableCell>
                       <TableCell className="py-2 text-center text-xs tabular-nums" data-testid={`recipe-count-${item.id}`}>
-                        {recipeMap[(item.stock_title || "").toLowerCase()] || 0}
+                        {usageMap[item.id] || recipeMap[(item.stock_title || "").toLowerCase()] || 0}
                       </TableCell>
                     </TableRow>
                     {isExpanded && (
@@ -436,7 +533,7 @@ function IngredientsTab() {
                           <div className="bg-muted/10 p-4 border-t" onClick={(e) => e.stopPropagation()}>
                             <div className="grid grid-cols-2 gap-6">
                               <InlineEditForm item={item} categories={categories} onSave={() => { setExpandedId(null); load(); }} onCancel={() => setExpandedId(null)} />
-                              <IngredientIntelligence item={item} purchaseData={purchaseData} childStoreCount={isTopLevel ? childStoreCount : 0} />
+                              <IngredientIntelligence item={item} purchaseData={purchaseData} consumptionMap={consumptionMap} childStoreCount={isTopLevel ? childStoreCount : 0} />
                             </div>
                           </div>
                         </td>
@@ -464,9 +561,13 @@ function CategoriesTab() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editCat, setEditCat] = useState(null);
   const [name, setName] = useState("");
+  const [toggleLoading, setToggleLoading] = useState(null);
 
   useEffect(() => { crud.load(); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Filter out "Sub Recipe" system category
+  const visibleCategories = useMemo(() => (crud.items || []).filter((c) => (c.category_name || "").toLowerCase() !== "sub recipe"), [crud.items]);
 
   const openCreate = () => { setEditCat(null); setName(""); setDialogOpen(true); };
   const openEdit = (c) => { setEditCat(c); setName(c.category_name); setDialogOpen(true); };
@@ -475,23 +576,38 @@ function CategoriesTab() {
     if (ok) setDialogOpen(false);
   };
 
+  const handleToggleActive = async (cat) => {
+    setToggleLoading(cat.id);
+    // Stub: toggle will call backend API when available
+    toast({ title: `Category "${cat.category_name}" toggle — backend API pending`, description: "Active/inactive toggle will be wired when the API is provided." });
+    setToggleLoading(null);
+  };
+
   if (crud.loading) return <LoadingState lines={3} />;
   if (crud.error) return <ErrorState message={crud.error} onRetry={crud.load} />;
 
   return (
     <>
       <div className="flex justify-end mb-3"><Button size="sm" onClick={openCreate} data-testid="add-category-btn"><Plus className="h-4 w-4 mr-1" />Add Category</Button></div>
-      {crud.items.length === 0 ? <EmptyState title="No categories" icon={FolderOpen} /> : (
+      {visibleCategories.length === 0 ? <EmptyState title="No categories" icon={FolderOpen} /> : (
         <div className="border rounded-lg overflow-hidden">
           <Table><TableHeader><TableRow><TableHead className="text-xs">Name</TableHead><TableHead className="text-xs w-32">Actions</TableHead></TableRow></TableHeader>
-            <TableBody>{crud.items.map(c => (
+            <TableBody>{visibleCategories.map(c => (
               <TableRow key={c.id} data-testid={`cat-row-${c.id}`}>
                 <TableCell className="py-2 text-sm">{c.category_name}</TableCell>
-                <TableCell className="py-2 flex gap-1">
+                <TableCell className="py-2 flex items-center gap-2">
                   <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => openEdit(c)} data-testid={`edit-cat-${c.id}`}><Pencil className="h-3.5 w-3.5" /></Button>
-                  <AlertDialog><AlertDialogTrigger asChild><Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive" data-testid={`del-cat-${c.id}`}><Trash2 className="h-3.5 w-3.5" /></Button></AlertDialogTrigger>
-                    <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Delete &ldquo;{c.category_name}&rdquo;?</AlertDialogTitle><AlertDialogDescription>This may affect linked ingredients.</AlertDialogDescription></AlertDialogHeader>
-                      <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => crud.remove(c.id, "Category deleted")}>Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+                  <TooltipProvider><Tooltip><TooltipTrigger asChild>
+                    <div className="flex items-center">
+                      <Switch
+                        checked={c.status !== "inactive"}
+                        onCheckedChange={() => handleToggleActive(c)}
+                        disabled={toggleLoading === c.id}
+                        data-testid={`toggle-cat-${c.id}`}
+                        className="scale-75"
+                      />
+                    </div>
+                  </TooltipTrigger><TooltipContent><p className="text-xs">Active / Inactive (API pending)</p></TooltipContent></Tooltip></TooltipProvider>
                 </TableCell>
               </TableRow>
             ))}</TableBody></Table>
