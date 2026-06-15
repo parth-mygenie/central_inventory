@@ -14,6 +14,7 @@ import { LoadingState, ErrorState, EmptyState } from "@/components/common/StateD
 import { ShoppingCart, ArrowLeft, Loader2, Check, ShieldX, ArrowRight, AlertTriangle, Package, Search, Info, UserPlus } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "@/hooks/use-toast";
+import { normalizeToDisplayUnit, smartConsumptionDisplay } from "@/lib/formatters"; // BUG-036
 
 function formatCurrency(n) {
   if (n == null || isNaN(n)) return "\u20B90";
@@ -165,8 +166,10 @@ export default function PurchaseOrderCreate() {
       const sortedDates = allItemRecords.map((r) => new Date(r.Purchase_Date)).sort((a, b) => a - b);
       const totalPurchased = allItemRecords.reduce((s, r) => s + (Number(r.stock_quantity_raw) || 0), 0);
       // BUG-030: Use real consumption from daily-consumption-report, display_qty for stock
+      // BUG-036: Normalize consumption unit (gm→kg) before calculations
       const cData = consumptionMap[item.id] || consumptionMap[`name:${(item.stock_title || "").toLowerCase().trim()}`];
-      const dailyConsumption = cData ? cData.dailyQty : 0;
+      const rawDaily = cData ? cData.dailyQty : 0;
+      const dailyConsumption = rawDaily > 0 ? normalizeToDisplayUnit(rawDaily, cData?.unit || "", item.unit || "") : 0;
 
       const currentQty = Number(item.display_qty) || 0; // BUG-030: display_qty not cal_quantity
       const daysOfCover = dailyConsumption > 0 ? Math.floor(currentQty / dailyConsumption) : null;
@@ -219,8 +222,10 @@ export default function PurchaseOrderCreate() {
       const vendorRates = getCheapestVendor(item.stock_title, item.id, purchaseData, vendors);
       const cheapest = vendorRates[0];
       // BUG-030: Use real consumption from daily-consumption-report
+      // BUG-036: Normalize consumption unit (gm→kg) before calculations
       const cData = consumptionMap[item.id] || consumptionMap[`name:${(item.stock_title || "").toLowerCase().trim()}`];
-      const dailyConsumption = cData ? cData.dailyQty : 0;
+      const rawDaily = cData ? cData.dailyQty : 0;
+      const dailyConsumption = rawDaily > 0 ? normalizeToDisplayUnit(rawDaily, cData?.unit || "", item.unit || "") : 0;
       const daysOfCover = dailyConsumption > 0 ? Math.floor(qty / dailyConsumption) : null;
       // Urgency score (lower = more urgent)
       const urgency = isEmpty ? 0 : isLow ? 1 : daysOfCover !== null && daysOfCover < 14 ? 2 : daysOfCover !== null ? 3 + daysOfCover : 999;
@@ -239,7 +244,7 @@ export default function PurchaseOrderCreate() {
 
       return {
         inventory_master_id: item.id, stock_title: item.stock_title, unit: item.unit,
-        current_qty: qty, daily: dailyConsumption, daysOfCover, isLow, isEmpty, urgency,
+        current_qty: qty, daily: dailyConsumption, dailyRaw: rawDaily, dailyUnit: cData?.unit || "", daysOfCover, isLow, isEmpty, urgency,
         selectedVendorId: cheapest ? String(cheapest.vendorId) : "",
         vendorOptions: vendorRates,
         otherVendors,
@@ -638,7 +643,7 @@ export default function PurchaseOrderCreate() {
                       {!l.isLow && !l.isEmpty && l.daysOfCover !== null && l.daysOfCover < 14 && <><br/><span className="text-[9px] text-blue-600">{l.daysOfCover}d left</span></>}
                     </TableCell>
                     <TableCell className="py-1.5 text-xs text-right tabular-nums">{l.current_qty} {l.unit}</TableCell>
-                    <TableCell className="py-1.5 text-xs text-right tabular-nums text-muted-foreground">{l.daily > 0 ? `${l.daily.toFixed(1)} ${l.unit}/d` : "\u2014"}</TableCell>
+                    <TableCell className="py-1.5 text-xs text-right tabular-nums text-muted-foreground">{l.daily > 0 ? (smartConsumptionDisplay(l.dailyRaw, l.dailyUnit, l.unit)?.text || `${l.daily.toFixed(3)} ${l.unit}/d`) : "\u2014"}</TableCell>
                     <TableCell className="py-1.5 text-xs text-right">
                       <span className={`tabular-nums ${l.daysOfCover !== null && l.daysOfCover < 7 ? "text-red-600 font-semibold" : l.daysOfCover !== null && l.daysOfCover < 14 ? "text-amber-600" : "text-muted-foreground"}`}>
                         {l.daysOfCover !== null ? `${l.daysOfCover}d` : "\u2014"}

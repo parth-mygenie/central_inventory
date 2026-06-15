@@ -4,7 +4,7 @@ import { useLoginContext } from "@/hooks/useLoginContext";
 import { useWriteAction } from "@/hooks/useWriteAction";
 import api from "@/services/api";
 import { mapRestaurantType } from "@/lib/terminology";
-import { validateQuantityForUnit } from "@/lib/formatters";
+import { validateQuantityForUnit, parseConsumedQty, normalizeToDisplayUnit } from "@/lib/formatters"; // BUG-036
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -134,11 +134,12 @@ export default function RequestStockForm() {
   const consumptionMap = useMemo(() => {
     if (!consumption.length || consumptionDays <= 0) return {};
     const map = {};
+    // BUG-036: Parse unit from total_consumed string, store { dailyQty, unit }
     consumption.forEach(item => {
       const name = (item.ingredient_name || "").toLowerCase();
-      const consumed = parseFloat(item.total_consumed) || 0;
-      if (name && consumed > 0) {
-        map[name] = consumed / consumptionDays;
+      const parsed = parseConsumedQty(item.total_consumed);
+      if (name && parsed.value > 0) {
+        map[name] = { dailyQty: parsed.value / consumptionDays, unit: parsed.unit };
       }
     });
     return map;
@@ -157,7 +158,9 @@ export default function RequestStockForm() {
 
       const currentStock = item.display_qty ?? 0;
       const minQty = item.min_qty_alert ?? 0;
-      const avgDaily = consumptionMap[name] || 0;
+      // BUG-036: Normalize consumption to item's display unit
+      const cEntry = consumptionMap[name];
+      const avgDaily = cEntry ? normalizeToDisplayUnit(cEntry.dailyQty, cEntry.unit, item.display_unit || catalogItem?.unit || "") : 0;
       const sourceAvail = catalogItem.available_display_qty ?? null;
       const category = catalogItem.category_name || item.category_name || "Uncategorized";
 
@@ -249,7 +252,9 @@ export default function RequestStockForm() {
     ownStock.forEach(item => {
       const name = (item.stock_title || "").toLowerCase();
       const currentStock = item.display_qty ?? 0;
-      const avgDaily = consumptionMap[name] || 0;
+      // BUG-036: Normalize consumption to item's display unit
+      const cEntry2 = consumptionMap[name];
+      const avgDaily = cEntry2 ? normalizeToDisplayUnit(cEntry2.dailyQty, cEntry2.unit, item.display_unit || "") : 0;
       const minQty = item.min_qty_alert ?? 0;
 
       if (avgDaily > 0) {

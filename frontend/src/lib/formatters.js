@@ -82,3 +82,45 @@ export function formatItemsCount(count) {
   if (isNaN(n)) return "—";
   return n === 1 ? "1 item" : `${n} items`;
 }
+
+// BUG-036 — Consumption unit helpers
+
+/**
+ * Parse a consumed-quantity string like "134.18 gm" → { value: 134.18, unit: "gm" }
+ * Handles bare numbers (returns unit "").
+ */
+export function parseConsumedQty(str) {
+  if (!str) return { value: 0, unit: "" };
+  if (typeof str === "number") return { value: str, unit: "" };
+  const parts = String(str).trim().split(/\s+/);
+  return { value: parseFloat(parts[0]) || 0, unit: parts[1] || "" };
+}
+
+/**
+ * Convert between base unit (gm/ml) and display unit (kg/ltr).
+ * Returns the original value if no conversion is known.
+ */
+export function normalizeToDisplayUnit(value, fromUnit, toUnit) {
+  if (!fromUnit || !toUnit || fromUnit === toUnit) return value;
+  const f = fromUnit.toLowerCase();
+  const t = toUnit.toLowerCase();
+  if (f === "gm" && t === "kg") return value / 1000;
+  if (f === "kg" && t === "gm") return value * 1000;
+  if (f === "ml" && t === "ltr") return value / 1000;
+  if (f === "ltr" && t === "ml") return value * 1000;
+  return value;
+}
+
+/**
+ * Format consumption for display: 3 decimals, Option A fallback.
+ * If value < 0.05 in displayUnit, show in consumptionUnit instead.
+ * Returns { text: "9.584 gm/day", value: 9.584, unit: "gm" } or null if zero.
+ */
+export function smartConsumptionDisplay(dailyQty, consumptionUnit, displayUnit) {
+  if (!dailyQty || dailyQty <= 0) return null;
+  const converted = normalizeToDisplayUnit(dailyQty, consumptionUnit, displayUnit);
+  if (converted < 0.05 && consumptionUnit && displayUnit && consumptionUnit.toLowerCase() !== displayUnit.toLowerCase()) {
+    return { text: `${dailyQty.toFixed(3)} ${consumptionUnit}/day`, value: dailyQty, unit: consumptionUnit };
+  }
+  return { text: `${converted.toFixed(3)} ${displayUnit || consumptionUnit}/day`, value: converted, unit: displayUnit || consumptionUnit };
+}

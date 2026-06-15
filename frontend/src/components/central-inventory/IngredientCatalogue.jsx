@@ -54,16 +54,8 @@ function parseQtyString(str) {
 }
 
 /** Helper: convert consumption qty to display unit for comparison */
-function normalizeToDisplayUnit(value, fromUnit, toUnit) {
-  if (!fromUnit || !toUnit || fromUnit === toUnit) return value;
-  const f = fromUnit.toLowerCase();
-  const t = toUnit.toLowerCase();
-  if (f === "gm" && t === "kg") return value / 1000;
-  if (f === "kg" && t === "gm") return value * 1000;
-  if (f === "ml" && t === "ltr") return value / 1000;
-  if (f === "ltr" && t === "ml") return value * 1000;
-  return value; // no conversion available
-}
+// BUG-036: Moved to shared lib/formatters.js — import instead of local
+import { normalizeToDisplayUnit, smartConsumptionDisplay } from "@/lib/formatters";
 
 /** Intelligence panel for expanded ingredient row */
 function IngredientIntelligence({ item, purchaseData, consumptionMap, childStoreCount }) {
@@ -101,7 +93,7 @@ function IngredientIntelligence({ item, purchaseData, consumptionMap, childStore
 
     const maxRate = vendorRates.length > 0 ? vendorRates[vendorRates.length - 1].rate : 1;
 
-    return { avgRate, dailyConsumption: dailyInDisplayUnit, daysOfStock, vendorRates, maxRate };
+    return { avgRate, dailyConsumption: dailyInDisplayUnit, dailyConsumptionRaw: dailyConsumption, consumptionUnit: consumptionUnit, daysOfStock, vendorRates, maxRate };
   }, [item, purchaseData, consumptionMap]);
 
   const hasAnyData = intel.avgRate > 0 || intel.dailyConsumption > 0 || intel.vendorRates.length > 0;
@@ -121,7 +113,7 @@ function IngredientIntelligence({ item, purchaseData, consumptionMap, childStore
         <div className="bg-slate-50 rounded p-2 border border-slate-200">
           <p className="text-[9px] text-muted-foreground uppercase">Consumption</p>
           <p className="text-xs font-semibold" data-testid="ing-kpi-consumption">
-            {intel.dailyConsumption > 0 ? `${intel.dailyConsumption.toFixed(1)} ${item.unit || ""}/day` : "\u2014"}
+            {intel.dailyConsumption > 0 ? (smartConsumptionDisplay(intel.dailyConsumptionRaw, intel.consumptionUnit, item.unit || "")?.text || `${intel.dailyConsumption.toFixed(3)} ${item.unit || ""}/day`) : "\u2014"}
           </p>
         </div>
         <div className="bg-slate-50 rounded p-2 border border-slate-200">

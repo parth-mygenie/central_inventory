@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import api from "@/services/api";
 import { useLoginContext } from "@/hooks/useLoginContext";
+import { parseConsumedQty } from "@/lib/formatters"; // BUG-036
 
 /**
  * Hook for Production Run functionality.
@@ -109,11 +110,12 @@ export function useProductionRun() {
     const days = dateRange.length > 1
       ? Math.max(1, Math.round((new Date(dateRange[1]) - new Date(dateRange[0])) / 86400000))
       : 7;
+    // BUG-036: Use parseConsumedQty to handle "134.18 gm" strings (Number() returns NaN)
     for (const item of details) {
       const id = item.inventory_master_id || item.id;
-      const totalConsumed = Number(item.total_consumed || item.total_qty || 0);
-      if (id && totalConsumed > 0) {
-        consumptionMap[id] = totalConsumed / days;
+      const parsed = parseConsumedQty(item.total_consumed || item.total_qty);
+      if (id && parsed.value > 0) {
+        consumptionMap[id] = { dailyQty: parsed.value / days, unit: parsed.unit };
       }
     }
   }

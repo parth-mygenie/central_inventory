@@ -4,7 +4,7 @@ import { useLoginContext } from "@/hooks/useLoginContext";
 import { useWriteAction } from "@/hooks/useWriteAction";
 import api from "@/services/api";
 import { mapRestaurantType } from "@/lib/terminology";
-import { validateQuantityForUnit } from "@/lib/formatters";
+import { validateQuantityForUnit, parseConsumedQty, normalizeToDisplayUnit } from "@/lib/formatters"; // BUG-036
 import SourceSelector from "./SourceSelector";
 import StoreHealthStrip from "@/components/common/StoreHealthStrip";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -125,10 +125,11 @@ export default function DirectDispatchForm() {
   const destConsumptionMap = useMemo(() => {
     if (!destConsumption.length || destConsumptionDays <= 0) return {};
     const map = {};
+    // BUG-036: Parse unit from total_consumed string, store { dailyQty, unit }
     destConsumption.forEach(item => {
       const name = (item.ingredient_name || "").toLowerCase();
-      const consumed = parseFloat(item.total_consumed) || 0;
-      if (name && consumed > 0) map[name] = consumed / destConsumptionDays;
+      const parsed = parseConsumedQty(item.total_consumed);
+      if (name && parsed.value > 0) map[name] = { dailyQty: parsed.value / destConsumptionDays, unit: parsed.unit };
     });
     return map;
   }, [destConsumption, destConsumptionDays]);
@@ -142,7 +143,9 @@ export default function DirectDispatchForm() {
       const name = (item.stock_title || "").toLowerCase();
       const destQty = parseFloat(item.display_quantity) || 0;
       const minQty = parseFloat(item.min_qty_alert) || 0;
-      const avgDaily = destConsumptionMap[name] || 0;
+      // BUG-036: Normalize consumption to item's display unit before calculation
+      const cEntry = destConsumptionMap[name];
+      const avgDaily = cEntry ? normalizeToDisplayUnit(cEntry.dailyQty, cEntry.unit, item.unit || ownItem?.display_unit || "") : 0;
       const ownItem = ownStock.find(s => (s.stock_title || "").toLowerCase() === name);
       if (!ownItem) return null;
       const ownQty = ownItem.display_qty ?? 0;
@@ -262,7 +265,9 @@ export default function DirectDispatchForm() {
       const name = (item.stock_title || "").toLowerCase();
       const qty = parseFloat(item.display_quantity) || 0;
       const minQty = parseFloat(item.min_qty_alert) || 0;
-      const avgDaily = destConsumptionMap[name] || 0;
+      // BUG-036: Normalize consumption to item's display unit
+      const cEntry2 = destConsumptionMap[name];
+      const avgDaily = cEntry2 ? normalizeToDisplayUnit(cEntry2.dailyQty, cEntry2.unit, item.unit || "") : 0;
       if (avgDaily > 0) {
         const doc = qty / avgDaily;
         if (doc < 1) needDispatching++;

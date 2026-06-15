@@ -630,8 +630,8 @@ function ExpandedStockDetail({ item, navigate }) {
         <div>
           <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Consumption</h4>
           <div className="space-y-2 text-xs">
-            <div><span className="text-[10px] text-muted-foreground block">Daily Rate</span><span className="font-semibold tabular-nums">{dailyRate > 0 ? `${dailyRate.toFixed(1)} ${item.display_unit}/day` : "—"}</span></div>
-            <div><span className="text-[10px] text-muted-foreground block">7-Day Total</span><span className="font-semibold tabular-nums">{consumption.total_consumed_cal > 0 ? `${Number(consumption.total_consumed_cal).toFixed(1)} ${item.display_unit}` : "—"}</span></div>
+            <div><span className="text-[10px] text-muted-foreground block">Daily Rate</span><span className="font-semibold tabular-nums">{dailyRate > 0 ? `${dailyRate.toFixed(3)} ${item.display_unit}/day` : "—"}</span></div>
+            <div><span className="text-[10px] text-muted-foreground block">7-Day Total</span><span className="font-semibold tabular-nums">{consumption.total_consumed_cal > 0 ? `${Number(consumption.total_consumed_cal).toFixed(3)} ${item.display_unit}` : "—"}</span></div>
             <div>
               <span className="text-[10px] text-muted-foreground block">Days of Cover</span>
               <span className={`font-semibold tabular-nums ${daysOfCover !== null ? (daysOfCover < 3 ? "text-red-600" : daysOfCover < 14 ? "text-amber-600" : "text-emerald-600") : ""}`}>

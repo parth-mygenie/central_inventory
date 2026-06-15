@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLoginContext } from "@/hooks/useLoginContext";
 import { useProductionRun } from "@/hooks/useProductionRun";
+import { normalizeToDisplayUnit } from "@/lib/formatters"; // BUG-036
 import api from "@/services/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -144,12 +145,15 @@ export default function ProductionRunForm() {
   const coverageEstimate = useMemo(() => {
     if (!selectedRecipe || totalQty <= 0) return null;
     const fgId = selectedRecipe.inventory_id;
-    const dailyConsumption = consumptionMap[fgId];
-    if (!dailyConsumption || dailyConsumption <= 0) return null;
+    // BUG-036: consumptionMap now stores { dailyQty, unit } objects
+    const cEntry = consumptionMap[fgId];
+    if (!cEntry || !cEntry.dailyQty || cEntry.dailyQty <= 0) return null;
     const currentStock = Number(stockMap[fgId]?.cal_quantity) || 0;
-    const coverageDays = Math.round((currentStock + totalQty) / dailyConsumption);
+    // Normalize consumption to cal_quantity scale for consistent division
+    const dailyInCalScale = normalizeToDisplayUnit(cEntry.dailyQty, cEntry.unit, "gm");
+    const coverageDays = Math.round((currentStock + totalQty) / dailyInCalScale);
     const outletCount = hierarchyStores.length || 0;
-    return { coverageDays, dailyConsumption: Math.round(dailyConsumption), currentStock, outletCount };
+    return { coverageDays, dailyConsumption: Math.round(dailyInCalScale), currentStock, outletCount };
   }, [selectedRecipe, totalQty, consumptionMap, stockMap, hierarchyStores]);
 
   const handleRecipeSelect = (id) => {
