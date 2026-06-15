@@ -1953,5 +1953,218 @@
       "Owner-Signoff: PENDING"
     ],
     "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-026",
+    "title": "Raw Material Master — Sub-recipe items/categories contaminating Ingredients view",
+    "status": "IN_PROGRESS",
+    "severity": "HIGH",
+    "sprint_key": "S3",
+    "phase": "Raw Material Master",
+    "files": [
+      "frontend/src/components/central-inventory/IngredientCatalogue.jsx"
+    ],
+    "notes": "5 sub-issues: (1) Ingredients list shows sub-recipe FG items, (2) New/Edit category dropdown shows 'Sub Recipe', (3) Categories tab lists 'Sub Recipe' with delete icon, (4) Filter dropdown shows 'Sub Recipe', (5) Recipes column shows 0 for items used in sub-recipes — should reflect sub-recipe usage.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "DONE",
+        "path": "control/sessions/BUG026_027_028_SESSION_START.md"
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/BUG026_027_028_SESSION_START.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "control/sessions/BUG026_027_028_ARTIFACT_2_IMPACT_ANALYSIS.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 3,
+      "total": 7,
+      "pct": 43
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "Impl-Plan: PENDING",
+      "Code-Gate: PENDING",
+      "QA-Report: PENDING",
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-027",
+    "title": "Raw Material Master — Consumption & Days of Stock calculation wildly incorrect",
+    "status": "IN_PROGRESS",
+    "severity": "HIGH",
+    "sprint_key": "S3",
+    "phase": "Raw Material Master",
+    "files": [
+      "frontend/src/components/central-inventory/IngredientCatalogue.jsx"
+    ],
+    "notes": "Whole Wheat Flour: 29.87kg stock, shows 30.0 kg/day consumption and 995d days of stock. Likely unit mismatch — purchase data stock_quantity_raw may be in grams while display is in kg, causing 1000x error in consumption calc.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "DONE",
+        "path": "control/sessions/BUG026_027_028_SESSION_START.md"
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/BUG026_027_028_SESSION_START.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "control/sessions/BUG026_027_028_ARTIFACT_2_IMPACT_ANALYSIS.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 3,
+      "total": 7,
+      "pct": 43
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "Impl-Plan: PENDING",
+      "Code-Gate: PENDING",
+      "QA-Report: PENDING",
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-028",
+    "title": "Purchase Order Create — Sub-recipe contamination + UX issues (search, cheapest, rate, columns, vendor selection)",
+    "status": "IN_PROGRESS",
+    "severity": "HIGH",
+    "sprint_key": "S3",
+    "phase": "Purchase Order",
+    "files": [
+      "frontend/src/components/central-inventory/PurchaseOrderCreate.jsx"
+    ],
+    "notes": "9 sub-issues: (7a) By Vendor shows sub-recipes, (7b) No search, (7c) Cheapest shows \\u2014 as literal text, (7d) Rate input shouldn't be required if history exists, (8a) By Item Need shows sub-recipes, (8b) No vendor for 'No history' items, (8c) 'Daily' → 'Daily Consumption', (8d) 'Days' → 'Days Will Last', (8e) Projection calculation tooltip needed.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "DONE",
+        "path": "control/sessions/BUG026_027_028_SESSION_START.md"
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/BUG026_027_028_SESSION_START.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "control/sessions/BUG026_027_028_ARTIFACT_2_IMPACT_ANALYSIS.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 3,
+      "total": 7,
+      "pct": 43
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "Impl-Plan: PENDING",
+      "Code-Gate: PENDING",
+      "QA-Report: PENDING",
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
   }
 ]

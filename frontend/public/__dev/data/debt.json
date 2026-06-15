@@ -488,5 +488,56 @@
     ],
     "missing_count": 0,
     "pending_count": 1
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-026",
+    "title": "Raw Material Master — Sub-recipe items/categories contaminating Ingredients view",
+    "status": "IN_PROGRESS",
+    "severity": "HIGH",
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "Impl-Plan: PENDING",
+      "Code-Gate: PENDING",
+      "QA-Report: PENDING",
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 4
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-027",
+    "title": "Raw Material Master — Consumption & Days of Stock calculation wildly incorrect",
+    "status": "IN_PROGRESS",
+    "severity": "HIGH",
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "Impl-Plan: PENDING",
+      "Code-Gate: PENDING",
+      "QA-Report: PENDING",
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 4
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-028",
+    "title": "Purchase Order Create — Sub-recipe contamination + UX issues (search, cheapest, rate, columns, vendor selection)",
+    "status": "IN_PROGRESS",
+    "severity": "HIGH",
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "Impl-Plan: PENDING",
+      "Code-Gate: PENDING",
+      "QA-Report: PENDING",
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 4
   }
 ]
