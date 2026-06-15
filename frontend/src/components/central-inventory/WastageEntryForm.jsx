@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useLoginContext } from "@/hooks/useLoginContext";
 import { useWriteAction } from "@/hooks/useWriteAction";
 import { useWastageReasons } from "@/hooks/useWastageReasons";
@@ -25,6 +25,8 @@ export default function WastageEntryForm() {
   const [items, setItems] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
   const [monthlyWastage, setMonthlyWastage] = useState(null);
+  const [searchParams] = useSearchParams(); // BUG-033
+  const preselectedItemId = searchParams.get("item"); // BUG-033
 
   const [selectedItem, setSelectedItem] = useState("");
   const [quantity, setQuantity] = useState("");
@@ -59,6 +61,14 @@ export default function WastageEntryForm() {
     }).finally(() => { if (!cancelled) setLoadingData(false); });
     return () => { cancelled = true; };
   }, []);
+
+  // BUG-033: Pre-select ingredient from URL param
+  useEffect(() => {
+    if (preselectedItemId && items.length > 0 && !selectedItem) {
+      const match = items.find(i => String(i.id) === preselectedItemId);
+      if (match) setSelectedItem(String(match.id));
+    }
+  }, [preselectedItemId, items, selectedItem]);
 
   if (!canDo("record-wastage")) return <PermissionDenied />;
   if (loadingData || reasonsLoading) return <LoadingState lines={4} />;

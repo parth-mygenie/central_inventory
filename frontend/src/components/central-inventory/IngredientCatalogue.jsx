@@ -76,7 +76,8 @@ function IngredientIntelligence({ item, purchaseData, consumptionMap, childStore
     const avgRate = totalQty > 0 ? totalAmt / totalQty : 0;
 
     // Daily consumption from consumption report (accurate, production-based)
-    const consumption = consumptionMap[item.id] || null;
+    // BUG-029: fallback to name-based lookup when ID doesn't match
+    const consumption = consumptionMap[item.id] || consumptionMap[`name:${(item.stock_title || "").toLowerCase().trim()}`] || null;
     const dailyConsumption = consumption ? consumption.dailyQty : 0;
     const consumptionUnit = consumption ? consumption.unit : (item.unit || "");
 
@@ -415,19 +416,31 @@ function IngredientsTab() {
       });
       const details = resp.data?.stock_details || [];
       const days = 14;
-      // Aggregate by ingredient_id
+      // BUG-029: Aggregate by ingredient_id AND ingredient_name (for fallback join)
       const cMap = {};
+      const nameMap = {};
       details.forEach((d) => {
         const ingId = d.ingredient_id;
-        if (!ingId) return;
+        const ingName = (d.ingredient_name || "").toLowerCase().trim();
+        if (!ingId && !ingName) return;
         const parsed = parseQtyString(d.quantity_deducted);
-        if (!cMap[ingId]) cMap[ingId] = { totalQty: 0, unit: parsed.unit };
-        cMap[ingId].totalQty += parsed.value;
+        if (ingId) {
+          if (!cMap[ingId]) cMap[ingId] = { totalQty: 0, unit: parsed.unit };
+          cMap[ingId].totalQty += parsed.value;
+        }
+        if (ingName) {
+          if (!nameMap[ingName]) nameMap[ingName] = { totalQty: 0, unit: parsed.unit };
+          nameMap[ingName].totalQty += parsed.value;
+        }
       });
-      // Convert to daily rate
+      // Convert to daily rate — merge id-keyed + name-keyed
       const result = {};
       Object.entries(cMap).forEach(([id, data]) => {
         result[id] = { dailyQty: data.totalQty / days, unit: data.unit, totalQty: data.totalQty };
+      });
+      // BUG-029: Add name-keyed entries for fallback lookup
+      Object.entries(nameMap).forEach(([name, data]) => {
+        result[`name:${name}`] = { dailyQty: data.totalQty / days, unit: data.unit, totalQty: data.totalQty };
       });
       setConsumptionMap(result);
     } catch (e) { console.warn("[IngredientCatalogue] consumption data:", e); }

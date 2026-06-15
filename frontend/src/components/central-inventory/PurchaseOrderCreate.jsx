@@ -25,6 +25,13 @@ function isSubRecipeItem(item) {
   return item.is_sub_recipe === true || (item.category_name || "").toLowerCase() === "sub recipe" || !!item.subrecipe_id;
 }
 
+/** BUG-030: Helper: parse "5 gm" or "1.2 kg" → { value, unit } */
+function parseQtyString(str) {
+  if (!str) return { value: 0, unit: "" };
+  const parts = String(str).trim().split(/\s+/);
+  return { value: parseFloat(parts[0]) || 0, unit: parts[1] || "" };
+}
+
 /** Compute cheapest vendor for an item from purchase data */
 function getCheapestVendor(itemName, itemId, purchaseData, vendors) {
   const byVendor = {};
@@ -73,6 +80,8 @@ export default function PurchaseOrderCreate() {
   const [submitting, setSubmitting] = useState(false);
   const [step, setStep] = useState("select"); // select | items | review
   const [vendorSearch, setVendorSearch] = useState(""); // search for By Vendor items
+  const [needSearch, setNeedSearch] = useState(""); // BUG-030: search for By Item Need
+  const [consumptionMap, setConsumptionMap] = useState({}); // BUG-030: real consumption data
 
   // Filter sub-recipes from inventory
   const rawMaterialItems = useMemo(() => inventoryItems.filter((i) => !isSubRecipeItem(i)), [inventoryItems]);
@@ -97,6 +106,37 @@ export default function PurchaseOrderCreate() {
   }, [restaurantId]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  // BUG-030: Fetch real consumption data from daily-consumption-report
+  useEffect(() => {
+    const loadConsumption = async () => {
+      try {
+        const toDate = new Date();
+        const fromDate = new Date();
+        fromDate.setDate(fromDate.getDate() - 14);
+        const resp = await api.getDailyConsumptionReport({
+          fromDate: fromDate.toISOString().split("T")[0],
+          toDate: toDate.toISOString().split("T")[0],
+        });
+        const details = resp.data?.stock_details || [];
+        const days = 14;
+        const cMap = {};
+        const nameMap = {};
+        details.forEach((d) => {
+          const ingId = d.ingredient_id;
+          const ingName = (d.ingredient_name || "").toLowerCase().trim();
+          const parsed = parseQtyString(d.quantity_deducted);
+          if (ingId) { if (!cMap[ingId]) cMap[ingId] = { totalQty: 0, unit: parsed.unit }; cMap[ingId].totalQty += parsed.value; }
+          if (ingName) { if (!nameMap[ingName]) nameMap[ingName] = { totalQty: 0, unit: parsed.unit }; nameMap[ingName].totalQty += parsed.value; }
+        });
+        const result = {};
+        Object.entries(cMap).forEach(([id, data]) => { result[id] = { dailyQty: data.totalQty / days, unit: data.unit }; });
+        Object.entries(nameMap).forEach(([name, data]) => { result[`name:${name}`] = { dailyQty: data.totalQty / days, unit: data.unit }; });
+        setConsumptionMap(result);
+      } catch (e) { console.warn("[PO] consumption data:", e); }
+    };
+    loadConsumption();
+  }, []);
 
   // ── By Vendor Mode ──
   const selectedVendor = useMemo(() => vendors.find((v) => String(v.id) === selectedVendorId), [vendors, selectedVendorId]);
@@ -124,13 +164,11 @@ export default function PurchaseOrderCreate() {
       const allItemRecords = purchaseData.filter((r) => (r.Ingredient_Name === item.stock_title || r.ingredient_id === item.id) && Number(r.stock_quantity_raw) > 0);
       const sortedDates = allItemRecords.map((r) => new Date(r.Purchase_Date)).sort((a, b) => a - b);
       const totalPurchased = allItemRecords.reduce((s, r) => s + (Number(r.stock_quantity_raw) || 0), 0);
-      let dailyConsumption = 0;
-      if (sortedDates.length >= 2) {
-        const days = Math.max(1, (sortedDates[sortedDates.length - 1] - sortedDates[0]) / (1000 * 60 * 60 * 24));
-        dailyConsumption = totalPurchased / days;
-      }
+      // BUG-030: Use real consumption from daily-consumption-report, display_qty for stock
+      const cData = consumptionMap[item.id] || consumptionMap[`name:${(item.stock_title || "").toLowerCase().trim()}`];
+      const dailyConsumption = cData ? cData.dailyQty : 0;
 
-      const currentQty = Number(item.cal_quantity) || 0;
+      const currentQty = Number(item.display_qty) || 0; // BUG-030: display_qty not cal_quantity
       const daysOfCover = dailyConsumption > 0 ? Math.floor(currentQty / dailyConsumption) : null;
       const isLow = item.is_low_stock || currentQty === 0;
 
@@ -175,20 +213,14 @@ export default function PurchaseOrderCreate() {
   const initNeedLines = useCallback(() => {
     if (!rawMaterialItems.length) return;
     const lines = rawMaterialItems.map((item) => {
-      const qty = Number(item.cal_quantity) || 0;
+      const qty = Number(item.display_qty) || 0; // BUG-030: display_qty not cal_quantity
       const isLow = item.is_low_stock;
       const isEmpty = qty === 0;
       const vendorRates = getCheapestVendor(item.stock_title, item.id, purchaseData, vendors);
       const cheapest = vendorRates[0];
-      // Estimate daily consumption from purchase data
-      const itemRecords = purchaseData.filter((r) => r.Ingredient_Name === item.stock_title || r.ingredient_id === item.id);
-      const sortedDates = itemRecords.map((r) => new Date(r.Purchase_Date)).sort((a, b) => a - b);
-      let dailyConsumption = 0;
-      const totalPurchasedQty = itemRecords.reduce((s, r) => s + (Number(r.stock_quantity_raw) || 0), 0);
-      if (sortedDates.length >= 2) {
-        const days = Math.max(1, (sortedDates[sortedDates.length - 1] - sortedDates[0]) / (1000 * 60 * 60 * 24));
-        dailyConsumption = totalPurchasedQty / days;
-      }
+      // BUG-030: Use real consumption from daily-consumption-report
+      const cData = consumptionMap[item.id] || consumptionMap[`name:${(item.stock_title || "").toLowerCase().trim()}`];
+      const dailyConsumption = cData ? cData.dailyQty : 0;
       const daysOfCover = dailyConsumption > 0 ? Math.floor(qty / dailyConsumption) : null;
       // Urgency score (lower = more urgent)
       const urgency = isEmpty ? 0 : isLow ? 1 : daysOfCover !== null && daysOfCover < 14 ? 2 : daysOfCover !== null ? 3 + daysOfCover : 999;
@@ -217,7 +249,7 @@ export default function PurchaseOrderCreate() {
       };
     }).sort((a, b) => a.urgency - b.urgency);
     setNeedLines(lines);
-  }, [rawMaterialItems, purchaseData, vendors]);
+  }, [rawMaterialItems, purchaseData, vendors, consumptionMap]);
 
   useEffect(() => { if (mode === "item" && needLines.length === 0) initNeedLines(); }, [mode, needLines.length, initNeedLines]);
 
@@ -261,8 +293,8 @@ export default function PurchaseOrderCreate() {
 
   // KPIs for By Item Need
   const needKPIs = useMemo(() => {
-    const oos = rawMaterialItems.filter((i) => (Number(i.cal_quantity) || 0) === 0).length;
-    const low = rawMaterialItems.filter((i) => i.is_low_stock && (Number(i.cal_quantity) || 0) > 0).length;
+    const oos = rawMaterialItems.filter((i) => (Number(i.display_qty) || 0) === 0).length; // BUG-030
+    const low = rawMaterialItems.filter((i) => i.is_low_stock && (Number(i.display_qty) || 0) > 0).length; // BUG-030
     return { oos, low, total: rawMaterialItems.length };
   }, [rawMaterialItems]);
 
@@ -281,7 +313,7 @@ export default function PurchaseOrderCreate() {
           inventory_master_id: l.inventory_master_id,
           ordered_qty: Number(l.ordered_qty),
           ordered_unit: l.ordered_unit,
-          expected_rate: Number(l.expected_rate),
+          expected_rate: 0, // BUG-030: always send 0 to API
         })),
       };
       const resp = await api.createPO(payload);
@@ -309,7 +341,7 @@ export default function PurchaseOrderCreate() {
             inventory_master_id: l.inventory_master_id,
             ordered_qty: Number(l.ordered_qty),
             ordered_unit: l.unit,
-            expected_rate: Number(l.expected_rate),
+            expected_rate: 0, // BUG-030: always send 0 to API
           })),
         };
         await api.createPO(payload);
@@ -572,6 +604,12 @@ export default function PurchaseOrderCreate() {
 
           <p className="text-xs font-medium text-muted-foreground">Items sorted by urgency (lowest cover first). Select items to purchase.</p>
 
+          {/* BUG-030: Search for item-need mode */}
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input data-testid="po-need-search" placeholder="Search items..." value={needSearch} onChange={(e) => setNeedSearch(e.target.value)} className="pl-8 h-8 text-xs" />
+          </div>
+
           <Card><CardContent className="py-0 px-0">
             <Table>
               <TableHeader><TableRow>
@@ -590,7 +628,7 @@ export default function PurchaseOrderCreate() {
                 <TableHead className="text-[10px] text-right">Qty</TableHead>
               </TableRow></TableHeader>
               <TableBody>
-                {needLines.map((l, idx) => (
+                {needLines.filter((l) => !needSearch.trim() || l.stock_title.toLowerCase().includes(needSearch.toLowerCase())).map((l, idx) => (
                   <TableRow key={l.inventory_master_id} data-testid={`po-need-${l.inventory_master_id}`} className={l.checked ? "bg-primary/5" : ""}>
                     <TableCell className="py-1.5"><Checkbox checked={l.checked} onCheckedChange={() => toggleNeedLine(idx)} /></TableCell>
                     <TableCell className="py-1.5 text-xs">

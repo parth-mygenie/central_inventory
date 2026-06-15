@@ -47,6 +47,26 @@ export function useStockInventory({ staleAfterMs = 5 * 60 * 1000, initialStockTy
     fetchInventory();
   }, [fetchInventory]);
 
+  // BUG-032 Option C: Background load with segments after initial render
+  const segmentsLoadedRef = useRef(false);
+  useEffect(() => {
+    if (loading || segmentsLoadedRef.current) return;
+    segmentsLoadedRef.current = true;
+    let cancelled = false;
+    const loadSegments = async () => {
+      try {
+        const resp = await api.getStockInventory({ includeSegments: true, segmentLimit: 5, includeConsumption: true });
+        if (cancelled) return;
+        const data = resp.data;
+        setStocks(data.current_stocks || []);
+      } catch (e) {
+        console.warn("[useStockInventory] segment load:", e);
+      }
+    };
+    loadSegments();
+    return () => { cancelled = true; };
+  }, [loading]);
+
   const isStale = lastFetched ? (Date.now() - lastFetched > staleAfterMs) : false;
 
   const lowStockItems = stocks.filter((s) => s.is_low_stock);

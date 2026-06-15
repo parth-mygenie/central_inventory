@@ -93,7 +93,11 @@ export default function StockInventorySummary() {
   const [refreshing, setRefreshing] = useState(false);
   const [expandedItemId, setExpandedItemId] = useState(null);
 
-  const categories = useMemo(() => Object.keys(categoryCounts).sort(), [categoryCounts]);
+  // BUG-031: Filter out "Sub Recipe" from category filter
+  const categories = useMemo(() => Object.keys(categoryCounts).filter((c) => c.toLowerCase() !== "sub recipe").sort(), [categoryCounts]);
+
+  // BUG-031: Type-filtered low stock count for KPI accuracy
+  const filteredLowStockCount = useMemo(() => typeFilteredStocks.filter(s => s.is_low_stock).length, [typeFilteredStocks]);
 
   const filtered = useMemo(() => {
     let items = [...typeFilteredStocks];
@@ -220,13 +224,17 @@ export default function StockInventorySummary() {
         </div>
       </div>
 
-      {/* CR-029: Stock type tabs (FG / Raw / All) */}
+      {/* CR-029: Stock type tabs — BUG-031: conditional based on URL type */}
       <div className="flex gap-1 mb-4" data-testid="stock-type-tabs">
         {[
           { value: "all", label: `All (${totalItems})` },
           { value: "fg", label: `Finished Goods (${fgCount})` },
           { value: "raw", label: `Raw Materials (${rawCount})` },
-        ].map((tab) => (
+        ].filter((tab) => {
+          if (defaultStockType === "raw") return tab.value === "raw";
+          if (defaultStockType === "fg") return tab.value === "fg";
+          return true;
+        }).map((tab) => (
           <button
             key={tab.value}
             data-testid={`stock-type-tab-${tab.value}`}
@@ -250,27 +258,27 @@ export default function StockInventorySummary() {
               <Package className="h-5 w-5 text-slate-600" />
             </div>
             <div className="min-w-0">
-              <p className="text-2xl font-bold">{totalItems}</p>
+              <p className="text-2xl font-bold">{typeFilteredStocks.length}</p>
               <p className="text-xs text-muted-foreground">Total Items</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card data-testid="kpi-low-stock" className={lowStockCount > 0 ? "border-red-200 bg-red-50/30" : ""}>
+        <Card data-testid="kpi-low-stock" className={filteredLowStockCount > 0 ? "border-red-200 bg-red-50/30" : ""}>
           <CardContent className="py-4 px-4 flex items-center gap-3">
-            <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${lowStockCount > 0 ? "bg-red-100" : "bg-emerald-50"}`}>
-              {lowStockCount > 0 ? (
+            <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${filteredLowStockCount > 0 ? "bg-red-100" : "bg-emerald-50"}`}>
+              {filteredLowStockCount > 0 ? (
                 <AlertTriangle className="h-5 w-5 text-red-600" />
               ) : (
                 <CheckCircle2 className="h-5 w-5 text-emerald-600" />
               )}
             </div>
             <div className="min-w-0">
-              <p className={`text-2xl font-bold ${lowStockCount > 0 ? "text-red-700" : ""}`}>
-                {lowStockCount}
+              <p className={`text-2xl font-bold ${filteredLowStockCount > 0 ? "text-red-700" : ""}`}>
+                {filteredLowStockCount}
               </p>
               <p className="text-xs text-muted-foreground">
-                {lowStockCount > 0 ? "Low Stock Items" : "All Stocked"}
+                {filteredLowStockCount > 0 ? "Low Stock Items" : "All Stocked"}
               </p>
             </div>
           </CardContent>
@@ -441,11 +449,22 @@ export default function StockInventorySummary() {
                       </Badge>
                     )}
                   </TableCell>
-                  {/* Expiry Risk */}
+                  {/* Expiry Risk — BUG-032: show nearest expiry date from segments */}
                   <TableCell className="py-2.5 text-center">
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground" data-testid={`expiry-risk-${item.id}`}>
-                      View detail
-                    </span>
+                    {(() => {
+                      const segs = item.segments_preview || [];
+                      const validDates = segs.map(s => s.expiry_date).filter(Boolean).sort();
+                      const nearest = validDates[0];
+                      if (!nearest) return <span className="text-[10px] text-muted-foreground" data-testid={`expiry-risk-${item.id}`}>—</span>;
+                      const daysLeft = Math.ceil((new Date(nearest + "T23:59:59") - new Date()) / 86400000);
+                      const isExpired = daysLeft < 0;
+                      const isNear = daysLeft >= 0 && daysLeft < 14;
+                      return (
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded ${isExpired ? "bg-red-100 text-red-700" : isNear ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground"}`} data-testid={`expiry-risk-${item.id}`}>
+                          {isExpired ? `Expired` : `${daysLeft}d`}
+                        </span>
+                      );
+                    })()}
                   </TableCell>
                   {/* Pending In/Out */}
                   <TableCell className="py-2.5 text-center">
@@ -631,9 +650,6 @@ function ExpandedStockDetail({ item, navigate }) {
             </Button>
             <Button variant="outline" size="sm" className="w-full h-7 text-xs justify-start gap-2" onClick={() => navigate(`/dispatch/new?item=${item.id}`)} data-testid={`action-dispatch-${item.id}`}>
               Dispatch
-            </Button>
-            <Button variant="outline" size="sm" className="w-full h-7 text-xs justify-start gap-2" onClick={() => navigate(`/adjustment/new?item=${item.id}`)} data-testid={`action-adjust-${item.id}`}>
-              Adjust Stock
             </Button>
             <Button variant="outline" size="sm" className="w-full h-7 text-xs justify-start gap-2 text-primary" onClick={() => navigate(`/inventory/${item.id}`)} data-testid={`action-full-detail-${item.id}`}>
               View Full Detail →

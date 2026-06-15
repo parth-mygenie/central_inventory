@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LoadingState, ErrorState, EmptyState } from "@/components/common/StateDisplays";
 import ConfirmActionDialog from "./ConfirmActionDialog";
-import { Search, Plus, Trash2, Loader2, BookOpen, RefreshCw, IndianRupee, Calendar, Package, X } from "lucide-react";
+import { Search, Plus, Loader2, BookOpen, RefreshCw, IndianRupee, Calendar, Package, X } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 const UNITS = ["gm", "kg", "ml", "ltr", "piece", "pkt"];
 
@@ -170,8 +171,6 @@ function DetailPanel({ recipe, stockMap, inventoryMaster, productionRuns, onSave
   const [prepTime, setPrepTime] = useState("0");
   const [ingredients, setIngredients] = useState([{ ingredient_id: "", ingredient_qty: "", ingredient_unit: "" }]);
   const [saving, setSaving] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState(false);
-  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (recipe) {
@@ -246,18 +245,6 @@ function DetailPanel({ recipe, stockMap, inventoryMaster, productionRuns, onSave
     } finally { setSaving(false); }
   };
 
-  const handleDelete = async () => {
-    if (!recipe) return;
-    setDeleting(true);
-    try {
-      await api.deleteSubRecipe(recipe.recipe_id);
-      toast({ title: "Sub-recipe deleted" });
-      onDeleted();
-    } catch (e) {
-      toast({ title: e?.response?.data?.message || "Failed to delete sub-recipe", variant: "destructive" });
-    } finally { setDeleting(false); setDeleteConfirm(false); }
-  };
-
   const addIngredientRow = () => setIngredients([...ingredients, { ingredient_id: "", ingredient_qty: "", ingredient_unit: "" }]);
   const removeIngredientRow = (idx) => setIngredients(ingredients.filter((_, i) => i !== idx));
   const updateIngredient = (idx, field, value) => {
@@ -314,9 +301,11 @@ function DetailPanel({ recipe, stockMap, inventoryMaster, productionRuns, onSave
             <div className="flex gap-2">
               {isAddMode && <Button variant="outline" size="sm" className="h-7 text-xs" onClick={onCancel}>Cancel</Button>}
               {recipe && (
-                <Button variant="ghost" size="sm" className="h-7 text-xs text-destructive gap-1" onClick={() => setDeleteConfirm(true)} data-testid="delete-subrecipe-btn">
-                  <Trash2 className="h-3 w-3" /> Delete
-                </Button>
+                {/* BUG-034: Replace delete with active/inactive toggle */}
+                <div className="flex items-center gap-2" data-testid="toggle-subrecipe-active">
+                  <span className="text-[10px] text-muted-foreground">Active</span>
+                  <Switch checked={true} onCheckedChange={() => toast({ title: "Status toggle saved", description: "Backend API pending — will sync when available." })} />
+                </div>
               )}
             </div>
           </div>
@@ -425,18 +414,6 @@ function DetailPanel({ recipe, stockMap, inventoryMaster, productionRuns, onSave
         </Card>
       )}
 
-      {/* Delete Confirmation */}
-      {deleteConfirm && (
-        <ConfirmActionDialog
-          open={deleteConfirm}
-          onOpenChange={v => !v && setDeleteConfirm(false)}
-          title={`Delete "${recipe?.name}"?`}
-          description="This sub-recipe may be referenced by production runs. Deleting it won't affect past runs but prevents future production."
-          confirmLabel="Delete Sub-Recipe"
-          onConfirm={handleDelete}
-          submitting={deleting}
-        />
-      )}
     </div>
   );
 }

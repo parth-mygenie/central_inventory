@@ -131,7 +131,28 @@ function InlineAuditDetail({ runId }) {
   );
 }
 
+// BUG-035: Compute total qty from segments if ingredient-level is missing
+function computeAllocQty(alloc, segments) {
+  if (alloc.quantity_consumed != null && alloc.quantity_consumed !== "" && Number(alloc.quantity_consumed) !== 0) {
+    return { value: alloc.quantity_consumed, unit: alloc.unit || "" };
+  }
+  if (segments.length === 0) return { value: null, unit: alloc.unit || "" };
+  let total = 0;
+  const baseUnit = (segments[0]?.unit || alloc.unit || "").toLowerCase();
+  segments.forEach(seg => {
+    const segQty = Number(seg.qty_cal || seg.quantity || 0);
+    const segUnit = (seg.unit || baseUnit).toLowerCase();
+    if (segUnit === "gm" && baseUnit === "kg") total += segQty / 1000;
+    else if (segUnit === "kg" && baseUnit === "gm") total += segQty * 1000;
+    else if (segUnit === "ml" && baseUnit === "ltr") total += segQty / 1000;
+    else if (segUnit === "ltr" && baseUnit === "ml") total += segQty * 1000;
+    else total += segQty;
+  });
+  return { value: total, unit: baseUnit };
+}
+
 function AllocationRow({ alloc, allocId, segments, isOpen, onToggle }) {
+  const computed = computeAllocQty(alloc, segments); // BUG-035
   return (
     <>
       <tr data-testid={`alloc-row-${allocId}`} className="border-b cursor-pointer hover:bg-accent/30" onClick={segments.length > 0 ? onToggle : undefined}>
@@ -139,8 +160,8 @@ function AllocationRow({ alloc, allocId, segments, isOpen, onToggle }) {
           {segments.length > 0 && (isOpen ? <ChevronDown className="h-3 w-3 text-muted-foreground" /> : <ChevronRight className="h-3 w-3 text-muted-foreground" />)}
         </td>
         <td className="py-1.5 px-2 font-medium">{alloc.ingredient_name || `Item #${allocId}`}</td>
-        <td className="py-1.5 px-2 text-right tabular-nums">{fmt(alloc.quantity_consumed)}</td>
-        <td className="py-1.5 px-2 text-right">{alloc.unit || ""}</td>
+        <td className="py-1.5 px-2 text-right tabular-nums">{fmt(computed.value)}</td>
+        <td className="py-1.5 px-2 text-right">{computed.unit || alloc.unit || ""}</td>
         <td className="py-1.5 px-2 text-right tabular-nums font-semibold">₹{fmt(alloc.line_cost)}</td>
       </tr>
       {isOpen && segments.map(seg => (

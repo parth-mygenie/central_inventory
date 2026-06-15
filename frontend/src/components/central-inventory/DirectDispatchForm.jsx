@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useLoginContext } from "@/hooks/useLoginContext";
 import { useWriteAction } from "@/hooks/useWriteAction";
 import api from "@/services/api";
@@ -26,6 +26,8 @@ const COVERAGE_OPTIONS = [
 
 export default function DirectDispatchForm() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams(); // BUG-033
+  const preselectedItemId = searchParams.get("item"); // BUG-033
   const { restaurantId, restaurantType, canDo } = useLoginContext();
   const { submitting, execute } = useWriteAction();
 
@@ -208,6 +210,16 @@ export default function DirectDispatchForm() {
   useEffect(() => {
     setDispatchRows(dispatchNeeds.map(item => ({ ...item })));
   }, [dispatchNeeds]);
+
+  // BUG-033: Pre-select item from URL param — add as manual row if not in dispatch needs
+  useEffect(() => {
+    if (preselectedItemId && allItems.length > 0 && dispatchRows.length === 0 && manualRows.length === 0) {
+      const match = allItems.find(i => String(i.id) === preselectedItemId);
+      if (match && !dispatchNeeds.find(d => String(d.invMasterId) === preselectedItemId)) {
+        setManualRows([{ itemId: String(match.id), qty: "", source: "segment" }]);
+      }
+    }
+  }, [preselectedItemId, allItems, dispatchRows.length, manualRows.length, dispatchNeeds]);
 
   const updateDispatchRow = (idx, field, value) => {
     setDispatchRows(prev => {
