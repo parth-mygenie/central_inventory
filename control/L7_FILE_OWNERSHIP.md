@@ -1,6 +1,6 @@
 # L7 — File Ownership (Frozen vs Active)
 
-> **Updated:** 2026-06-15 (BUG-026/027/028 implemented, BUG-029→035 registered)
+> **Updated:** 2026-06-15 (BUG-029→035 implemented — 8 files modified)
 
 ---
 
@@ -67,32 +67,32 @@
 ### CR-030: Inward Screens Audit (8 files: 3 new + 5 modified)
 | File | Change |
 |------|--------|
-| `services/api.js` | MODIFIED — `getVendorItemList()`, 10 PO methods, extended `getStockInventory` params (+~105 lines) |
+| `services/api.js` | MODIFIED — `getVendorItemList()`, 10 PO methods, extended `getStockInventory` params |
 | `VendorManagement.jsx` | **FULL REWRITE** — master-detail, purchase intelligence |
 | `IngredientCatalogue.jsx` | **FULL REWRITE** — expandable rows, intelligence, filters |
-| `AddStockPurchaseForm.jsx` | MODIFIED — PO gate redirect (proactive + reactive) |
-| `PurchaseOrderList.jsx` **(NEW)** | PO list with status tabs, 4 KPI cards, filters |
+| `AddStockPurchaseForm.jsx` | MODIFIED — PO gate redirect |
+| `PurchaseOrderList.jsx` **(NEW)** | PO list with status tabs, 4 KPI cards |
 | `PurchaseOrderCreate.jsx` **(NEW)** | By Vendor + By Item Need + multi-PO auto-group |
-| `PurchaseOrderDetail.jsx` **(NEW)** | Detail + card-per-line receive + stock context columns |
-| `App.js` | MODIFIED — 3 PO routes + 3 imports |
+| `PurchaseOrderDetail.jsx` **(NEW)** | Detail + card-per-line receive |
+| `App.js` | MODIFIED — 3 PO routes |
 
-### BUG-026/027/028: Raw Material + PO Fixes (2 files modified, 2026-06-15)
+### BUG-026/027/028: Raw Material + PO Fixes (2 files, prior session)
 | File | Change |
 |------|--------|
-| `IngredientCatalogue.jsx` | MODIFIED — +isSubRecipeItem filter, +filterRawCategories, +parseQtyString, +normalizeToDisplayUnit, +consumptionMap from daily-consumption-report, +usageMap from recipes+sub-recipes, CategoriesTab Switch toggle, "Used In" column |
-| `PurchaseOrderCreate.jsx` | MODIFIED — +rawMaterialItems filter, +vendorSearch, column renames (Daily Consumption, Days Will Last), vendor picker for no-history, read-only Expected Rate |
+| `IngredientCatalogue.jsx` | +isSubRecipeItem, +filterRawCategories, +consumptionMap, "Used In" column |
+| `PurchaseOrderCreate.jsx` | +rawMaterialItems filter, +vendorSearch, column renames |
 
-### BUG-029→035: Registered for Next Session (0 files modified yet)
-| File | Planned Bugs |
-|------|-------------|
-| `IngredientCatalogue.jsx` | BUG-029 (consumption join fix) |
-| `PurchaseOrderCreate.jsx` | BUG-030 (rate=0, display_qty, search) |
-| `StockInventorySummary.jsx` | BUG-031, BUG-032, BUG-033 |
-| `DirectDispatchForm.jsx` | BUG-033 (pre-select ingredient) |
-| `WastageEntryForm.jsx` | BUG-033 (pre-select ingredient) |
-| `SubRecipeMaster.jsx` | BUG-034 (delete → toggle) |
-| `ProductionHistory.jsx` | BUG-035 (ingredient qty total) |
-
+### BUG-029→035: Implementation Batch (8 files, this session 2026-06-15)
+| File | Change | Bug |
+|------|--------|-----|
+| `IngredientCatalogue.jsx` | MODIFIED — name-based fallback join in consumptionMap | BUG-029 |
+| `PurchaseOrderCreate.jsx` | MODIFIED — display_qty, consumption API, rate=0, search, KPIs | BUG-030 |
+| `StockInventorySummary.jsx` | MODIFIED — conditional tabs, Sub Recipe filter, expiry inline, Adjust Stock removed, KPIs type-aware | BUG-031, BUG-032 |
+| `useStockInventory.js` | MODIFIED — Option C hybrid segment loading (include_segments only, no include_consumption) | BUG-032 |
+| `DirectDispatchForm.jsx` | MODIFIED — useSearchParams, pre-select from ?item= | BUG-033 |
+| `WastageEntryForm.jsx` | MODIFIED — useSearchParams, pre-select from ?item= | BUG-033 |
+| `SubRecipeMaster.jsx` | MODIFIED — Delete → Active/Inactive toggle (Switch), removed ConfirmActionDialog for delete | BUG-034 |
+| `ProductionHistory.jsx` | MODIFIED — computeAllocQty function, batch qty summing with unit normalization | BUG-035 |
 
 ### Orphaned Files (not deleted, not imported)
 | File | Reason |
@@ -109,3 +109,4 @@
 | PO Module | `api.js` (10 PO methods + getVendorItemList + getStockInventory + getOperationalSettings) |
 | Transfer write forms | `useWriteAction.js` |
 | Approval inbox | `FulfillmentVerdict.jsx`, `StoreHealthStrip.jsx`, `useRestaurantMap.js` |
+| Stock Inventory segments | `useStockInventory.js` background load (~6s, include_segments only) |

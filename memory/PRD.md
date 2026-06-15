@@ -4,37 +4,54 @@
 Central Inventory — multi-store hierarchy stock management module for MyGenie POS. React 19 + Craco + Tailwind + Radix UI frontend, proxy-only FastAPI backend → preprod.mygenie.online.
 
 ## Architecture
-- **Backend**: FastAPI proxy to MyGenie POS API (preprod.mygenie.online). Zero business logic.
+- **Backend**: FastAPI proxy to MyGenie POS API (preprod.mygenie.online). Zero business logic in server.py.
 - **Frontend**: React 19 + CRACO + Tailwind CSS + Radix UI (shadcn) + Recharts
 - **Database**: MongoDB (local, for session/token caching only)
+- **Terminology**: API `master` = Central (TOP), `central` = Master (MID), `franchise` = Outlet (BOTTOM)
 
-## What's Been Implemented (2026-06-15)
+## What's Been Implemented
 
-### This Session — IMPLEMENTATION Role
-- **BUG-029**: Fixed consumption 0.0 — added name-based fallback join in consumptionMap (ingredient_id ≠ inventory_master_id)
-- **BUG-030**: Fixed PO Create — display_qty, daily-consumption-report API, rate=0 to API, search in By Item Need, KPIs
-- **BUG-031**: Fixed RM Stock page — conditional tabs (?type=raw shows only RM), "Sub Recipe" filtered from category, KPIs type-aware
-- **BUG-032**: Implemented Option C hybrid segment loading, expiry risk inline dates, removed Adjust Stock button
-- **BUG-033**: Added ingredient pre-selection from URL param in DirectDispatch + WastageEntry forms
-- **BUG-034**: Replaced Sub-Recipe Delete with Active/Inactive toggle (backend API pending)
-- **BUG-035**: Fixed Production History ingredient qty — sum from batch segments with unit normalization
+### Session 2026-06-15 — PLANNING + IMPLEMENTATION + INVESTIGATION
+**7 bugs implemented across 8 files:**
+- **BUG-029** (HIGH): Consumption join fix — name-based fallback in consumptionMap
+- **BUG-030** (HIGH): PO Create — display_qty, daily-consumption API, rate=0, search in By Item Need
+- **BUG-031** (MEDIUM): RM Stock — conditional tabs, Sub Recipe filter, type-aware KPIs
+- **BUG-032** (HIGH): Stock Inv — Option C hybrid segment loading (~6s), expiry inline, Adjust Stock removed
+- **BUG-033** (MEDIUM): Quick Actions — ingredient pre-selection via ?item= URL param
+- **BUG-034** (MEDIUM): Sub-Recipe — Delete → Active/Inactive toggle (backend API pending)
+- **BUG-035** (MEDIUM): Production History — batch qty summing with unit normalization
 
-### Previous Sessions (from repo)
-- S0: Slices 1-5 (all core screens), P17-P23 (amend, settings, vendors, procurement, stock, catalogue, consumption, hierarchy)
+**Investigation finding:** `include_consumption=true` param causes POS API to exceed 30s proxy timeout. Removed from background segment load.
+
+### Prior Sessions (from repo)
+- S0: Slices 1-5 (core screens), P17-P23 (amend, settings, vendors, procurement, stock, catalogue, consumption, hierarchy)
 - S1: Governance setup, registries, dev dashboard
 - S2: Intelligent UI across 24 screens, code quality review
-- S3: API reality check, cache (72% reduction), intelligent PO, FEFO detail, production module, navigation restructure, screen audits, PO module, recipe API fix, store creation, bug batches
+- S3: API reality check, cache (72% reduction), intelligent PO, FEFO detail, production module, navigation restructure, screen audits, PO module, recipe API fix, store creation, bug batches (018-028, 029-035)
 
 ## Sprint S3 Status
-- 5 CRs CLOSED, 9 CRs QA, 1 CR QA_PASS
-- 1 BUG CLOSED, 11 BUGs QA_PASS, 7 BUGs IMPLEMENTED (this session)
+- **CLOSED**: 5 CRs + 1 BUG
+- **IMPLEMENTED** (awaiting QA): 7 BUGs (029-035)
+- **QA/QA_PASS** (awaiting owner signoff): 9 CRs + 11 BUGs
+- **PROPOSED** (backlog): 3 CRs
 
-## Next Tasks (P0)
-1. QA for BUG-029→035 (7 items just implemented)
+## Prioritized Backlog (P0/P1/P2)
+
+### P0 — Immediate
+1. QA for BUG-029→035 (QA handover ready: 47 test cases)
 2. Owner smoke testing for 12 QA_PASS items
-3. Owner signoff on 9 QA CRs
 
-## Backlog
-- CR-017: Smart Dispatch / Request Assistance (PROPOSED)
-- CR-020: Daily Intelligence Digest (PROPOSED)
-- CR-028: Product Catalog Overhaul — Excel-like Bulk Editor (PROPOSED, plan exists)
+### P1 — This Sprint
+3. Owner signoff on 9 QA CRs
+4. Sprint S3 closure
+
+### P2 — Next Sprint
+5. CR-028: Product Catalog Excel-like Bulk Editor (plan exists)
+6. CR-017: Smart Dispatch / Request Assistance
+7. CR-020: Daily Intelligence Digest (SMS/WhatsApp/Email)
+
+## Governance
+- **Registry**: `control/registry.json` — 35 CRs, 35 BUGs
+- **Dashboard**: `/__dev/index.html` — auto-generated from registry
+- **Gate System**: 7-gate pipeline (Intake → Impact → Plan → GO → Code → QA → Smoke)
+- **QA Handover**: `control/sessions/QA_HANDOVER_20260615.md`

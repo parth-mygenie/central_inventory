@@ -1,6 +1,6 @@
 # L1 — Control Dashboard (Project Status)
 
-> **Updated:** 2026-06-15 (Session close — BUG-026/027/028 QA_PASS, BUG-029→035 registered)
+> **Updated:** 2026-06-15 (Session close — BUG-029→035 IMPLEMENTED, QA handover written)
 
 ---
 
@@ -8,11 +8,11 @@
 
 | Field | Value |
 |-------|-------|
-| **Branch** | `15-june` |
-| **Deploy URL** | `https://8adbeef8-4332-4bcd-9cd5-d4b532cbf051.preview.emergentagent.com` |
+| **Branch** | `15-06-v2` |
+| **Deploy URL** | `https://c461f1eb-85c7-4a22-9473-69a045470e4f.preview.emergentagent.com` |
 | **Active Sprint** | **S3 — API Reality Check + Intelligent PO + Screen Audit** |
-| **UI Freeze Status** | PHASE 7 FROZEN — CR-030/031/032/033 IMPLEMENTED |
-| **Implementation Status** | 24/24 screens + 3 PO screens + CR-034 recipe fix |
+| **UI Freeze Status** | PHASE 7 FROZEN — All screen audits IMPLEMENTED |
+| **Implementation Status** | 24/24 screens + 3 PO screens + CR-034 + BUG-029→035 |
 | **Dev Dashboard** | `/__dev/index.html` |
 
 ## Sprint S3 — Closed Items
@@ -24,55 +24,61 @@
 ### CR-035: Store Creation 2-Step — **CLOSED**
 ### BUG-017: Duplicate Ingredient Filter — **CLOSED**
 
-## Sprint S3 — Completed This Session (2026-06-15)
+## Sprint S3 — Implemented This Session (2026-06-15)
 
-### BUG-026: Raw Material Master Sub-Recipe Contamination — **QA_PASS**
-- Filtered sub-recipe items from ingredients list, category dropdowns, filter, categories tab
-- Replaced delete icons with active/inactive toggle (API pending)
-- "Recipes" → "Used In" column counting recipe + sub-recipe usage
+### BUG-029: Consumption Join Fix — **IMPLEMENTED**
+- Name-based fallback join in consumptionMap (ingredient_id ↔ stock_title)
+- Fixes 0.0 kg/day for Whole Wheat Flour etc.
 
-### BUG-027: Consumption & Days of Stock Calculation — **QA_PASS**
-- Switched to `daily-consumption-report` API for real consumption data
-- Unit normalization (gm→kg, ml→ltr), uses `display_qty`
+### BUG-030: PO Create Residual Fixes — **IMPLEMENTED**
+- display_qty (not cal_quantity), daily-consumption-report API, rate=0 to API
+- Search bar added to By Item Need mode, KPIs type-aware
 
-### BUG-028: Purchase Order Create — **QA_PASS**
-- Sub-recipe filter both modes, search field, Expected Rate read-only, vendor picker, column renames, tooltip
+### BUG-031: RM Stock Tab Cleanup — **IMPLEMENTED**
+- Conditional tabs (?type=raw → only RM tab), "Sub Recipe" filtered from category
+- KPIs reflect filtered stock type
 
-## QA Completed — Pending Owner Signoff
+### BUG-032: Stock Inventory Expanded Row — **IMPLEMENTED**
+- Option C hybrid segment loading (background, ~6s), expiry risk inline dates
+- Adjust Stock button removed. Root cause: include_consumption caused 30s timeout.
 
-| Item | Title | QA Status | Report |
-|------|-------|:---------:|--------|
-| BUG-026 | Raw Material sub-recipe contamination | QA_PASS | iteration_55.json |
-| BUG-027 | Consumption/DoS calculation | QA_PASS | iteration_55.json |
-| BUG-028 | PO Create sub-recipe + UX | QA_PASS | iteration_55.json |
-| CR-034 | Recipe & Sub-Recipe API Contract Fix | QA_PASS | iteration_46, iteration_48 |
+### BUG-033: Quick Action Pre-Selection — **IMPLEMENTED**
+- DirectDispatchForm + WastageEntryForm read ?item= URL param
 
-## Next Work — Bug Batch (BUG-029→035) — Registered, Awaiting Implementation
+### BUG-034: Sub-Recipe Toggle — **IMPLEMENTED**
+- Delete button → Active/Inactive toggle (backend API pending, toast stub)
 
-| Order | Item | Title | Severity | Est. | Status |
-|:-----:|------|-------|:--------:|:----:|--------|
-| 1 | BUG-029 | Consumption 0.0 — ingredient_id join mismatch | **HIGH** | 30 min | PLANNED |
-| 2 | BUG-030 | PO Create residual — rate=0 API, display_qty, DoC | **HIGH** | 45 min | PLANNED |
-| 3 | BUG-032 | Stock Inventory — expiry inline, Adjust Stock, FEFO | **HIGH** | 45 min | PLANNED |
-| 4 | BUG-031 | RM Stock — remove All/FG tabs, Sub Recipe filter | MEDIUM | 20 min | PLANNED |
-| 5 | BUG-033 | Quick Actions — ingredient pre-selection | MEDIUM | 30 min | PLANNED |
-| 6 | BUG-034 | Sub-Recipe Master — Delete → toggle | MEDIUM | 15 min | PLANNED |
-| 7 | BUG-035 | Production History — ingredient qty total | MEDIUM | 30 min | PLANNED |
+### BUG-035: Production History Qty — **IMPLEMENTED**
+- computeAllocQty sums batch segments with gm↔kg/ml↔ltr normalization
 
-## Older Bug Batch (BUG-018→025) — All QA_PASS, Awaiting Owner Signoff
+## QA Pipeline — Awaiting QA or Owner Signoff
 
+### Needs QA (just implemented):
 | Item | Title | Status |
-|------|-------|--------|
-| BUG-018 | Push status misleading | QA_PASS |
-| BUG-019 | Stock Inventory split FG/RM | QA_PASS |
-| BUG-020 | "Unknown: —" Store Detail | QA_PASS |
-| BUG-021 | Remove Adjust Stock card | QA_PASS |
-| BUG-022 | Gate page auto-redirect | QA_PASS |
-| BUG-023 | $ → ₹ icon swap | QA_PASS |
-| BUG-024 | Production Run master-detail | QA_PASS |
-| BUG-025 | Food edit → Side Sheet | QA_PASS |
+|------|-------|:------:|
+| BUG-029 | Consumption join fix | IMPLEMENTED |
+| BUG-030 | PO Create residual | IMPLEMENTED |
+| BUG-031 | RM Stock tab cleanup | IMPLEMENTED |
+| BUG-032 | Stock Inv expanded row | IMPLEMENTED |
+| BUG-033 | Quick action pre-select | IMPLEMENTED |
+| BUG-034 | Sub-Recipe toggle | IMPLEMENTED |
+| BUG-035 | Production History qty | IMPLEMENTED |
 
-## Registry: 35 CRs, 35 BUGs, 3 Sprints (S0-S2 closed, S3 active)
+### QA Done — Awaiting Owner Signoff:
+| Item | Title | Status |
+|------|-------|:------:|
+| CR-018 | Wastage Report Enhancements | QA_PASS |
+| CR-026 | Production Unit Module | QA |
+| CR-027 | Navigation Restructure | QA |
+| CR-029 | Stock Inventory Split | QA |
+| CR-030 | Inward Screens Audit | QA |
+| CR-031 | Production Screens Audit | QA |
+| CR-032 | Outward Screens Audit | QA |
+| CR-033 | Action Screens Audit | QA |
+| CR-034 | Recipe API Contract Fix | QA |
+| BUG-018→028 | 11 bugs | QA_PASS |
+
+## Registry: 35 CRs, 35 BUGs, 4 Sprints (S0-S2 closed, S3 active)
 
 ## Quick Links
 
@@ -84,4 +90,5 @@
 | L8 Credentials | `control/L8_ACCESS_REGISTRY.md` |
 | L9 Gaps | `control/L9_OPEN_GAPS_REGISTER.md` |
 | Registry | `control/registry.json` |
-| Handover | `control/sessions/SESSION_CLOSE_20260615_HANDOVER.md` |
+| QA Handover | `control/sessions/QA_HANDOVER_20260615.md` |
+| Session Handover | `control/sessions/SESSION_HANDOVER_20260615_IMPL.md` |
