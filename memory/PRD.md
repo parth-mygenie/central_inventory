@@ -1,38 +1,37 @@
 # Central Inventory - PRD
 
 ## Original Problem Statement
-Clone central_inventory repo, run it, QA, investigate consumption bug, register, plan, and implement fix.
+Wipe current /app, pull -> https://github.com/parth-mygenie/central_inventory.git, branch -> 18-6-26, don't need to focus anywhere or need to test anything, just pull and run. Get tech stack from repo, it's public, no special key, everything in repo.
 
-## Architecture
-- **Backend**: FastAPI proxy-only layer → preprod.mygenie.online POS API
-- **Frontend**: React 19 + CRACO + Tailwind CSS + Radix UI + React Router v7
-- **Database**: MongoDB (local, token sessions only)
+## Architecture & Tech Stack
+- **Backend**: FastAPI (Python) + Motor (async MongoDB driver) + uvicorn
+- **Frontend**: React 19 + Tailwind CSS + CRACO + Radix UI + React Router v7 + Recharts
+- **Database**: MongoDB (local)
+- **External APIs**: MyGenie POS preprod APIs (v1/v2) for auth and data proxy
 
-## What's Been Done
+## What's Been Implemented
+- **2026-06-18**: Pulled repo from GitHub (branch `18-6-26`), created .env files, installed dependencies, started services
+  - Backend running on port 8001 (FastAPI)
+  - Frontend running on port 3000 (React/CRACO)
+  - MongoDB running locally
+  - App loads successfully with login page
 
-### Session 1 — Deployment ✅
-### Session 2 — QA Gate 6 (50/50 PASS) ✅
-### Session 3 — INVESTIGATION (4 bug classes found) ✅
-### Session 4 — INTAKE Gate 1 + IMPACT ANALYSIS Gate 2 ✅
-### Session 5 — PLANNING Gate 3 ✅
-### Session 6 — IMPLEMENTATION Gate 5 ✅
-- 8 files modified per plan, all code markers in place
-- Self-test: 7/7 tests PASS
-- EXIT GATE: 5/5 checks PASS
-- Registry, L1, L7 updated
+## Core Modules (from repo)
+- Login/Auth (via MyGenie POS API proxy)
+- Operations Hub (Dashboard)
+- Vendor Management
+- Raw Materials / Ingredient Catalogue
+- Purchase Orders
+- Sub-Recipe Master
+- Production (Run, History)
+- Store Management
+- Product Catalogue
+- Stock Inventory
+- Pending Queues
+- History Ledger
+- Dispatch, Request Stock, Stock Adjustment, Wastage
+- Reports (Consumption, Wastage)
+- Operational Settings
 
-## BUG-036 Pipeline
-
-| Gate | Status |
-|------|--------|
-| Gate 1 (Intake) | ✅ DONE |
-| Gate 2 (Impact Analysis) | ✅ DONE |
-| Gate 3 (Implementation Plan) | ✅ DONE |
-| Gate 4 (Owner GO) | ✅ (implicit) |
-| Gate 5 (Code + EXIT GATE) | ✅ DONE |
-| Gate 6 (QA) | ⏳ NEXT |
-| Gate 7 (Smoke) | — |
-
-## Next Tasks
-- Gate 6: QA agent for BUG-036 verification
-- Gate 7: Owner smoke test
+## Backlog
+- No additional tasks requested by user at this time
