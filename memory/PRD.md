@@ -1,37 +1,28 @@
 # Central Inventory - PRD
 
 ## Original Problem Statement
-Wipe current /app, pull -> https://github.com/parth-mygenie/central_inventory.git, branch -> 18-6-26, don't need to focus anywhere or need to test anything, just pull and run. Get tech stack from repo, it's public, no special key, everything in repo.
+1. Wipe current /app, pull -> https://github.com/parth-mygenie/central_inventory.git, branch -> 18-6-26
+2. Validate all open backend gaps from the project documentation via API testing, document results in `/app/AI/openGaps/gap_validation.md`
 
 ## Architecture & Tech Stack
-- **Backend**: FastAPI (Python) + Motor (async MongoDB driver) + uvicorn
+- **Backend**: FastAPI (Python) proxy → POS preprod API (`preprod.mygenie.online`)
 - **Frontend**: React 19 + Tailwind CSS + CRACO + Radix UI + React Router v7 + Recharts
-- **Database**: MongoDB (local)
-- **External APIs**: MyGenie POS preprod APIs (v1/v2) for auth and data proxy
+- **Database**: MongoDB (local, used for token sessions and status checks)
+- **External APIs**: MyGenie POS preprod APIs (v1 auth, v2 business logic)
 
 ## What's Been Implemented
 - **2026-06-18**: Pulled repo from GitHub (branch `18-6-26`), created .env files, installed dependencies, started services
-  - Backend running on port 8001 (FastAPI)
-  - Frontend running on port 3000 (React/CRACO)
-  - MongoDB running locally
-  - App loads successfully with login page
+- **2026-06-18**: Comprehensive gap validation — 22 gaps + bugs tested via API, results documented in `/app/AI/openGaps/gap_validation.md`
 
-## Core Modules (from repo)
-- Login/Auth (via MyGenie POS API proxy)
-- Operations Hub (Dashboard)
-- Vendor Management
-- Raw Materials / Ingredient Catalogue
-- Purchase Orders
-- Sub-Recipe Master
-- Production (Run, History)
-- Store Management
-- Product Catalogue
-- Stock Inventory
-- Pending Queues
-- History Ledger
-- Dispatch, Request Stock, Stock Adjustment, Wastage
-- Reports (Consumption, Wastage)
-- Operational Settings
+## Gap Validation Summary (2026-06-18)
+- **P1 Open**: G-006 (return flow), G-014 (OCR), G-020 (unit conversion) — 3 gaps
+- **P2 Open**: G-001, G-002, G-005, G-011, G-015, G-016 — 6 gaps
+- **P3 Open**: G-003 — 1 gap
+- **Possibly Resolved**: G-004 (restaurant_type now in history) — needs owner confirmation
+- **Verified Closed**: G-009, G-010, G-013, G-017, G-018, G-019, G-021, G-022, G-023 — 9 gaps verified
+- **Cannot Verify**: G-012 (needs franchise login)
 
 ## Backlog
-- No additional tasks requested by user at this time
+- Resolve P1 gaps when POS backend delivers
+- Close G-004 after owner review
+- Verify G-012 with franchise account
