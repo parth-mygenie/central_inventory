@@ -22,15 +22,21 @@ Central Inventory is a multi-store inventory management system built for MyGenie
 - Hierarchy management (P23), store management
 - Daily consumption report (P22), wastage report (P25)
 - Production run & history (P28)
-- Purchase order module - create, list, detail, approve, send, receive, cancel, close (CR-030)
+- Purchase order module (CR-030)
 - Operational settings (P17)
 - Response caching layer with TTL and in-flight dedup
 
-## Deployment (2026-07-02)
-- Pulled from GitHub, .env files created, dependencies installed
-- Backend running on port 8001, frontend on port 3000
-- Both services healthy and accessible
+## Work Done This Session (2026-07-02)
+1. Pulled repo from GitHub (branch 18-6-26), set up .env files, installed deps, got running
+2. **Gap Validation**: Tested all 22 gaps + 4 bug items via API curls
+   - 5 P1/P2 blocking gaps confirmed open (G-006, G-014, G-015, G-016, G-020)
+   - 5 low-priority gaps confirmed open (G-001, G-002, G-003, G-005, G-011)
+   - 1 gap flagged for re-evaluation (G-004 — types now present)
+   - 10 closed gaps verified
+   - Report at `/app/AI/openGaps/gap_validation.md`
 
-## Next Action Items
-- User to provide test credentials to verify login flow
-- Any feature additions or bug fixes as requested
+## Prioritized Backlog
+- P0: None (all P0s resolved)
+- P1: G-006 (return flow), G-014 (invoice OCR), G-020 (unit conversion) — POS backend
+- P2: G-015, G-016, G-001, G-002, G-005, G-011 — POS backend
+- P3: G-003, G-004 (re-evaluate) — POS backend
