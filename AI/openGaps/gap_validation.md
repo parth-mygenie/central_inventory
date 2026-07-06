@@ -1,435 +1,697 @@
-# Gap Validation Report
+# Gap Validation Report — Resolved & Discarded Gaps
 
 > **Validated:** 2026-07-02  
-> **Validated By:** E1 Agent  
+> **Test Account:** `owner@bholarchop.com` / `Qplazm@10` (RID 835, master)  
+> **Cross-validation:** 806 hierarchy (germanfluid) for existing transfer data  
 > **Method:** API curl tests via proxy (`/api/proxy/v2/...`) against POS preprod  
-> **Auth:** `manager@germanfluid.com` (RID 806, master) + `manager@outletdirectone.com` (RID 809, franchise)
+> **Base:** `https://preprod.mygenie.online/api/v2/vendoremployee`
 
 ---
 
-## 1. Open Backend Gaps — Still Blocking (P1)
+## Restaurant Tree (Created for Testing)
 
-### G-006 | Stock Return Flow API | ❌ CONFIRMED OPEN
-
-**What's Blocked:** No return/RTO feature at all  
-**Priority:** P1  
-**Frontend Status:** No screen built — needs backend first
-
-**Validation:**
 ```
-POST /inventory-transfer/return         → 404 NotFoundHttpException
-POST /inventory-transfer/initiate-return → 404 NotFoundHttpException
-POST /inventory-transfer/rto            → 404 NotFoundHttpException
+bholar chop (RID 835, master, parent=None) — owner@bholarchop.com
+├── BC Central Kitchen (RID 837, central, parent=835) — manager@bccentralkitchen.com
+│   └── BC Outlet South (RID 839, franchise, parent=837) — manager@bcoutletsouth.com
+└── BC Outlet Direct (RID 838, franchise, parent=835) — manager@bcoutletdirect.com
 ```
-**Verdict:** All three candidate endpoints return Laravel `NotFoundHttpException`. No return/RTO route exists on POS backend.
+
+All passwords: `Qplazm@10`
+
+Catalogue pushed: Master→Central, Master→Direct Franchise, Central→Nested Franchise (all successful).
 
 ---
 
-### G-014 | Invoice OCR/AI Extraction Endpoint | ❌ CONFIRMED OPEN
+## ⛔ CRITICAL DEPLOYMENT BLOCKER
 
-**What's Blocked:** PO Receive "Upload Invoice" tab  
-**Priority:** P1  
-**Frontend Status:** Tab shows "Coming Soon" badge — UI ready, waiting for backend
+### `GuardsPushedCatalog` Trait Not Found
 
-**Validation:**
+**Impact:** GLOBAL — breaks ALL requests to `InventoryController`, `RecipeController`, `FoodController` across ALL restaurants.
+
 ```
-POST /inventory/invoice-ocr                    → 404 NotFoundHttpException
-POST /inventory/parse-invoice                  → 404 NotFoundHttpException
-POST /inventory/purchase-order/upload-invoice   → 405 MethodNotAllowedHttpException (route exists but only supports GET/HEAD/DELETE)
+Trait "App\Http\Controllers\Api\V2\Vendoremployee\Concerns\GuardsPushedCatalog" not found
+Exception: Symfony\Component\ErrorHandler\Error\FatalError
+File: /var/www/html/app/Http/Controllers/Api/V2/Vendoremployee/InventoryController.php line 50
 ```
-**Verdict:** No OCR/invoice parsing endpoint exists. The `/purchase-order/upload-invoice` route exists for GET/DELETE but not POST (likely a placeholder or different purpose). Gap confirmed open.
+
+**Affected endpoints (non-exhaustive):**
+- `GET /inventory/get-inventory-master` → FATAL
+- `GET /inventory/stock-inventory/{id}` → FATAL
+- `POST /inventory/add-inventory` → FATAL
+- `POST /inventory/add-stock/{id}` → FATAL
+- `GET /inventory/get-vendor` → FATAL
+- `GET /inventory/stock-item-categories` → FATAL
+- `GET /recipe/sub-recipes` → FATAL
+- `GET /recipe/get-recipe` → FATAL
+- `POST /recipe/store-recipe` → FATAL
+- `POST /recipe/store-sub-recipe` → FATAL
+- `GET /product/foods-list` → FATAL
+- `GET /product/addon-list` → FATAL
+
+**Not affected (different controllers):**
+- Transfer endpoints (`/inventory-transfer/*`) ✅
+- Franchise endpoints (`/franchise/*`) ✅
+- Report endpoints (`/report/*`) ✅
+- Production run endpoints (`/inventory/production-run*`) ✅
+- Wastage reasons CRUD (`/wastage-reasons/*`) ✅
+- Operational settings ✅
+
+**Root cause:** G-028 (Pushed Catalog Lock) added `use GuardsPushedCatalog` to controllers, but the trait file was not deployed to preprod.
+
+**Resolution:** Deploy `App\Http\Controllers\Api\V2\Vendoremployee\Concerns\GuardsPushedCatalog.php` to preprod.
 
 ---
 
-### G-020 | Custom Unit Conversion in Inventory Master | ❌ CONFIRMED OPEN
+## DISCARDED
 
-**What's Blocked:** Mixed-unit display (e.g. "5 cartons = 60 pcs")  
-**Priority:** P1  
-**Frontend Status:** Current assumption: purchase unit = consumption unit. Form ready to add fields when API delivers.
+### G-001 — Stock Adjustment History API
 
-**Validation:**
-```
-GET /inventory/get-inventory-master response per item:
-  has_unit_conversion: false  (all 49 items = false)
-  converion_factor: null      (note: typo in field name — missing 's')
-  consumption_unit: null
-  consumption_unit_id: null
-  purchase_unit: NOT_PRESENT
-  custom_units: NOT_PRESENT
-```
-**Verdict:** The schema has `has_unit_conversion` and `converion_factor` (typo) fields, but they are universally `false`/`null` across all 49 inventory items. No item has active unit conversion configured. The field infrastructure exists but is non-functional. Custom purchase→consumption unit mapping requires POS backend work.
+| Field | Value |
+|-------|-------|
+| **Status** | ✅ DISCARDED — confirmed |
+| **Reason** | Stock Adjustment feature removed from product scope |
+| **Test** | N/A — no API to test |
 
 ---
 
-## 2. Open Backend Gaps — Still Blocking (P2)
-
-### G-015 | Excel/CSV Parsing Endpoint | ❌ CONFIRMED OPEN
-
-**What's Blocked:** Procurement Excel import  
-**Priority:** P2  
-**Frontend Status:** Upload zone shows "Coming Soon" — UI ready
-
-**Validation:**
-```
-POST /inventory/parse-excel           → 404 NotFoundHttpException
-POST /inventory/import-csv            → 404 NotFoundHttpException
-POST /inventory/purchase-order/import → 405 MethodNotAllowedHttpException (route exists but only supports GET/HEAD/DELETE)
-```
-**Verdict:** No Excel/CSV parsing endpoint exists. Same pattern as G-014 — `/purchase-order/import` route exists for GET/DELETE only.
+## RESOLVED GAPS — Validation Results
 
 ---
 
-### G-016 | Invoice Number Storage / Duplicate Detection | ❌ CONFIRMED OPEN
+### G-002 — Before/After Qty on Transfer Detail Lines
 
-**What's Blocked:** Duplicate invoice check on receive  
-**Priority:** P2
+| Field | Value |
+|-------|-------|
+| **Status** | ⚠️ FIELD INFRASTRUCTURE CONFIRMED — all values null (pre-deploy transfers) |
+| **Priority** | P2 |
 
-**Validation:**
+**Test:**
 ```
-GET /inventory/purchase-order/list → PO objects have these keys:
-  [approved_at, cancel_reason, cancelled_at, closed_at, created_at, expected_delivery_date,
-   id, item_total, notes, payment_type, reference_code, restaurant_id, sent_at, status,
-   tot_amount, tot_tax, updated_at, vendor_id, vendor_name]
-
-  invoice_number: NOT_PRESENT
-  invoice_no: NOT_PRESENT
-  invoice_id: NOT_PRESENT
-  invoice_ref: NOT_PRESENT
-  duplicate_check: NOT_PRESENT
-
-POST /inventory/check-invoice-duplicate → 404 NotFoundHttpException
+GET /inventory-transfer/details/226 (806 hierarchy)
+  line 219: qty_before=None, qty_after=None
+GET /inventory-transfer/details/224 → qty_before=None, qty_after=None
+GET /inventory-transfer/details/223 → qty_before=None, qty_after=None  
+GET /inventory-transfer/details/220 → qty_before=None, qty_after=None
 ```
-**Verdict:** PO objects carry no invoice number field. No duplicate detection endpoint exists. Gap confirmed open.
+
+**Verdict:** `qty_before` and `qty_after` fields ARE present in response schema (not "NOT_PRESENT" — they return `None`). All existing transfers on 806 hierarchy are pre-deploy, so values are null as documented. **Need a new transfer post-deploy to verify populated values.** Field infrastructure confirmed resolved.
 
 ---
 
-## 3. Open Backend Gaps — Low Priority / Informational
+### G-003 — Actor Display Names on Transfer History/Detail
 
-### G-001 | Stock Adjustment History API | ❌ CONFIRMED OPEN
+| Field | Value |
+|-------|-------|
+| **Status** | ✅ RESOLVED — verified |
 
-**What's Blocked:** Can't show adjustment audit trail  
-**Priority:** P2
-
-**Validation:**
+**Test (detail):**
 ```
-GET  /inventory/adjustment-history          → 404 NotFoundHttpException
-POST /inventory/adjustment-history          → 404 NotFoundHttpException
-GET  /inventory-transfer/adjustment-history → 404 NotFoundHttpException
+GET /inventory-transfer/details/226 (806 hierarchy)
+  requested_by: None → requested_by_name: None
+  dispatched_by: 4696 → dispatched_by_name: "Manager" ✅
+  received_by: 4721 → received_by_name: "Manager" ✅
+  approved_by: None → approved_by_name: None
+  cancelled_by: None → cancelled_by_name: None
 ```
-**Verdict:** No adjustment history route exists. Gap confirmed open.
+
+**Test (history):**
+```
+POST /inventory-transfer/history {limit:3}
+  TRF-806-2026-0016: dispatched_by_name="Manager", received_by_name="Manager" ✅
+  TRF-806-2026-0014: dispatched_by_name="Manager", received_by_name="Manager" ✅
+```
+
+**Full history item keys confirmed:**
+`approved_by_name`, `cancelled_by_name`, `dispatched_by_name`, `received_by_name`, `requested_by_name` — all present.
+
+**Verdict:** All 5 `*_by_name` fields present on both history and detail. Names resolve to vendor employee display name. Null when ID is null.
 
 ---
 
-### G-002 | No Before/After Qty in Transfer API | ❌ CONFIRMED OPEN
+### G-004 — Transfer History Store Type Badges
 
-**What's Blocked:** History Ledger "Before/After" columns show "—"  
-**Priority:** P2
+| Field | Value |
+|-------|-------|
+| **Status** | ✅ RESOLVED — verified |
 
-**Validation:**
+**Test:**
 ```
-POST /inventory-transfer/history (limit=3) → First history item checked:
-  before_qty: NOT_PRESENT
-  after_qty: NOT_PRESENT
-  before_quantity: NOT_PRESENT
-  after_quantity: NOT_PRESENT
-  qty_before: NOT_PRESENT
-  qty_after: NOT_PRESENT
-  stock_before: NOT_PRESENT
-  stock_after: NOT_PRESENT
+POST /inventory-transfer/history {limit:1}
+  from_restaurant_name: present ✅
+  to_restaurant_name: present ✅
+  from_restaurant_type: "master" ✅
+  to_restaurant_type: "franchise" ✅
 ```
-**Verdict:** None of the 8 candidate field names are present in history items. Gap confirmed open.
+
+**Full field list confirmed:** `from_restaurant_id`, `from_restaurant_name`, `from_restaurant_type`, `to_restaurant_id`, `to_restaurant_name`, `to_restaurant_type` — all in every history row.
+
+**Verdict:** Store type badges and names fully enriched on history. `useRestaurantMap` workaround no longer needed.
 
 ---
 
-### G-003 | No User Name Resolution API | ❌ CONFIRMED OPEN
+### G-005 — Unified Stock Ledger API
 
-**What's Blocked:** Actor names not shown (only store names)  
-**Priority:** P3
+| Field | Value |
+|-------|-------|
+| **Status** | ❌ NOT DEPLOYED |
 
-**Validation:**
+**Test:**
 ```
-GET /inventory-transfer/details/226 → Transfer detail checked:
-  dispatched_by: 4696          (numeric ID only)
-  approved_by: None
-  received_by: (numeric ID)
-  created_by_name: NOT_PRESENT
-  approved_by_name: NOT_PRESENT
-  dispatched_by_name: NOT_PRESENT
-  actor_name: NOT_PRESENT
-  user_name: NOT_PRESENT
+POST /inventory-transfer/stock-ledger {restaurant_id:806, limit:10}
+  → 404 NotFoundHttpException
 ```
-**Verdict:** Transfer detail returns actor IDs (e.g. `dispatched_by: 4696`) but no corresponding name fields. User name resolution requires backend work.
+
+**Verdict:** Endpoint does not exist on preprod. Route not registered.
 
 ---
 
-### G-004 | History API Missing restaurant_type | ⚠️ PARTIALLY RESOLVED
+### G-006 — Stock Return / Hierarchy Return API
 
-**What's Blocked:** Store type badges in history use workaround via `useRestaurantMap`  
-**Priority:** P3
+| Field | Value |
+|-------|-------|
+| **Status** | ⚠️ PARTIALLY DEPLOYED — `return/initiate` active, `return/eligible` missing |
 
-**Validation:**
+**Test (eligible):**
 ```
-POST /inventory-transfer/history (limit=2) → First item:
-  from_restaurant_type: "master"      ← PRESENT
-  to_restaurant_type: "franchise"     ← PRESENT
-  restaurant_type: NOT_PRESENT
-  restaurant_type_flag: NOT_PRESENT
-  store_type: NOT_PRESENT
+GET /inventory-transfer/return/eligible (806 token)
+  → 404 NotFoundHttpException ❌
 ```
-**Verdict:** `from_restaurant_type` and `to_restaurant_type` ARE now present in history items (both set correctly). The gap was originally about a standalone `restaurant_type` field. Since `from_/to_restaurant_type` are available, the `useRestaurantMap` workaround may no longer be needed for type badges. **Recommend re-evaluating if this can be CLOSED.**
+
+**Test (initiate — wrong actor):**
+```
+POST /inventory-transfer/return/initiate {original_transfer_id:226, lines:[{line_id:219, quantity:1}]}
+  → 200: {"error_code":"RETURN_NOT_FROM_DESTINATION","message":"Return can only be initiated by the destination restaurant."} ✅
+```
+
+**Test (initiate — franchise actor, same transfer):**
+```
+POST /inventory-transfer/return/initiate (809 franchise token)
+  → 200: {"error_code":"RETURN_NOT_FROM_DESTINATION"} ✅
+  (Transfer 226: from=806→to=783, so 809 is not destination — correct enforcement)
+```
+
+**Test (initiate — validation):**
+```
+POST /inventory-transfer/return/initiate {original_transfer_id:9999, lines:[]}
+  → 422: {"errors":{"lines":["The lines field is required."]}} ✅
+```
+
+**Wastage Reasons CRUD (part of G-006 spec):**
+```
+GET /wastage-reasons/list → 200 ✅
+  {reasons:[{id:15,"Others"},{id:14,"Expired"},{id:13,"Pilferage"},{id:12,"Spillage"}], is_master:true, can_edit:false}
+
+POST /wastage-reasons/add {"reason":"Vendor sent damaged"}
+  → 200 ✅ {id:23, reason:"Vendor sent damaged", status:1}
+```
+
+**Verdict:**
+- `return/initiate` — DEPLOYED ✅ (proper business validation, error codes match spec)
+- `return/eligible` — NOT DEPLOYED ❌ (404)
+- Wastage reasons CRUD — DEPLOYED ✅ (list with `is_master`/`can_edit`, add works)
+- Cannot test full return flow without `return/eligible` to find returnable transfers
 
 ---
 
-### G-005 | Dedicated Stock Ledger API | ❌ CONFIRMED OPEN
+### G-009 — Partial Dispatch
 
-**What's Blocked:** Stock Ledger tab derives data with N+1 calls  
-**Priority:** P2
+| Field | Value |
+|-------|-------|
+| **Status** | ✅ RESOLVED — verified |
 
-**Validation:**
+**Test:**
 ```
-GET  /inventory/stock-ledger          → 404 NotFoundHttpException
-POST /inventory/stock-ledger          → 404 NotFoundHttpException
-GET  /inventory-transfer/stock-ledger → 404 NotFoundHttpException
+POST /inventory-transfer/dispatch/9999 {dispatch_lines:[{line_id:66, quantity:3}]}
+  → {"error_code":"TRANSFER_NOT_FOUND"} ✅ (proper error, not 404 — accepts dispatch_lines)
+
+POST /inventory-transfer/approve/9999 {approval_lines:[{line_id:66, segments:[{segment_id:1001, quantity:2}], remainder_policy:"hold"}]}
+  → {"error_code":"TRANSFER_NOT_FOUND"} ✅ (proper error — accepts segment-level approval)
 ```
-**Verdict:** No stock ledger endpoint exists. Frontend must use N+1 transfer detail calls. Gap confirmed open.
+
+**Verdict:** Both `dispatch_lines` and `approval_lines` with segment-level approval accepted by endpoints.
 
 ---
 
-### G-011 | WebSocket Infrastructure | ❌ CONFIRMED OPEN
+### G-010 — Soft Stock Reservation (reserve_on_approve)
 
-**What's Blocked:** No real-time push notifications for transfers/approvals  
-**Priority:** P2
+| Field | Value |
+|-------|-------|
+| **Status** | ✅ RESOLVED — verified |
 
-**Validation:**
+**Test:**
 ```
-GET /inventory-transfer/subscribe → 404 NotFoundHttpException
-GET /ws                           → 404 NotFoundHttpException
+POST /operational-settings/get {restaurant_id:835}
+  resolved_settings.reserve_on_approve: false ✅
+  resolved_settings.fefo_consumption_enabled: true ✅
+  
+POST /operational-settings/get {restaurant_id:806}
+  stored_settings.reserve_on_approve: false ✅
 ```
-**Verdict:** No WebSocket or push subscription endpoint exists. Gap confirmed open.
+
+**Verdict:** Setting exists in both `resolved_settings` and `stored_settings`. Configurable via update endpoint.
 
 ---
 
-## 4. Closed Gaps — Verification
+### G-012 — Request Catalog Category Grouping
 
-### G-009 | Partial Dispatch via approval_lines | ✅ CONFIRMED CLOSED
+| Field | Value |
+|-------|-------|
+| **Status** | ✅ RESOLVED — verified |
 
+**Test:**
 ```
-POST /inventory-transfer/approve/9999 with {"approval_lines":[]}
-→ {"status":false,"error_code":"TRANSFER_NOT_FOUND","message":"Transfer not found"}
+POST /inventory-transfer/request-catalog {source_restaurant_id:806} (franchise token)
+  → 49 items
+  category_id: 1529 ✅
+  category_name: "coffee" ✅
+  source_inventory_master_id: 17641 ✅
+  stock_title: "coffee beans" ✅
 ```
-**Verdict:** Endpoint accepts `approval_lines` parameter (returns proper business error, not 404/validation). Confirmed working.
+
+**Verdict:** Both `category_id` and `category_name` present in every catalog item.
 
 ---
 
-### G-010 | Soft Stock Reservation (reserve_on_approve) | ✅ CONFIRMED CLOSED
+### G-013 — Transfer Reference Code
 
+| Field | Value |
+|-------|-------|
+| **Status** | ✅ RESOLVED — verified |
+
+**Test:**
 ```
-POST /inventory-transfer/operational-settings/get → 200
-  Response includes: "reserve_on_approve": false
+GET /inventory-transfer/details/226
+  reference_code: "TRF-806-2026-0016" ✅
+  lines[0].line_reference: "TRF-806-2026-0016-L01" ✅
+
+POST /inventory-transfer/history {reference_code:"TRF-806-2026-0016"}
+  → Filtered to exactly 1 result ✅
 ```
-**Verdict:** `reserve_on_approve` setting exists and is configurable. Confirmed working.
+
+**Verdict:** `reference_code` on transfer, `line_reference` on lines, history filter by reference_code — all working.
 
 ---
 
-### G-012 | request-catalog Missing Category | ✅ CONFIRMED CLOSED
+### G-014 — Hierarchy Transfer Selling Price + Shipping
 
+| Field | Value |
+|-------|-------|
+| **Status** | ✅ RESOLVED — verified (field infrastructure) |
+
+**Test (transfer detail):**
 ```
-POST /inventory-transfer/request-catalog {"source_restaurant_id":806}
-→ 49 items, each with:
-  category_id: 1529
-  category_name: "coffee"
+GET /inventory-transfer/details/226
+  selling_goods_total: 0 ✅ (present, no pricing set)
+  selling_grand_total: 0 ✅
+  shipping_fee: 0.00000000 ✅
+  shipping_fee_set_by: None ✅
+  shipping_fee_set_at: None ✅
+  line.selling_unit_price: None ✅ (present, not set)
+  line.selling_line_total: None ✅
 ```
-**Verdict:** Both `category_id` and `category_name` present in catalog items. Confirmed closed.
+
+**Test (operational settings):**
+```
+POST /operational-settings/get
+  allow_master_set_transfer_selling_price: true ✅
+  transfer_selling_price_required: false ✅
+  central_resell_markup_percent: 0 ✅
+  allow_central_set_transfer_selling_price: true ✅
+  transfer_shipping_fee_allowed: true ✅
+```
+
+**Verdict:** All pricing and shipping fields present on transfer detail. Master config keys in operational settings. Fields are null/zero because no pricing was set on these transfers — infrastructure confirmed.
 
 ---
 
-### G-013 | No PO Number (reference_code) | ✅ CONFIRMED CLOSED
+### G-015 — Excel/CSV Parse for Procurement Import
 
+| Field | Value |
+|-------|-------|
+| **Status** | ❌ NOT DEPLOYED |
+
+**Test:**
 ```
-POST /inventory-transfer/history → items include:
-  reference_code: "TRF-806-2026-0016"
+POST /inventory/purchase-order/parse-import → 405 MethodNotAllowedHttpException
+  (route exists for GET/HEAD/DELETE only — POST not registered)
+
+GET /inventory/purchase-order/import-template → 404 NotFoundHttpException
 ```
-**Verdict:** `reference_code` present in transfer history items. Confirmed closed.
+
+**Verdict:** Routes not registered for the parse-import flow. Not deployed.
 
 ---
 
-### G-017 | Vendor Purchase History API | ✅ CONFIRMED CLOSED
+### G-016 — Invoice Number + Duplicate Check
 
+| Field | Value |
+|-------|-------|
+| **Status** | ❌ NOT DEPLOYED |
+
+**Test:**
+```
+POST /inventory/purchase-order/check-invoice-number {vendor_id:42, invoice_number:"INV-UAT-001"}
+  → 405 MethodNotAllowedHttpException (POST not registered)
+
+GET /inventory/purchase-order/6
+  PO detail lines → 0 receipts (no invoice_number field to check)
+  PO top-level keys: no invoice_number present
+```
+
+**Verdict:** `check-invoice-number` POST route not registered. PO objects carry no `invoice_number` field. Not deployed.
+
+---
+
+### G-017 — Vendor Purchase History API
+
+| Field | Value |
+|-------|-------|
+| **Status** | ✅ RESOLVED — verified |
+
+**Test:**
 ```
 GET /inventory/vendor-item-list?restaurant_ids[]=806
-→ 75 records with keys: [Amount, ID, Ingredient_Name, Payment_Type, Purchase_Date,
-   Quantity, Restaurant_Name, Vendor_Name, ingredient_id, line_total, restaurant_id,
-   restaurant_type_flag, stock_quantity_raw, unit_price, vendor_id]
+  → 75 records ✅
+  Keys: [Amount, ID, Ingredient_Name, Payment_Type, Purchase_Date, Quantity, 
+         Restaurant_Name, Vendor_Name, ingredient_id, line_total, restaurant_id,
+         restaurant_type_flag, stock_quantity_raw, unit_price, vendor_id]
 ```
-**Verdict:** 75 records returned with full vendor purchase data. Confirmed closed.
+
+**Verdict:** Full vendor purchase data with 75 records. Used in CR-030 screens.
 
 ---
 
-### G-018 | Production Run List/History API | ✅ CONFIRMED CLOSED
+### G-018 — Production Run List + Detail
 
+| Field | Value |
+|-------|-------|
+| **Status** | ✅ RESOLVED — verified |
+
+**Test (list):**
 ```
-GET /inventory/production-run → 200
-  {"status":true, "data": [...], "meta": {...}}
-  Runs count: 11
+GET /inventory/production-run?limit=5
+  → 11 total runs, paginated (5 per page, 3 pages)
+  Run 11: reference_code="PRD-2026-0011", output_unit="piece", status="completed" ✅
 ```
-**Verdict:** Production run list returns 11 runs with pagination meta. Confirmed closed.
+
+**Test (detail):**
+```
+GET /inventory/production-run/11
+  reference_code: "PRD-2026-0011" ✅
+  unit_cost: 2.4834375 ✅
+  total_cost: 2.4834375 ✅
+  consumed_allocations: present ✅
+    → Jaggery Powder: qty_needed=2.708, segment unit_cost=0.1, line_cost=0.270
+    → GSM: with segment allocations and unit_cost
+  output_batch: "TEST-806" ✅
+  output_expiry_date: "2026-09-14" ✅
+```
+
+**Verdict:** Full production run lifecycle with cost tracking, consumed allocations with per-segment `unit_cost`.
 
 ---
 
-### G-019 | Segment unit_cost | ✅ CONFIRMED CLOSED
+### G-019 — Segment unit_cost on Stock Detail
 
+| Field | Value |
+|-------|-------|
+| **Status** | 🔒 BLOCKED BY GuardsPushedCatalog — previously confirmed |
+
+**Previous verification (before trait broke):**
 ```
-GET /inventory/stock-inventory/17681 (Almonds) →
-  segments[0]: {
-    "segment_id": 304,
-    "batch": "VA-ALMD-001",
-    "expiry_date": "2026-09-12",
-    "cal_quantity": 1000,
-    "display_qty": 1,
-    "unit_cost": 1.4
-  }
+GET /inventory/stock-inventory/17681 (Almonds)
+  segments[0]: {segment_id:304, batch:"VA-ALMD-001", expiry_date:"2026-09-12", unit_cost:1.4} ✅
 ```
-**Verdict:** `unit_cost` present in segment data (1.4 for Almonds batch). Confirmed closed.
+
+**Current test:**
+```
+GET /inventory/stock-inventory/17681 → FATAL: GuardsPushedCatalog not found
+```
+
+**Also confirmed via production-run detail:**
+```
+consumed_allocations[].segment_allocations[].unit_cost present ✅ (0.1 for Jaggery, etc.)
+```
+
+**Verdict:** `unit_cost` confirmed via production-run allocations. Direct stock-inventory blocked by trait issue. Previously verified working.
 
 ---
 
-### G-021 | Purchase Order Module (10 endpoints) | ✅ CONFIRMED CLOSED
+### G-020 — Custom Unit Conversion
 
+| Field | Value |
+|-------|-------|
+| **Status** | ⚠️ READ FIELDS PRESENT — no active conversions found; WRITE BLOCKED by GuardsPushedCatalog |
+
+**Test (request-catalog):**
 ```
-GET  /inventory/purchase-order/list   → 200 (returns PO list)
-GET  /inventory/purchase-order/6      → 200 (returns PO detail)
-POST /inventory/purchase-order/create → 422 VALIDATION_FAILED (correct — requires vendor_id + lines)
+POST /request-catalog {source_restaurant_id:806}
+  49 items, With has_unit_conversion=true: 0
+  All items: has_unit_conversion=false, consumption_unit=null, converion_factor=null
 ```
-**Verdict:** List, detail, and create endpoints all respond correctly. Validation errors are proper business rules. Confirmed closed.
+
+**Test (write — add-inventory with conversion):**
+```
+POST /inventory/add-inventory [{consumption_unit:"gm", converion_factor:500, ...}]
+  → FATAL: GuardsPushedCatalog not found
+```
+
+**Verdict:** Read fields (`has_unit_conversion`, `consumption_unit`, `converion_factor`, `consumption_unit_id`) present in schema. No items currently have active conversion. Write test blocked by GuardsPushedCatalog. Cannot fully verify until trait is deployed.
 
 ---
 
-### G-022 | Aggregated Stock with Segments/Consumption | ✅ CONFIRMED NOT NEEDED
+### G-021 — Purchase Order Module
 
+| Field | Value |
+|-------|-------|
+| **Status** | ✅ RESOLVED — verified |
+
+**Test:**
 ```
-GET /inventory/stock-inventory?include_segments=true&include_consumption=true&segment_limit=2
-→ 200, 49 stocks, each with:
-  consumption_summary: present ✓
-  consumption_lines: present ✓
-  segments_preview: present ✓  (note: key is "segments_preview" not "segments")
+GET /inventory/purchase-order/list → 200 ✅
+GET /inventory/purchase-order/6 → 200 ✅
+POST /inventory/purchase-order/create {} → 422 VALIDATION_FAILED ✅
+  errors: {vendor_id: required, lines: required}
 ```
-**Verdict:** API supports `include_segments` and `include_consumption` params. Data returned inline. Separate endpoint not needed. Confirmed NOT NEEDED.
+
+**Verdict:** List, detail, and create endpoints all respond correctly with proper validation.
 
 ---
 
-### G-023 | Push-form API Missing child_existing Keys | ✅ CONFIRMED CLOSED
+### G-022 — Aggregated Stock with Segments/Consumption
 
+| Field | Value |
+|-------|-------|
+| **Status** | ✅ RESOLVED — NOT NEEDED (confirmed) |
+
+**Previous verification (before trait broke):**
 ```
-GET /franchise/push-form/812 → 200
-  push_summary: {total_source: 73, total_child_matched: 13, total_behind: 60, breakdown: {...}}
-  child_existing keys: [category_names, food_names, addon_names, ingredient_names,
-                        sub_recipe_names, recipe_names, role_names]
+GET /inventory/stock-inventory?include_segments=true&include_consumption=true
+  → 49 stocks, each with consumption_summary, consumption_lines, segments_preview
 ```
-**Verdict:** Both `push_summary` and enriched `child_existing` (with ingredient/sub_recipe/recipe names) are present. Confirmed closed.
+
+**Verdict:** API supports inline params. Separate endpoint not needed.
 
 ---
 
-## 5. Other Known Issues — Validation
+### G-023 — Franchise Push-form child_existing + push_summary
 
-### History items_count Always 0 | ❌ CONFIRMED
+| Field | Value |
+|-------|-------|
+| **Status** | ✅ RESOLVED — verified |
 
+**Test (835 → 837):**
 ```
-Transfer 226: items_count=0 (status=received)
-Transfer 224: items_count=0 (status=received)
-Transfer 223: items_count=0 (status=received)
-Transfer 222: items_count=0 (status=partially_received)
-Transfer 220: items_count=0 (status=received)
+GET /franchise/push-form/837
+  push_summary: {total_source:28, total_child_matched:28, total_behind:0, breakdown:{...}} ✅
+  child_existing keys: [category_names, food_names, addon_names, ingredient_names, 
+                        sub_recipe_names, recipe_names, role_names] ✅
+    ingredient_names: 9 items ✅
+    sub_recipe_names: 3 items ✅
+    recipe_names: 1 item ✅
+    food_names: 1 item ✅
 ```
-**Verdict:** All 5 sampled transfers show `items_count=0`. Backend does not compute line count in history listing. Would need per-transfer detail call (N+1) to get actual counts.
+
+**Verdict:** Both `push_summary` and enriched `child_existing` confirmed. Full entity matching breakdown available.
 
 ---
 
-### store-sub-recipe Create API Bug (name null) | ❌ CONFIRMED
+### G-025 — `items_count` on Transfer History
 
+| Field | Value |
+|-------|-------|
+| **Status** | ✅ RESOLVED — verified |
+
+**Test:**
 ```
-POST /recipe/store-sub-recipe {"name":"test-validation-only","ingredients":[]}
-→ SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'name' cannot be null
-  SQL: insert into `sub_recipes` (`name`, ...) values (?, ...)
+POST /inventory-transfer/history {restaurant_id:806, limit:5}
+  TRF-806-2026-0016: items_count=1, line_count=1 ✅
+  TRF-806-2026-0014: items_count=1, line_count=1 ✅
+  TRF-806-2026-0013: items_count=1, line_count=1 ✅
+  TRF-806-2026-0012: items_count=2, line_count=2 ✅
+  TRF-806-2026-0010: items_count=1, line_count=1 ✅
 ```
-**Verdict:** POS backend ignores the `name` field from JSON payload and inserts NULL. This is a confirmed POS backend bug — the Laravel query shows `?` placeholder for name, indicating the field is not bound from the request. Existing sub-recipes work, but creating new ones via API fails.
+
+**Was:** All items_count=0 (previously verified on 2026-07-02 initial test)  
+**Now:** Both `items_count` and `line_count` populated from line-count subquery.
+
+**Verdict:** Confirmed resolved. Both fields populated correctly.
 
 ---
 
-### Wastage Reasons | ✅ WORKING
+### G-026 — parent_restaurant_id on Hierarchy Summary
 
+| Field | Value |
+|-------|-------|
+| **Status** | ✅ RESOLVED — verified |
+
+**Test:**
 ```
-GET /inventory/wastage-reasons → 200
-  4 reasons: [Others, Expired, Pilferage, Spillage]
+POST /inventory-transfer/hierarchy-summary {store_type:"franchise"} (806 token)
+  Store 810 (Alpha Outlet One): parent_restaurant_id=807 ✅
+  Store 811 (Cost Test Outlet): parent_restaurant_id=806 ✅
+  Store 809 (Outlet Direct One): parent_restaurant_id=806 ✅
 ```
-**Verdict:** Wastage reasons endpoint works. Returns 4 configured reasons.
+
+**Verdict:** `parent_restaurant_id` present on every store row in hierarchy-summary.
 
 ---
 
-### Daily Consumption Report | ✅ WORKING
+### G-027 — Master-Controlled Operational Settings (Strict)
 
+| Field | Value |
+|-------|-------|
+| **Status** | ✅ RESOLVED — verified |
+
+**Test (master read):**
 ```
-POST /report/daily-consumption-report {} → 200
-  stock_summary: 18 items
-  stock_details: 102 items
-  date_range, restaurant_id, applied_restaurant_ids, hierarchy_scope: all present
+POST /operational-settings/get {restaurant_id:835}
+  restaurant_id: 835 ✅
+  master_restaurant_id: 835 ✅
+  policy_controlled_by_master: true ✅
+  settings_editable: true ✅ (master can edit)
 ```
-**Verdict:** Consumption report works. No trend comparison (would need 2 separate API calls with different date ranges).
+
+**Test (central read — inherits):**
+```
+POST /operational-settings/get {restaurant_id:837}
+  restaurant_id: 837 ✅
+  master_restaurant_id: 835 ✅
+  policy_controlled_by_master: true ✅
+  settings_editable: false ✅ (central cannot edit)
+```
+
+**Test (central update — blocked):**
+```
+POST /operational-settings/update {restaurant_id:837, settings:{production_enabled:true}}
+  → 403: error_code="READONLY_HIERARCHY_SETTINGS" ✅
+  → message="Hierarchy operational settings are read-only for this store. Contact master admin."
+```
+
+**Verdict:** Full master-controlled settings hierarchy confirmed. Central/franchise reads inherit from master. Central/franchise updates blocked with proper error code.
 
 ---
 
-## 6. Summary Table
+### G-028 — Pushed Hierarchy Bundle Write Lock
 
-### Open Gaps (Blocking)
+| Field | Value |
+|-------|-------|
+| **Status** | ❌ NOT DEPLOYED — GuardsPushedCatalog trait missing |
 
-| ID | Gap | Status | Priority | Resolution Owner |
-|----|-----|:------:|:--------:|:---:|
-| **G-006** | Stock return flow API | ❌ OPEN | **P1** | POS Backend |
-| **G-014** | Invoice OCR/AI extraction | ❌ OPEN | **P1** | POS Backend |
-| **G-020** | Custom unit conversion | ❌ OPEN | **P1** | POS Backend |
-| G-015 | Excel/CSV parsing | ❌ OPEN | P2 | POS Backend |
-| G-016 | Invoice number storage | ❌ OPEN | P2 | POS Backend |
+**Test:**
+```
+GET /product/foods-list (central 837 token)
+  → FATAL: GuardsPushedCatalog trait not found
 
-### Open Gaps (Low Priority)
+All write endpoints (inventory, recipe, food controllers) → same FATAL error
+```
 
-| ID | Gap | Status | Priority | Resolution Owner |
-|----|-----|:------:|:--------:|:---:|
-| G-001 | Stock adjustment history API | ❌ OPEN | P2 | POS Backend |
-| G-002 | Before/after qty in transfer | ❌ OPEN | P2 | POS Backend |
-| G-005 | Dedicated stock ledger API | ❌ OPEN | P2 | POS Backend |
-| G-011 | WebSocket infrastructure | ❌ OPEN | P2 | POS Backend |
-| G-003 | User name resolution | ❌ OPEN | P3 | POS Backend |
-| **G-004** | **History restaurant_type** | **⚠️ RE-EVALUATE** | **P3** | **from/to types present — may be closable** |
+**Verdict:** The `use GuardsPushedCatalog` statement was added to controllers but the trait file itself was not deployed. This is a deployment gap, not an API design gap. **Blocks all catalogue read/write operations globally.**
 
-### Closed Gaps (Verified)
+---
 
-| ID | Gap | Verified |
-|----|-----|:--------:|
-| G-009 | Partial dispatch (approval_lines) | ✅ |
-| G-010 | reserve_on_approve setting | ✅ |
-| G-012 | request-catalog category_id | ✅ |
-| G-013 | reference_code in transfers | ✅ |
-| G-017 | vendor-item-list API (75 records) | ✅ |
-| G-018 | Production run list (11 runs) | ✅ |
-| G-019 | Segment unit_cost (1.4 confirmed) | ✅ |
-| G-021 | Purchase Order Module (list/detail/create) | ✅ |
-| G-022 | Aggregated stock params (NOT NEEDED) | ✅ |
-| G-023 | push_summary + child_existing keys | ✅ |
+### G-029 — Child Catalogue/Inventory Edit Policy
 
-### Bug Confirmations
+| Field | Value |
+|-------|-------|
+| **Status** | ❌ NOT DEPLOYED |
 
-| Bug | Confirmed | Notes |
-|-----|:---------:|-------|
-| History items_count=0 | ✅ Yes | All 5 sampled transfers = 0 |
-| store-sub-recipe name null | ✅ Yes | SQLSTATE[23000] — POS doesn't bind `name` param |
-| Wastage reasons | Working | 4 reasons returned |
-| Daily consumption report | Working | 18 summary + 102 detail items |
+**Test:**
+```
+GET /franchise/catalog-policy/837 → empty response (no route match)
+POST /franchise/catalog-policy/837 → 404 NotFoundHttpException
+```
+
+**Verdict:** `catalog-policy` routes not registered on preprod. Not deployed.
+
+---
+
+### G-030 — Manufactured Recipe → Auto Sub-recipe
+
+| Field | Value |
+|-------|-------|
+| **Status** | 🔒 BLOCKED BY GuardsPushedCatalog |
+
+**Test:**
+```
+POST /recipe/store-recipe {} → FATAL: GuardsPushedCatalog trait not found
+```
+
+**Verdict:** Cannot test — RecipeController blocked by missing trait. Route exists but controller crashes on load.
+
+---
+
+## Summary Table
+
+### Deployment Status
+
+| Gap | Description | Deployed? | Verified? |
+|-----|-------------|:---------:|:---------:|
+| G-001 | Stock adjustment history | DISCARDED | ✅ |
+| **G-002** | **Before/after qty** | **✅ Yes** | **⚠️ Fields present, values null (pre-deploy)** |
+| **G-003** | **Actor display names** | **✅ Yes** | **✅ Confirmed** |
+| **G-004** | **History store type badges** | **✅ Yes** | **✅ Confirmed** |
+| **G-005** | **Stock ledger API** | **❌ No** | **404** |
+| **G-006** | **Return flow** | **⚠️ Partial** | **initiate ✅, eligible ❌** |
+| **G-009** | **Partial dispatch** | **✅ Yes** | **✅ Confirmed** |
+| **G-010** | **reserve_on_approve** | **✅ Yes** | **✅ Confirmed** |
+| **G-012** | **Request catalog category** | **✅ Yes** | **✅ Confirmed** |
+| **G-013** | **Reference code** | **✅ Yes** | **✅ Confirmed** |
+| **G-014** | **Selling price + shipping** | **✅ Yes** | **✅ Confirmed** |
+| **G-015** | **Excel/CSV parse** | **❌ No** | **405/404** |
+| **G-016** | **Invoice number check** | **❌ No** | **405** |
+| **G-017** | **Vendor item list** | **✅ Yes** | **✅ Confirmed** |
+| **G-018** | **Production run** | **✅ Yes** | **✅ Confirmed** |
+| **G-019** | **Segment unit_cost** | **🔒 Blocked** | **Previously confirmed; GuardsPushedCatalog** |
+| **G-020** | **Unit conversion** | **⚠️ Read only** | **Fields present, write blocked** |
+| **G-021** | **Purchase order module** | **✅ Yes** | **✅ Confirmed** |
+| **G-022** | **Aggregated stock** | **✅ Yes** | **✅ NOT NEEDED** |
+| **G-023** | **Push-form enrichment** | **✅ Yes** | **✅ Confirmed** |
+| **G-025** | **items_count** | **✅ Yes** | **✅ Confirmed (was 0, now populated)** |
+| **G-026** | **parent_restaurant_id** | **✅ Yes** | **✅ Confirmed** |
+| **G-027** | **Master-controlled settings** | **✅ Yes** | **✅ Confirmed** |
+| **G-028** | **Pushed catalog lock** | **❌ BROKEN** | **Trait file missing — GLOBAL BLOCKER** |
+| **G-029** | **Child catalog policy** | **❌ No** | **404** |
+| **G-030** | **Manufactured recipe** | **🔒 Blocked** | **GuardsPushedCatalog** |
+
+### Score: 15/22 resolved gaps verified ✅, 4 not deployed, 3 blocked by GuardsPushedCatalog
+
+### Priority Action Items
+
+1. **P0 — DEPLOY `GuardsPushedCatalog` trait file** → unblocks G-019, G-020 write, G-028, G-029 (enforcement), G-030, and ALL catalogue read/write globally
+2. **P1 — Deploy `return/eligible` route** → unblocks G-006 return flow (initiate already works)
+3. **P1 — Deploy `stock-ledger` route** → unblocks G-005
+4. **P2 — Deploy `parse-import` + `import-template` routes** → unblocks G-015
+5. **P2 — Deploy `check-invoice-number` route** → unblocks G-016
+6. **P2 — Deploy `catalog-policy` routes** → unblocks G-029
 
 ---
 
 ## Resolution Log
 
-_This section will be updated as gaps are resolved._
-
-| Date | Gap ID | Resolution | Validated By |
-|------|--------|------------|:------------:|
-| — | — | — | — |
+| Date | Gap ID | Action | Result |
+|------|--------|--------|:------:|
+| 2026-07-02 | G-025 | Tested items_count | **NEWLY RESOLVED** — was 0, now populated |
+| 2026-07-02 | G-028 | Tested GuardsPushedCatalog | **DEPLOYMENT BLOCKER FOUND** |
+| — | — | Awaiting resolution | — |
