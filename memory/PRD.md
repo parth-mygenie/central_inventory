@@ -1,7 +1,7 @@
 # Central Inventory — PRD
 
 ## Problem Statement
-Full E2E testing on Hells Kitchen (RID 803) hierarchy with correct API contracts.
+Full E2E testing on Hells Kitchen (RID 803) hierarchy — all transfer directions, production, PO with correct contracts.
 
 ## Architecture
 - **Backend**: FastAPI proxy → MyGenie POS preprod APIs + MongoDB
@@ -9,28 +9,32 @@ Full E2E testing on Hells Kitchen (RID 803) hierarchy with correct API contracts
 
 ## What's Been Implemented — 2026-07-10
 
-### Hells Kitchen (RID 803) Full E2E Test
-1. **Hierarchy**: 5/5 children created (B=804, C=807, C2=805, D=808, E=806), all tokens working
-2. **Catalogue**: 3 stock categories, 6 inventory items (with kg→gm conversion), 2 food categories, 4 foods
-3. **Recipes**: 3 regular + 1 manufactured (auto sub-recipe 192 + FG 18142). Standalone sub-recipe created with `subunit` field
-4. **Vendors**: Metro Wholesale (240), Farm Direct (241)
-5. **PO**: PO-803-2026-0001 full lifecycle with correct `batch` field → segments have batch+expiry
-6. **Push bundles**: All 3 direct children received catalogue (2 cats, 7 inv, 4 food, 4 recipes each)
-7. **Transfers**: 5 successful (Master→B, Master→C2, Master→E, B→C, C2→D) using `segment_id` mode
-8. **New G-031 endpoints**: All deployed and verified (import-template, parse-import, receive-import-template, check-invoice-number, catalog-policy, return/eligible, stock-ledger)
+### Hells Kitchen (RID 803) — ALL TESTS PASSING
+1. **Hierarchy 5/5**: B(804), C(807), C2(805), D(808), E(806) — all tokens working
+2. **Catalogue**: 3 stock cats, 6 inv items, 2 food cats, 4 foods
+3. **Recipes**: 3 regular + 1 manufactured (SR 192, FG 18142) + 1 standalone sub-recipe
+4. **PO lifecycle**: PO-803-2026-0001 with correct `batch` field → segments have batch+expiry
+5. **Production**: PRD-2026-0001, 5 batches Marinara, cost ₹900
+6. **8/8 transfer directions**: Master→Central, Master→Franchise, Central→Franchise, Central→Central(lateral), Central→other's Franchise(cross), Franchise→Franchise(lateral)
+7. **G-031 endpoints**: All 7 deployed and verified
 
-### Key API Contract Corrections
+### Key Operational Settings (master 803)
+- `production_enabled: true`
+- `allow_lateral_central_transfer: true`
+- `allow_lateral_franchise_transfer: true`
+- `allow_cross_central_franchise_dispatch: true`
+
+### API Contract Confirmed
 - PO receive: `batch` (not `batch_number`)
 - Sub-recipe: `subunit` (not `unit`)
-- Source selector: `segment_id` mode requires batch+expiry on segment
-- Hierarchy transfers: Only Master→Central, Master→Franchise, Central→own Franchise allowed
+- Production expiry: `YYYY-MM-DD` format
+- Lateral transfers: `lateral/initiate` endpoint + master approval
+- Cross-central: `initiate` endpoint with ops flag enabled
 
-### Blockers
-- Production run: `INVENTORY_NOT_ENABLED` — needs `restaurants.inventory='Yes'` in POS DB
-- Central→Central, Central→other's franchise, Franchise→Franchise: `INVALID_HIERARCHY` (by design)
-
-## Reports
-- `/app/AI/Plans/hk_803_e2e_test_report.md` — Full test report
-- `/app/AI/Plans/hg_799_e2e_test_report.md` — Previous Heaven Garden test
-- `/app/AI/curls/hk_phase1_hierarchy.sh` — Hierarchy creation script
-- `/app/AI/curls/hk_phase2to4_catalogue_po.sh` — Catalogue + PO script
+### Reports (AI/ directory — append only)
+- `AI/Plans/hk_803_e2e_test_report.md` — Full initial test
+- `AI/Plans/hk_803_retest_addendum.md` — Retest with production + lateral transfers
+- `AI/Plans/hg_799_e2e_test_report.md` — Previous Heaven Garden test
+- `AI/curls/hk_phase1_hierarchy.sh` — Hierarchy creation
+- `AI/curls/hk_phase2to4_catalogue_po.sh` — Catalogue + PO
+- `AI/curls/hg_phase*.sh` — Heaven Garden scripts (preserved)
