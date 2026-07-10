@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>B3 — Transfer Detail (Intelligent UI Preview)</title>
+<style>
+:root{--bg:#fff;--surface:#fff;--surface2:#f4f4f5;--surface3:#fafafa;--border:#e4e4e7;--border-light:#f4f4f5;--text:#09090b;--text-sec:#52525b;--text-muted:#a1a1aa;--primary:#18181b;--primary-fg:#fafafa;--amber:#b45309;--amber-light:#fffbeb;--amber-border:#fde68a;--red:#dc2626;--red-light:#fef2f2;--red-border:#fecaca;--green:#16a34a;--font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;--mono:'SF Mono',Consolas,monospace;--sidebar-w:200px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--surface2);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5;}
+.shell{display:flex;min-height:100vh;}
+.sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);padding:16px 0;flex-shrink:0;position:sticky;top:0;height:100vh;}
+.sidebar .logo{padding:0 16px 16px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.sidebar .logo .icon{width:24px;height:24px;background:var(--primary);border-radius:6px;}
+.sidebar nav a{display:flex;align-items:center;padding:8px 16px;font-size:13px;color:var(--text-sec);text-decoration:none;}
+.sidebar nav a:hover{background:var(--surface2);}
+.sidebar nav a.active{background:var(--surface2);color:var(--text);font-weight:600;border-right:2px solid var(--primary);}
+.topbar{height:48px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;justify-content:space-between;background:var(--surface);}
+.topbar .store-name{font-size:13px;font-weight:600;}
+.topbar .badge{font-size:10px;padding:2px 8px;border-radius:4px;background:var(--surface2);color:var(--text-sec);border:1px solid var(--border);font-weight:600;margin-left:8px;}
+.main{flex:1;display:flex;flex-direction:column;}
+.content{flex:1;padding:20px 28px 40px;max-width:1000px;}
+.preview-bar{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 12px;margin-bottom:16px;font-size:11px;color:var(--text-sec);}
+.back{font-size:12px;color:var(--text-muted);margin-bottom:10px;display:inline-block;cursor:pointer;}
+
+/* Header */
+.t-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:8px;}
+.t-header h1{font-size:20px;font-weight:700;display:flex;align-items:center;gap:10px;}
+.status-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:4px;background:var(--amber-light);color:var(--amber);border:1px solid var(--amber-border);}
+.type-tag{font-size:10px;padding:2px 8px;border-radius:3px;background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);}
+.age-tag{font-size:11px;color:var(--red);font-weight:500;}
+
+/* Timeline breadcrumb */
+.timeline{display:flex;align-items:center;gap:0;margin:12px 0 16px;flex-wrap:wrap;}
+.tl-step{display:flex;align-items:center;gap:4px;font-size:11px;padding:4px 10px;border-radius:4px;}
+.tl-step.done{color:var(--text-sec);background:var(--surface2);}
+.tl-step.current{color:var(--primary);background:var(--amber-light);border:1px solid var(--amber-border);font-weight:600;}
+.tl-step.future{color:var(--text-muted);}
+.tl-arrow{margin:0 4px;color:var(--text-muted);font-size:10px;}
+.tl-time{font-size:9px;color:var(--text-muted);margin-left:2px;}
+
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:12px;}
+.card-head{padding:10px 16px;border-bottom:1px solid var(--border-light);font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:600;}
+.card-body{padding:12px 16px;}
+
+/* From/To */
+.ft-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.ft-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 16px;}
+.ft-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+.ft-name{font-size:14px;font-weight:600;}
+.ft-type{font-size:11px;color:var(--text-muted);}
+
+/* Impact summary card */
+.impact-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:12px;border-left:3px solid var(--amber);}
+.impact-head{padding:10px 16px;border-bottom:1px solid var(--border-light);font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--amber);font-weight:700;display:flex;align-items:center;gap:6px;}
+.impact-body{padding:12px 16px;}
+.impact-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:12px;}
+.impact-row .label{color:var(--text-sec);}
+.impact-row .val{font-family:var(--mono);font-weight:600;}
+.impact-row .val.neg{color:var(--red);}
+
+/* Items table */
+table{width:100%;border-collapse:collapse;}
+th{text-align:left;padding:8px 16px;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:600;border-bottom:1px solid var(--border);background:var(--surface3);}
+td{padding:10px 16px;border-bottom:1px solid var(--border-light);font-size:12px;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+.item-name{font-weight:600;}
+.item-unit{color:var(--text-muted);margin-left:3px;font-size:11px;}
+.stock-val{display:flex;align-items:center;gap:4px;font-size:12px;}
+.stock-val .dot{width:5px;height:5px;border-radius:50%;}
+.stock-val.ok{color:var(--text-sec);} .stock-val.ok .dot{background:#d4d4d8;}
+.stock-val.low{color:var(--amber);font-weight:600;} .stock-val.low .dot{background:var(--amber);}
+.stock-label{font-size:10px;color:var(--text-muted);}
+.mono{font-family:var(--mono);}
+.projection{font-size:11px;color:var(--text-muted);margin-top:2px;}
+.projection.neg{color:var(--red);}
+
+/* Actions card */
+.actions-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:12px;}
+.actions-head{padding:10px 16px;border-bottom:1px solid var(--border-light);font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:600;}
+.actions-body{padding:12px 16px;}
+.actions-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+.btn{font-size:12px;font-weight:500;padding:7px 18px;border-radius:5px;border:1px solid var(--border);background:var(--surface);color:var(--text-sec);cursor:pointer;}
+.btn:hover{background:var(--surface2);}
+.btn-primary{background:var(--primary);color:var(--primary-fg);border-color:var(--primary);}
+.btn-danger{color:var(--red);border-color:var(--red-border);}
+.btn-danger:hover{background:var(--red-light);}
+
+/* Action tooltips */
+.action-help{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:11px;color:var(--text-muted);border-top:1px solid var(--border-light);padding-top:10px;}
+.action-help .name{font-weight:600;color:var(--text-sec);}
+
+/* Disabled explanation */
+.disabled-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 16px;margin-bottom:12px;font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:8px;}
+
+@media(max-width:900px){.sidebar{display:none;}.ft-grid{grid-template-columns:1fr;}.content{padding:16px;}}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside class="sidebar">
+  <div class="logo"><div class="icon"></div>Central Inventory</div>
+  <nav>
+    <a href="#">Operations Hub</a>
+    <a href="#" class="active">Pending Queues</a>
+    <a href="#">Stock Inventory</a>
+    <a href="#">History & Ledger</a>
+  </nav>
+</aside>
+<div class="main">
+<div class="topbar"><div class="store-name">Kala Bahia Central<span class="badge">Central Store</span></div></div>
+<div class="content">
+<div class="preview-bar">PREVIEW — B3 Transfer Detail — Intelligent view (status: Requested, viewer: Source/Central)</div>
+<a class="back">← Back to Pending Queues</a>
+
+<!-- Header with PO + age -->
+<div class="t-header">
+  <h1>
+    PO-XXXX
+    <span class="status-badge">Requested</span>
+    <span class="type-tag">Stock Request</span>
+  </h1>
+  <span class="age-tag">Created 3 days ago</span>
+</div>
+
+<!-- B3-11: Timeline breadcrumb with relative times -->
+<div class="timeline">
+  <span class="tl-step done">Requested <span class="tl-time">3 days ago</span></span>
+  <span class="tl-arrow">→</span>
+  <span class="tl-step current">Awaiting Approval</span>
+  <span class="tl-arrow">→</span>
+  <span class="tl-step future">Dispatch</span>
+  <span class="tl-arrow">→</span>
+  <span class="tl-step future">Receive</span>
+</div>
+
+<!-- From / To -->
+<div class="ft-grid">
+  <div class="ft-card">
+    <div class="ft-label">From (Source — You)</div>
+    <div class="ft-name">Kala Bahia Central</div>
+    <div class="ft-type">Central Store</div>
+  </div>
+  <div class="ft-card">
+    <div class="ft-label">To (Requester)</div>
+    <div class="ft-name">DemoFranchise1</div>
+    <div class="ft-type">Outlet</div>
+  </div>
+</div>
+
+<!-- Requester Store Health Panel -->
+<div class="card" style="border-left:3px solid var(--border);">
+  <div class="card-head" style="display:flex;justify-content:space-between;align-items:center;">
+    <span>Requester Store Snapshot — DemoFranchise1</span>
+    <span style="font-size:10px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-muted);">Real-time stock as of now</span>
+  </div>
+  <div class="card-body">
+    <!-- Health summary strip -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;">
+      <div style="text-align:center;padding:8px;background:var(--red-light);border-radius:6px;border:1px solid var(--red-border);">
+        <div style="font-size:20px;font-weight:700;font-family:var(--mono);color:var(--red);">3</div>
+        <div style="font-size:10px;color:#991b1b;">Out of Stock</div>
+      </div>
+      <div style="text-align:center;padding:8px;background:var(--amber-light);border-radius:6px;border:1px solid var(--amber-border);">
+        <div style="font-size:20px;font-weight:700;font-family:var(--mono);color:var(--amber);">1</div>
+        <div style="font-size:10px;color:#92400e;">Low Stock</div>
+      </div>
+      <div style="text-align:center;padding:8px;background:var(--surface2);border-radius:6px;border:1px solid var(--border);">
+        <div style="font-size:20px;font-weight:700;font-family:var(--mono);">0</div>
+        <div style="font-size:10px;color:var(--text-muted);">Adequate</div>
+      </div>
+      <div style="text-align:center;padding:8px;background:var(--surface2);border-radius:6px;border:1px solid var(--border);">
+        <div style="font-size:20px;font-weight:700;font-family:var(--mono);">4</div>
+        <div style="font-size:10px;color:var(--text-muted);">Total Items</div>
+      </div>
+    </div>
+    <!-- Full item list -->
+    <table style="font-size:12px;">
+      <thead>
+        <tr>
+          <th style="font-size:9px;padding:6px 12px;">Item</th>
+          <th style="font-size:9px;padding:6px 12px;">Category</th>
+          <th style="font-size:9px;padding:6px 12px;">Stock Level</th>
+          <th style="font-size:9px;padding:6px 12px;">Min Threshold</th>
+          <th style="font-size:9px;padding:6px 12px;">Status</th>
+          <th style="font-size:9px;padding:6px 12px;">In This Request?</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="padding:6px 12px;"><span style="font-weight:600;">Red Meat</span><span style="color:var(--text-muted);font-size:11px;margin-left:3px;">gm</span></td>
+          <td style="padding:6px 12px;font-size:11px;color:var(--text-muted);">Non Veg</td>
+          <td style="padding:6px 12px;"><span style="color:var(--red);font-weight:600;">0 gm</span></td>
+          <td style="padding:6px 12px;font-family:var(--mono);font-size:11px;">500 gm</td>
+          <td style="padding:6px 12px;"><span style="font-size:10px;font-weight:600;color:var(--red);background:var(--red-light);padding:2px 6px;border-radius:3px;border:1px solid var(--red-border);">OUT</span></td>
+          <td style="padding:6px 12px;font-size:11px;font-weight:600;">Yes — 500 gm</td>
+        </tr>
+        <tr>
+          <td style="padding:6px 12px;"><span style="font-weight:600;">Patri</span><span style="color:var(--text-muted);font-size:11px;margin-left:3px;">gm</span></td>
+          <td style="padding:6px 12px;font-size:11px;color:var(--text-muted);">Non Veg</td>
+          <td style="padding:6px 12px;"><span style="color:var(--red);font-weight:600;">0 gm</span></td>
+          <td style="padding:6px 12px;font-family:var(--mono);font-size:11px;">800 gm</td>
+          <td style="padding:6px 12px;"><span style="font-size:10px;font-weight:600;color:var(--red);background:var(--red-light);padding:2px 6px;border-radius:3px;border:1px solid var(--red-border);">OUT</span></td>
+          <td style="padding:6px 12px;font-size:11px;font-weight:600;">Yes — 800 gm</td>
+        </tr>
+        <tr>
+          <td style="padding:6px 12px;"><span style="font-weight:600;">Maida</span><span style="color:var(--text-muted);font-size:11px;margin-left:3px;">kg</span></td>
+          <td style="padding:6px 12px;font-size:11px;color:var(--text-muted);">Veggies</td>
+          <td style="padding:6px 12px;"><span style="color:var(--amber);font-weight:600;">0.5 kg</span></td>
+          <td style="padding:6px 12px;font-family:var(--mono);font-size:11px;">10 kg</td>
+          <td style="padding:6px 12px;"><span style="font-size:10px;font-weight:600;color:var(--amber);background:var(--amber-light);padding:2px 6px;border-radius:3px;border:1px solid var(--amber-border);">LOW</span></td>
+          <td style="padding:6px 12px;font-size:11px;font-weight:600;">Yes — 10 kg</td>
+        </tr>
+        <tr>
+          <td style="padding:6px 12px;"><span style="font-weight:600;">Cooking Oil</span><span style="color:var(--text-muted);font-size:11px;margin-left:3px;">ltr</span></td>
+          <td style="padding:6px 12px;font-size:11px;color:var(--text-muted);">Veggies</td>
+          <td style="padding:6px 12px;"><span style="color:var(--red);font-weight:600;">0 ltr</span></td>
+          <td style="padding:6px 12px;font-family:var(--mono);font-size:11px;">5 ltr</td>
+          <td style="padding:6px 12px;"><span style="font-size:10px;font-weight:600;color:var(--red);background:var(--red-light);padding:2px 6px;border-radius:3px;border:1px solid var(--red-border);">OUT</span></td>
+          <td style="padding:6px 12px;font-size:11px;color:var(--amber);">Not requested</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="font-size:11px;color:var(--amber);margin-top:8px;padding-top:8px;border-top:1px solid var(--border-light);">
+      ⚠ Cooking Oil is also out of stock at this outlet but was not included in this request.
+    </div>
+  </div>
+</div>
+
+<!-- B3-01/02: Approval Impact Summary -->
+<div class="impact-card">
+  <div class="impact-head">Approval Impact on Your Stock</div>
+  <div class="impact-body">
+    <div class="impact-row" style="font-size:10px;color:var(--text-muted);padding-bottom:6px;border-bottom:1px solid var(--border-light);">
+      <span>Item</span><span style="display:flex;gap:40px;"><span>Requested</span><span>Your Stock</span><span>After Approval</span></span>
+    </div>
+    <div class="impact-row">
+      <span class="label">Red Meat (gm)</span>
+      <span style="display:flex;gap:40px;align-items:center;">
+        <span class="mono">500</span>
+        <span class="mono">1,250</span>
+        <span class="mono">750</span>
+      </span>
+    </div>
+    <div class="impact-row">
+      <span class="label">Patri (gm)</span>
+      <span style="display:flex;gap:40px;align-items:center;">
+        <span class="mono">800</span>
+        <span class="mono">3,950</span>
+        <span class="mono">3,150</span>
+      </span>
+    </div>
+    <div class="impact-row" style="background:var(--red-light);margin:0 -16px;padding:6px 16px;border-radius:4px;">
+      <span class="label" style="color:var(--red);">Maida (kg)</span>
+      <span style="display:flex;gap:40px;align-items:center;">
+        <span class="mono">10</span>
+        <span class="mono" style="color:var(--amber);">3.2</span>
+        <span class="mono neg">-6.8</span>
+      </span>
+    </div>
+    <div style="font-size:11px;color:var(--amber);margin-top:8px;">⚠ Maida: insufficient stock. Consider partial approval (approve 3.2 kg, hold remainder).</div>
+  </div>
+</div>
+
+<!-- Line Items with stock context -->
+<div class="card">
+  <div class="card-head">Line Items — 3 items</div>
+  <table>
+    <thead>
+      <tr><th>Item</th><th>Requested</th><th>Your Stock</th><th>Requester's Stock</th><th>After Approval</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="item-name">Red Meat</span><span class="item-unit">gm</span></td>
+        <td class="mono">500 gm</td>
+        <td><div class="stock-val ok"><span class="dot"></span>1,250 gm</div></td>
+        <td><div class="stock-val" style="color:var(--red);font-weight:600;"><span class="dot" style="background:var(--red)"></span>0 gm</div><div class="stock-label">Out of stock</div></td>
+        <td><span class="mono">750 gm</span><div class="projection">You'll retain 60%</div></td>
+      </tr>
+      <tr>
+        <td><span class="item-name">Patri</span><span class="item-unit">gm</span></td>
+        <td class="mono">800 gm</td>
+        <td><div class="stock-val ok"><span class="dot"></span>3,950 gm</div></td>
+        <td><div class="stock-val" style="color:var(--red);font-weight:600;"><span class="dot" style="background:var(--red)"></span>0 gm</div><div class="stock-label">Out of stock</div></td>
+        <td><span class="mono">3,150 gm</span><div class="projection">You'll retain 80%</div></td>
+      </tr>
+      <tr style="background:var(--red-light);">
+        <td><span class="item-name">Maida</span><span class="item-unit">kg</span></td>
+        <td class="mono">10 kg</td>
+        <td><div class="stock-val low"><span class="dot"></span>3.2 kg</div><div class="stock-label">Insufficient</div></td>
+        <td><div class="stock-val low"><span class="dot"></span>0.5 kg</div><div class="stock-label">Low stock</div></td>
+        <td><span class="mono" style="color:var(--red);">-6.8 kg</span><div class="projection neg">Cannot fulfill fully</div></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- B3-04/08: Actions with explanations -->
+<div class="actions-card">
+  <div class="actions-head">Actions</div>
+  <div class="actions-body">
+    <div class="actions-row">
+      <button class="btn btn-primary">Approve All</button>
+      <button class="btn">Partial Approve</button>
+      <button class="btn btn-danger">Reject</button>
+      <button class="btn">View Segments</button>
+    </div>
+    <div class="action-help">
+      <span class="name">Approve All</span><span>Approve all 3 items at requested quantities. Stock will be committed.</span>
+      <span class="name">Partial Approve</span><span>Approve selected items/quantities. Remaining will be held for later or cancelled.</span>
+      <span class="name">Reject</span><span>Reject the entire request. No stock will move. Requires a reason.</span>
+    </div>
+  </div>
+</div>
+
+<!-- B3-08: Disabled explanation example (if viewer is destination) -->
+<div class="disabled-box">
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3M8 10h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+  <span><strong>Example if viewer is Outlet (destination):</strong> No actions available. You submitted this request — the source store (Kala Bahia Central) needs to approve or reject it.</span>
+</div>
+
+<!-- Legend -->
+<div style="margin-top:16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;">
+  <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;color:var(--text-sec);">Intelligence Elements</div>
+  <div style="font-size:11px;color:var(--text-sec);line-height:2;">
+    <div><strong>PO-XXXX</strong> — PO number placeholder (G-013 backend gap)</div>
+    <div><strong>B3-01</strong> Approval impact summary card — your stock before/after per item</div>
+    <div><strong>B3-02</strong> Source stock warning — Maida row highlighted red (insufficient)</div>
+    <div><strong>B3-03</strong> Transfer age — "Created 3 days ago"</div>
+    <div><strong>B3-04</strong> Action explanations — what each button does, inline</div>
+    <div><strong>B3-05</strong> Destination stock column — "Requester has 0 gm" (out of stock)</div>
+    <div><strong>B3-06</strong> Post-action projection — "You'll retain 60%" / "-6.8 kg"</div>
+    <div><strong>B3-08</strong> Disabled explanation — role-specific "why can't I act?"</div>
+    <div><strong>B3-10</strong> Item count in header — "3 items"</div>
+    <div><strong>B3-11</strong> Timeline breadcrumb with relative timestamps</div>
+  </div>
+</div>
+
+</div></div></div>
+</body>
+</html>

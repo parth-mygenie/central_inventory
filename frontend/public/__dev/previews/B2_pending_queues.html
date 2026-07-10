@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>B2 — Pending Queues: Intelligent Approval Inbox</title>
+<style>
+:root{--bg:#fff;--surface:#fff;--surface2:#f4f4f5;--surface3:#fafafa;--border:#e4e4e7;--border-light:#f4f4f5;--text:#09090b;--text-sec:#52525b;--text-muted:#a1a1aa;--primary:#18181b;--primary-fg:#fafafa;--amber:#b45309;--amber-light:#fffbeb;--amber-border:#fde68a;--red:#dc2626;--red-light:#fef2f2;--red-border:#fecaca;--green:#16a34a;--green-light:#f0fdf4;--green-border:#bbf7d0;--font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;--mono:'SF Mono',Consolas,monospace;--sidebar-w:200px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--surface2);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5;}
+.shell{display:flex;min-height:100vh;}
+.sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);padding:16px 0;flex-shrink:0;position:sticky;top:0;height:100vh;}
+.sidebar .logo{padding:0 16px 16px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.sidebar .logo .icon{width:24px;height:24px;background:var(--primary);border-radius:6px;}
+.sidebar nav a{display:flex;align-items:center;gap:8px;padding:8px 16px;font-size:13px;color:var(--text-sec);text-decoration:none;}
+.sidebar nav a:hover{background:var(--surface2);}
+.sidebar nav a.active{background:var(--surface2);color:var(--text);font-weight:600;border-right:2px solid var(--primary);}
+.topbar{height:48px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;justify-content:space-between;background:var(--surface);}
+.topbar .store-name{font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;}
+.topbar .store-badge{font-size:10px;padding:2px 8px;border-radius:4px;background:var(--surface2);color:var(--text-sec);border:1px solid var(--border);font-weight:600;}
+.main{flex:1;display:flex;flex-direction:column;}
+.content{flex:1;padding:20px 28px 40px;max-width:1100px;}
+.preview-bar{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 12px;margin-bottom:16px;font-size:11px;color:var(--text-sec);}
+
+.page-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.page-hdr h1{font-size:20px;font-weight:700;}
+.page-hdr .right{display:flex;align-items:center;gap:12px;}
+.refresh-info{font-size:11px;color:var(--text-muted);}
+.refresh-btn{font-size:12px;color:var(--text-sec);border:1px solid var(--border);background:var(--surface);padding:5px 12px;border-radius:5px;cursor:pointer;}
+
+/* Tabs */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:16px;background:var(--surface);margin-left:-28px;margin-right:-28px;padding:0 28px;}
+.tab{padding:10px 16px;border:none;background:none;font-size:13px;font-weight:500;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;display:flex;align-items:center;gap:6px;}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--text);border-bottom-color:var(--primary);font-weight:600;}
+.tab .count{font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;background:var(--surface2);color:var(--text-sec);}
+.tab.active .count{background:var(--primary);color:var(--primary-fg);}
+
+/* Sort bar */
+.sort-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;font-size:12px;color:var(--text-muted);}
+.sort-bar select{font-size:11px;border:1px solid var(--border);border-radius:4px;padding:3px 8px;color:var(--text-sec);background:var(--surface);}
+
+/* Transfer card */
+.t-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:12px;overflow:hidden;}
+.t-card.stale{border-left:3px solid var(--red);}
+.t-card.aging{border-left:3px solid var(--amber);}
+
+.t-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border-light);}
+.t-header-left{display:flex;align-items:center;gap:12px;}
+.t-id{font-family:var(--mono);font-size:13px;font-weight:700;}
+.t-route{font-size:12px;color:var(--text-sec);}
+.t-route-type{font-size:10px;color:var(--text-muted);}
+.t-header-right{display:flex;align-items:center;gap:10px;}
+
+/* Age badge */
+.age{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:2px 8px;border-radius:4px;}
+.age.fresh{color:var(--text-muted);background:var(--surface2);}
+.age.aging{color:var(--amber);background:var(--amber-light);border:1px solid var(--amber-border);}
+.age.stale{color:var(--red);background:var(--red-light);border:1px solid var(--red-border);}
+
+/* Fulfillment verdict */
+.verdict{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:4px;}
+.verdict.can{color:var(--text-sec);background:var(--surface2);}
+.verdict.partial{color:var(--amber);background:var(--amber-light);border:1px solid var(--amber-border);}
+.verdict.cannot{color:var(--red);background:var(--red-light);border:1px solid var(--red-border);}
+
+/* Items table inside card */
+.t-items{width:100%;border-collapse:collapse;}
+.t-items th{text-align:left;padding:6px 16px;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:600;background:var(--surface3);border-bottom:1px solid var(--border-light);}
+.t-items td{padding:8px 16px;font-size:12px;border-bottom:1px solid var(--border-light);}
+.t-items tr:last-child td{border-bottom:none;}
+
+.item-name{font-weight:600;font-size:12px;}
+.item-unit{color:var(--text-muted);font-size:11px;margin-left:3px;}
+
+.stock-val{font-size:12px;display:flex;align-items:center;gap:4px;}
+.stock-val .dot{width:5px;height:5px;border-radius:50%;}
+.stock-val.out{color:var(--red);font-weight:600;} .stock-val.out .dot{background:var(--red);}
+.stock-val.low{color:var(--amber);font-weight:600;} .stock-val.low .dot{background:var(--amber);}
+.stock-val.ok{color:var(--text-sec);} .stock-val.ok .dot{background:#d4d4d8;}
+.stock-label{font-size:10px;color:var(--text-muted);}
+
+/* Their stock inline bracket */
+.their-inline{font-size:10px;color:var(--text-muted);}
+.their-inline.out{color:var(--red);font-weight:600;}
+.their-inline.low{color:var(--amber);font-weight:600;}
+
+/* Action footer */
+.t-footer{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--surface3);border-top:1px solid var(--border-light);}
+
+/* Requester health strip */
+.req-health{display:flex;align-items:center;gap:10px;padding:8px 16px;border-top:1px solid var(--border-light);font-size:11px;background:var(--surface3);flex-wrap:wrap;}
+.req-health-urgent{background:var(--red-light);}
+.rh-label{color:var(--text-muted);font-weight:500;}
+.rh-stat{display:flex;align-items:center;gap:3px;color:var(--text-sec);}
+.rh-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.rh-muted{color:var(--text-muted);}
+.rh-alert{color:var(--amber);font-weight:500;margin-left:auto;}
+.t-footer-left{font-size:11px;color:var(--text-muted);}
+.t-footer-right{display:flex;gap:6px;}
+.btn{font-size:12px;font-weight:500;padding:6px 16px;border-radius:5px;border:1px solid var(--border);background:var(--surface);color:var(--text-sec);cursor:pointer;}
+.btn:hover{background:var(--surface2);}
+.btn-primary{background:var(--primary);color:var(--primary-fg);border-color:var(--primary);}
+.btn-primary:hover{opacity:.9;}
+.btn-danger{color:var(--red);border-color:var(--red-border);}
+.btn-danger:hover{background:var(--red-light);}
+
+/* Empty state */
+.empty{text-align:center;padding:40px 20px;background:var(--surface);border:1px solid var(--border);border-radius:8px;}
+.empty .title{font-size:14px;font-weight:600;margin-bottom:4px;}
+.empty .desc{font-size:12px;color:var(--text-muted);line-height:1.5;}
+
+@media(max-width:900px){.sidebar{display:none;}.tabs{margin-left:-16px;margin-right:-16px;padding:0 16px;}.content{padding:16px;}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<aside class="sidebar">
+  <div class="logo"><div class="icon"></div>Central Inventory</div>
+  <nav>
+    <a href="#">Operations Hub</a>
+    <a href="#">Stock Inventory</a>
+    <a href="#">Hierarchy Summary</a>
+    <a href="#" class="active">Pending Queues</a>
+    <a href="#">History & Ledger</a>
+    <a href="#">Request Stock</a>
+    <a href="#">Vendors</a>
+  </nav>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div class="store-name">Kala Bahia Central <span class="store-badge">Central Store</span></div>
+  </div>
+
+  <div class="content">
+    <div class="preview-bar">PREVIEW — B2 Pending Queues — Intelligent Approval Inbox (item-level visibility)</div>
+
+    <div class="page-hdr">
+      <h1>Pending Queues</h1>
+      <div class="right">
+        <span class="refresh-info">Updated 30s ago</span>
+        <button class="refresh-btn">Refresh</button>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active">Approvals <span class="count">3</span></button>
+      <button class="tab">Ready to Dispatch <span class="count">2</span></button>
+      <button class="tab">Receives <span class="count">1</span></button>
+      <button class="tab">My Requests <span class="count">0</span></button>
+    </div>
+
+    <div class="sort-bar">
+      <span>3 transfers awaiting approval · Oldest first</span>
+      <select><option>Oldest first</option><option>Newest first</option></select>
+    </div>
+
+    <!-- CARD 1: STALE (3 days), Can Fulfill -->
+    <div class="t-card stale">
+      <div class="t-header">
+        <div class="t-header-left">
+          <span class="t-id">PO-XXXX</span>
+          <div>
+            <div class="t-route">DemoCentral1 → Kala Bahia Central</div>
+            <div class="t-route-type">Master Store requesting from you</div>
+          </div>
+        </div>
+        <div class="t-header-right">
+          <span class="verdict can">Can fulfill</span>
+          <span class="age stale">3 days ago</span>
+        </div>
+      </div>
+
+      <table class="t-items">
+        <thead>
+          <tr><th>Item Requested</th><th>Qty Requested</th><th>Your Stock</th><th>After Approval</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="item-name">Cooking Oil</span><span class="item-unit">ltr</span></td>
+            <td><span style="font-family:var(--mono)">5 ltr</span> <span class="their-inline">(has 12.3)</span></td>
+            <td><div class="stock-val ok"><span class="dot"></span>24.82 ltr</div></td>
+            <td style="font-family:var(--mono);color:var(--text-sec)">19.82 ltr</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Requester health strip -->
+      <div class="req-health">
+        <span class="rh-label">DemoCentral1 store health:</span>
+        <span class="rh-stat"><span class="rh-dot" style="background:var(--red)"></span>1 out</span>
+        <span class="rh-stat"><span class="rh-dot" style="background:var(--amber)"></span>0 low</span>
+        <span class="rh-stat rh-muted">3 adequate</span>
+      </div>
+
+      <div class="t-footer">
+        <div class="t-footer-left">1 item · Requested by DemoCentral1</div>
+        <div class="t-footer-right">
+          <button class="btn btn-danger">Reject</button>
+          <button class="btn">View Details</button>
+          <button class="btn btn-primary">Approve All</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARD 2: AGING (26h), Partial Fulfill -->
+    <div class="t-card aging">
+      <div class="t-header">
+        <div class="t-header-left">
+          <span class="t-id">PO-XXXX</span>
+          <div>
+            <div class="t-route">DemoFranchise1 → DemoCentral1</div>
+            <div class="t-route-type">Outlet requesting from you</div>
+          </div>
+        </div>
+        <div class="t-header-right">
+          <span class="verdict partial">Partial — 2 of 3 items</span>
+          <span class="age aging">26 hours</span>
+        </div>
+      </div>
+
+      <table class="t-items">
+        <thead>
+          <tr><th>Item Requested</th><th>Qty Requested</th><th>Your Stock</th><th>After Approval</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="item-name">Red Meat</span><span class="item-unit">gm</span></td>
+            <td><span style="font-family:var(--mono)">500 gm</span> <span class="their-inline out">(has 0)</span></td>
+            <td><div class="stock-val ok"><span class="dot"></span>1,250 gm</div></td>
+            <td style="font-family:var(--mono);color:var(--text-sec)">750 gm</td>
+          </tr>
+          <tr>
+            <td><span class="item-name">Patri</span><span class="item-unit">gm</span></td>
+            <td><span style="font-family:var(--mono)">800 gm</span> <span class="their-inline out">(has 0)</span></td>
+            <td><div class="stock-val ok"><span class="dot"></span>3,950 gm</div></td>
+            <td style="font-family:var(--mono);color:var(--text-sec)">3,150 gm</td>
+          </tr>
+          <tr>
+            <td><span class="item-name">Maida</span><span class="item-unit">kg</span></td>
+            <td><span style="font-family:var(--mono)">10 kg</span> <span class="their-inline low">(has 0.5)</span></td>
+            <td><div class="stock-val low"><span class="dot"></span>3.2 kg</div><div class="stock-label">Low — not enough</div></td>
+            <td style="font-family:var(--mono);color:var(--red)">-6.8 kg</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Requester health strip — critical urgency -->
+      <div class="req-health req-health-urgent">
+        <span class="rh-label">DemoFranchise1 store health:</span>
+        <span class="rh-stat"><span class="rh-dot" style="background:var(--red)"></span><strong>3 out</strong></span>
+        <span class="rh-stat"><span class="rh-dot" style="background:var(--amber)"></span>1 low</span>
+        <span class="rh-stat rh-muted">0 adequate</span>
+        <span class="rh-alert">⚠ 1 out-of-stock item not in this request</span>
+      </div>
+
+      <div class="t-footer">
+        <div class="t-footer-left">3 items · <span style="color:var(--amber)">Maida: insufficient stock (3.2 of 10 requested)</span></div>
+        <div class="t-footer-right">
+          <button class="btn btn-danger">Reject</button>
+          <button class="btn">View Details</button>
+          <button class="btn">Partial Approve</button>
+          <button class="btn btn-primary">Approve All</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARD 3: FRESH (2h), Can Fulfill -->
+    <div class="t-card">
+      <div class="t-header">
+        <div class="t-header-left">
+          <span class="t-id">PO-XXXX</span>
+          <div>
+            <div class="t-route">DemoFranchise2 → DemoCentral1</div>
+            <div class="t-route-type">Outlet requesting from you</div>
+          </div>
+        </div>
+        <div class="t-header-right">
+          <span class="verdict can">Can fulfill</span>
+          <span class="age fresh">2 hours</span>
+        </div>
+      </div>
+
+      <table class="t-items">
+        <thead>
+          <tr><th>Item Requested</th><th>Qty Requested</th><th>Your Stock</th><th>After Approval</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="item-name">Cooking Oil</span><span class="item-unit">ltr</span></td>
+            <td><span style="font-family:var(--mono)">3 ltr</span> <span class="their-inline out">(has 0)</span></td>
+            <td><div class="stock-val ok"><span class="dot"></span>24.82 ltr</div></td>
+            <td style="font-family:var(--mono);color:var(--text-sec)">21.82 ltr</td>
+          </tr>
+          <tr>
+            <td><span class="item-name">Red Meat</span><span class="item-unit">gm</span></td>
+            <td><span style="font-family:var(--mono)">300 gm</span> <span class="their-inline low">(has 150)</span></td>
+            <td><div class="stock-val ok"><span class="dot"></span>1,250 gm</div></td>
+            <td style="font-family:var(--mono);color:var(--text-sec)">950 gm</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Requester health strip — healthy store -->
+      <div class="req-health">
+        <span class="rh-label">DemoFranchise2 store health:</span>
+        <span class="rh-stat"><span class="rh-dot" style="background:var(--red)"></span>1 out</span>
+        <span class="rh-stat"><span class="rh-dot" style="background:var(--amber)"></span>1 low</span>
+        <span class="rh-stat rh-muted">2 adequate</span>
+      </div>
+
+      <div class="t-footer">
+        <div class="t-footer-left">2 items · Requested by DemoFranchise2</div>
+        <div class="t-footer-right">
+          <button class="btn btn-danger">Reject</button>
+          <button class="btn">View Details</button>
+          <button class="btn btn-primary">Approve All</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Intelligence legend -->
+    <div style="margin-top:20px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;color:var(--text-sec);">Intelligence in this view</div>
+      <div style="font-size:11px;color:var(--text-sec);line-height:2;">
+        <div><strong>Item-level visibility</strong> — See exactly what was requested, quantities, and your stock per item</div>
+        <div><strong>Fulfillment verdict</strong> — "Can fulfill" / "Partial — 2 of 3" / "Can't fulfill" per transfer</div>
+        <div><strong>After-approval projection</strong> — "Your stock will be X after approving this"</div>
+        <div><strong>Insufficient stock highlight</strong> — Maida: requested 10, you have 3.2 → shows negative projection in red</div>
+        <div><strong>Age badges</strong> — Stale (red, 3 days), Aging (amber, 26h), Fresh (gray, 2h)</div>
+        <div><strong>Left border accent</strong> — Red = stale, Amber = aging, None = fresh</div>
+        <div><strong>Smart actions</strong> — "Partial Approve" only appears when stock is insufficient for some items</div>
+        <div><strong>Footer context</strong> — Item count + specific issue callout ("Maida: insufficient stock")</div>
+        <div style="margin-top:6px;color:var(--text-muted);font-size:10px"><em>Data source: batch-fetch getTransferDetails() + getStockInventory() on tab load (typically 3-10 transfers)</em></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+</body>
+</html>

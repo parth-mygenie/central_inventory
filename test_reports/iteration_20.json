@@ -1,0 +1,123 @@
+{
+  "summary": "P21 Catalogue Phase Testing Complete. All 17 features tested and verified. Backend APIs (19/19 pytest tests passed) and Frontend UI (all catalogue pages working correctly). Fixed React hooks violation in AddonRecipeCatalogue.jsx. Role-based visibility working correctly - catalogue nav items visible only for master role.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_p21_catalogue.py",
+    "/app/test_reports/pytest/p21_catalogue_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "FIXED: AddonRecipeCatalogue.jsx had React hooks called conditionally - moved all useState/useCallback/useEffect hooks before any conditional returns",
+    "api.js correctly implements 27 new catalogue methods with proper response normalization",
+    "screenVisibility.js correctly defines scr-catalogue as FULL for master, HIDDEN for central/franchise",
+    "Sidebar.jsx correctly renders 4 catalogue nav items (Ingredients, Products, Recipes, Addon Recipes) with proper icons",
+    "IngredientCatalogue.jsx correctly shows Ingredients tab (4 items) and Categories tab (2 categories) with CRUD actions",
+    "ProductCatalogue.jsx correctly shows Foods tab (3 items), Categories tab, and Addons tab",
+    "RecipeCatalogue.jsx correctly shows Recipes tab (2 recipes with ingredient counts) and Sub-Recipes tab (empty state)",
+    "AddonRecipeCatalogue.jsx correctly shows addon recipe 'rossa' with price 50.00 and 1 ingredient",
+    "Recipe endpoints correctly use /recipe/ prefix (not /product/) as per corrected API contract"
+  ],
+  "updated_files": [
+    "/app/frontend/src/components/central-inventory/AddonRecipeCatalogue.jsx",
+    "/app/backend/tests/test_p21_catalogue.py"
+  ],
+  "success_rate": {
+    "backend": "100% (19/19 pytest tests passed)",
+    "frontend": "100% (17/17 features tested)"
+  },
+  "test_credentials": {
+    "master_user": "abhishek@kalabahia.com / Qplazm@10 (rid=1, type=master - SEES catalogue nav items)",
+    "central_user": "owner@democentral2.com / Qplazm@10 (rid=782, type=central - does NOT see catalogue nav items)",
+    "franchise_user": "owner@demofranchise4.com / Qplazm@10 (rid=786, type=franchise - does NOT see catalogue nav items)"
+  },
+  "seed_data_creation": "None - using real POS API via proxy",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "P21 Catalogue Phase fully tested. All 4 catalogue pages working: /catalogue/ingredients (4 items, 2 categories), /catalogue/products (3 foods, 1 category, 1 addon), /catalogue/recipes (2 recipes, 0 sub-recipes), /catalogue/addon-recipes (1 addon recipe 'rossa'). Role visibility working correctly - catalogue nav items visible only for master role. Fixed React hooks violation in AddonRecipeCatalogue.jsx. All backend APIs return 200 with expected data.",
+  "features_tested": {
+    "P21-1": "PASS - Sidebar shows Ingredients, Products, Recipes, Addon Recipes nav items for master role only",
+    "P21-2": "PASS - /catalogue/ingredients page loads with 4 ingredients (Cooking Oil, maida, patri, red meat) with correct columns",
+    "P21-3": "PASS - /catalogue/ingredients Categories tab shows 2 stock-item-categories (veggies, non veg) with CRUD actions",
+    "P21-4": "PASS - /catalogue/products Foods tab shows 3 foods (aloo parantha ₹101, mutton keema ₹110, polo ₹90)",
+    "P21-5": "PASS - /catalogue/products Categories tab shows food categories list (toast)",
+    "P21-6": "PASS - /catalogue/products Addons tab shows addon list (rossa)",
+    "P21-7": "PASS - /catalogue/recipes Recipes tab shows 2 recipes (aloo parantha with 2 ingredients, mutton keema with 1)",
+    "P21-8": "PASS - /catalogue/recipes Sub-Recipes tab loads with empty state",
+    "P21-9": "PASS - /catalogue/addon-recipes shows addon recipe rossa with 1 ingredient and price 50.00",
+    "P21-10": "PASS - Central user (owner@democentral2.com) does NOT see catalogue nav items in sidebar",
+    "P21-11": "PASS - Franchise user (owner@demofranchise4.com) does NOT see catalogue nav items in sidebar",
+    "P21-12": "PASS - GET /api/proxy/v2/inventory/stock-item-categories returns 200",
+    "P21-13": "PASS - GET /api/proxy/v2/product/foods-list returns 200",
+    "P21-14": "PASS - GET /api/proxy/v2/recipe/get-recipe returns 200 (corrected /recipe/ prefix)",
+    "P21-15": "PASS - GET /api/proxy/v2/product/addon-recipe-list returns 200",
+    "P21-16": "PASS - Operations Hub still loads correctly for master user (no regression)",
+    "P21-17": "PASS - Stock Inventory page still works (no regression)"
+  },
+  "ui_verification": {
+    "master_user_sidebar": {
+      "catalogue_nav_items_visible": true,
+      "items": ["Ingredients", "Products", "Recipes", "Addon Recipes"]
+    },
+    "central_user_sidebar": {
+      "catalogue_nav_items_visible": false
+    },
+    "franchise_user_sidebar": {
+      "catalogue_nav_items_visible": false
+    },
+    "ingredients_page": {
+      "ingredients_tab": {
+        "items": 4,
+        "columns": ["Name", "Category", "Quantity", "Min Alert", "Status", "Actions"],
+        "data": ["Cooking Oil (24.82 ltr)", "maida (118.15 kg)", "patri (13.83 kg)", "red meat (32 kg)"]
+      },
+      "categories_tab": {
+        "items": 2,
+        "data": ["veggies", "non veg"],
+        "crud_actions": true
+      }
+    },
+    "products_page": {
+      "foods_tab": {
+        "items": 3,
+        "data": ["aloo parantha (₹101)", "mutton keema (₹110)", "polo (₹90)"]
+      },
+      "categories_tab": {
+        "items": 1,
+        "data": ["toast"]
+      },
+      "addons_tab": {
+        "items": 1,
+        "data": ["rossa (₹50)"]
+      }
+    },
+    "recipes_page": {
+      "recipes_tab": {
+        "items": 2,
+        "data": ["aloo parantha (2 ingredients)", "mutton keema (1 ingredient)"]
+      },
+      "sub_recipes_tab": {
+        "items": 0,
+        "empty_state": true
+      }
+    },
+    "addon_recipes_page": {
+      "items": 1,
+      "data": ["rossa (price 50.00, 1 ingredient)"]
+    }
+  },
+  "bug_fixes_applied": {
+    "AddonRecipeCatalogue_hooks_violation": {
+      "file": "/app/frontend/src/components/central-inventory/AddonRecipeCatalogue.jsx",
+      "issue": "React hooks (useState, useCallback, useEffect) were called conditionally after hasAccess check",
+      "fix": "Moved all hooks before any conditional returns, added hasAccess check inside useCallback instead"
+    }
+  }
+}

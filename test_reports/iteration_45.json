@@ -1,0 +1,87 @@
+{
+  "iteration": 45,
+  "test_date": "2026-06-13",
+  "test_type": "Frontend QA - CR-030 Inward Screens Audit",
+  "overall_status": "PASS",
+  "summary": "QA testing for CR-030 Inward Screens Audit. All 4 phases verified: (1) VendorManagement toast import confirmed, delete confirmation dialog works, (2) 'Pushed to' column visible with '5 stores' badges for Central Store user, (3) Purchase file inputs have G-014/G-015 notices and disabled functionality, (4) 'Empty' badges (22 found) displayed for 0-stock items. Regression tests passed for vendor CRUD, ingredient search/edit, and categories tab.",
+  "tests": [
+    {
+      "id": "T1",
+      "feature": "Phase 1 - VendorManagement Toast on Delete Error",
+      "status": "PASS",
+      "details": "VendorManagement.jsx has toast import (line 12). Delete confirmation dialog works. Toast is used on line 74 for delete errors. Tested delete flow - dialog appears with 'Delete Vendor' button. 3 vendors visible after one deletion."
+    },
+    {
+      "id": "T2",
+      "feature": "Phase 1 - IngredientCatalogue Add Ingredient Error Toast",
+      "status": "PASS",
+      "details": "IngredientCatalogue.jsx has toast import (line 17). Add Ingredient dialog has validation - Save button is disabled when required fields (Name, Category) are empty. Toast on error at lines 244-245."
+    },
+    {
+      "id": "T3",
+      "feature": "Phase 2 - Pushed to Stores Column",
+      "status": "PASS",
+      "details": "'Pushed to' column header found in ingredients table. 48 pushed-to cells found with '5 stores' badges. Column only visible for isTopLevel (Central Store) users as per code logic."
+    },
+    {
+      "id": "T4",
+      "feature": "Phase 3 - Purchase File Inputs Disabled",
+      "status": "PASS",
+      "details": "Upload Invoice tab shows G-014 notice: 'AI Invoice Extraction — Coming Soon'. Excel upload shows G-015 notice. Both file inputs have onChange handlers that clear value and show toast. OCR pending notice visible."
+    },
+    {
+      "id": "T5",
+      "feature": "Phase 4 - Empty Badge for 0-Stock Items",
+      "status": "PASS",
+      "details": "Found 22 'Empty' badges for items with 0 quantity. Found 24 'OK' badges for items with stock. Found 2 'Low' badges for low-stock items. Badge logic at lines 129-136 correctly shows Empty for 0 quantity."
+    },
+    {
+      "id": "T6",
+      "feature": "Regression - Vendor CRUD",
+      "status": "PASS",
+      "details": "Add Vendor button works, dialog opens with form fields. Edit Vendor dialog works with pre-filled data. Search filters vendors correctly (1 result for 'Premium'). Refresh button works. Delete confirmation dialog works."
+    },
+    {
+      "id": "T7",
+      "feature": "Regression - Ingredient Table Columns",
+      "status": "PASS",
+      "details": "All columns present: Name, Category, Quantity, Min Alert, Status, Recipes, Vendor, Pushed to, Actions. Search works (1 result for 'Almond'). Edit ingredient dialog works."
+    },
+    {
+      "id": "T8",
+      "feature": "Regression - Purchase Manual Entry Tab",
+      "status": "PASS",
+      "details": "Manual Entry tab works. Vendor select, Purchase date, Item select, Qty input, Batch label, Expiry date all present. Add Another Item button works. Review & Confirm button present."
+    }
+  ],
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/test_reports/iteration_45.json"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "VendorManagement.jsx: Toast import at line 12, used correctly at line 74 for delete error handling",
+    "IngredientCatalogue.jsx: Toast import at line 17, used at lines 199, 217, 244-245 for error handling",
+    "IngredientCatalogue.jsx: 'Pushed to' column correctly gated by isTopLevel check (lines 119, 142-149)",
+    "IngredientCatalogue.jsx: Empty badge logic at lines 132-133 correctly checks for 0 quantity",
+    "AddStockPurchaseForm.jsx: File input onChange handlers at lines 263-265 and 289-291 correctly clear value and show toast with G-014/G-015 messages"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (frontend-only test)",
+    "frontend": "100% (8/8 test cases passed)"
+  },
+  "test_credentials": {
+    "central_store_806_master": "manager@germanfluid.com / Qplazm@10"
+  },
+  "seed_data_creation": "None - used existing POS API data via proxy",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "CR-030 Inward Screens Audit fully verified. Phase 1: Toast notifications working for VendorManagement delete errors and IngredientCatalogue add errors. Phase 2: 'Pushed to' column shows '5 stores' for Central Store users. Phase 3: Purchase file inputs disabled with G-014/G-015 messages. Phase 4: 'Empty' badges (gray) shown for 0-stock items. All regression tests passed."
+}
