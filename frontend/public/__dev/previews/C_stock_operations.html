@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flow C — Stock Operations (Intelligent UI Preview)</title>
+<style>
+:root{--bg:#fff;--surface:#fff;--surface2:#f4f4f5;--surface3:#fafafa;--border:#e4e4e7;--border-light:#f4f4f5;--text:#09090b;--text-sec:#52525b;--text-muted:#a1a1aa;--primary:#18181b;--primary-fg:#fafafa;--amber:#b45309;--amber-light:#fffbeb;--amber-border:#fde68a;--red:#dc2626;--red-light:#fef2f2;--red-border:#fecaca;--green:#16a34a;--green-light:#f0fdf4;--green-border:#bbf7d0;--font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;--mono:'SF Mono',Consolas,monospace;--sidebar-w:200px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--surface2);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5;}
+.shell{display:flex;min-height:100vh;}
+.sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);padding:16px 0;flex-shrink:0;position:sticky;top:0;height:100vh;}
+.sidebar .logo{padding:0 16px 16px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.sidebar .logo .icon{width:24px;height:24px;background:var(--primary);border-radius:6px;}
+.sidebar nav a{display:flex;align-items:center;padding:8px 16px;font-size:13px;color:var(--text-sec);text-decoration:none;}
+.sidebar nav a:hover{background:var(--surface2);}
+.sidebar nav a.active{background:var(--surface2);color:var(--text);font-weight:600;border-right:2px solid var(--primary);}
+.topbar{height:48px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;background:var(--surface);}
+.topbar .store-name{font-size:13px;font-weight:600;}
+.topbar .badge{font-size:10px;padding:2px 8px;border-radius:4px;background:var(--surface2);color:var(--text-sec);border:1px solid var(--border);font-weight:600;margin-left:8px;}
+.main{flex:1;display:flex;flex-direction:column;}
+.content{flex:1;padding:20px 28px 40px;max-width:1100px;}
+.preview-bar{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 12px;margin-bottom:16px;font-size:11px;color:var(--text-sec);}
+.back{font-size:12px;color:var(--text-muted);margin-bottom:10px;display:inline-block;cursor:pointer;}
+h1{font-size:20px;font-weight:700;margin-bottom:4px;}
+.sub{font-size:13px;color:var(--text-muted);margin-bottom:16px;}
+.section-div{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin:32px 0 12px;padding-top:24px;border-top:2px solid var(--border);}
+.section-div:first-of-type{border-top:none;margin-top:0;padding-top:0;}
+
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:12px;overflow:hidden;}
+.card-head{padding:10px 16px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between;}
+.card-head h2{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:600;}
+
+/* Form elements */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.form-row.full{grid-template-columns:1fr;}
+.field label{display:block;font-size:11px;color:var(--text-muted);margin-bottom:3px;font-weight:500;}
+.field label .req{color:var(--red);}
+.field input,.field select,.field textarea{width:100%;border:1px solid var(--border);border-radius:5px;padding:8px 10px;font-size:13px;color:var(--text);background:var(--surface);font-family:var(--font);}
+.field input:read-only{background:var(--surface2);opacity:.7;}
+.field textarea{resize:vertical;}
+.field .hint{font-size:10px;color:var(--text-muted);margin-top:2px;}
+.field .warn{font-size:10px;color:var(--amber);margin-top:2px;}
+.field .err{font-size:10px;color:var(--red);margin-top:2px;}
+
+/* Stock context box */
+.stock-ctx{background:var(--surface3);border:1px solid var(--border-light);border-radius:6px;padding:10px 14px;margin-bottom:12px;display:flex;gap:20px;flex-wrap:wrap;font-size:12px;}
+.stock-ctx .ctx-item{display:flex;flex-direction:column;}
+.stock-ctx .ctx-label{font-size:10px;color:var(--text-muted);}
+.stock-ctx .ctx-val{font-family:var(--mono);font-weight:600;}
+.stock-ctx .ctx-val.red{color:var(--red);}
+.stock-ctx .ctx-val.amber{color:var(--amber);}
+
+/* Impact preview */
+.impact-box{border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:12px;}
+.impact-box.warn{background:var(--amber-light);border:1px solid var(--amber-border);color:#92400e;}
+.impact-box.danger{background:var(--red-light);border:1px solid var(--red-border);color:#991b1b;}
+.impact-box.ok{background:var(--surface3);border:1px solid var(--border);color:var(--text-sec);}
+
+/* Buttons */
+.btn{font-size:12px;font-weight:500;padding:8px 20px;border-radius:5px;border:1px solid var(--border);background:var(--surface);color:var(--text-sec);cursor:pointer;}
+.btn-primary{background:var(--primary);color:var(--primary-fg);border-color:var(--primary);}
+.btn-row{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;}
+
+/* Table */
+table{width:100%;border-collapse:collapse;}
+th{text-align:left;padding:8px 14px;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:600;border-bottom:1px solid var(--border);background:var(--surface3);}
+td{padding:10px 14px;border-bottom:1px solid var(--border-light);font-size:12px;}
+tr:last-child td{border-bottom:none;}
+
+/* Stats */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 16px;text-align:center;}
+.stat-card .v{font-size:22px;font-weight:700;font-family:var(--mono);}
+.stat-card .l{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
+.stat-card.red .v{color:var(--red);}
+.stat-card.amber .v{color:var(--amber);}
+
+/* Vendor hint */
+.vendor-hint{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--surface3);border:1px solid var(--border-light);border-radius:6px;margin-bottom:10px;font-size:11px;color:var(--text-muted);}
+.vendor-hint strong{color:var(--text-sec);}
+
+@media(max-width:900px){.sidebar{display:none;}.form-row{grid-template-columns:1fr;}.stats-row{grid-template-columns:repeat(2,1fr);}.content{padding:16px;}}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside class="sidebar">
+  <div class="logo"><div class="icon"></div>Central Inventory</div>
+  <nav>
+    <a href="#">Operations Hub</a>
+    <a href="#">Stock Inventory</a>
+    <a href="#">Pending Queues</a>
+    <a href="#" class="active">Stock Operations</a>
+    <a href="#">History & Ledger</a>
+  </nav>
+</aside>
+<div class="main">
+<div class="topbar"><div class="store-name">Kala Bahia Central<span class="badge">Central Store</span></div></div>
+<div class="content">
+
+<div class="preview-bar">PREVIEW — Flow C: Stock Operations — C1 Adjustment + C2 Wastage + C3 Procurement + C4 Wastage Report</div>
+
+<!-- ═══════════════ C1: STOCK ADJUSTMENT ═══════════════ -->
+<div class="section-div">C1 — Stock Adjustment (Central Only)</div>
+<a class="back">← Back</a>
+<h1>Stock Adjustment</h1>
+<div class="sub">Correct stock quantities. Central Store only. Immediate effect with audit trail.</div>
+
+<div class="card">
+  <div class="card-head"><h2>Adjustment Details</h2></div>
+  <div style="padding:14px 16px;">
+    <div class="form-row">
+      <div class="field">
+        <label>Type <span class="req">*</span></label>
+        <div style="display:flex;gap:6px;">
+          <button class="btn" style="flex:1;background:var(--surface2);font-weight:600;">Increase</button>
+          <button class="btn btn-primary" style="flex:1;">Decrease</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Item <span class="req">*</span></label>
+        <select><option>Cooking Oil (ltr)</option></select>
+      </div>
+    </div>
+
+    <!-- Current stock context -->
+    <div class="stock-ctx">
+      <div class="ctx-item"><span class="ctx-label">Current Stock</span><span class="ctx-val">24.82 ltr</span></div>
+      <div class="ctx-item"><span class="ctx-label">Min Threshold</span><span class="ctx-val">200 ml</span></div>
+      <div class="ctx-item"><span class="ctx-label">Category</span><span class="ctx-val" style="font-weight:400;font-family:var(--font);">Veggies</span></div>
+      <div class="ctx-item"><span class="ctx-label">After Adjustment</span><span class="ctx-val amber">19.82 ltr</span></div>
+    </div>
+
+    <div class="form-row">
+      <div class="field">
+        <label>Quantity <span class="req">*</span></label>
+        <input type="number" value="5" />
+        <div class="hint">Decrease by 5 ltr → Stock will be 19.82 ltr</div>
+      </div>
+      <div class="field">
+        <label>Reason <span class="req">*</span></label>
+        <select><option>Counting Error</option><option>System Correction</option><option>Quality Issue</option><option>Other</option></select>
+      </div>
+    </div>
+
+    <div class="form-row full">
+      <div class="field">
+        <label>Source Segment <span class="req">*</span> (for decrease)</label>
+        <select><option>Seg #18 — 24.82 ltr (exp: 2026-07-01) · FEFO Recommended</option></select>
+        <div class="hint">FEFO: Soonest expiry selected. 19.82 ltr will remain in this segment.</div>
+      </div>
+    </div>
+
+    <!-- Impact preview + MI-03: Undo guidance -->
+    <div class="impact-box ok">
+      <strong>Impact:</strong> Cooking Oil decreases by 5 ltr (24.82 → 19.82). Reason: Counting Error. This cannot be undone.
+    </div>
+    <div style="font-size:10px;color:var(--text-muted);background:var(--surface3);border:1px solid var(--border-light);border-radius:4px;padding:6px 10px;margin-bottom:12px;">
+      Made a mistake? Adjustments cannot be reversed. If you entered wrong data, create an opposite adjustment (increase to undo a decrease, or vice versa) with reason "Correction for previous error".
+    </div>
+
+    <div class="btn-row">
+      <button class="btn">Cancel</button>
+      <button class="btn btn-primary">Confirm Adjustment</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ C2: WASTAGE ENTRY ═══════════════ -->
+<div class="section-div">C2 — Wastage Entry (All Roles)</div>
+<a class="back">← Back</a>
+<h1>Record Wastage</h1>
+<div class="sub">Record spoiled, damaged, or expired stock. All stores.</div>
+
+<div class="card">
+  <div class="card-head"><h2>Wastage Details</h2></div>
+  <div style="padding:14px 16px;">
+    <div class="form-row">
+      <div class="field">
+        <label>Item <span class="req">*</span></label>
+        <select><option>Red Meat (gm)</option></select>
+      </div>
+      <div class="field">
+        <label>Reason <span class="req">*</span></label>
+        <select><option>Expired</option><option>Spoiled</option><option>Damaged</option><option>Spillage</option><option>Pest/Contamination</option><option>Other</option></select>
+      </div>
+    </div>
+
+    <!-- Stock context with history -->
+    <div class="stock-ctx">
+      <div class="ctx-item"><span class="ctx-label">Current Stock</span><span class="ctx-val">1,250 gm</span></div>
+      <div class="ctx-item"><span class="ctx-label">After Wastage</span><span class="ctx-val">1,050 gm</span></div>
+      <div class="ctx-item"><span class="ctx-label">Wastage This Month</span><span class="ctx-val amber">450 gm</span></div>
+      <div class="ctx-item"><span class="ctx-label">Avg Monthly Wastage</span><span class="ctx-val" style="font-weight:400;">200 gm</span></div>
+    </div>
+
+    <div class="form-row">
+      <div class="field">
+        <label>Quantity <span class="req">*</span></label>
+        <input type="number" value="200" />
+      </div>
+      <div class="field">
+        <label>Source Segment <span class="req">*</span></label>
+        <select><option>Seg #42 — 800 gm (exp: 2026-06-15)</option></select>
+      </div>
+    </div>
+
+    <!-- Wastage anomaly warning -->
+    <div class="impact-box warn">
+      ⚠ <strong>Anomaly:</strong> Wastage this month (450 + 200 = 650 gm) is <strong>3.2x above</strong> monthly average (200 gm). Review wastage patterns.
+    </div>
+    <!-- MI-03: Undo guidance for wastage -->
+    <div style="font-size:10px;color:var(--text-muted);background:var(--surface3);border:1px solid var(--border-light);border-radius:4px;padding:6px 10px;margin-bottom:12px;">
+      Wastage records are permanent. If you enter wrong data, contact your Central Store manager to create a stock adjustment to correct the quantity.
+    </div>
+
+
+    <div class="btn-row">
+      <button class="btn">Cancel</button>
+      <button class="btn btn-primary">Record Wastage</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ C3: PROCUREMENT / ADD STOCK ═══════════════ -->
+<div class="section-div">C3 — Procurement / Add Stock (Central + Master)</div>
+<a class="back">← Back</a>
+<h1>Procurement — Add Stock</h1>
+<div class="sub">Purchase stock from vendors. Upload invoice or enter manually.</div>
+
+<!-- Tab toggle -->
+<div style="display:inline-flex;background:var(--surface2);border-radius:6px;padding:3px;border:1px solid var(--border);margin-bottom:16px;">
+  <button id="tab-upload" onclick="document.getElementById('panel-upload').style.display='block';document.getElementById('panel-manual').style.display='none';this.style.background='var(--surface)';this.style.fontWeight='600';this.style.boxShadow='0 1px 3px rgba(0,0,0,.08)';document.getElementById('tab-manual').style.background='none';document.getElementById('tab-manual').style.fontWeight='500';document.getElementById('tab-manual').style.boxShadow='none';document.getElementById('tab-manual').style.color='var(--text-muted)';" class="btn" style="flex:none;padding:8px 24px;background:var(--surface);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.08);border:none;border-radius:4px;cursor:pointer;">Upload Invoice</button>
+  <button id="tab-manual" onclick="document.getElementById('panel-manual').style.display='block';document.getElementById('panel-upload').style.display='none';this.style.background='var(--surface)';this.style.fontWeight='600';this.style.boxShadow='0 1px 3px rgba(0,0,0,.08)';document.getElementById('tab-upload').style.background='none';document.getElementById('tab-upload').style.fontWeight='500';document.getElementById('tab-upload').style.boxShadow='none';document.getElementById('tab-upload').style.color='var(--text-muted)';" class="btn" style="flex:none;padding:8px 24px;border:none;color:var(--text-muted);background:none;border-radius:4px;cursor:pointer;">Manual Entry</button>
+</div>
+
+<!-- Upload Invoice Tab -->
+<div id="panel-upload">
+<div class="card">
+  <div class="card-head"><h2>Step 1 — Upload Invoice</h2></div>
+  <div style="padding:16px;">
+    <!-- Upload zone -->
+    <div style="border:2px dashed var(--border);border-radius:8px;padding:32px;text-align:center;background:var(--surface3);margin-bottom:14px;">
+      <div style="font-size:24px;color:var(--text-muted);margin-bottom:6px;">&#8593;</div>
+      <div style="font-size:13px;font-weight:600;">Drop invoice here or click to browse</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">PDF, JPG, PNG — max 10MB</div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Supports printed invoices and handwritten bills</div>
+    </div>
+
+    <!-- Simulated: Invoice uploaded + extracted -->
+    <div style="background:var(--green-light);border:1px solid var(--green-border);border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#166534;display:flex;align-items:center;gap:8px;">
+      <span style="font-size:16px;">&#10003;</span>
+      <div>
+        <strong>Invoice extracted successfully</strong>
+        <div style="font-size:11px;color:#15803d;">INV-2026-0487.pdf — 4 items detected, vendor matched</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Step 2: Extracted data with matching -->
+<div class="card">
+  <div class="card-head">
+    <h2>Step 2 — Review Extracted Data</h2>
+    <span style="font-size:10px;color:var(--text-muted);">Verify and correct before submitting</span>
+  </div>
+  <div style="padding:14px 16px;">
+    <!-- Invoice metadata extracted -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;">
+      <div class="field"><label>Invoice Number</label><input value="INV-2026-0487" readonly style="background:var(--surface2);" /></div>
+      <div class="field"><label>Vendor (auto-detected)</label>
+        <select><option>Test Vendor (ID: 16) &#10003; matched</option></select>
+      </div>
+      <div class="field"><label>Invoice Date</label><input type="date" value="2026-05-31" /></div>
+      <div class="field"><label>Invoice Total</label><input value="Rs 6,410" readonly style="background:var(--surface2);font-family:var(--mono);" /></div>
+    </div>
+
+    <!-- Duplicate invoice check -->
+    <!--<div style="background:var(--amber-light);border:1px solid var(--amber-border);border-radius:6px;padding:8px 12px;margin-bottom:12px;font-size:11px;color:#92400e;">
+      ⚠ Invoice INV-2026-0487 may be a duplicate — similar invoice processed on May 20. <a href="#" style="color:var(--text-sec);text-decoration:underline;">View previous →</a>
+    </div>-->
+
+    <!-- Extracted items table with matching -->
+    <table>
+      <thead>
+        <tr>
+          <th style="width:30px;">Match</th>
+          <th>Extracted Item</th>
+          <th>Matched To</th>
+          <th>Qty</th>
+          <th>Unit</th>
+          <th>Batch</th>
+          <th>Expiry</th>
+          <th>Price/Unit</th>
+          <th>Current Stock</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Row 1: Exact match -->
+        <tr>
+          <td><span style="color:var(--green);font-size:16px;">&#9679;</span></td>
+          <td style="font-size:11px;color:var(--text-muted);">"Cooking Oil 10L"</td>
+          <td>
+            <select style="font-size:12px;border:1px solid var(--green-border);border-radius:4px;padding:4px 8px;background:var(--green-light);color:#166534;">
+              <option>Cooking Oil (ltr) &#10003;</option>
+            </select>
+            <div style="font-size:9px;color:var(--green);">Exact match (100%)</div>
+          </td>
+          <td><input style="width:60px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px;" value="10" /></td>
+          <td style="color:var(--text-muted);font-size:12px;">ltr</td>
+          <td><input style="width:80px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px;" value="" placeholder="—" /></td>
+          <td><input style="width:100px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px;" type="date" /></td>
+          <td>
+            <input style="width:60px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px;" value="150" />
+            <div style="font-size:9px;color:var(--text-muted);">Last: Rs 145</div>
+          </td>
+          <td>
+            <span style="font-family:var(--mono);font-size:12px;">24.82 ltr</span>
+            <div style="font-size:9px;color:var(--text-muted);">→ 34.82 after</div>
+          </td>
+        </tr>
+        <!-- Row 2: Exact match + price warning -->
+        <tr>
+          <td><span style="color:var(--green);font-size:16px;">&#9679;</span></td>
+          <td style="font-size:11px;color:var(--text-muted);">"Maida Fine 20kg"</td>
+          <td>
+            <select style="font-size:12px;border:1px solid var(--green-border);border-radius:4px;padding:4px 8px;background:var(--green-light);color:#166534;">
+              <option>Maida (kg) &#10003;</option>
+            </select>
+            <div style="font-size:9px;color:var(--green);">Exact match (98%)</div>
+          </td>
+          <td><input style="width:60px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px;" value="20" /></td>
+          <td style="color:var(--text-muted);font-size:12px;">kg</td>
+          <td><input style="width:80px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px;" value="MDA-06" /></td>
+          <td><input style="width:100px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px;" type="date" value="2026-08-31" /></td>
+          <td>
+            <input style="width:60px;border:1px solid var(--amber-border);border-radius:4px;padding:4px 6px;font-size:12px;background:var(--amber-light);" value="45" />
+            <div style="font-size:9px;color:var(--amber);">⚠ Last Rs 38 (+18%)</div>
+          </td>
+          <td>
+            <span style="font-family:var(--mono);font-size:12px;color:var(--amber);">3.2 kg</span>
+            <div style="font-size:9px;color:var(--text-muted);">→ 23.2 after</div>
+          </td>
+        </tr>
+        <!-- Row 3: Fuzzy match — needs confirmation -->
+        <tr style="background:var(--amber-light);">
+          <td><span style="color:var(--amber);font-size:16px;">&#9679;</span></td>
+          <td style="font-size:11px;color:var(--amber);">"Red M. Fresh 500g"</td>
+          <td>
+            <select style="font-size:12px;border:1px solid var(--amber-border);border-radius:4px;padding:4px 8px;background:var(--amber-light);color:#92400e;">
+              <option>Red Meat (gm) ? confirm</option>
+              <option>— No match —</option>
+            </select>
+            <div style="font-size:9px;color:var(--amber);">Fuzzy match (72%) — please confirm</div>
+          </td>
+          <td><input style="width:60px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px;" value="500" /></td>
+          <td style="color:var(--text-muted);font-size:12px;">gm</td>
+          <td><input style="width:80px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px;" value="RM-31" /></td>
+          <td><input style="width:100px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px;" type="date" value="2026-06-20" /></td>
+          <td>
+            <input style="width:60px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px;" value="320" />
+            <div style="font-size:9px;color:var(--text-muted);">Last: Rs 310</div>
+          </td>
+          <td>
+            <span style="font-family:var(--mono);font-size:12px;">1,250 gm</span>
+            <div style="font-size:9px;color:var(--text-muted);">→ 1,750 after</div>
+          </td>
+        </tr>
+        <!-- Row 4: No match — unrecognized -->
+        <tr style="background:var(--red-light);">
+          <td><span style="color:var(--red);font-size:16px;">&#9679;</span></td>
+          <td style="font-size:11px;color:var(--red);">"Spice Mix Special 2pk"</td>
+          <td>
+            <select style="font-size:12px;border:1px solid var(--red-border);border-radius:4px;padding:4px 8px;background:var(--red-light);color:#991b1b;">
+              <option>— No match found —</option>
+              <option>Create new item...</option>
+            </select>
+            <div style="font-size:9px;color:var(--red);">Not in inventory — skip or create new item</div>
+          </td>
+          <td><input style="width:60px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px;" value="2" /></td>
+          <td style="color:var(--text-muted);font-size:12px;">pkt</td>
+          <td><input style="width:80px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px;" value="" /></td>
+          <td><input style="width:100px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px;" type="date" /></td>
+          <td>
+            <input style="width:60px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px;" value="85" />
+          </td>
+          <td style="color:var(--text-muted);font-size:11px;font-style:italic;">N/A</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Running total vs invoice total -->
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--surface3);border:1px solid var(--border-light);border-radius:6px;margin-top:12px;font-size:12px;">
+      <div>
+        <span style="color:var(--text-muted);">Match summary:</span>
+        <span style="color:var(--green);font-weight:600;margin-left:6px;">2 exact</span> ·
+        <span style="color:var(--amber);font-weight:600;">1 fuzzy</span> ·
+        <span style="color:var(--red);font-weight:600;">1 unmatched</span>
+      </div>
+      <div>
+        <span style="color:var(--text-muted);">Calculated total:</span>
+        <span style="font-family:var(--mono);font-weight:700;margin-left:4px;">Rs 6,370</span>
+        <span style="color:var(--text-muted);margin-left:6px;">Invoice total:</span>
+        <span style="font-family:var(--mono);font-weight:700;margin-left:4px;">Rs 6,410</span>
+        <span style="color:var(--amber);font-size:10px;margin-left:6px;">Diff: Rs 40</span>
+      </div>
+    </div>
+
+    <div class="btn-row" style="margin-top:14px;">
+      <button class="btn">Re-upload</button>
+      <button class="btn">Skip Unmatched</button>
+      <button class="btn btn-primary">Confirm & Submit (3 matched items)</button>
+    </div>
+  </div>
+</div>
+</div><!-- end panel-upload -->
+
+<!-- Manual Entry Tab -->
+<!-- closing upload panel before manual -->
+
+<div id="panel-manual" style="display:none;">
+<div class="card">
+  <div class="card-head"><h2>Purchase Details</h2></div>
+  <div style="padding:14px 16px;">
+    <div class="form-row">
+      <div class="field"><label>Vendor <span class="req">*</span></label><select><option value="">Select vendor...</option><option>Test Vendor (ID: 16)</option></select></div>
+      <div class="field"><label>Purchase Date</label><input type="date" value="2026-05-31" /></div>
+    </div>
+    <div class="vendor-hint">Last purchase from this vendor: <strong>2026-05-20</strong> (11 days ago) &middot; 3 items &middot; Total: Rs 4,500</div>
+  </div>
+</div>
+<div class="card">
+  <div class="card-head"><h2>Import Items</h2><span style="font-size:10px;color:var(--text-muted);">Upload Excel/CSV or add rows manually</span></div>
+  <div style="padding:14px 16px;">
+    <div style="display:flex;gap:12px;align-items:stretch;margin-bottom:14px;">
+      <div style="flex:1;border:2px dashed var(--border);border-radius:8px;padding:20px;text-align:center;background:var(--surface3);cursor:pointer;">
+        <div style="font-size:20px;color:var(--text-muted);margin-bottom:4px;">&uarr;</div>
+        <div style="font-size:12px;font-weight:600;">Drop Excel/CSV here</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:3px;">.xlsx, .xls, .csv &mdash; max 5MB</div>
+      </div>
+      <div style="flex:1;border:1px solid var(--border);border-radius:8px;padding:20px;text-align:center;">
+        <div style="font-size:12px;font-weight:600;margin-bottom:4px;">Need a template?</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">Download format with items pre-filled</div>
+        <button class="btn" style="font-size:11px;padding:5px 14px;">Download Template</button>
+      </div>
+    </div>
+    <div style="background:var(--green-light);border:1px solid var(--green-border);border-radius:6px;padding:8px 14px;font-size:12px;color:#166534;display:flex;align-items:center;gap:8px;">
+      <span style="font-size:14px;">&#10003;</span>
+      <div><strong>purchase_order_may.xlsx imported</strong> &mdash; 4 rows parsed, 3 matched<div style="font-size:10px;color:#15803d;">1 row has issues</div></div>
+      <button style="margin-left:auto;font-size:10px;color:#166534;background:none;border:1px solid var(--green-border);border-radius:3px;padding:2px 8px;cursor:pointer;">Clear</button>
+    </div>
+  </div>
+</div>
+<div class="card">
+  <div class="card-head"><h2>Review Items (4 rows)</h2><span style="font-size:10px;color:var(--text-muted);">Verify before approving</span></div>
+  <div style="overflow-x:auto;">
+    <table>
+      <thead><tr><th style="width:20px"></th><th>Row</th><th>Item</th><th>Qty</th><th>Unit</th><th>Batch</th><th>Expiry</th><th>Price/Unit</th><th>Amount</th><th>Stock Now</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><input type="checkbox" checked style="accent-color:var(--primary)" /></td>
+          <td style="font-family:var(--mono);font-size:11px;color:var(--text-muted)">1</td>
+          <td><select style="width:130px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px"><option>Cooking Oil (ltr)</option></select></td>
+          <td><input style="width:60px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px" value="10" /></td>
+          <td style="color:var(--text-muted);font-size:12px">ltr</td>
+          <td><input style="width:80px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px" placeholder="&mdash;" /></td>
+          <td><input style="width:100px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px" type="date" /></td>
+          <td><input style="width:60px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px" value="150" /><div style="font-size:9px;color:var(--text-muted)">Last: 145</div></td>
+          <td style="font-family:var(--mono);font-size:12px">1,500</td>
+          <td><span style="font-family:var(--mono);font-size:11px">24.82</span><div style="font-size:9px;color:var(--text-muted)">&rarr; 34.82</div></td>
+          <td><span style="font-size:10px;color:var(--green);font-weight:600">Valid</span></td>
+        </tr>
+        <tr>
+          <td><input type="checkbox" checked style="accent-color:var(--primary)" /></td>
+          <td style="font-family:var(--mono);font-size:11px;color:var(--text-muted)">2</td>
+          <td><select style="width:130px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px"><option>Maida (kg)</option></select></td>
+          <td><input style="width:60px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px" value="20" /></td>
+          <td style="color:var(--text-muted);font-size:12px">kg</td>
+          <td><input style="width:80px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px" value="MDA-06" /></td>
+          <td><input style="width:100px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px" type="date" value="2026-08-31" /></td>
+          <td><input style="width:60px;border:1px solid var(--amber-border);border-radius:4px;padding:4px 6px;font-size:12px;background:var(--amber-light)" value="45" /><div style="font-size:9px;color:var(--amber)">&triangle; +18%</div></td>
+          <td style="font-family:var(--mono);font-size:12px">900</td>
+          <td><span style="font-family:var(--mono);font-size:11px;color:var(--amber)">3.2</span><div style="font-size:9px;color:var(--text-muted)">&rarr; 23.2</div></td>
+          <td><span style="font-size:10px;color:var(--amber);font-weight:600">Price &#9888;</span></td>
+        </tr>
+        <tr>
+          <td><input type="checkbox" checked style="accent-color:var(--primary)" /></td>
+          <td style="font-family:var(--mono);font-size:11px;color:var(--text-muted)">3</td>
+          <td><select style="width:130px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px"><option>Red Meat (gm)</option></select></td>
+          <td><input style="width:60px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px" value="500" /></td>
+          <td style="color:var(--text-muted);font-size:12px">gm</td>
+          <td><input style="width:80px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px" value="RM-31" /></td>
+          <td><input style="width:100px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px" type="date" value="2026-06-20" /></td>
+          <td><input style="width:60px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px" value="320" /><div style="font-size:9px;color:var(--text-muted)">Last: 310</div></td>
+          <td style="font-family:var(--mono);font-size:12px">1,600</td>
+          <td><span style="font-family:var(--mono);font-size:11px">1,250</span><div style="font-size:9px;color:var(--text-muted)">&rarr; 1,750</div></td>
+          <td><span style="font-size:10px;color:var(--green);font-weight:600">Valid</span></td>
+        </tr>
+        <tr style="background:var(--red-light)">
+          <td><input type="checkbox" style="accent-color:var(--primary)" /></td>
+          <td style="font-family:var(--mono);font-size:11px;color:var(--text-muted)">4</td>
+          <td><select style="width:130px;border:1px solid var(--red-border);border-radius:4px;padding:4px 6px;font-size:12px;background:var(--red-light)"><option>&mdash; "Spice Mix" not found &mdash;</option></select></td>
+          <td><input style="width:60px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px" value="2" /></td>
+          <td style="color:var(--text-muted);font-size:12px">pkt</td>
+          <td><input style="width:80px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px" /></td>
+          <td><input style="width:100px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px" type="date" /></td>
+          <td><input style="width:60px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px" value="85" /></td>
+          <td style="font-family:var(--mono);font-size:12px">170</td>
+          <td style="color:var(--text-muted);font-size:11px;font-style:italic">N/A</td>
+          <td><span style="font-size:10px;color:var(--red);font-weight:600">No match</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="padding:6px 14px"><button style="font-size:11px;color:var(--text-sec);background:none;border:none;cursor:pointer;text-decoration:underline">+ Add row manually</button></div>
+  </div>
+</div>
+<div style="display:flex;gap:12px;align-items:flex-start;margin-top:4px">
+  <div style="flex:1">
+    <div style="background:var(--amber-light);border:1px solid var(--amber-border);border-radius:6px;padding:8px 12px;font-size:11px;color:#92400e">
+      <strong>Review:</strong><ul style="margin:4px 0 0 16px"><li>Row 2: Price 18% above last purchase</li><li>Row 4: Item not in inventory</li></ul>
+    </div>
+  </div>
+  <div style="width:260px;flex-shrink:0">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>3 valid rows</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>1 row with issues</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;border-top:1px solid var(--border);padding-top:6px;margin-top:6px"><span>Grand Total</span><span style="font-family:var(--mono)">Rs 4,000</span></div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;padding:10px;font-size:14px">Approve &amp; Submit (3 items)</button>
+    <div style="font-size:10px;color:var(--text-muted);text-align:center;margin-top:4px">Unchecked/invalid rows skipped</div>
+  </div>
+</div>
+</div><!-- end panel-manual -->
+
+<!-- ═══════════════ C4: WASTAGE REPORT ═══════════════ -->
+<div class="section-div">C4 — Wastage Report (All Roles)</div>
+<h1>Wastage Report</h1>
+<div class="sub">Analyze wastage patterns across stores and time periods.</div>
+
+<div class="stats-row">
+  <div class="stat-card red"><div class="v">12</div><div class="l">Total Records</div></div>
+  <div class="stat-card amber"><div class="v">2,450 gm</div><div class="l">Net Wastage</div></div>
+  <div class="stat-card"><div class="v">3</div><div class="l">Items Affected</div></div>
+  <div class="stat-card"><div class="v">2</div><div class="l">Stores</div></div>
+</div>
+
+<!-- Top wasted items -->
+<div class="card">
+  <div class="card-head"><h2>Top Wasted Items</h2><span style="font-size:10px;color:var(--text-muted);">This month</span></div>
+  <table>
+    <thead><tr><th>Item</th><th>Total Wastage</th><th>Records</th><th>Top Reason</th><th>Trend</th></tr></thead>
+    <tbody>
+      <tr>
+        <td style="font-weight:600;">Red Meat <span style="color:var(--text-muted);font-size:11px;">gm</span></td>
+        <td style="font-family:var(--mono);color:var(--red);">1,200 gm</td>
+        <td style="font-family:var(--mono);">6</td>
+        <td>Expired (4), Damaged (2)</td>
+        <td><span style="font-size:10px;color:var(--red);">↑ 3.2x above avg</span></td>
+      </tr>
+      <tr>
+        <td style="font-weight:600;">Patri <span style="color:var(--text-muted);font-size:11px;">gm</span></td>
+        <td style="font-family:var(--mono);color:var(--amber);">850 gm</td>
+        <td style="font-family:var(--mono);">4</td>
+        <td>Spoiled (3), Spillage (1)</td>
+        <td><span style="font-size:10px;color:var(--amber);">↑ 1.5x above avg</span></td>
+      </tr>
+      <tr>
+        <td style="font-weight:600;">Cooking Oil <span style="color:var(--text-muted);font-size:11px;">ltr</span></td>
+        <td style="font-family:var(--mono);">400 ml</td>
+        <td style="font-family:var(--mono);">2</td>
+        <td>Spillage (2)</td>
+        <td><span style="font-size:10px;color:var(--text-muted);">Normal</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Legend -->
+<div style="margin-top:20px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;">
+  <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;color:var(--text-sec);">Intelligence Elements — Flow C</div>
+  <div style="font-size:11px;color:var(--text-sec);line-height:2;">
+    <div><strong>C1-Adj:</strong> Current stock display, after-adjustment projection, FEFO segment pre-selected, impact preview with "cannot be undone" warning</div>
+    <div><strong>C2-Waste:</strong> Current stock + after-wastage projection, wastage-this-month context, anomaly detection ("3.2x above avg"), segment with expiry</div>
+    <div><strong>C3-Proc:</strong> Last purchase from vendor context, per-item current stock + after-purchase projection, last purchase price with % change warning, batch/expiry inline</div>
+    <div><strong>C4-Report:</strong> Top wasted items ranking, trend vs average ("3.2x above avg" / "Normal"), reason breakdown per item, summary stats</div>
+  </div>
+</div>
+
+</div></div></div>
+</body>
+</html>
