@@ -1,52 +1,36 @@
 # Central Inventory — PRD
 
 ## Problem Statement
-Pull repo `https://github.com/parth-mygenie/central_inventory.git` (branch `6-07-26`), set up the environment, then perform full E2E testing:
-- Create hierarchy tree under `owner@heavengarden.com` (RID 799, master)
-- Create catalogue: categories, foods, ingredients, sub-recipes, recipes (regular + manufactured)
-- Vendor purchase through PO
-- Production runs
-- Stock transfers in all directions
-- Test new PO receive import endpoints from validation-6-7
-- Document results in AI/ folder
+Full E2E testing on Hells Kitchen (RID 803) hierarchy with correct API contracts.
 
 ## Architecture
-- **Backend**: FastAPI (Python) — proxy to MyGenie POS preprod APIs + MongoDB for local state
-- **Frontend**: React 19 + Tailwind CSS + Radix UI + shadcn components, bundled via CRACO
-- **Database**: MongoDB (local, `test_database`)
-- **External APIs**: MyGenie POS preprod (v1 & v2)
+- **Backend**: FastAPI proxy → MyGenie POS preprod APIs + MongoDB
+- **Frontend**: React 19 + Tailwind + Radix UI + CRACO
 
-## What's Been Implemented
+## What's Been Implemented — 2026-07-10
 
-### 2026-07-10: Repo Pull + Full E2E Test
-1. **Repo pulled** from `6-07-26` branch, .env files created, dependencies installed, app running
-2. **Hierarchy created** (3 of 5 children): B(800), C2(801), E(802) under master A(799)
-3. **Catalogue setup**: 3 stock categories, 6 inventory items, 3 food categories, 4 foods
-4. **Recipes**: 3 regular + 1 manufactured (auto sub-recipe + FG inventory)
-5. **Vendors**: Fresh Farms(238), Spice World(239)
-6. **PO lifecycle**: 2 POs created → approved → sent → received → closed (full lifecycle)
-7. **Bundle push**: Pushed to all 3 children (categories, ingredients, foods, recipes)
-8. **Transfers**: 3 dispatched (Master→B, Master→C2, Master→E)
-9. **New endpoints tested**: stock-ledger(✅), wastage-reasons(✅), 7 others(❌ not deployed)
-10. **Full report**: `/app/AI/Plans/hg_799_e2e_test_report.md`
+### Hells Kitchen (RID 803) Full E2E Test
+1. **Hierarchy**: 5/5 children created (B=804, C=807, C2=805, D=808, E=806), all tokens working
+2. **Catalogue**: 3 stock categories, 6 inventory items (with kg→gm conversion), 2 food categories, 4 foods
+3. **Recipes**: 3 regular + 1 manufactured (auto sub-recipe 192 + FG 18142). Standalone sub-recipe created with `subunit` field
+4. **Vendors**: Metro Wholesale (240), Farm Direct (241)
+5. **PO**: PO-803-2026-0001 full lifecycle with correct `batch` field → segments have batch+expiry
+6. **Push bundles**: All 3 direct children received catalogue (2 cats, 7 inv, 4 food, 4 recipes each)
+7. **Transfers**: 5 successful (Master→B, Master→C2, Master→E, B→C, C2→D) using `segment_id` mode
+8. **New G-031 endpoints**: All deployed and verified (import-template, parse-import, receive-import-template, check-invoice-number, catalog-policy, return/eligible, stock-ledger)
 
-## Blockers Found
-- Child account login: POS API `common-login` rejects newly created hierarchy children
-- Production run: `INVENTORY_NOT_ENABLED` even after settings update
-- Cross-store transfers: Require child tokens (UNAUTHORIZED_ACTION from master)
-- PO receive doesn't populate batch on segments → forces filter_bucket for transfers
-- New G-031 routes: Not deployed to preprod for RID 799 hierarchy
+### Key API Contract Corrections
+- PO receive: `batch` (not `batch_number`)
+- Sub-recipe: `subunit` (not `unit`)
+- Source selector: `segment_id` mode requires batch+expiry on segment
+- Hierarchy transfers: Only Master→Central, Master→Franchise, Central→own Franchise allowed
 
-## Test Scripts Created (AI/curls/)
-- `hg_phase1_hierarchy_create.sh`
-- `hg_phase2_catalogue.sh`
-- `hg_phase3to5_recipes_vendors_po.sh`
-- `hg_phase6_production_transfers.sh`
+### Blockers
+- Production run: `INVENTORY_NOT_ENABLED` — needs `restaurants.inventory='Yes'` in POS DB
+- Central→Central, Central→other's franchise, Franchise→Franchise: `INVALID_HIERARCHY` (by design)
 
-## Next Tasks
-- POS admin: Activate child accounts (B, C2, E) for login
-- POS admin: Enable inventory management for RID 799
-- POS admin: Deploy G-031 routes (receive-import, catalog-policy, return/eligible)
-- Create C (franchise under B) and D (franchise under C2) once child tokens available
-- Complete all transfer directions once child tokens available
-- Production run once inventory enabled
+## Reports
+- `/app/AI/Plans/hk_803_e2e_test_report.md` — Full test report
+- `/app/AI/Plans/hg_799_e2e_test_report.md` — Previous Heaven Garden test
+- `/app/AI/curls/hk_phase1_hierarchy.sh` — Hierarchy creation script
+- `/app/AI/curls/hk_phase2to4_catalogue_po.sh` — Catalogue + PO script
