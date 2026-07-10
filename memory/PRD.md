@@ -1,7 +1,7 @@
 # Central Inventory — PRD
 
 ## Problem Statement
-Full E2E testing on Hells Kitchen (RID 803) hierarchy — all transfer directions, production, PO with correct contracts.
+Full E2E testing on Hells Kitchen (RID 803) — comprehensive ops settings, every transfer operation, partial flows, returns, disputes, wastage, production.
 
 ## Architecture
 - **Backend**: FastAPI proxy → MyGenie POS preprod APIs + MongoDB
@@ -9,32 +9,41 @@ Full E2E testing on Hells Kitchen (RID 803) hierarchy — all transfer direction
 
 ## What's Been Implemented — 2026-07-10
 
-### Hells Kitchen (RID 803) — ALL TESTS PASSING
-1. **Hierarchy 5/5**: B(804), C(807), C2(805), D(808), E(806) — all tokens working
-2. **Catalogue**: 3 stock cats, 6 inv items, 2 food cats, 4 foods
-3. **Recipes**: 3 regular + 1 manufactured (SR 192, FG 18142) + 1 standalone sub-recipe
-4. **PO lifecycle**: PO-803-2026-0001 with correct `batch` field → segments have batch+expiry
-5. **Production**: PRD-2026-0001, 5 batches Marinara, cost ₹900
-6. **8/8 transfer directions**: Master→Central, Master→Franchise, Central→Franchise, Central→Central(lateral), Central→other's Franchise(cross), Franchise→Franchise(lateral)
-7. **G-031 endpoints**: All 7 deployed and verified
+### Hells Kitchen (RID 803) — Comprehensive Ops Test: 47/49 passing
 
-### Key Operational Settings (master 803)
-- `production_enabled: true`
-- `allow_lateral_central_transfer: true`
-- `allow_lateral_franchise_transfer: true`
-- `allow_cross_central_franchise_dispatch: true`
+**Operations tested (19 unique transfers):**
+- All transfer statuses: requested, approved, dispatched, received, rejected, withdrawn, cancelled, receive_dispute_pending
+- All transfer types: dispatch, request, lateral, modification_request
+- Full request flow: request→approve→dispatch→receive
+- Reject, Amend, Withdraw, Modification request
+- Cancel transfer
+- Dispute + resolve
+- Partial approve + cancel remainder
+- Lateral transfers (central↔central, franchise↔franchise) with master approval
+- Cross-central franchise dispatch
+- Selling price + shipping fee on transfers
 
-### API Contract Confirmed
-- PO receive: `batch` (not `batch_number`)
-- Sub-recipe: `subunit` (not `unit`)
-- Production expiry: `YYYY-MM-DD` format
-- Lateral transfers: `lateral/initiate` endpoint + master approval
-- Cross-central: `initiate` endpoint with ops flag enabled
+**Ops settings tested:**
+- require_po_for_purchase (toggle verified)
+- allow_child_direct_vendor_purchase (toggle verified)
+- allow_over_receive
+- transfer_selling_price + shipping_fee
+- G-027 READONLY for children
+- G-029 catalog policy (deny + enforce)
+- G-028 pushed catalog lock
+- production_enabled
+- allow_lateral_central_transfer, allow_lateral_franchise_transfer, allow_cross_central_franchise_dispatch
 
-### Reports (AI/ directory — append only)
-- `AI/Plans/hk_803_e2e_test_report.md` — Full initial test
-- `AI/Plans/hk_803_retest_addendum.md` — Retest with production + lateral transfers
-- `AI/Plans/hg_799_e2e_test_report.md` — Previous Heaven Garden test
-- `AI/curls/hk_phase1_hierarchy.sh` — Hierarchy creation
-- `AI/curls/hk_phase2to4_catalogue_po.sh` — Catalogue + PO
-- `AI/curls/hg_phase*.sh` — Heaven Garden scripts (preserved)
+**Other operations:**
+- Stock decrease adjustment, stock increase
+- Wastage recording + report (4 reasons)
+- 2 production runs (PRD-2026-0001/0002)
+- Stock ledger (10 entries)
+- Daily consumption report (hierarchy-wide)
+- FEFO stock detail with segments
+
+### Reports (AI/ only, append-only)
+- `AI/Plans/hk_803_comprehensive_ops_report.md` — This test
+- `AI/Plans/hk_803_retest_addendum.md` — Production + lateral transfers
+- `AI/Plans/hk_803_e2e_test_report.md` — Initial E2E
+- `AI/curls/hk_comprehensive_ops_test.sh` — Test script
