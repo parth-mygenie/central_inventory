@@ -677,11 +677,9 @@
     "sprint_key": "S3",
     "sprint_name": "API Reality Check + Intelligent PO",
     "debt_reasons": [
-      "Impact-Analysis: MISSING",
-      "Impl-Plan: MISSING",
       "QA-Report: MISSING"
     ],
-    "missing_count": 3,
+    "missing_count": 1,
     "pending_count": 0
   },
   {
@@ -693,11 +691,9 @@
     "sprint_key": "S3",
     "sprint_name": "API Reality Check + Intelligent PO",
     "debt_reasons": [
-      "Impact-Analysis: MISSING",
-      "Impl-Plan: MISSING",
       "QA-Report: MISSING"
     ],
-    "missing_count": 3,
+    "missing_count": 1,
     "pending_count": 0
   },
   {
@@ -709,11 +705,9 @@
     "sprint_key": "S3",
     "sprint_name": "API Reality Check + Intelligent PO",
     "debt_reasons": [
-      "Impact-Analysis: MISSING",
-      "Impl-Plan: MISSING",
       "QA-Report: MISSING"
     ],
-    "missing_count": 3,
+    "missing_count": 1,
     "pending_count": 0
   },
   {
@@ -725,11 +719,9 @@
     "sprint_key": "S3",
     "sprint_name": "API Reality Check + Intelligent PO",
     "debt_reasons": [
-      "Impact-Analysis: MISSING",
-      "Impl-Plan: MISSING",
       "QA-Report: MISSING"
     ],
-    "missing_count": 3,
+    "missing_count": 1,
     "pending_count": 0
   },
   {
@@ -741,11 +733,9 @@
     "sprint_key": "S3",
     "sprint_name": "API Reality Check + Intelligent PO",
     "debt_reasons": [
-      "Impact-Analysis: MISSING",
-      "Impl-Plan: MISSING",
       "QA-Report: MISSING"
     ],
-    "missing_count": 3,
+    "missing_count": 1,
     "pending_count": 0
   },
   {
@@ -757,11 +747,9 @@
     "sprint_key": "S3",
     "sprint_name": "API Reality Check + Intelligent PO",
     "debt_reasons": [
-      "Impact-Analysis: MISSING",
-      "Impl-Plan: MISSING",
       "QA-Report: MISSING"
     ],
-    "missing_count": 3,
+    "missing_count": 1,
     "pending_count": 0
   },
   {
@@ -773,11 +761,9 @@
     "sprint_key": "S3",
     "sprint_name": "API Reality Check + Intelligent PO",
     "debt_reasons": [
-      "Impact-Analysis: MISSING",
-      "Impl-Plan: MISSING",
       "QA-Report: MISSING"
     ],
-    "missing_count": 3,
+    "missing_count": 1,
     "pending_count": 0
   },
   {
@@ -789,11 +775,9 @@
     "sprint_key": "S3",
     "sprint_name": "API Reality Check + Intelligent PO",
     "debt_reasons": [
-      "Impact-Analysis: MISSING",
-      "Impl-Plan: MISSING",
       "QA-Report: MISSING"
     ],
-    "missing_count": 3,
+    "missing_count": 1,
     "pending_count": 0
   }
 ]

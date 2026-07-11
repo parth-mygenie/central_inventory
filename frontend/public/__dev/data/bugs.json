@@ -2650,14 +2650,14 @@
       {
         "artifact": 2,
         "label": "Impact-Analysis",
-        "status": "MISSING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/BUG038-045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
       },
       {
         "artifact": 3,
         "label": "Impl-Plan",
-        "status": "MISSING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/BUG038-045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
       },
       {
         "artifact": 4,
@@ -2679,15 +2679,13 @@
       }
     ],
     "completeness": {
-      "done": 4,
+      "done": 6,
       "total": 7,
-      "pct": 57
+      "pct": 86
     },
     "doc_count": 0,
     "is_debt": true,
     "debt_reasons": [
-      "Impact-Analysis: MISSING",
-      "Impl-Plan: MISSING",
       "QA-Report: MISSING"
     ],
     "sprint_name": "API Reality Check + Intelligent PO"
@@ -2720,14 +2718,14 @@
       {
         "artifact": 2,
         "label": "Impact-Analysis",
-        "status": "MISSING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/BUG038-045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
       },
       {
         "artifact": 3,
         "label": "Impl-Plan",
-        "status": "MISSING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/BUG038-045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
       },
       {
         "artifact": 4,
@@ -2749,15 +2747,13 @@
       }
     ],
     "completeness": {
-      "done": 4,
+      "done": 6,
       "total": 7,
-      "pct": 57
+      "pct": 86
     },
     "doc_count": 0,
     "is_debt": true,
     "debt_reasons": [
-      "Impact-Analysis: MISSING",
-      "Impl-Plan: MISSING",
       "QA-Report: MISSING"
     ],
     "sprint_name": "API Reality Check + Intelligent PO"
@@ -2790,14 +2786,14 @@
       {
         "artifact": 2,
         "label": "Impact-Analysis",
-        "status": "MISSING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/BUG038-045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
       },
       {
         "artifact": 3,
         "label": "Impl-Plan",
-        "status": "MISSING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/BUG038-045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
       },
       {
         "artifact": 4,
@@ -2819,15 +2815,13 @@
       }
     ],
     "completeness": {
-      "done": 4,
+      "done": 6,
       "total": 7,
-      "pct": 57
+      "pct": 86
     },
     "doc_count": 0,
     "is_debt": true,
     "debt_reasons": [
-      "Impact-Analysis: MISSING",
-      "Impl-Plan: MISSING",
       "QA-Report: MISSING"
     ],
     "sprint_name": "API Reality Check + Intelligent PO"
@@ -2861,14 +2855,14 @@
       {
         "artifact": 2,
         "label": "Impact-Analysis",
-        "status": "MISSING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/BUG038-045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
       },
       {
         "artifact": 3,
         "label": "Impl-Plan",
-        "status": "MISSING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/BUG038-045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
       },
       {
         "artifact": 4,
@@ -2890,15 +2884,13 @@
       }
     ],
     "completeness": {
-      "done": 4,
+      "done": 6,
       "total": 7,
-      "pct": 57
+      "pct": 86
     },
     "doc_count": 0,
     "is_debt": true,
     "debt_reasons": [
-      "Impact-Analysis: MISSING",
-      "Impl-Plan: MISSING",
       "QA-Report: MISSING"
     ],
     "sprint_name": "API Reality Check + Intelligent PO"
@@ -2931,14 +2923,14 @@
       {
         "artifact": 2,
         "label": "Impact-Analysis",
-        "status": "MISSING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/BUG038-045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
       },
       {
         "artifact": 3,
         "label": "Impl-Plan",
-        "status": "MISSING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/BUG038-045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
       },
       {
         "artifact": 4,
@@ -2960,15 +2952,13 @@
       }
     ],
     "completeness": {
-      "done": 4,
+      "done": 6,
       "total": 7,
-      "pct": 57
+      "pct": 86
     },
     "doc_count": 0,
     "is_debt": true,
     "debt_reasons": [
-      "Impact-Analysis: MISSING",
-      "Impl-Plan: MISSING",
       "QA-Report: MISSING"
     ],
     "sprint_name": "API Reality Check + Intelligent PO"
@@ -3001,14 +2991,14 @@
       {
         "artifact": 2,
         "label": "Impact-Analysis",
-        "status": "MISSING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/BUG038-045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
       },
       {
         "artifact": 3,
         "label": "Impl-Plan",
-        "status": "MISSING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/BUG038-045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
       },
       {
         "artifact": 4,
@@ -3030,15 +3020,13 @@
       }
     ],
     "completeness": {
-      "done": 4,
+      "done": 6,
       "total": 7,
-      "pct": 57
+      "pct": 86
     },
     "doc_count": 0,
     "is_debt": true,
     "debt_reasons": [
-      "Impact-Analysis: MISSING",
-      "Impl-Plan: MISSING",
       "QA-Report: MISSING"
     ],
     "sprint_name": "API Reality Check + Intelligent PO"
@@ -3073,14 +3061,14 @@
       {
         "artifact": 2,
         "label": "Impact-Analysis",
-        "status": "MISSING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/BUG038-045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
       },
       {
         "artifact": 3,
         "label": "Impl-Plan",
-        "status": "MISSING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/BUG038-045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
       },
       {
         "artifact": 4,
@@ -3102,15 +3090,13 @@
       }
     ],
     "completeness": {
-      "done": 4,
+      "done": 6,
       "total": 7,
-      "pct": 57
+      "pct": 86
     },
     "doc_count": 0,
     "is_debt": true,
     "debt_reasons": [
-      "Impact-Analysis: MISSING",
-      "Impl-Plan: MISSING",
       "QA-Report: MISSING"
     ],
     "sprint_name": "API Reality Check + Intelligent PO"
@@ -3143,14 +3129,14 @@
       {
         "artifact": 2,
         "label": "Impact-Analysis",
-        "status": "MISSING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/BUG038-045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
       },
       {
         "artifact": 3,
         "label": "Impl-Plan",
-        "status": "MISSING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/BUG038-045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
       },
       {
         "artifact": 4,
@@ -3172,15 +3158,13 @@
       }
     ],
     "completeness": {
-      "done": 4,
+      "done": 6,
       "total": 7,
-      "pct": 57
+      "pct": 86
     },
     "doc_count": 0,
     "is_debt": true,
     "debt_reasons": [
-      "Impact-Analysis: MISSING",
-      "Impl-Plan: MISSING",
       "QA-Report: MISSING"
     ],
     "sprint_name": "API Reality Check + Intelligent PO"
