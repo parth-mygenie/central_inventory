@@ -188,6 +188,16 @@ function BatchInventorySection({ segments, displayUnit, restaurantMap, onNavigat
     if (days !== null && days < 0) return sum; // exclude expired from total
     return sum + (Number(s.display_qty) || 0);
   }, 0);
+  // CR-041 — G-019 aggregate segment value = Σ (cal_quantity × unit_cost) for non-expired batches.
+  // R6 discipline: Number() wrap on both operands.
+  const totalValue = segments.reduce((sum, s) => {
+    const days = daysUntilExpiry(s.expiry_date);
+    if (days !== null && days < 0) return sum;
+    const cost = Number(s.unit_cost) || 0;
+    const qty = Number(s.cal_quantity) || 0;
+    return sum + qty * cost;
+  }, 0);
+  const hasAnyCost = segments.some((s) => Number(s.unit_cost) > 0);
 
   return (
     <Card data-testid="stock-detail-batches">
@@ -197,6 +207,11 @@ function BatchInventorySection({ segments, displayUnit, restaurantMap, onNavigat
           Batch Inventory
           {segments.length > 0 && (
             <span className="text-xs font-normal text-muted-foreground">({segments.length} — FEFO order)</span>
+          )}
+          {hasAnyCost && totalValue > 0 && (
+            <span className="ml-auto text-xs font-normal text-emerald-700" data-testid="batches-total-value">
+              Total value: ₹{totalValue.toLocaleString("en-IN", { maximumFractionDigits: 2 })}
+            </span>
           )}
         </CardTitle>
       </CardHeader>
@@ -215,6 +230,9 @@ function BatchInventorySection({ segments, displayUnit, restaurantMap, onNavigat
                   <TableHead className="text-xs">Batch</TableHead>
                   <TableHead className="text-xs text-right">Available Qty</TableHead>
                   <TableHead className="text-xs text-right">Display Qty</TableHead>
+                  {/* CR-041 — G-019 cost columns (only render header when data exists) */}
+                  {hasAnyCost && <TableHead className="text-xs text-right">Unit Cost</TableHead>}
+                  {hasAnyCost && <TableHead className="text-xs text-right">Value</TableHead>}
                   <TableHead className="text-xs text-right">% of Total</TableHead>
                   <TableHead className="text-xs">Expiry Date</TableHead>
                   <TableHead className="text-xs">Source Store</TableHead>
@@ -228,6 +246,8 @@ function BatchInventorySection({ segments, displayUnit, restaurantMap, onNavigat
                   const isExpiring = days !== null && days >= 0 && days <= 30;
                   const isFirstExpiry = i === 0 && isExpiring && !isExpired;
                   const pctOfTotal = totalQty > 0 ? Math.round((Number(seg.display_qty) / totalQty) * 100) : 0;
+                  const unitCost = Number(seg.unit_cost) || 0; // CR-041
+                  const segValue = unitCost * (Number(seg.cal_quantity) || 0); // CR-041
                   let rowClass = "";
                   if (isExpired) rowClass = "bg-red-50/60 opacity-60";
                   else if (isExpiring && i === 0) rowClass = "bg-amber-50/40";
@@ -255,6 +275,21 @@ function BatchInventorySection({ segments, displayUnit, restaurantMap, onNavigat
                           {Number(seg.display_qty)} {displayUnit}
                         </span>
                       </TableCell>
+                      {/* CR-041 — G-019 unit cost + batch value */}
+                      {hasAnyCost && (
+                        <TableCell className="py-2.5 text-right">
+                          <span className={`text-sm tabular-nums ${isExpired ? "line-through text-muted-foreground" : ""}`} data-testid={`batch-unit-cost-${seg.segment_id || i}`}>
+                            {unitCost > 0 ? `₹${unitCost.toLocaleString("en-IN", { maximumFractionDigits: 2 })}` : "—"}
+                          </span>
+                        </TableCell>
+                      )}
+                      {hasAnyCost && (
+                        <TableCell className="py-2.5 text-right">
+                          <span className={`text-sm tabular-nums ${isExpired ? "line-through text-muted-foreground" : "text-emerald-700"}`} data-testid={`batch-value-${seg.segment_id || i}`}>
+                            {segValue > 0 ? `₹${segValue.toLocaleString("en-IN", { maximumFractionDigits: 2 })}` : "—"}
+                          </span>
+                        </TableCell>
+                      )}
                       <TableCell className="py-2.5 text-right">
                         {!isExpired && (
                           <span className="text-xs tabular-nums text-muted-foreground">{pctOfTotal}%</span>

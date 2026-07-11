@@ -13,8 +13,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Search, Plus, Pencil, Trash2, Loader2, UtensilsCrossed } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, Loader2, UtensilsCrossed, Info } from "lucide-react";
 import { LoadingState, ErrorState, EmptyState } from "@/components/common/StateDisplays";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { friendlyCatalogError } from "@/lib/apiErrors"; // CR-043 — G-028/G-029
 
 import RecipeCatalogue from "./RecipeCatalogue";
 import AddonRecipeCatalogue from "./AddonRecipeCatalogue";
@@ -86,7 +88,10 @@ function FoodsTab() {
 
   const handleDelete = async (id) => {
     try { await api.deleteFood(id); toast({ title: "Food deleted" }); load(); }
-    catch (e) { toast({ title: e?.response?.data?.message || "Delete failed", variant: "destructive" }); }
+    catch (e) {
+      const friendly = friendlyCatalogError(e); // CR-043
+      toast({ title: friendly || e?.response?.data?.message || "Delete failed", variant: "destructive" });
+    }
   };
 
   if (loading) return <LoadingState lines={4} />;
@@ -111,14 +116,31 @@ function FoodsTab() {
           </TableRow></TableHeader>
             <TableBody>{filtered.map(f => (
               <TableRow key={f.id} data-testid={`food-row-${f.id}`}>
-                <TableCell className="py-2 text-sm font-medium">{f.name}</TableCell>
+                <TableCell className="py-2 text-sm font-medium">
+                  <div className="flex items-center gap-1.5">
+                    <span>{f.name}</span>
+                    {/* CR-043 — G-028 pushed lock badge */}
+                    {f.is_pushed_managed && (
+                      <TooltipProvider delayDuration={200}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge variant="outline" className="text-[9px] px-1 py-0 gap-1 bg-slate-100 text-slate-600 border-slate-300" data-testid={`pushed-lock-food-${f.id}`}>
+                              <Info className="h-2.5 w-2.5" /> Pushed
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="text-[10px]">Managed by hierarchy push. Edit/delete on the parent store only.</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </div>
+                </TableCell>
                 <TableCell className="py-2 text-xs text-muted-foreground">{f.category?.name || "—"}</TableCell>
                 <TableCell className="py-2 text-sm text-right tabular-nums">₹{f.price}</TableCell>
                 <TableCell className="py-2 text-center"><Badge variant={f.status === 1 ? "outline" : "secondary"} className="text-[10px] px-1.5 py-0">{f.status === 1 ? "Active" : "Inactive"}</Badge></TableCell>
                 <TableCell className="py-2 text-center"><Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${recipeMap[(f.name || "").toLowerCase()] ? "text-emerald-700 border-emerald-200 bg-emerald-50" : ""}`}>{recipeMap[(f.name || "").toLowerCase()] ? "Yes" : "—"}</Badge></TableCell>
                 <TableCell className="py-2 flex gap-1">
-                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => { setEditFood(f); setSheetOpen(true); }} data-testid={`edit-food-${f.id}`}><Pencil className="h-3.5 w-3.5" /></Button>
-                  <AlertDialog><AlertDialogTrigger asChild><Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive" data-testid={`del-food-${f.id}`}><Trash2 className="h-3.5 w-3.5" /></Button></AlertDialogTrigger>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => { setEditFood(f); setSheetOpen(true); }} disabled={f.is_pushed_managed} title={f.is_pushed_managed ? "Managed by hierarchy push" : ""} data-testid={`edit-food-${f.id}`}><Pencil className="h-3.5 w-3.5" /></Button>
+                  <AlertDialog><AlertDialogTrigger asChild><Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive" disabled={f.is_pushed_managed} title={f.is_pushed_managed ? "Managed by hierarchy push" : ""} data-testid={`del-food-${f.id}`}><Trash2 className="h-3.5 w-3.5" /></Button></AlertDialogTrigger>
                     <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Delete "{f.name}"?</AlertDialogTitle><AlertDialogDescription>This cannot be undone.</AlertDialogDescription></AlertDialogHeader>
                       <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => handleDelete(f.id)}>Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
                 </TableCell>
@@ -154,7 +176,8 @@ function FoodFormSheet({ open, onOpenChange, food, categories, onSaved, recipeMa
       onOpenChange(false); onSaved();
     } catch (e) {
       const d = e?.response?.data;
-      const msg = d?.errors ? (Array.isArray(d.errors) ? d.errors.map(x => x.message).join(", ") : Object.values(d.errors).flat().join(", ")) : (d?.message || "Failed");
+      const friendly = friendlyCatalogError(e); // CR-043
+      const msg = friendly || (d?.errors ? (Array.isArray(d.errors) ? d.errors.map(x => x.message).join(", ") : Object.values(d.errors).flat().join(", ")) : (d?.message || "Failed"));
       toast({ title: msg, variant: "destructive" });
     } finally { setSaving(false); }
   };

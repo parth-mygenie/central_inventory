@@ -9,7 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ConfirmActionDialog from "./ConfirmActionDialog";
 import { LoadingState, ErrorState, EmptyState } from "@/components/common/StateDisplays";
-import { Search, Plus, Trash2, Loader2, BookOpen, ChevronDown, ChevronRight, X, IndianRupee } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { friendlyCatalogError } from "@/lib/apiErrors"; // CR-043 — G-028/G-029
+import { Search, Plus, Trash2, Loader2, BookOpen, ChevronDown, ChevronRight, X, IndianRupee, Info, Factory } from "lucide-react";
 
 /**
  * RecipeCatalogue — CR-032 master-detail BOM editor
@@ -91,7 +93,17 @@ export default function RecipeCatalogue({ embedded }) {
                 <div key={rid} data-testid={`recipe-card-${rid}`}
                   className={`p-3 rounded-lg border cursor-pointer transition-all ${isSelected ? "border-primary bg-accent/30 shadow-sm" : "border-border hover:border-primary/40"}`}
                   onClick={() => { setSelectedId(rid); setIsAddMode(false); }}>
-                  <p className="text-sm font-semibold truncate">{r.name || r.food_name}</p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-sm font-semibold truncate flex-1">{r.name || r.food_name}</p>
+                    {/* CR-044 — manufactured badge */}
+                    {r.is_manufactured && (
+                      <Badge variant="outline" className="text-[9px] px-1 py-0 bg-amber-50 text-amber-700 border-amber-200" data-testid={`recipe-manufactured-badge-${rid}`}>Manufactured</Badge>
+                    )}
+                    {/* CR-043 — pushed lock badge */}
+                    {r.is_pushed_managed && (
+                      <Badge variant="outline" className="text-[9px] px-1 py-0 bg-slate-100 text-slate-600 border-slate-300" data-testid={`pushed-lock-recipe-${rid}`}>Pushed</Badge>
+                    )}
+                  </div>
                   <p className="text-[10px] text-muted-foreground">{ingCount - subCount} ingredients, {subCount} sub-recipe{subCount !== 1 ? "s" : ""}</p>
                 </div>
               );
@@ -136,6 +148,13 @@ function RecipeDetail({ recipe, foods, inventoryMaster, subRecipeMap, stockMap, 
   const [deleting, setDeleting] = useState(false);
   const [expandedSub, setExpandedSub] = useState({});
   const [detailData, setDetailData] = useState(null);
+  // CR-044 — G-030 manufactured recipe (create-only in v1; update endpoint support unverified).
+  const [isManufactured, setIsManufactured] = useState(false);
+  const [mfgOutputQty, setMfgOutputQty] = useState("1");
+  const [mfgOutputUnit, setMfgOutputUnit] = useState("batch");
+  const [mfgConsumptionUnit, setMfgConsumptionUnit] = useState("piece");
+  const [mfgConversionFactor, setMfgConversionFactor] = useState("10");
+  const [lastMfgResult, setLastMfgResult] = useState(null); // {manufactured_sub_recipe_id, fg_inventory_master_id}
 
   useEffect(() => {
     if (recipe) {
@@ -149,6 +168,17 @@ function RecipeDetail({ recipe, foods, inventoryMaster, subRecipeMap, stockMap, 
         setServes(String(d?.serve_people || "1"));
         setOutputQty(String(d?.qty || "1"));
         setOutputUnit(d?.unit || "piece");
+        // CR-044 — hydrate manufactured toggle from detail if present
+        if (d?.is_manufactured) {
+          setIsManufactured(true);
+          const m = d.manufacturing || {};
+          setMfgOutputQty(String(m.output_qty ?? d.qty ?? "1"));
+          setMfgOutputUnit(m.output_unit || "batch");
+          setMfgConsumptionUnit(m.consumption_unit || "piece");
+          setMfgConversionFactor(String(m.converion_factor ?? "1"));
+        } else {
+          setIsManufactured(false);
+        }
         setIngredients(
           (d?.ingredients || []).map(i => ({
             ingredient_id: String(i.ingredient_id),
@@ -212,6 +242,13 @@ function RecipeDetail({ recipe, foods, inventoryMaster, subRecipeMap, stockMap, 
       toast({ title: "Please select a linked food item first", variant: "destructive" });
       return;
     }
+    // CR-044 — validate manufacturing fields when toggle is ON
+    if (isManufactured) {
+      if (!Number(mfgOutputQty) || !mfgOutputUnit.trim() || !mfgConsumptionUnit.trim() || !Number(mfgConversionFactor)) {
+        toast({ title: "Batch manufactured recipes need output qty/unit, consumption unit and conversion factor.", variant: "destructive" });
+        return;
+      }
+    }
     setSaving(true);
     try {
       const validIngredients = ingredients
@@ -229,11 +266,35 @@ function RecipeDetail({ recipe, foods, inventoryMaster, subRecipeMap, stockMap, 
         unit: outputUnit,
         ingredients: validIngredients,
       };
-      if (recipe) await api.updateRecipe(recipe.id || recipe.recipe_id, payload);
-      else await api.createRecipe(payload);
-      toast({ title: recipe ? "Recipe updated" : "Recipe created" });
+      // CR-044 — G-030 manufactured payload (API typo: converion_factor kept intentionally).
+      if (isManufactured) {
+        payload.is_manufactured = true;
+        payload.manufacturing = {
+          output_qty: Number(mfgOutputQty),
+          output_unit: mfgOutputUnit.trim(),
+          consumption_unit: mfgConsumptionUnit.trim(),
+          converion_factor: Number(mfgConversionFactor),
+        };
+      }
+      const resp = recipe
+        ? await api.updateRecipe(recipe.id || recipe.recipe_id, payload)
+        : await api.createRecipe(payload);
+      const body = resp?.data || {};
+      // CR-044 — surface auto-linked sub-recipe + FG inventory item ids
+      if (isManufactured && (body.manufactured_sub_recipe_id || body.fg_inventory_master_id)) {
+        setLastMfgResult({
+          sub_recipe_id: body.manufactured_sub_recipe_id,
+          fg_inventory_master_id: body.fg_inventory_master_id,
+          recipe_id: body.recipe_id || body.id,
+        });
+      }
+      toast({ title: recipe ? "Recipe updated" : (isManufactured ? "Manufactured recipe created" : "Recipe created") });
       onSaved();
-    } catch (e) { toast({ title: e?.response?.data?.message || "Failed to save", variant: "destructive" }); }
+    } catch (e) {
+      // CR-043 — friendly mapping for pushed/policy 403s
+      const friendly = friendlyCatalogError(e);
+      toast({ title: friendly || e?.response?.data?.message || "Failed to save", variant: "destructive" });
+    }
     finally { setSaving(false); }
   };
 
@@ -243,7 +304,10 @@ function RecipeDetail({ recipe, foods, inventoryMaster, subRecipeMap, stockMap, 
       await api.deleteRecipe(recipe.id || recipe.recipe_id);
       toast({ title: "Recipe deleted" });
       onDeleted();
-    } catch (e) { toast({ title: e?.response?.data?.message || "Failed to delete", variant: "destructive" }); }
+    } catch (e) {
+      const friendly = friendlyCatalogError(e); // CR-043
+      toast({ title: friendly || e?.response?.data?.message || "Failed to delete", variant: "destructive" });
+    }
     finally { setDeleting(false); setDeleteConfirm(false); }
   };
 
@@ -267,6 +331,58 @@ function RecipeDetail({ recipe, foods, inventoryMaster, subRecipeMap, stockMap, 
               <div><Label className="text-[10px] text-muted-foreground">Output</Label><Input type="number" value={outputQty} onChange={e => setOutputQty(e.target.value)} className="h-8 text-xs" /></div>
               <div><Label className="text-[10px] text-muted-foreground">Unit</Label><Input value={outputUnit} onChange={e => setOutputUnit(e.target.value)} className="h-8 text-xs" /></div>
             </div>
+          </div>
+          {/* CR-044 — G-030 batch-manufactured toggle & fields */}
+          <div className="mt-3 pt-3 border-t border-dashed">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Factory className="h-3.5 w-3.5 text-amber-600" />
+                <Label className="text-xs font-medium">Batch manufactured recipe</Label>
+                {isManufactured && <Badge variant="outline" className="text-[9px] bg-amber-50 text-amber-700 border-amber-200">ON</Badge>}
+              </div>
+              <Switch
+                checked={isManufactured}
+                onCheckedChange={(v) => { setIsManufactured(!!v); if (v) setLastMfgResult(null); }}
+                data-testid="recipe-manufactured-toggle"
+                disabled={!!recipe}
+              />
+            </div>
+            {isManufactured && (
+              <div className="grid grid-cols-4 gap-2" data-testid="recipe-mfg-fields">
+                <div>
+                  <Label className="text-[10px] text-muted-foreground">Output Qty</Label>
+                  <Input type="number" min="0" value={mfgOutputQty} onChange={e => setMfgOutputQty(e.target.value)} className="h-8 text-xs" data-testid="mfg-output-qty" />
+                </div>
+                <div>
+                  <Label className="text-[10px] text-muted-foreground">Output Unit</Label>
+                  <Input value={mfgOutputUnit} onChange={e => setMfgOutputUnit(e.target.value)} className="h-8 text-xs" placeholder="batch" data-testid="mfg-output-unit" />
+                </div>
+                <div>
+                  <Label className="text-[10px] text-muted-foreground">Consumption Unit</Label>
+                  <Input value={mfgConsumptionUnit} onChange={e => setMfgConsumptionUnit(e.target.value)} className="h-8 text-xs" placeholder="piece" data-testid="mfg-consumption-unit" />
+                </div>
+                <div>
+                  <Label className="text-[10px] text-muted-foreground">Conversion Factor</Label>
+                  <Input type="number" min="0" value={mfgConversionFactor} onChange={e => setMfgConversionFactor(e.target.value)} className="h-8 text-xs" data-testid="mfg-conversion-factor" />
+                </div>
+                <p className="col-span-4 text-[10px] text-muted-foreground pt-1">
+                  Producing {Number(mfgOutputQty) || "?"} {mfgOutputUnit || "?"} yields {Number(mfgConversionFactor) || "?"} {mfgConsumptionUnit || "?"} of finished goods.
+                </p>
+                {!!recipe && (
+                  <p className="col-span-4 text-[10px] text-amber-700">Manufactured toggle can only be set on new recipes (v1).</p>
+                )}
+              </div>
+            )}
+            {lastMfgResult && (
+              <div className="mt-2 flex items-start gap-1.5 p-2 rounded border border-emerald-200 bg-emerald-50 text-emerald-800 text-[10px]" data-testid="mfg-result-panel">
+                <Info className="h-3 w-3 mt-0.5 shrink-0" />
+                <span>
+                  Manufactured recipe wired up.
+                  {lastMfgResult.sub_recipe_id != null && <> Sub-recipe #{lastMfgResult.sub_recipe_id}.</>}
+                  {lastMfgResult.fg_inventory_master_id != null && <> FG stock item #{lastMfgResult.fg_inventory_master_id}.</>}
+                </span>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

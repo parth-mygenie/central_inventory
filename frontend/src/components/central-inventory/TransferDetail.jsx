@@ -647,6 +647,13 @@ export default function TransferDetail() {
                   <TableHead className="text-[10px] text-right">Qty</TableHead>
                   <TableHead className="text-[10px]">Unit</TableHead>
                   {hasP16Meta && <TableHead className="text-[10px]">Breakdown</TableHead>}
+                  {/* CR-037 — G-002 qty_before/qty_after (post-deploy transfers only) */}
+                  {lines.some((l) => l.qty_before != null || l.qty_after != null) && (
+                    <>
+                      <TableHead className="text-[10px] text-right">Stock Before</TableHead>
+                      <TableHead className="text-[10px] text-right">Stock After</TableHead>
+                    </>
+                  )}
                   {hasLineResolution && (
                     <>
                       <TableHead className="text-[10px] text-right">Accepted</TableHead>
@@ -674,6 +681,13 @@ export default function TransferDetail() {
                     <TableCell className="text-xs text-muted-foreground">{line.unit || "—"}</TableCell>
                     {hasP16Meta && (
                       <TableCell><LineQtyBreakdown line={line} /></TableCell>
+                    )}
+                    {/* CR-037 — G-002 stock-before/after cells */}
+                    {lines.some((l) => l.qty_before != null || l.qty_after != null) && (
+                      <>
+                        <TableCell className="text-xs text-right tabular-nums text-muted-foreground" data-testid={`line-qty-before-${idx}`}>{line.qty_before == null ? "—" : line.qty_before}</TableCell>
+                        <TableCell className="text-xs text-right tabular-nums text-muted-foreground" data-testid={`line-qty-after-${idx}`}>{line.qty_after == null ? "—" : line.qty_after}</TableCell>
+                      </>
                     )}
                     {hasLineResolution && (
                       <>

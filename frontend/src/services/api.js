@@ -121,6 +121,7 @@ function _invalidateTransferCaches() {
     "getHierarchyDetail:",
     "getStockInventory:",
     "getSourceOptions:",
+    "getStockLedger:", // CR-037 — ledger includes transfer rows
   ]);
 }
 
@@ -131,6 +132,7 @@ function _invalidateStockCaches() {
     "getInventoryMaster:",
     "getHierarchyDetail:",
     "getStockDetail:",
+    "getStockLedger:", // CR-037 — ledger includes grn/production/wastage rows
   ]);
 }
 
@@ -366,6 +368,74 @@ function _getTransferHistory({ fromDate, toDate, status, limit, page } = {}) {
   });
 }
 const getTransferHistory = _cached("getTransferHistory", TTL.SHORT, _getTransferHistory);
+
+// ── CR-037: G-005 Unified Stock Ledger ────────────────────────────
+
+function _getStockLedger({ restaurantId, fromDate, toDate, sourceTypes, page, limit } = {}) {
+  const payload = {};
+  if (restaurantId) payload.restaurant_id = restaurantId;
+  if (fromDate) payload.from_date = fromDate;
+  if (toDate) payload.to_date = toDate;
+  if (sourceTypes && sourceTypes.length) payload.source_types = sourceTypes;
+  if (page) payload.page = page;
+  if (limit) payload.limit = limit;
+  return client.post("/proxy/v2/inventory-transfer/stock-ledger", payload);
+}
+const getStockLedger = _cached("getStockLedger", TTL.SHORT, _getStockLedger);
+
+// ── CR-038: G-006 Stock Return + Wastage Reasons CRUD ─────────────
+
+function getReturnEligible() {
+  return client.get("/proxy/v2/inventory-transfer/return/eligible").then((resp) => {
+    const d = resp.data?.data || resp.data;
+    return { ...resp, data: (d && d.transfers) || [] };
+  });
+}
+
+function initiateReturn({ originalTransferId, lines }) {
+  return client.post("/proxy/v2/inventory-transfer/return/initiate", {
+    original_transfer_id: originalTransferId,
+    lines,
+  }).then(r => { _invalidateTransferCaches(); _invalidateStockCaches(); return r; });
+}
+
+function addWastageReason(reason) {
+  return client.post("/proxy/v2/inventory/wastage-reasons/add", { reason })
+    .then(r => { _invalidateCache(["getWastageReasons:"]); return r; });
+}
+
+// ── CR-040: G-016 Invoice Number Duplicate Pre-Check ──────────────
+
+function checkInvoiceNumber(vendorId, invoiceNumber) {
+  return client.post("/proxy/v2/inventory/purchase-order/check-invoice-number", {
+    vendor_id: vendorId,
+    invoice_number: invoiceNumber,
+  });
+}
+
+// ── CR-043: G-029 Child Catalogue Policy ──────────────────────────
+
+function getCatalogPolicy(childId) {
+  return client.get(`/proxy/v2/franchise/catalog-policy/${childId}`);
+}
+
+function updateCatalogPolicy(childId, policy) {
+  return client.post(`/proxy/v2/franchise/catalog-policy/${childId}`, { policy });
+}
+
+// ── CR-039: G-015 Procurement Excel Import ────────────────────────
+
+function getPOImportTemplate() {
+  return client.get("/proxy/v2/inventory/purchase-order/import-template", { responseType: "blob" });
+}
+
+function parsePOImport(file) {
+  const fd = new FormData();
+  fd.append("file", file);
+  return client.post("/proxy/v2/inventory/purchase-order/parse-import", fd, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+}
 
 // ── Source Options ────────────────────────────────────────────────
 
@@ -1039,6 +1109,19 @@ const api = {
   getPendingQueues,
   getTransferDetails,
   getTransferHistory,
+  getStockLedger, // CR-037 — G-005 unified stock ledger
+  // CR-038 — G-006 stock returns
+  getReturnEligible,
+  initiateReturn,
+  addWastageReason,
+  // CR-040 — G-016 invoice duplicate check
+  checkInvoiceNumber,
+  // CR-043 — G-029 child catalogue policy
+  getCatalogPolicy,
+  updateCatalogPolicy,
+  // CR-039 — G-015 procurement excel import
+  getPOImportTemplate,
+  parsePOImport,
   getSourceOptions,
   getInventoryMaster,
   getFranchiseList,

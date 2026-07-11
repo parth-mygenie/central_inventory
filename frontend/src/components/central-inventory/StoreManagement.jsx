@@ -12,10 +12,12 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LoadingState, ErrorState, EmptyState } from "@/components/common/StateDisplays";
 import { mapRestaurantType } from "@/lib/terminology";
+import { Switch } from "@/components/ui/switch";
 import {
   GitBranch, Search, Plus, ChevronDown, ChevronRight, RefreshCw, Loader2,
-  Upload, Mail, Phone, MapPin, Calendar, Check, ArrowRight, ArrowLeft,
+  Upload, Mail, Phone, MapPin, Calendar, Check, ArrowRight, ArrowLeft, Shield, Save,
 } from "lucide-react";
+import { friendlyCatalogError } from "@/lib/apiErrors"; // CR-043 — G-029
 
 /**
  * Store Management — CR-032 unified view
@@ -525,6 +527,97 @@ function ExpandedStoreDetail({ child, pushStatus, health, onPush, pushing }) {
             </div>
           )}
         </div>
+      </div>
+      {/* CR-043 — G-029 Catalogue Policy panel (master-only editing gated by policy_editable) */}
+      <CatalogPolicyCard childId={child.id} childName={child.name} />
+    </div>
+  );
+}
+
+// CR-043 — G-029 Catalogue policy editor. Lazy-loads on mount; auto-hides when API says
+// policy_editable=false (view stays read-only in that case).
+const POLICY_TOGGLES = [
+  { key: "allow_child_catalog_create", label: "Create catalogue items" },
+  { key: "allow_child_catalog_update", label: "Edit catalogue items" },
+  { key: "allow_child_catalog_delete", label: "Delete catalogue items" },
+  { key: "allow_child_inventory_create", label: "Create inventory items" },
+  { key: "allow_child_inventory_update", label: "Edit inventory items" },
+  { key: "allow_child_inventory_delete", label: "Delete inventory items" },
+];
+
+function CatalogPolicyCard({ childId, childName }) {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+  const [policyEditable, setPolicyEditable] = useState(false);
+  const [policy, setPolicy] = useState({});
+  const [initial, setInitial] = useState({});
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true); setError(null);
+    api.getCatalogPolicy(childId)
+      .then((resp) => {
+        if (cancelled) return;
+        const body = resp.data?.data || resp.data || {};
+        setPolicyEditable(!!body.policy_editable);
+        const resolved = body.resolved_policy || body.stored_policy || {};
+        setPolicy(resolved);
+        setInitial(resolved);
+      })
+      .catch((e) => { if (!cancelled) setError(e?.response?.data?.message || "Unable to load policy"); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [childId]);
+
+  const dirty = useMemo(() => POLICY_TOGGLES.some((t) => !!policy[t.key] !== !!initial[t.key]), [policy, initial]);
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      const payload = {};
+      POLICY_TOGGLES.forEach((t) => { payload[t.key] = !!policy[t.key]; });
+      await api.updateCatalogPolicy(childId, payload);
+      setInitial({ ...policy });
+      toast({ title: `Catalogue policy updated for ${childName}` });
+    } catch (e) {
+      const friendly = friendlyCatalogError(e);
+      toast({ title: friendly || e?.response?.data?.message || "Failed to update policy", variant: "destructive" });
+    } finally { setSaving(false); }
+  };
+
+  if (loading) return null;
+  if (error) return (
+    <div className="mt-4 text-[10px] text-muted-foreground" data-testid={`policy-card-error-${childId}`}>{error}</div>
+  );
+
+  return (
+    <div className="mt-5 pt-4 border-t border-border" data-testid={`policy-card-${childId}`}>
+      <div className="flex items-center justify-between mb-2">
+        <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+          <Shield className="h-3 w-3" /> Catalogue Policy — What {childName} can edit locally
+        </h4>
+        {policyEditable ? (
+          <Button size="sm" className="h-7 text-[10px] gap-1" onClick={save} disabled={saving || !dirty} data-testid="policy-save-btn">
+            {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
+            Save
+          </Button>
+        ) : (
+          <Badge variant="outline" className="text-[9px] bg-slate-100 text-slate-600">Read-only</Badge>
+        )}
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+        {POLICY_TOGGLES.map((t) => (
+          <div key={t.key} className="flex items-center justify-between gap-2 p-2 rounded border border-border/60 bg-background/60">
+            <span className="text-[11px] leading-tight">{t.label}</span>
+            <Switch
+              checked={!!policy[t.key]}
+              onCheckedChange={(v) => setPolicy((p) => ({ ...p, [t.key]: !!v }))}
+              disabled={!policyEditable || saving}
+              data-testid={`policy-toggle-${t.key}`}
+            />
+          </div>
+        ))}
       </div>
     </div>
   );

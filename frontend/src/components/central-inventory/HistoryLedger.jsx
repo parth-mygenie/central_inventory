@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useLoginContext } from "@/hooks/useLoginContext";
 import { useRestaurantMap } from "@/hooks/useRestaurantMap";
 import api from "@/services/api";
-import { mapRestaurantType, STATUS_CONFIG, getStatusConfig, TYPE_LABELS } from "@/lib/terminology";
+import { STATUS_CONFIG, getStatusConfig, TYPE_LABELS } from "@/lib/terminology";
 import { formatTimestamp, formatItemsCount, formatPO } from "@/lib/formatters";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,192 +16,23 @@ import { StatusBadge, StoreTypeBadge } from "@/components/common/Badges";
 import DateRangePicker from "@/components/common/DateRangePicker";
 import {
   ScrollText, History, ArrowDownLeft, ArrowUpRight, Minus,
-  Search, X, Filter, Eye, ArrowRightLeft, RefreshCw, Download
+  Search, X, Filter, Eye, RefreshCw, Download, ChevronLeft, ChevronRight
 } from "lucide-react";
 
-const MOVEMENT_TYPES = {
-  transfer_out: { label: "Transfer Out", color: "bg-red-100 text-red-700", icon: ArrowUpRight },
-  transfer_in: { label: "Transfer In", color: "bg-emerald-100 text-emerald-700", icon: ArrowDownLeft },
-  partial_receive: { label: "Partial Receive", color: "bg-teal-100 text-teal-700", icon: ArrowDownLeft },
-  reversal: { label: "Reversal (Restored)", color: "bg-amber-100 text-amber-700", icon: ArrowRightLeft },
-  adjustment_increase: { label: "Adjustment (Increase)", color: "bg-blue-100 text-blue-700", icon: ArrowDownLeft },
-  adjustment_decrease: { label: "Adjustment (Decrease)", color: "bg-orange-100 text-orange-700", icon: ArrowUpRight },
-  wastage: { label: "Wastage", color: "bg-rose-100 text-rose-700", icon: ArrowUpRight },
+// CR-037 — Server-side ledger source_type badges (G-005). Legacy client-derived
+// movement_type keys (transfer_out/in, adjustment_*, reversal, partial_receive)
+// removed with deriveLedgerEntries — server now returns 4 canonical source_types.
+const SOURCE_TYPES = {
+  transfer: { label: "Transfer", color: "bg-indigo-100 text-indigo-700" },
+  grn: { label: "GRN / Purchase", color: "bg-blue-100 text-blue-700" },
+  production: { label: "Production", color: "bg-emerald-100 text-emerald-700" },
+  wastage: { label: "Wastage", color: "bg-rose-100 text-rose-700" },
 };
 
 const ALL_STATUSES = Object.keys(STATUS_CONFIG);
 
-/**
- * Derive stock ledger entries from full transfer objects.
- * Each dispatched/received/partial/cancelled transfer produces 1-2 entries per line.
- *
- * P16 fix: Use actual dispatched/received quantities from meta_json and resolution_meta,
- * not the requested qty. Merge restaurant names from historyNameMap.
- */
-function deriveLedgerEntries(transfers, actorRestaurantId, historyNameMap) {
-  const entries = [];
-  let entryId = 1;
-  const nameMap = historyNameMap || {};
-
-  for (const t of transfers) {
-    const lines = t.lines || t.data?.lines || [];
-    // P16: merge restaurant names from history list (details API lacks them)
-    const fromName = t.from_restaurant?.restaurant_name || t.from_restaurant_name || nameMap[t.from_restaurant_id]?.name || (t.from_restaurant_type ? mapRestaurantType(t.from_restaurant_type) : `Store #${t.from_restaurant_id || "?"}`);
-    const toName = t.to_restaurant?.restaurant_name || t.to_restaurant_name || nameMap[t.to_restaurant_id]?.name || (t.to_restaurant_type ? mapRestaurantType(t.to_restaurant_type) : `Store #${t.to_restaurant_id || "?"}`);
-    const fromType = t.from_restaurant?.restaurant_type || t.from_restaurant_type || nameMap[t.from_restaurant_id]?.type || null;
-    const toType = t.to_restaurant?.restaurant_type || t.to_restaurant_type || nameMap[t.to_restaurant_id]?.type || null;
-
-    // P16: get header-level receive totals for partial receive qty
-    const receiveTotals = t.resolution_meta?.receive_totals;
-
-    for (const line of lines) {
-      // P16: Use dispatched qty from meta_json, not requested qty
-      const dispatchedQty = line.dispatchedDisplayTotal ?? line.quantity;
-      // Skip lines that were never dispatched (on_hold / cancelled_remainder)
-      const lineWasDispatched = line.dispatchedDisplayTotal != null ? line.dispatchedDisplayTotal > 0 : true;
-
-      // Dispatched → source gets "Transfer Out"
-      if (["dispatched", "received", "partially_received", "cancelled"].includes(t.status) && lineWasDispatched) {
-        entries.push({
-          id: `L-${entryId++}`,
-          date: t.dispatched_at || t.created_at,
-          store_id: t.from_restaurant_id,
-          store_name: fromName,
-          store_type: fromType,
-          item: line.stock_title,
-          movement_type: "transfer_out",
-          direction: "out",
-          quantity: dispatchedQty,
-          unit: line.unit,
-          before_qty: null,
-          after_qty: null,
-          reference_type: "Transfer",
-          reference_id: t.id,
-          reference_code: t.reference_code,
-          counterparty_name: toName,
-          counterparty_type: toType,
-          reason: t.resolution_meta?.reason || null,
-          actor_id: t.dispatched_by || t.requested_by || null,
-          transfer_status: t.status,
-        });
-      }
-
-      // Received → destination gets "Transfer In" (use actual received qty, not dispatched)
-      if (t.status === "received" && lineWasDispatched) {
-        // P16 fix: Use accepted_qty from line if available (actual received), else dispatched total
-        const receivedQty = line.accepted_qty ?? receiveTotals?.accepted_qty ?? dispatchedQty;
-        entries.push({
-          id: `L-${entryId++}`,
-          date: t.received_at || t.updated_at,
-          store_id: t.to_restaurant_id,
-          store_name: toName,
-          store_type: toType,
-          item: line.stock_title,
-          movement_type: "transfer_in",
-          direction: "in",
-          quantity: receivedQty,
-          unit: line.unit,
-          before_qty: null,
-          after_qty: null,
-          reference_type: "Transfer",
-          reference_id: t.id,
-          reference_code: t.reference_code,
-          counterparty_name: fromName,
-          counterparty_type: fromType,
-          reason: null,
-          actor_id: t.received_by || null,
-          transfer_status: t.status,
-        });
-      }
-
-      // Partially received → destination gets partial entry
-      // P16: use accepted qty from resolution_meta.receive_totals (header-level)
-      if (t.status === "partially_received" && lineWasDispatched) {
-        const acceptedQty = line.accepted_qty ?? receiveTotals?.accepted_qty ?? dispatchedQty;
-        entries.push({
-          id: `L-${entryId++}`,
-          date: t.received_at || t.updated_at,
-          store_id: t.to_restaurant_id,
-          store_name: toName,
-          store_type: toType,
-          item: line.stock_title,
-          movement_type: "partial_receive",
-          direction: "in",
-          quantity: acceptedQty,
-          unit: line.unit,
-          before_qty: null,
-          after_qty: null,
-          reference_type: "Transfer",
-          reference_id: t.id,
-          reference_code: t.reference_code,
-          counterparty_name: fromName,
-          counterparty_type: fromType,
-          reason: line.resolution_type || t.resolution_meta?.reason || null,
-          actor_id: t.received_by || null,
-          transfer_status: t.status,
-        });
-      }
-
-      // Cancelled post-dispatch → source gets reversal (stock restored)
-      if (t.status === "cancelled" && t.dispatched_at && lineWasDispatched) {
-        entries.push({
-          id: `L-${entryId++}`,
-          date: t.cancelled_at || t.updated_at,
-          store_id: t.from_restaurant_id,
-          store_name: fromName,
-          store_type: fromType,
-          item: line.stock_title,
-          movement_type: "reversal",
-          direction: "in",
-          quantity: dispatchedQty,
-          unit: line.unit,
-          before_qty: null,
-          after_qty: null,
-          reference_type: "Transfer",
-          reference_id: t.id,
-          reference_code: t.reference_code,
-          counterparty_name: toName,
-          counterparty_type: toType,
-          reason: t.resolution_meta?.reason || t.resolution_type || "Cancelled",
-          actor_id: t.cancelled_by || null,
-          transfer_status: t.status,
-        });
-      }
-    }
-  }
-
-  // Sort by date descending
-  entries.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-  return entries;
-}
-
-/**
- * Convert wastage report API entries into ledger-compatible rows.
- * Each wastage entry produces one "Out" movement.
- */
-function deriveWastageEntries(wastageData) {
-  return wastageData.map((w, idx) => ({
-    id: `W-${idx + 1}`,
-    date: w.waste_date || w.created_at || w.date || w.timestamp,
-    store_id: w.restaurant_id || w.store_id || null,
-    store_name: w.restaurant_name || w.store_name || "—",
-    store_type: w.restaurant_type || w.store_type || null,
-    item: w.stock_title || w.item_name || w.item || "—",
-    movement_type: "wastage",
-    direction: "out",
-    quantity: w.wastage_quantity ?? w.quantity ?? w.cal_quantity ?? "—",
-    unit: w.unit || "—",
-    before_qty: null,
-    after_qty: null,
-    reference_type: "Wastage",
-    reference_id: w.wastage_id || w.id || null,
-    counterparty_name: null,
-    counterparty_type: null,
-    reason: w.waste_reason || w.reason || w.wastage_reason || null,
-    actor_id: w.recorded_by || w.user_id || null,
-    transfer_status: null,
-  }));
-}
+// CR-037 — deriveLedgerEntries / deriveWastageEntries removed; the server now
+// returns unified ledger rows via /inventory-transfer/stock-ledger (G-005).
 
 export default function HistoryLedger() {
   const navigate = useNavigate();
@@ -215,12 +46,14 @@ export default function HistoryLedger() {
   const [historyLoading, setHistoryLoading] = useState(true);
   const [historyError, setHistoryError] = useState(null);
 
-  // Stock Ledger state
-  const [fullTransfers, setFullTransfers] = useState([]);
-  const [wastageEntries, setWastageEntries] = useState([]);
+  // Stock Ledger state — CR-037: server-driven via /stock-ledger (G-005)
+  const [ledgerRows, setLedgerRows] = useState([]);
+  const [ledgerMeta, setLedgerMeta] = useState({ current_page: 1, last_page: 1, total: 0, per_page: 25, source_types: [] });
   const [ledgerLoading, setLedgerLoading] = useState(false);
   const [ledgerLoaded, setLedgerLoaded] = useState(false);
   const [ledgerError, setLedgerError] = useState(null);
+  const [ledgerPage, setLedgerPage] = useState(1);
+  const LEDGER_LIMIT = 25;
 
   // Filters — shared
   const [dateRange, setDateRange] = useState({ from: null, to: null });
@@ -230,8 +63,8 @@ export default function HistoryLedger() {
   const [statusFilter, setStatusFilter] = useState([]);
   const [directionFilter, setDirectionFilter] = useState("all");
 
-  // Stock Ledger filters
-  const [movementTypeFilter, setMovementTypeFilter] = useState([]);
+  // Stock Ledger filters — CR-037: source_type replaces client-derived movement_type
+  const [sourceTypeFilter, setSourceTypeFilter] = useState([]);
   const [ledgerDirectionFilter, setLedgerDirectionFilter] = useState("all");
   const [ledgerSearch, setLedgerSearch] = useState("");
 
@@ -250,80 +83,65 @@ export default function HistoryLedger() {
     }
   }, []);
 
-  // Fetch full transfer details + wastage data for ledger derivation (lazy)
-  const fetchLedgerData = useCallback(async () => {
-    if (ledgerLoaded || ledgerLoading) return;
+  // CR-037 — Server-side ledger fetch (G-005). Single call replaces the previous
+  // N+1 pattern (history-ids → getTransferDetails × N + getWastageReport).
+  const fetchLedgerData = useCallback(async (page = 1) => {
     setLedgerLoading(true);
     setLedgerError(null);
     try {
-      // Fetch transfer details
-      const ids = historyData.map((t) => t.id).filter(Boolean);
-      const results = await Promise.allSettled(
-        ids.map((id) => api.getTransferDetails(id))
-      );
-      const transfers = results
-        .filter((r) => r.status === "fulfilled")
-        .map((r) => r.value?.data?.data || r.value?.data || {})
-        .filter((t) => t.id || t.lines);
-      setFullTransfers(transfers);
-
-      // Fetch wastage data (best-effort — API may fail for non-Central roles)
-      try {
-        const wastageResp = await api.getWastageReport({ restaurantIds: [restaurantId] });
-        const wData = wastageResp.data?.data || wastageResp.data || [];
-        setWastageEntries(Array.isArray(wData) ? wData : []);
-      } catch {
-        // Wastage API may fail for some roles — not a blocking error
-        setWastageEntries([]);
-      }
-
+      const payload = {
+        restaurantId,
+        page,
+        limit: LEDGER_LIMIT,
+      };
+      if (sourceTypeFilter.length > 0) payload.sourceTypes = sourceTypeFilter;
+      if (dateRange.from) payload.fromDate = new Date(dateRange.from).toISOString().slice(0, 10);
+      if (dateRange.to) payload.toDate = new Date(dateRange.to).toISOString().slice(0, 10);
+      const resp = await api.getStockLedger(payload);
+      const body = resp.data || {};
+      const rows = Array.isArray(body.data) ? body.data : [];
+      const meta = body.meta || { current_page: page, last_page: 1, total: rows.length, per_page: LEDGER_LIMIT, source_types: [] };
+      setLedgerRows(rows);
+      setLedgerMeta(meta);
+      setLedgerPage(meta.current_page || page);
       setLedgerLoaded(true);
     } catch (err) {
-      setLedgerError("Failed to load stock ledger data");
+      setLedgerError(err?.response?.data?.message || "Failed to load stock ledger");
     } finally {
       setLedgerLoading(false);
     }
-  }, [historyData, ledgerLoaded, ledgerLoading, restaurantId]);
+  }, [restaurantId, sourceTypeFilter, dateRange.from, dateRange.to]);
 
   useEffect(() => { fetchHistory(); }, [fetchHistory]);
 
-  // When user switches to ledger tab, lazy-load details
+  // CR-037 — Lazy-load ledger on tab switch, and re-fetch on filter/date/page change.
   useEffect(() => {
-    if (activeTab === "ledger" && historyData.length > 0 && !ledgerLoaded) {
-      fetchLedgerData();
+    if (activeTab === "ledger") {
+      fetchLedgerData(ledgerPage);
     }
-  }, [activeTab, historyData, ledgerLoaded, fetchLedgerData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, sourceTypeFilter, dateRange.from, dateRange.to, ledgerPage]);
 
-  // Build restaurant name map from history data + restaurantMap hook
-  const historyNameMap = useMemo(() => {
-    const map = {};
-    // Merge restaurantMap first (from hierarchy-summary)
-    if (restaurantMap) {
-      Object.entries(restaurantMap).forEach(([rid, info]) => {
-        map[rid] = { name: info.name, type: info.type || null };
-      });
-    }
-    // Overlay from history data (has names from transfer records)
-    for (const t of historyData) {
-      if (t.from_restaurant_id && t.from_restaurant_name) {
-        map[t.from_restaurant_id] = { name: t.from_restaurant_name, type: t.from_restaurant_type || null };
-      }
-      if (t.to_restaurant_id && t.to_restaurant_name) {
-        map[t.to_restaurant_id] = { name: t.to_restaurant_name, type: t.to_restaurant_type || null };
-      }
-    }
-    return map;
-  }, [historyData, restaurantMap]);
+  // Build restaurant name map from history data + restaurantMap hook (used
+  // by history tab labels).
+  // eslint-disable-next-line no-unused-vars
+  const historyNameMap = useMemo(() => ({ ...(restaurantMap || {}) }), [restaurantMap]);
 
-  // Derive ledger entries (transfers + wastage merged)
-  const ledgerEntries = useMemo(() => {
-    if (!ledgerLoaded) return [];
-    const transferEntries = fullTransfers.length > 0 ? deriveLedgerEntries(fullTransfers, restaurantId, historyNameMap) : [];
-    const wastageRows = wastageEntries.length > 0 ? deriveWastageEntries(wastageEntries) : [];
-    const merged = [...transferEntries, ...wastageRows];
-    merged.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-    return merged;
-  }, [fullTransfers, wastageEntries, ledgerLoaded, restaurantId, historyNameMap]);
+  // CR-037 — Ledger rows come from server; only client-side apply is search
+  // & direction filter (date+source_type are sent to API and refetch triggers).
+  const filteredLedger = useMemo(() => {
+    let items = ledgerRows;
+    if (ledgerDirectionFilter === "in") items = items.filter((e) => e.movement === "in");
+    else if (ledgerDirectionFilter === "out") items = items.filter((e) => e.movement === "out");
+    if (ledgerSearch.trim()) {
+      const q = ledgerSearch.toLowerCase().trim();
+      items = items.filter((e) =>
+        (e.stock_title || "").toLowerCase().includes(q) ||
+        String(e.reference_code || e.reference_id || "").toLowerCase().includes(q)
+      );
+    }
+    return items;
+  }, [ledgerRows, ledgerDirectionFilter, ledgerSearch]);
 
   // ── Filtered Transfer History ─────────────────────────
   const filteredHistory = useMemo(() => {
@@ -364,44 +182,7 @@ export default function HistoryLedger() {
     return items;
   }, [historyData, dateRange, statusFilter, directionFilter, searchQuery, restaurantId]);
 
-  // ── Filtered Ledger ─────────────────────────
-  const filteredLedger = useMemo(() => {
-    let items = [...ledgerEntries];
-
-    // Date range
-    if (dateRange.from) {
-      const from = new Date(dateRange.from).getTime();
-      items = items.filter((e) => new Date(e.date).getTime() >= from);
-    }
-    if (dateRange.to) {
-      const to = new Date(dateRange.to).setHours(23, 59, 59, 999);
-      items = items.filter((e) => new Date(e.date).getTime() <= to);
-    }
-
-    // Movement type
-    if (movementTypeFilter.length > 0) {
-      items = items.filter((e) => movementTypeFilter.includes(e.movement_type));
-    }
-
-    // Direction
-    if (ledgerDirectionFilter === "in") {
-      items = items.filter((e) => e.direction === "in");
-    } else if (ledgerDirectionFilter === "out") {
-      items = items.filter((e) => e.direction === "out");
-    }
-
-    // Search
-    if (ledgerSearch.trim()) {
-      const q = ledgerSearch.toLowerCase().trim();
-      items = items.filter((e) =>
-        (e.item || "").toLowerCase().includes(q) ||
-        String(e.reference_id).includes(q) ||
-        (e.store_name || "").toLowerCase().includes(q)
-      );
-    }
-
-    return items;
-  }, [ledgerEntries, dateRange, movementTypeFilter, ledgerDirectionFilter, ledgerSearch]);
+  // ── Filtered Ledger removed (server-driven; see filteredLedger below) ──
 
   const clearHistoryFilters = () => {
     setDateRange({ from: null, to: null });
@@ -412,13 +193,14 @@ export default function HistoryLedger() {
 
   const clearLedgerFilters = () => {
     setDateRange({ from: null, to: null });
-    setMovementTypeFilter([]);
+    setSourceTypeFilter([]);
     setLedgerDirectionFilter("all");
     setLedgerSearch("");
+    setLedgerPage(1);
   };
 
   const hasHistoryFilters = statusFilter.length > 0 || directionFilter !== "all" || searchQuery || dateRange.from;
-  const hasLedgerFilters = movementTypeFilter.length > 0 || ledgerDirectionFilter !== "all" || ledgerSearch || dateRange.from;
+  const hasLedgerFilters = sourceTypeFilter.length > 0 || ledgerDirectionFilter !== "all" || ledgerSearch || dateRange.from;
 
   const getDirection = (t) => {
     if (String(t.to_restaurant_id) === String(restaurantId)) return "incoming";
@@ -430,8 +212,9 @@ export default function HistoryLedger() {
     setStatusFilter((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]);
   };
 
-  const toggleMovementType = (m) => {
-    setMovementTypeFilter((prev) => prev.includes(m) ? prev.filter((x) => x !== m) : [...prev, m]);
+  const toggleSourceType = (t) => {
+    setSourceTypeFilter((prev) => prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]);
+    setLedgerPage(1);
   };
 
   return (
@@ -459,7 +242,7 @@ export default function HistoryLedger() {
           </button>
           <button
             data-testid="refresh-history-btn"
-            onClick={() => { fetchHistory(); setLedgerLoaded(false); }}
+            onClick={() => { fetchHistory(); fetchLedgerData(ledgerPage); }}
             disabled={historyLoading}
             className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
           >
@@ -482,9 +265,9 @@ export default function HistoryLedger() {
           <TabsTrigger data-testid="tab-stock-ledger" value="ledger" className="gap-1.5">
             <ScrollText className="h-3.5 w-3.5" />
             Stock Ledger
-            {ledgerEntries.length > 0 && (
+            {ledgerMeta.total > 0 && (
               <span className="ml-1 bg-slate-100 text-slate-600 text-[10px] px-1.5 py-0.5 rounded-full">
-                {ledgerEntries.length}
+                {ledgerMeta.total}
               </span>
             )}
           </TabsTrigger>
@@ -640,10 +423,10 @@ export default function HistoryLedger() {
 
         {/* ═══ STOCK LEDGER TAB ═══ */}
         <TabsContent value="ledger">
-          {ledgerLoading ? (
+          {ledgerLoading && !ledgerLoaded ? (
             <LoadingState lines={6} />
           ) : ledgerError ? (
-            <ErrorState message={ledgerError} onRetry={() => { setLedgerLoaded(false); fetchLedgerData(); }} />
+            <ErrorState message={ledgerError} onRetry={() => fetchLedgerData(ledgerPage)} />
           ) : !ledgerLoaded ? (
             <LoadingState lines={4} />
           ) : (
@@ -689,19 +472,21 @@ export default function HistoryLedger() {
                     </Button>
                   )}
                 </div>
-                {/* Movement type pills */}
+                {/* Source type pills — CR-037: G-005 canonical types */}
                 <div className="flex flex-wrap gap-1.5">
                   <span className="text-[10px] text-muted-foreground mr-1 self-center"><Filter className="h-3 w-3 inline mr-0.5" />Type:</span>
-                  {Object.entries(MOVEMENT_TYPES).map(([key, cfg]) => {
-                    const active = movementTypeFilter.includes(key);
+                  {Object.entries(SOURCE_TYPES).map(([key, cfg]) => {
+                    const available = !ledgerMeta.source_types || ledgerMeta.source_types.length === 0 || ledgerMeta.source_types.includes(key);
+                    const active = sourceTypeFilter.includes(key);
                     return (
                       <button
                         key={key}
-                        data-testid={`movement-filter-${key}`}
-                        onClick={() => toggleMovementType(key)}
+                        data-testid={`source-filter-${key}`}
+                        onClick={() => toggleSourceType(key)}
+                        disabled={!available && !active}
                         className={`text-[10px] px-2 py-0.5 rounded-full border transition-colors ${
                           active ? cfg.color + " border-current font-semibold" : "bg-muted/40 text-muted-foreground border-transparent hover:bg-muted"
-                        }`}
+                        } ${!available && !active ? "opacity-40 cursor-not-allowed" : ""}`}
                       >
                         {cfg.label}
                       </button>
@@ -724,46 +509,34 @@ export default function HistoryLedger() {
                         <TableHeader>
                           <TableRow>
                             <TableHead className="text-[10px]">Date</TableHead>
-                            <TableHead className="text-[10px]">Store</TableHead>
+                            <TableHead className="text-[10px]">Source</TableHead>
+                            <TableHead className="text-[10px]">Reference</TableHead>
                             <TableHead className="text-[10px]">Item</TableHead>
-                            <TableHead className="text-[10px]">Movement</TableHead>
                             <TableHead className="text-[10px]">Dir.</TableHead>
                             <TableHead className="text-[10px]">Qty</TableHead>
                             <TableHead className="text-[10px]">Unit</TableHead>
                             <TableHead className="text-[10px]">Before</TableHead>
                             <TableHead className="text-[10px]">After</TableHead>
-                            <TableHead className="text-[10px]">Reference</TableHead>
                             <TableHead className="text-[10px]">Counterparty</TableHead>
-                            <TableHead className="text-[10px]">Reason</TableHead>
+                            <TableHead className="text-[10px]">Status</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {filteredLedger.map((e) => {
-                            const mt = MOVEMENT_TYPES[e.movement_type] || { label: e.movement_type, color: "bg-gray-100 text-gray-600" };
-                            const DirIcon = e.direction === "in" ? ArrowDownLeft : e.direction === "out" ? ArrowUpRight : Minus;
-                            const dirColor = e.direction === "in" ? "text-emerald-600" : e.direction === "out" ? "text-red-500" : "text-muted-foreground";
+                            const st = SOURCE_TYPES[e.source_type] || { label: e.source_type, color: "bg-gray-100 text-gray-600" };
+                            const DirIcon = e.movement === "in" ? ArrowDownLeft : e.movement === "out" ? ArrowUpRight : Minus;
+                            const dirColor = e.movement === "in" ? "text-emerald-600" : e.movement === "out" ? "text-red-500" : "text-muted-foreground";
+                            const cpartyName = e.counterparty_restaurant_id ? (restaurantMap[String(e.counterparty_restaurant_id)]?.name || `Store #${e.counterparty_restaurant_id}`) : null;
+                            const cpartyType = e.counterparty_restaurant_id ? restaurantMap[String(e.counterparty_restaurant_id)]?.type : null;
+                            const isTransfer = e.source_type === "transfer";
                             return (
-                              <TableRow key={e.id} data-testid={`ledger-row-${e.id}`}>
-                                <TableCell className="text-xs text-muted-foreground">{formatTimestamp(e.date)}</TableCell>
+                              <TableRow key={e.ledger_id || `${e.source_type}-${e.reference_id}-${e.line_id || 0}`} data-testid={`ledger-row-${e.ledger_id || e.reference_id}`}>
+                                <TableCell className="text-xs text-muted-foreground">{formatTimestamp(e.occurred_at)}</TableCell>
                                 <TableCell>
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="text-xs">{e.store_name || "—"}</span>
-                                    {e.store_type && <StoreTypeBadge backendType={e.store_type} />}
-                                  </div>
-                                </TableCell>
-                                <TableCell className="text-xs font-medium">{e.item || "—"}</TableCell>
-                                <TableCell>
-                                  <span className={`text-[10px] px-2 py-0.5 rounded-full ${mt.color}`}>{mt.label}</span>
+                                  <span className={`text-[10px] px-2 py-0.5 rounded-full ${st.color}`}>{st.label}</span>
                                 </TableCell>
                                 <TableCell>
-                                  <DirIcon className={`h-3.5 w-3.5 ${dirColor}`} />
-                                </TableCell>
-                                <TableCell className="text-xs tabular-nums font-medium">{e.quantity ?? "—"}</TableCell>
-                                <TableCell className="text-xs text-muted-foreground">{e.unit || "—"}</TableCell>
-                                <TableCell className="text-xs text-muted-foreground">{e.before_qty ?? "—"}</TableCell>
-                                <TableCell className="text-xs text-muted-foreground">{e.after_qty ?? "—"}</TableCell>
-                                <TableCell>
-                                  {e.reference_id ? (
+                                  {e.reference_id && isTransfer ? (
                                     <Button
                                       variant="link"
                                       size="sm"
@@ -771,21 +544,31 @@ export default function HistoryLedger() {
                                       data-testid={`ledger-ref-${e.reference_id}`}
                                       onClick={() => navigate(`/transfer/${e.reference_id}`)}
                                     >
-                                      {formatPO(e.reference_id, e.reference_code)}
+                                      {e.reference_code || formatPO(e.reference_id, null)}
                                     </Button>
+                                  ) : (
+                                    <span className="text-[10px] font-mono text-muted-foreground">{e.reference_code || "—"}</span>
+                                  )}
+                                </TableCell>
+                                <TableCell className="text-xs font-medium">{e.stock_title || "—"}</TableCell>
+                                <TableCell>
+                                  <DirIcon className={`h-3.5 w-3.5 ${dirColor}`} />
+                                </TableCell>
+                                <TableCell className="text-xs tabular-nums font-medium">{e.quantity ?? "—"}</TableCell>
+                                <TableCell className="text-xs text-muted-foreground">{e.display_unit || "—"}</TableCell>
+                                <TableCell className="text-xs text-muted-foreground tabular-nums">{e.qty_before == null ? "—" : e.qty_before}</TableCell>
+                                <TableCell className="text-xs text-muted-foreground tabular-nums">{e.qty_after == null ? "—" : e.qty_after}</TableCell>
+                                <TableCell>
+                                  {cpartyName ? (
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="text-xs">{cpartyName}</span>
+                                      {cpartyType && <StoreTypeBadge backendType={cpartyType} />}
+                                    </div>
                                   ) : (
                                     <span className="text-[10px] text-muted-foreground">—</span>
                                   )}
                                 </TableCell>
-                                <TableCell>
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="text-xs">{e.counterparty_name || "—"}</span>
-                                    {e.counterparty_type && <StoreTypeBadge backendType={e.counterparty_type} />}
-                                  </div>
-                                </TableCell>
-                                <TableCell className="text-xs text-muted-foreground max-w-[150px] truncate" title={e.reason || ""}>
-                                  {e.reason || "—"}
-                                </TableCell>
+                                <TableCell className="text-[10px] text-muted-foreground capitalize">{e.status || "—"}</TableCell>
                               </TableRow>
                             );
                           })}
@@ -795,9 +578,34 @@ export default function HistoryLedger() {
                   </CardContent>
                 </Card>
               )}
-              <p className="text-[10px] text-muted-foreground mt-2">
-                Showing {filteredLedger.length} of {ledgerEntries.length} movements
-              </p>
+              {/* CR-037 — server-driven pagination */}
+              <div className="flex items-center justify-between mt-3">
+                <p className="text-[10px] text-muted-foreground">
+                  Showing {filteredLedger.length} of {ledgerMeta.total || 0} rows (page {ledgerMeta.current_page || 1} of {ledgerMeta.last_page || 1})
+                </p>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    data-testid="ledger-prev-page"
+                    disabled={ledgerLoading || (ledgerMeta.current_page || 1) <= 1}
+                    onClick={() => setLedgerPage((p) => Math.max(1, p - 1))}
+                    className="h-7 px-2 text-[10px]"
+                  >
+                    <ChevronLeft className="h-3 w-3" /> Prev
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    data-testid="ledger-next-page"
+                    disabled={ledgerLoading || (ledgerMeta.current_page || 1) >= (ledgerMeta.last_page || 1)}
+                    onClick={() => setLedgerPage((p) => p + 1)}
+                    className="h-7 px-2 text-[10px]"
+                  >
+                    Next <ChevronRight className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
             </>
           )}
         </TabsContent>

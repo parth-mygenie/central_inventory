@@ -10,8 +10,9 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LoadingState, ErrorState, EmptyState } from "@/components/common/StateDisplays";
 import ConfirmActionDialog from "./ConfirmActionDialog";
-import { Search, Plus, Loader2, BookOpen, RefreshCw, IndianRupee, Calendar, Package, X } from "lucide-react";
+import { Search, Plus, Loader2, BookOpen, RefreshCw, IndianRupee, Calendar, Package, X, Info } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { friendlyCatalogError } from "@/lib/apiErrors"; // CR-043 — G-028/G-029
 
 const UNITS = ["gm", "kg", "ml", "ltr", "piece", "pkt"];
 
@@ -121,7 +122,15 @@ export default function SubRecipeMaster() {
                     className={`p-3 rounded-lg border cursor-pointer transition-all ${isSelected ? "border-primary bg-accent/30 shadow-sm" : "border-border hover:border-primary/40"}`}
                     onClick={() => handleSelect(sr.recipe_id)}
                   >
-                    <p className="text-sm font-semibold truncate">{sr.name}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-sm font-semibold truncate flex-1">{sr.name}</p>
+                      {/* CR-043 — G-028 pushed lock badge */}
+                      {sr.is_pushed_managed && (
+                        <Badge variant="outline" className="text-[9px] px-1 py-0 gap-0.5 bg-slate-100 text-slate-600 border-slate-300" data-testid={`pushed-lock-subrecipe-${sr.recipe_id}`}>
+                          <Info className="h-2.5 w-2.5" /> Pushed
+                        </Badge>
+                      )}
+                    </div>
                     <div className="flex items-center justify-between mt-1">
                       <span className="text-[10px] text-muted-foreground">{sr.ingredients?.length || 0} ingredients</span>
                       <span className={`text-[10px] font-semibold tabular-nums ${isLow ? "text-red-600" : "text-emerald-600"}`}>
@@ -241,7 +250,9 @@ function DetailPanel({ recipe, stockMap, inventoryMaster, productionRuns, onSave
       toast({ title: recipe ? "Sub-recipe updated" : "Sub-recipe created" });
       onSaved();
     } catch (e) {
-      toast({ title: e?.response?.data?.message || "Failed to save", variant: "destructive" });
+      // CR-043 — G-028/G-029 friendly mapping for pushed-lock / policy 403s.
+      const friendly = friendlyCatalogError(e);
+      toast({ title: friendly || e?.response?.data?.message || "Failed to save", variant: "destructive" });
     } finally { setSaving(false); }
   };
 

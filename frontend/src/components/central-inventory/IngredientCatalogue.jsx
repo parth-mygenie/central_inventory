@@ -56,6 +56,7 @@ function parseQtyString(str) {
 /** Helper: convert consumption qty to display unit for comparison */
 // BUG-036: Moved to shared lib/formatters.js — import instead of local
 import { normalizeToDisplayUnit, smartConsumptionDisplay } from "@/lib/formatters";
+import { friendlyCatalogError } from "@/lib/apiErrors"; // CR-043 — G-028/G-029 mapping
 
 /** Intelligence panel for expanded ingredient row */
 function IngredientIntelligence({ item, purchaseData, consumptionMap, childStoreCount }) {
@@ -166,6 +167,9 @@ function InlineEditForm({ item, categories, onSave, onCancel }) {
     unit: item.unit || "kg",
     min_qty_alert: String(item.min_qty_alert || "0"),
     min_unit_alert: item.min_unit_alert || item.unit || "kg",
+    // CR-042 — G-020 unit conversion (API typo: `converion_factor`).
+    consumption_unit: item.consumption_unit || "",
+    converion_factor: item.converion_factor != null ? String(item.converion_factor) : "",
   });
   const [saving, setSaving] = useState(false);
   const [showRenameWarn, setShowRenameWarn] = useState(false);
@@ -180,16 +184,30 @@ function InlineEditForm({ item, categories, onSave, onCancel }) {
       const payload = { unit: form.unit, min_qty_alert: Number(form.min_qty_alert), min_unit_alert: form.min_unit_alert };
       if (nameChanged) payload.stock_title = form.stock_title.trim();
       if (form.category_id && form.category_id !== String(item.category_id)) payload.category_id = Number(form.category_id);
+      // CR-042 — include conversion fields only when both are provided (API typo: converion_factor).
+      if (form.consumption_unit && form.converion_factor) {
+        payload.consumption_unit = form.consumption_unit;
+        payload.converion_factor = Number(form.converion_factor);
+      }
       await api.updateStockItem(item.id, payload);
       toast({ title: "Ingredient updated" });
       onSave();
     } catch (e) {
-      toast({ title: e?.response?.data?.message || "Update failed", variant: "destructive" });
+      // CR-043 — G-028/G-029 friendly mapping for pushed-lock / policy 403s.
+      const friendly = friendlyCatalogError(e);
+      toast({ title: friendly || e?.response?.data?.message || "Update failed", variant: "destructive" });
     } finally { setSaving(false); setShowRenameWarn(false); }
   };
 
   return (
     <div className="space-y-2" data-testid="ing-edit-form">
+      {/* CR-043 — G-028 pushed-managed notice (definition edits are locked). */}
+      {item.is_pushed_managed && (
+        <div className="flex items-start gap-1.5 p-2 rounded border border-slate-200 bg-slate-50 text-slate-700 text-[10px]" data-testid="pushed-edit-notice">
+          <Info className="h-3 w-3 mt-0.5 shrink-0" />
+          <span>This ingredient is managed by hierarchy push. Definition changes must be made on the parent store; attempts to save may be rejected.</span>
+        </div>
+      )}
       <div>
         <Label className="text-[10px]">Name</Label>
         <Input value={form.stock_title} onChange={(e) => { update("stock_title", e.target.value); setShowRenameWarn(false); }} className="h-7 text-xs" data-testid="edit-ing-name" />
@@ -226,6 +244,36 @@ function InlineEditForm({ item, categories, onSave, onCancel }) {
           </div>
         </div>
       </div>
+      {/* CR-042 — G-020 unit conversion (purchase → consumption). */}
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <Label className="text-[10px]">Consumption Unit</Label>
+          <Input
+            value={form.consumption_unit}
+            onChange={(e) => update("consumption_unit", e.target.value)}
+            className="h-7 text-xs"
+            placeholder="e.g. gm, piece"
+            data-testid="edit-ing-consumption-unit"
+          />
+        </div>
+        <div>
+          <Label className="text-[10px]">Conversion Factor</Label>
+          <Input
+            type="number"
+            min="0"
+            value={form.converion_factor}
+            onChange={(e) => update("converion_factor", e.target.value)}
+            className="h-7 text-xs"
+            placeholder="e.g. 1000"
+            data-testid="edit-ing-conversion-factor"
+          />
+        </div>
+      </div>
+      {form.consumption_unit && form.converion_factor && (
+        <p className="text-[10px] text-muted-foreground" data-testid="edit-ing-conversion-preview">
+          1 {form.unit} = {Number(form.converion_factor)} {form.consumption_unit}
+        </p>
+      )}
       <div className="flex gap-2 pt-1">
         <Button size="sm" className="h-6 text-[10px] gap-1" onClick={handleSave} disabled={saving} data-testid="save-ing-btn">
           {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
@@ -245,18 +293,29 @@ function InlineAddForm({ categories, onSaved, onCancel }) {
   const [unit, setUnit] = useState("kg");
   const [minAlert, setMinAlert] = useState("");
   const [minUnitAlert, setMinUnitAlert] = useState("gm");
+  // CR-042 — G-020 unit conversion fields on create (optional).
+  const [consumptionUnit, setConsumptionUnit] = useState("");
+  const [conversionFactor, setConversionFactor] = useState("");
   const [saving, setSaving] = useState(false);
 
   const save = async () => {
     if (!title.trim() || !catId) return;
     setSaving(true);
     try {
-      await api.addInventoryItem([{ category_id: Number(catId), stock_title: title, unit, small_unit: unit === "kg" ? "gm" : unit === "ltr" ? "ml" : "", minimun_stock_alert: Number(minAlert) || 0, min_unit_alert: minUnitAlert }]);
+      const payloadItem = { category_id: Number(catId), stock_title: title, unit, small_unit: unit === "kg" ? "gm" : unit === "ltr" ? "ml" : "", minimun_stock_alert: Number(minAlert) || 0, min_unit_alert: minUnitAlert };
+      // CR-042 — include conversion fields only when both are provided.
+      if (consumptionUnit.trim() && conversionFactor) {
+        payloadItem.consumption_unit = consumptionUnit.trim();
+        payloadItem.converion_factor = Number(conversionFactor); // API typo intentional
+      }
+      await api.addInventoryItem([payloadItem]);
       toast({ title: "Ingredient added" });
-      setTitle(""); setCatId(""); setMinAlert("");
+      setTitle(""); setCatId(""); setMinAlert(""); setConsumptionUnit(""); setConversionFactor("");
       onSaved();
     } catch (err) {
-      toast({ title: err?.response?.data?.message || "Failed to add ingredient", variant: "destructive" });
+      // CR-043 — G-028/G-029 friendly mapping.
+      const friendly = friendlyCatalogError(err);
+      toast({ title: friendly || err?.response?.data?.message || "Failed to add ingredient", variant: "destructive" });
     } finally { setSaving(false); }
   };
 
@@ -301,6 +360,22 @@ function InlineAddForm({ categories, onSaved, onCancel }) {
               {saving && <Loader2 className="h-3 w-3 mr-0.5 animate-spin" />}Add
             </Button>
             <Button variant="ghost" size="sm" className="h-7 text-[10px]" onClick={onCancel}>Cancel</Button>
+          </div>
+        </div>
+        {/* CR-042 — G-020 optional unit conversion (purchase → consumption). */}
+        <div className="grid grid-cols-5 gap-2 items-end mt-2 pt-2 border-t border-primary/10">
+          <div className="col-span-2">
+            <Label className="text-[10px]">Consumption Unit <span className="text-muted-foreground">(optional)</span></Label>
+            <Input value={consumptionUnit} onChange={(e) => setConsumptionUnit(e.target.value)} className="h-7 text-xs" placeholder="e.g. gm, piece" data-testid="add-ing-consumption-unit" />
+          </div>
+          <div className="col-span-2">
+            <Label className="text-[10px]">Conversion Factor</Label>
+            <Input type="number" min="0" value={conversionFactor} onChange={(e) => setConversionFactor(e.target.value)} className="h-7 text-xs" placeholder="e.g. 1000" data-testid="add-ing-conversion-factor" />
+          </div>
+          <div className="text-[10px] text-muted-foreground self-center">
+            {consumptionUnit && conversionFactor && (
+              <span data-testid="add-ing-conversion-preview">1 {unit} = {Number(conversionFactor)} {consumptionUnit}</span>
+            )}
           </div>
         </div>
       </CardContent>
@@ -522,7 +597,32 @@ function IngredientsTab() {
                       <TableCell className="py-2 pl-3 pr-0">
                         {isExpanded ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
                       </TableCell>
-                      <TableCell className="py-2 text-xs font-medium">{item.stock_title}</TableCell>
+                      <TableCell className="py-2 text-xs font-medium">
+                        <div className="flex items-center gap-1.5">
+                          <span>{item.stock_title}</span>
+                          {/* CR-043 — G-028 pushed lock badge (definition locked; qty paths remain enabled) */}
+                          {item.is_pushed_managed && (
+                            <TooltipProvider delayDuration={200}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Badge variant="outline" className="text-[9px] px-1 py-0 gap-1 bg-slate-100 text-slate-600 border-slate-300" data-testid={`pushed-lock-${item.id}`}>
+                                    <Info className="h-2.5 w-2.5" /> Pushed
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="text-[10px]">
+                                  Managed by hierarchy push. Definition edits are locked; stock quantity actions remain available.
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                          {/* CR-042 — G-020 conversion indicator on row */}
+                          {item.has_unit_conversion && item.consumption_unit && item.converion_factor != null && (
+                            <Badge variant="outline" className="text-[9px] px-1 py-0 bg-indigo-50 text-indigo-700 border-indigo-200" data-testid={`ing-conversion-${item.id}`}>
+                              1 {item.purchase_unit || item.unit} = {Number(item.converion_factor)} {item.consumption_unit}
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell className="py-2 text-xs text-muted-foreground">{item.category_name || "\u2014"}</TableCell>
                       <TableCell className="py-2 text-xs text-right tabular-nums font-mono">{item.display_qty} {item.display_unit}</TableCell>
                       <TableCell className="py-2 text-xs text-muted-foreground">{item.unit}</TableCell>

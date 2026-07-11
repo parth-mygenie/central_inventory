@@ -74,6 +74,9 @@ export default function PurchaseOrderDetail() {
   const [receivePayment, setReceivePayment] = useState("Cash");
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [receiving, setReceiving] = useState(false);
+  // CR-040 — G-016 invoice duplicate pre-check
+  const [invoiceCheck, setInvoiceCheck] = useState(null); // null | {available, existing_po_reference_code} | {error: string}
+  const [invoiceChecking, setInvoiceChecking] = useState(false);
 
   const fetchDetail = useCallback(async () => {
     setLoading(true); setError(null);
@@ -108,6 +111,33 @@ export default function PurchaseOrderDetail() {
   }, [id]);
 
   useEffect(() => { fetchDetail(); }, [fetchDetail]);
+
+  // CR-040 — G-016: debounced invoice-number duplicate pre-check.
+  // Warn-only (non-blocking). Fires when both vendor_id and invoice_number are set.
+  useEffect(() => {
+    const trimmed = (invoiceNumber || "").trim();
+    if (!trimmed || !po?.vendor_id) {
+      setInvoiceCheck(null);
+      return undefined;
+    }
+    setInvoiceChecking(true);
+    const timer = setTimeout(async () => {
+      try {
+        const resp = await api.checkInvoiceNumber(po.vendor_id, trimmed);
+        const body = resp.data || {};
+        if (body.status === false) {
+          setInvoiceCheck({ error: body.message || "Could not verify invoice number" });
+        } else {
+          setInvoiceCheck(body.data || { available: true });
+        }
+      } catch (e) {
+        setInvoiceCheck({ error: e?.response?.data?.message || "Invoice check failed" });
+      } finally {
+        setInvoiceChecking(false);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [invoiceNumber, po?.vendor_id]);
 
   const handleAction = async (action) => {
     setActionLoading(action);
@@ -357,6 +387,22 @@ export default function PurchaseOrderDetail() {
                 <div>
                   <Label className="text-xs">Vendor Invoice #</Label>
                   <Input value={invoiceNumber} onChange={(e) => setInvoiceNumber(e.target.value)} className="h-8 text-xs" placeholder="INV-001" data-testid="receive-invoice-number" />
+                  {/* CR-040 — G-016 invoice duplicate pre-check (non-blocking warning) */}
+                  {invoiceChecking && (
+                    <p className="text-[10px] text-muted-foreground mt-1" data-testid="invoice-check-loading">Checking…</p>
+                  )}
+                  {!invoiceChecking && invoiceCheck && invoiceCheck.available === false && (
+                    <p
+                      data-testid="invoice-duplicate-warning"
+                      className="mt-1 text-[10px] flex items-start gap-1 text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1"
+                    >
+                      <AlertTriangle className="h-3 w-3 mt-[1px] flex-shrink-0" />
+                      <span>Invoice already recorded against {invoiceCheck.existing_po_reference_code || `PO #${invoiceCheck.existing_purchase_order_id || invoiceCheck.existing_purchase_id || "?"}`}. You can still submit if this is intentional.</span>
+                    </p>
+                  )}
+                  {!invoiceChecking && invoiceCheck && invoiceCheck.available === true && (
+                    <p className="mt-1 text-[10px] text-emerald-700" data-testid="invoice-available">Invoice number available.</p>
+                  )}
                 </div>
                 <div>
                   <Label className="text-xs">Payment Type</Label>
