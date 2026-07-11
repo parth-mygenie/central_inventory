@@ -1,75 +1,151 @@
-# INVESTIGATION REPORT — Store Management: Indirect Outlets Missing Data
+# INVESTIGATION REPORT — New API Contract: franchise/list + hierarchy-detail Updates
 
 > **Date:** 2026-07-11
 > **Agent Role:** INVESTIGATION
-> **Scope:** Store Management screen — master (Central Store) should see all restaurant info + stock health for indirect outlets
+> **Scope:** Verify new backend API fields, trace frontend impact, document what needs to change
 
 ---
 
-## Issue
-When logged in as Central Store (master), the Store Management page shows 5 stores. Direct children (HK Alpha Central, HK Central, HK Express) display full data: email, push status, OOS/Low/OK counts. Indirect outlets (HK Outlet North, HK Outlet South — grandchildren via Master Stores) show "—" for all fields.
+## API Verification Results
 
-## Hierarchy
+### 1. `GET /franchise/list` — New `include_indirect` Parameter
+
+| Scenario | Children Returned | Notes |
+|----------|:-----------------:|-------|
+| No param (default) | **5** | Now includes indirect outlets by default (master only) |
+| `include_indirect=true` | **5** | Same as default for master |
+| `include_indirect=false` | **3** | Legacy behavior — direct children only |
+
+**New fields on franchise rows (indirect outlets only):**
+
+| Field | Example (HK Outlet North, RID 808) |
+|-------|--------------------------------------|
+| `is_direct_child` | `false` |
+| `hierarchy_link` | `"indirect"` |
+| `managing_parent_restaurant_id` | `805` |
+| `managing_parent_name` | `"HK Alpha Central"` |
+
+**New fields on direct franchise rows:**
+
+| Field | Example (HK Express, RID 806) |
+|-------|-------------------------------|
+| `is_direct_child` | `true` |
+| `hierarchy_link` | `"direct"` |
+| `managing_parent_restaurant_id` | `803` |
+| `managing_parent_name` | `"hells kitchen"` |
+
+**Central (type=central) rows**: No new fields — `is_direct_child`, `hierarchy_link`, `managing_parent_*` all MISSING.
+
+**Key: Email is now available for indirect outlets:**
+- HK Outlet North: `hkoutletnorth@test.com`
+- HK Outlet South: `hkoutletsouth@test.com`
+
+### 2. `POST /inventory-transfer/hierarchy-detail` — New `include_stock_health_summary`
+
+**New opt-in field: `data.store_stock_health[]`** (appears only when `include_stock_health_summary: true`)
+
+Structure per entry:
+```json
+{
+  "restaurant_id": 808,
+  "stock_rows": 0,
+  "out_of_stock_rows": 0,
+  "low_stock_rows": 0,
+  "ok_stock_rows": 0
+}
 ```
-803 (hells kitchen) — master — Central Store ← LOGGED IN
-├── 805 (HK Alpha Central) — central — Master Store [DIRECT]
-│   └── 808 (HK Outlet North) — franchise — Outlet [INDIRECT]
-├── 804 (HK Central) — central — Master Store [DIRECT]
-│   └── 807 (HK Outlet South) — franchise — Outlet [INDIRECT]
-└── 806 (HK Express) — franchise — Outlet [DIRECT]
-```
 
-## Root Cause
+**Single call for self (803) returns health for ALL 6 restaurants:**
 
-### Data Flow Trace
-1. `franchise/list` → returns 3 direct children (805, 804, 806)
-2. Push status fetched for `children` (direct only) → lines 58-83
-3. Health (hierarchy-detail) fetched for `children` (direct only) → lines 86-116
-4. `allStores` populated from hierarchy-detail → includes all 5 restaurants
-5. `displayChildren` merges direct children + indirect outlets → shell objects with `email: ""`, no health, no push status
+| Restaurant | RID | stock_rows | OOS | Low | OK |
+|-----------|:---:|:----------:|:---:|:---:|:--:|
+| hells kitchen | 803 | 7 | 0 | 0 | 7 |
+| HK Alpha Central | 805 | 7 | 4 | 0 | 3 |
+| HK Central | 804 | 7 | 5 | 0 | 2 |
+| HK Express | 806 | 7 | 3 | 0 | 4 |
+| HK Outlet North | 808 | 0 | 0 | 0 | 0 |
+| HK Outlet South | 807 | 1 | 0 | 0 | 1 |
 
-### Shell Object Structure (BUG-040)
+---
+
+## Current Frontend Impact Analysis
+
+### What Already Works (from previous fix)
+The previous investigation added a secondary fetch for indirect outlets' push status + health. Since `franchise/list` now returns 5 children by default (instead of 3), the `children` array ALREADY includes indirect outlets. This means:
+- Push status is fetched for all 5 children ✅
+- Health is fetched for all 5 children ✅
+- Email is available from API (but `normalizeHierarchyChild` passes it through) ✅
+
+### What Needs to Change
+
+#### A. `normalizeHierarchyChild` in `api.js` — Pass through new fields
+Currently strips all unknown fields. New fields `is_direct_child`, `hierarchy_link`, `managing_parent_restaurant_id`, `managing_parent_name` are dropped.
+
+**Add to normalizer:**
 ```javascript
-{ id: 808, name: "HK Outlet North", restaurantTypeFlag: "franchise", email: "", isNested: true, parentRestaurantId: 805 }
+isDirectChild: raw.is_direct_child,
+hierarchyLink: raw.hierarchy_link,
+managingParentRestaurantId: raw.managing_parent_restaurant_id,
+managingParentName: raw.managing_parent_name,
 ```
-Missing: email, push status, health data.
 
-## API Verification — All APIs Work for Indirect Outlets
+#### B. `StoreManagement.jsx` — Remove BUG-040 shell object merge
+The `displayChildren` merge logic (lines 119-134) creates shell objects for indirect outlets. Since `franchise/list` now returns them directly (with email!), this merge is redundant and creates duplicates.
 
-| API | RID 808 (indirect) | Status |
-|-----|-------------------|:------:|
-| `push-form/808` | `push_summary: { total_behind: 19, status: "stale" }` | ✅ 200 |
-| `hierarchy-detail?store_restaurant_id=808` | `child_stock_summary: 0 items` (empty stock, but valid) | ✅ 200 |
-| `hierarchy-detail?store_restaurant_id=807` | `child_stock_summary: 1 item (Chicken: 2)` | ✅ 200 |
+**Remove:** The `allStores`-based merge in `displayChildren`. Just use `children` directly.
+**Remove:** The secondary fetch for indirect outlets (my previous fix) — no longer needed since `children` already includes them.
 
-## What's Missing and Where
+#### C. `StoreManagement.jsx` — Use `is_direct_child` for the `↳` prefix
+Replace `child.isNested` check with `child.isDirectChild === false` (or `child.hierarchyLink === "indirect"`).
 
-| Data | Source for Direct | Available for Indirect? | Fix |
-|------|-------------------|:-----------------------:|-----|
-| **Email** | `franchise/list` child.email | ❌ Not in hierarchy-summary or hierarchy-detail | Backend gap — show "—" or "(via {parent})" |
-| **Push Status** | `push-form/{id}` | ✅ Works | Fetch for indirect outlets too |
-| **OOS/Low/OK** | `hierarchy-detail` | ✅ Works | Fetch for indirect outlets too |
+#### D. `StoreManagement.jsx` — Push button always visible
+**Owner requirement:** Push button should always appear, not just when status is "stale".
 
-## Recommended Fix (Frontend)
+Current code (line 500):
+```jsx
+{ps?.status === "stale" && (
+  <Button ...>Push</Button>
+)}
+```
 
-### Approach: After discovering indirect outlets, fetch their push status + health
+Change to always show the Push button when `ps` exists (regardless of status).
 
-**File: `StoreManagement.jsx`**
+#### E. `ExpandedStoreDetail` — Use `managingParentName` for indirect outlets
+Replace "Indirect Outlet — managed by Master Store ({parentName})" with the API-provided `managing_parent_name`.
 
-Add a new `useEffect` that triggers after `allStores` is populated:
-1. Identify indirect outlet IDs (in `allStores` but not in `children`)
-2. Fetch `getPushForm()` for each
-3. Fetch `getHierarchyDetail()` for each
-4. Merge results into `pushStatusMap` and `childHealthMap`
+#### F. Optional optimization: Use `store_stock_health` for single-call health
+Instead of N hierarchy-detail calls (one per child), make ONE call with `store_restaurant_id: self` + `include_stock_health_summary: true`. Map the pre-computed health to `childHealthMap` by `restaurant_id`. This replaces N API calls with 1.
 
-**For email:** No API provides email for indirect outlets. Options:
-- Show "—" (current behavior) — acceptable
-- Show "(via HK Alpha Central)" — indicates parent relationship
+---
+
+## Push Button Visibility — Owner Requirement
+
+**Current:** Push button only shows when `ps?.status === "stale"`.
+**Requested:** Push button should ALWAYS appear.
+
+For synced stores, the button could show "Push" (re-push) or be styled differently. The `push-form` API works regardless of status.
+
+---
+
+## Summary of Required Changes
+
+| # | File | Change | Priority |
+|---|------|--------|:--------:|
+| 1 | `api.js` → `normalizeHierarchyChild` | Add 4 new fields from API | HIGH |
+| 2 | `StoreManagement.jsx` | Remove `displayChildren` shell merge + secondary fetch (now redundant) | HIGH |
+| 3 | `StoreManagement.jsx` | Use `isDirectChild === false` for `↳` prefix + indirect label | HIGH |
+| 4 | `StoreManagement.jsx` | Push button always visible (remove `ps?.status === "stale"` guard) | HIGH |
+| 5 | `StoreManagement.jsx` | Use `managingParentName` in expanded detail | MEDIUM |
+| 6 | `StoreManagement.jsx` | Optional: single-call health via `include_stock_health_summary` | LOW (optimization) |
 
 ### Classification
-**Frontend bug** — push status and health data ARE available from POS API for indirect outlets, but the frontend doesn't fetch them. No backend changes needed for push/health. Email is a backend gap (file in L9 if desired).
+**Frontend update needed** — backend API changes are additive and backward-compatible. Frontend needs to:
+1. Pass through new fields
+2. Remove now-redundant workaround code
+3. Make Push button always visible
+4. Leverage new `managing_parent_name` field
 
 ### Estimated Scope
-- **Files:** 1 (StoreManagement.jsx)
-- **Risk:** LOW — additive change, fetch more data for already-displayed rows
-- **Complexity:** LOW — pattern matches existing push/health fetch logic
+- **Files:** 2 (`api.js`, `StoreManagement.jsx`)
+- **Risk:** LOW — simplifying code (removing workarounds), additive field wiring
+- **Complexity:** LOW-MEDIUM
