@@ -456,16 +456,6 @@ function ExpandedStoreDetail({ child, pushStatus, health, onPush, pushing }) {
 
   return (
     <div className="py-4 px-5 bg-muted/20 border-t border-border" data-testid={`store-detail-${child.id}`}>
-      {/* Indirect outlets API wiring — use isDirectChild + managingParentName from API */}
-      {child.isDirectChild === false ? (
-        <div className="space-y-2">
-          <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Indirect Outlet</h4>
-          <p className="text-xs text-muted-foreground">
-            This outlet is managed by {child.managingParentName || "a Master Store"}.
-            View details from the parent store's management screen.
-          </p>
-        </div>
-      ) : (
       <div className="grid grid-cols-3 gap-5">
         {/* Left: Store Info */}
         <div className="space-y-2">
@@ -536,7 +526,6 @@ function ExpandedStoreDetail({ child, pushStatus, health, onPush, pushing }) {
           )}
         </div>
       </div>
-      )}
     </div>
   );
 }
