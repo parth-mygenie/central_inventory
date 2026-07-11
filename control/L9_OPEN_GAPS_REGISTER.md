@@ -1,6 +1,6 @@
 # L9 — Open Gaps Register
 
-> **Updated:** 2026-06-14 (G-023 CLOSED — backend added push_summary + missing child_existing keys)
+> **Updated:** 2026-07-11 (Synced with `AI/openGaps/gap_validation.md` retest of 2026-07-07 — backend resolved 22 gaps; frontend adoption registered as CR-037→044)
 
 ---
 
@@ -8,27 +8,34 @@
 
 | # | Gap | Blocked Feature | Priority | Status |
 |---|-----|-----------------|:--------:|--------|
-| G-001 | No stock adjustment history API | Traceability | P2 | OPEN |
-| G-002 | No before/after qty in transfer API | Ledger display | P2 | OPEN |
-| G-003 | No user name resolution API | Actor display | P3 | OPEN |
-| G-004 | History API missing restaurant_type | Store badges | P3 | OPEN |
-| G-005 | Dedicated stock ledger API | N+1 calls | P2 | OPEN |
-| G-006 | Stock return flow API | Return feature | P1 | OPEN |
+| G-001 | No stock adjustment history API | Traceability | P2 | **DISCARDED** (owner, per gap_validation) |
+| G-002 | No before/after qty in transfer API | Ledger display | P2 | **BACKEND CLOSED** — `qty_before/qty_after` on post-deploy transfers. Frontend: CR-037 |
+| G-003 | No user name resolution API | Actor display | P3 | **BACKEND CLOSED** — `*_by_name` fields. Frontend: CR-037 |
+| G-004 | History API missing restaurant_type | Store badges | P3 | **BACKEND CLOSED** — `from/to_restaurant_type/name`. Frontend: CR-037 |
+| G-005 | Dedicated stock ledger API | N+1 calls | P2 | **BACKEND CLOSED** — `POST /inventory-transfer/stock-ledger` (4 source types, paginated). Frontend: CR-037 |
+| G-006 | Stock return flow API | Return feature | P1 | **BACKEND CLOSED** — `return/eligible` + `return/initiate` + wastage-reasons CRUD. Frontend: CR-038 |
 | G-009 | Partial dispatch | Dispatch subset | P1 | **CLOSED** — works via `approval_lines` |
 | G-010 | Soft stock reservation on approval | Reservation | P1 | **CLOSED** — `reserve_on_approve` setting |
 | G-011 | WebSocket infrastructure | Real-time events | P2 | OPEN |
 | G-012 | request-catalog missing category | Category grouping | P1 | **CLOSED** — `category_id` + `category_name` in response |
 | G-013 | No PO number in transfer API | All screens | P0 | **CLOSED** — `reference_code` field. Frontend wired. |
-| **G-014** | **Invoice OCR/AI extraction** | **PO Receive Upload tab** | **P1** | **OPEN — UI shows "Coming Soon"** |
-| **G-015** | **Excel/CSV parsing** | **Procurement Excel import** | **P2** | **OPEN — Upload zone ready** |
-| G-016 | Invoice number storage | Duplicate detection | P2 | OPEN |
+| **G-014** | **Invoice OCR/AI extraction** | **PO Receive Upload tab** | **P1** | **OPEN — UI shows "Coming Soon"** (aliased as G-024 in AI/openGaps docs) |
+| **G-015** | **Excel/CSV parsing** | **Procurement Excel import** | **P2** | **BACKEND CLOSED** — `import-template` + `parse-import` live. Frontend: CR-039 (needs proxy multipart/binary passthrough — owner GO) |
+| G-016 | Invoice number storage | Duplicate detection | P2 | **BACKEND CLOSED** — `check-invoice-number`. Frontend: CR-040 |
 | G-017 | Vendor purchase history API | Vendor + Raw Material intelligence | P2 | **CLOSED** — `vendor-item-list` API confirmed working (75 records, 2026-06-14). Used in CR-030 Vendor Management + Raw Material Master + PO Create. |
 | G-018 | Production run list/history API | Production History | P0 | **CLOSED** — `GET /inventory/production-run` confirmed |
 | G-019 | Segment `unit_cost` | Cost estimation | P1 | **CLOSED** — `unit_cost` in segments[] confirmed |
-| **G-020** | **Custom unit conversion** | **Mixed-unit display** | **P1** | **OPEN — POS backend required** |
+| **G-020** | **Custom unit conversion** | **Mixed-unit display** | **P1** | **BACKEND CLOSED** — read+write live (`consumption_unit`, `converion_factor` [sic], `has_unit_conversion`, `purchase_unit`). Frontend: CR-042 |
 | G-021 | Purchase Order Module | PO lifecycle | P0 | **CLOSED** — All 10 PO endpoints validated (32/32 checks, 2026-06-14). Contract: `AI/Plans/phase3/P35_purchase_order_api_contract.md`. Frontend implemented in CR-030. |
 | G-022 | Aggregated stock with segments/consumption | Expanded stock detail | P1 | **NOT NEEDED** — API supports `include_segments` + `include_consumption` params (confirmed 2026-06-14). Response ~29s — used basic call for page load, purchase data for estimates. |
 | **G-023** | **Push-form API missing ingredients/sub_recipes/recipes in child_existing** | **Accurate push status on Store Management** | **P1** | **CLOSED — Backend added `ingredient_names`, `sub_recipe_names`, `recipe_names` to `child_existing` AND `push_summary` object (Option C). Verified 2026-06-14.** |
+| G-025 | items_count in transfer lists | List display | P2 | **CLOSED** — populated (verified 2026-07-07) |
+| G-026 | parent_restaurant_id in hierarchy-summary | Hierarchy mapping | P2 | **CLOSED** — verified 2026-07-07 |
+| G-027 | Master-controlled operational settings | Settings lockdown | P1 | **CLOSED** — `READONLY_HIERARCHY_SETTINGS` enforced |
+| **G-028** | **Pushed hierarchy bundle write lock** | **Catalogue integrity on children** | **P1** | **BACKEND CLOSED** — `is_pushed_managed` + 403 `PUSHED_CATALOG_LOCKED` (qty paths exempt). Frontend: CR-043 |
+| **G-029** | **Child catalogue/inventory edit policy** | **Parent control of child edits** | **P1** | **BACKEND CLOSED** — `franchise/catalog-policy/{id}` GET/POST + 403 `CHILD_CATALOG_POLICY_DENIED`. Frontend: CR-043 |
+| **G-030** | **Manufactured recipe → auto sub-recipe** | **Batch-manufactured dishes** | **P2** | **BACKEND CLOSED** — single-call recipe+sub-recipe+FG item. Frontend: CR-044 |
+| G-019 | Segment `unit_cost` (detail follow-up) | Batch valuation on Stock Detail | P2 | **BACKEND CLOSED** — `unit_cost` on segments verified 2026-07-07. Frontend: CR-041 |
 
 ## Implementation Gaps — Status After CR-030
 
@@ -61,5 +68,5 @@
 | Screen | Gap | Blocked By |
 |--------|-----|-----------|
 | DailyConsumptionReport | Trend column | Needs 2 consumption API calls |
-| PO Receive | Upload Invoice tab | G-014 (backend OCR) |
-| Procurement | Excel import | G-015 (backend parsing) |
+| PO Receive | Upload Invoice tab | G-014 (backend OCR — still open) |
+| Procurement | Excel import | ~~G-015~~ backend live → CR-039 (planned) |

@@ -1,19 +1,20 @@
 {
-  "generated_at": "2026-07-11T07:46:07.955Z",
+  "generated_at": "2026-07-11T15:08:32.743Z",
   "project": "Central Inventory",
   "repo": "parth-mygenie/central_inventory",
   "branch": "13-6-26",
   "totals": {
-    "items": 80,
-    "crs": 35,
+    "items": 88,
+    "crs": 43,
     "bugs": 45,
-    "debt": 47
+    "debt": 55
   },
   "crs_by_status": {
     "CLOSED": 22,
     "QA": 9,
     "PROPOSED": 3,
-    "QA_PASS": 1
+    "QA_PASS": 1,
+    "PLANNED": 8
   },
   "bugs_by_status": {
     "ACCEPTED": 11,
@@ -31,7 +32,7 @@
     "CRITICAL": 1
   },
   "debt_by_type": {
-    "CR": 27,
+    "CR": 35,
     "BUG": 20
   },
   "sprints": [
@@ -76,7 +77,7 @@
       "bug_count": 29
     }
   ],
-  "signoff_pending": 43,
+  "signoff_pending": 51,
   "owner_signoff_breakdown": {
     "pending": [
       "CR-001",
@@ -121,7 +122,15 @@
       "BUG-033",
       "BUG-034",
       "BUG-035",
-      "BUG-036"
+      "BUG-036",
+      "CR-037",
+      "CR-038",
+      "CR-039",
+      "CR-040",
+      "CR-041",
+      "CR-042",
+      "CR-043",
+      "CR-044"
     ],
     "done": [
       "CR-019",

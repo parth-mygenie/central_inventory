@@ -30,3 +30,7 @@ PO Items column removed, merged vendor dropdown, indirect outlet labels, restaur
 ## Next Tasks
 - Owner smoke testing
 - Consider registering indirect outlets work as formal CR item
+
+## 2026-07-11 — PLANNING session (Gap Adoption)
+- CR-037→044 registered (PLANNED) from AI/openGaps/gap_validation.md; combined Gate 2+3 artifacts in control/sessions/
+- L9 gaps register synced; L1 dashboard updated; awaiting owner Gate 4 GO

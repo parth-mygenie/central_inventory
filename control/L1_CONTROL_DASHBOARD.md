@@ -1,6 +1,6 @@
 # L1 — Control Dashboard (Project Status)
 
-> **Updated:** 2026-06-15 (Session close — BUG-029→035 IMPLEMENTED, QA handover written)
+> **Updated:** 2026-07-11 (PLANNING session — CR-037→044 registered & planned from gap_validation.md; L9 synced)
 
 ---
 
@@ -8,12 +8,30 @@
 
 | Field | Value |
 |-------|-------|
-| **Branch** | `15-06-v2` |
-| **Deploy URL** | `https://c461f1eb-85c7-4a22-9473-69a045470e4f.preview.emergentagent.com` |
+| **Branch** | `bug_fixes_before_gaps_filled` |
+| **Deploy URL** | `https://b4dccd0c-d7be-46c0-b773-5ad8389f24bf.preview.emergentagent.com` |
 | **Active Sprint** | **S3 — API Reality Check + Intelligent PO + Screen Audit** |
 | **UI Freeze Status** | PHASE 7 FROZEN — All screen audits IMPLEMENTED |
-| **Implementation Status** | 24/24 screens + 3 PO screens + CR-034 + BUG-029→035 |
+| **Implementation Status** | 24/24 screens + 3 PO screens + CR-034 + BUG-029→045 |
 | **Dev Dashboard** | `/__dev/index.html` |
+
+## Gap Adoption Pipeline — PLANNED 2026-07-11 (Awaiting Gate 4 GO)
+
+Backend resolved 22 gaps (verified `AI/openGaps/gap_validation.md`, 2026-07-07). Frontend adoption registered:
+
+| Item | Title | Gaps | Severity | Status |
+|------|-------|------|:--------:|:------:|
+| CR-037 | Unified Stock Ledger Adoption | G-005, G-002/003/004 | P1 | PLANNED |
+| CR-038 | Stock Return Flow + Wastage Reasons CRUD | G-006 | P1 | PLANNED |
+| CR-039 | Procurement Excel/CSV Import (**needs server.py waiver**) | G-015 | P2 | PLANNED |
+| CR-040 | Invoice Duplicate Pre-Check | G-016 | P2 | PLANNED |
+| CR-041 | Segment unit_cost on Stock Detail | G-019 | P2 | PLANNED |
+| CR-042 | Custom Unit Conversion Adoption | G-020 | P1 | PLANNED |
+| CR-043 | Pushed Catalog Lock + Child Edit Policy | G-028/029 | P1 | PLANNED |
+| CR-044 | Manufactured Recipe Auto Sub-Recipe | G-030 | P2 | PLANNED |
+
+Recommended execution order: CR-037 → CR-040 → CR-041 → CR-042 → CR-043 → CR-044 → CR-038 → CR-039.
+Plans: `control/sessions/CR0XX_ARTIFACT_2_3_IMPACT_AND_PLAN.md`
 
 ## Sprint S3 — Closed Items
 

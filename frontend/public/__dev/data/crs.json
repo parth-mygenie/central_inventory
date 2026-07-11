@@ -2985,5 +2985,581 @@
     "is_debt": false,
     "debt_reasons": [],
     "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "CR",
+    "id": "CR-037",
+    "title": "Unified Stock Ledger Adoption (G-005 + G-002/003/004)",
+    "status": "PLANNED",
+    "severity": "P1",
+    "sprint_key": null,
+    "phase": "Gap Adoption (backend gaps resolved 2026-07-07)",
+    "files": [
+      "frontend/src/services/api.js",
+      "frontend/src/components/central-inventory/HistoryLedger.jsx",
+      "frontend/src/components/central-inventory/TransferDetail.jsx"
+    ],
+    "notes": "Replace N+1 client-derived ledger with POST stock-ledger API; before/after qty, actor names, store badges.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "DONE",
+        "path": "control/sessions/SESSION_HANDOVER_20260711_PLAN.md"
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "WAIVED",
+        "path": "AI/openGaps/gap_validation.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "control/sessions/CR037_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "path": "control/sessions/CR037_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 4,
+      "total": 7,
+      "pct": 57
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "Code-Gate: PENDING",
+      "QA-Report: PENDING",
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "Unassigned"
+  },
+  {
+    "type": "CR",
+    "id": "CR-038",
+    "title": "Stock Return Flow + Wastage Reasons CRUD (G-006)",
+    "status": "PLANNED",
+    "severity": "P1",
+    "sprint_key": null,
+    "phase": "Gap Adoption (backend gaps resolved 2026-07-07)",
+    "files": [
+      "frontend/src/services/api.js",
+      "frontend/src/components/central-inventory/TransferDetail.jsx",
+      "frontend/src/components/central-inventory/ReturnStockDialog.jsx",
+      "frontend/src/components/central-inventory/WastageEntryForm.jsx"
+    ],
+    "notes": "Return eligible + initiate wiring via TransferDetail action (no frozen nav change); add wastage reason.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "DONE",
+        "path": "control/sessions/SESSION_HANDOVER_20260711_PLAN.md"
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "WAIVED",
+        "path": "AI/openGaps/gap_validation.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "control/sessions/CR038_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "path": "control/sessions/CR038_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 4,
+      "total": 7,
+      "pct": 57
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "Code-Gate: PENDING",
+      "QA-Report: PENDING",
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "Unassigned"
+  },
+  {
+    "type": "CR",
+    "id": "CR-039",
+    "title": "Procurement Excel/CSV Import (G-015)",
+    "status": "PLANNED",
+    "severity": "P2",
+    "sprint_key": null,
+    "phase": "Gap Adoption (backend gaps resolved 2026-07-07)",
+    "files": [
+      "backend/server.py",
+      "frontend/src/services/api.js",
+      "frontend/src/components/central-inventory/AddStockPurchaseForm.jsx",
+      "frontend/src/components/central-inventory/PurchaseOrderCreate.jsx"
+    ],
+    "notes": "Template download + parse-import. REQUIRES owner-approved server.py transport edits (multipart/binary passthrough).",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "DONE",
+        "path": "control/sessions/SESSION_HANDOVER_20260711_PLAN.md"
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "WAIVED",
+        "path": "AI/openGaps/gap_validation.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "control/sessions/CR039_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "path": "control/sessions/CR039_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 4,
+      "total": 7,
+      "pct": 57
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "Code-Gate: PENDING",
+      "QA-Report: PENDING",
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "Unassigned"
+  },
+  {
+    "type": "CR",
+    "id": "CR-040",
+    "title": "Invoice Number Duplicate Pre-Check (G-016)",
+    "status": "PLANNED",
+    "severity": "P2",
+    "sprint_key": null,
+    "phase": "Gap Adoption (backend gaps resolved 2026-07-07)",
+    "files": [
+      "frontend/src/services/api.js",
+      "frontend/src/components/central-inventory/PurchaseOrderDetail.jsx"
+    ],
+    "notes": "check-invoice-number on receive form; warn-only, non-blocking.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "DONE",
+        "path": "control/sessions/SESSION_HANDOVER_20260711_PLAN.md"
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "WAIVED",
+        "path": "AI/openGaps/gap_validation.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "control/sessions/CR040_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "path": "control/sessions/CR040_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 4,
+      "total": 7,
+      "pct": 57
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "Code-Gate: PENDING",
+      "QA-Report: PENDING",
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "Unassigned"
+  },
+  {
+    "type": "CR",
+    "id": "CR-041",
+    "title": "Segment unit_cost on Stock Detail (G-019)",
+    "status": "PLANNED",
+    "severity": "P2",
+    "sprint_key": null,
+    "phase": "Gap Adoption (backend gaps resolved 2026-07-07)",
+    "files": [
+      "frontend/src/components/central-inventory/StockDetailPanel.jsx"
+    ],
+    "notes": "Unit Cost + Batch Value columns in FEFO batch table; cost basis probe required before math.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "DONE",
+        "path": "control/sessions/SESSION_HANDOVER_20260711_PLAN.md"
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "WAIVED",
+        "path": "AI/openGaps/gap_validation.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "control/sessions/CR041_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "path": "control/sessions/CR041_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 4,
+      "total": 7,
+      "pct": 57
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "Code-Gate: PENDING",
+      "QA-Report: PENDING",
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "Unassigned"
+  },
+  {
+    "type": "CR",
+    "id": "CR-042",
+    "title": "Custom Unit Conversion Adoption (G-020)",
+    "status": "PLANNED",
+    "severity": "P1",
+    "sprint_key": null,
+    "phase": "Gap Adoption (backend gaps resolved 2026-07-07)",
+    "files": [
+      "frontend/src/components/central-inventory/IngredientCatalogue.jsx"
+    ],
+    "notes": "Create/edit conversion fields (consumption_unit + converion_factor) + display badge. v1 excludes app-wide qty re-unit-ing.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "DONE",
+        "path": "control/sessions/SESSION_HANDOVER_20260711_PLAN.md"
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "WAIVED",
+        "path": "AI/openGaps/gap_validation.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "control/sessions/CR042_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "path": "control/sessions/CR042_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 4,
+      "total": 7,
+      "pct": 57
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "Code-Gate: PENDING",
+      "QA-Report: PENDING",
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "Unassigned"
+  },
+  {
+    "type": "CR",
+    "id": "CR-043",
+    "title": "Pushed Catalog Lock UI + Child Edit Policy (G-028/G-029)",
+    "status": "PLANNED",
+    "severity": "P1",
+    "sprint_key": null,
+    "phase": "Gap Adoption (backend gaps resolved 2026-07-07)",
+    "files": [
+      "frontend/src/services/api.js",
+      "frontend/src/lib/formatters.js",
+      "frontend/src/components/central-inventory/ProductCatalogue.jsx",
+      "frontend/src/components/central-inventory/SubRecipeMaster.jsx",
+      "frontend/src/components/central-inventory/RecipeCatalogue.jsx",
+      "frontend/src/components/central-inventory/IngredientCatalogue.jsx",
+      "frontend/src/components/central-inventory/StoreManagement.jsx"
+    ],
+    "notes": "is_pushed_managed lock badges + friendly 403 mapping + per-child catalogue policy editor in StoreManagement.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "DONE",
+        "path": "control/sessions/SESSION_HANDOVER_20260711_PLAN.md"
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "WAIVED",
+        "path": "AI/openGaps/gap_validation.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "control/sessions/CR043_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "path": "control/sessions/CR043_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 4,
+      "total": 7,
+      "pct": 57
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "Code-Gate: PENDING",
+      "QA-Report: PENDING",
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "Unassigned"
+  },
+  {
+    "type": "CR",
+    "id": "CR-044",
+    "title": "Manufactured Recipe Auto Sub-Recipe (G-030)",
+    "status": "PLANNED",
+    "severity": "P2",
+    "sprint_key": null,
+    "phase": "Gap Adoption (backend gaps resolved 2026-07-07)",
+    "files": [
+      "frontend/src/components/central-inventory/RecipeCatalogue.jsx",
+      "frontend/src/components/central-inventory/SubRecipeMaster.jsx"
+    ],
+    "notes": "is_manufactured toggle + manufacturing fields on recipe form; success linkage display.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "DONE",
+        "path": "control/sessions/SESSION_HANDOVER_20260711_PLAN.md"
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "WAIVED",
+        "path": "AI/openGaps/gap_validation.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "control/sessions/CR044_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "path": "control/sessions/CR044_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 4,
+      "total": 7,
+      "pct": 57
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "Code-Gate: PENDING",
+      "QA-Report: PENDING",
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "Unassigned"
   }
 ]
