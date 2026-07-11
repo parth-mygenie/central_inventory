@@ -2990,7 +2990,7 @@
     "type": "CR",
     "id": "CR-037",
     "title": "Unified Stock Ledger Adoption (G-005 + G-002/003/004)",
-    "status": "IMPLEMENTED",
+    "status": "QA_PASS",
     "severity": "P1",
     "sprint_key": null,
     "phase": "Gap Adoption (backend gaps resolved 2026-07-07)",
@@ -3034,8 +3034,8 @@
       {
         "artifact": 5,
         "label": "QA-Report",
-        "status": "PENDING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/CR037_044_ARTIFACT_5_QA_REPORT.md"
       },
       {
         "artifact": 6,
@@ -3045,14 +3045,13 @@
       }
     ],
     "completeness": {
-      "done": 5,
+      "done": 6,
       "total": 7,
-      "pct": 71
+      "pct": 86
     },
     "doc_count": 0,
     "is_debt": true,
     "debt_reasons": [
-      "QA-Report: PENDING",
       "Owner-Signoff: PENDING"
     ],
     "sprint_name": "Unassigned"
@@ -3061,7 +3060,7 @@
     "type": "CR",
     "id": "CR-038",
     "title": "Stock Return Flow + Wastage Reasons CRUD (G-006)",
-    "status": "IMPLEMENTED",
+    "status": "QA_PASS",
     "severity": "P1",
     "sprint_key": null,
     "phase": "Gap Adoption (backend gaps resolved 2026-07-07)",
@@ -3106,8 +3105,8 @@
       {
         "artifact": 5,
         "label": "QA-Report",
-        "status": "PENDING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/CR037_044_ARTIFACT_5_QA_REPORT.md"
       },
       {
         "artifact": 6,
@@ -3117,14 +3116,13 @@
       }
     ],
     "completeness": {
-      "done": 5,
+      "done": 6,
       "total": 7,
-      "pct": 71
+      "pct": 86
     },
     "doc_count": 0,
     "is_debt": true,
     "debt_reasons": [
-      "QA-Report: PENDING",
       "Owner-Signoff: PENDING"
     ],
     "sprint_name": "Unassigned"
@@ -3133,7 +3131,7 @@
     "type": "CR",
     "id": "CR-039",
     "title": "Procurement Excel/CSV Import (G-015)",
-    "status": "IMPLEMENTED",
+    "status": "QA_PASS",
     "severity": "P2",
     "sprint_key": null,
     "phase": "Gap Adoption (backend gaps resolved 2026-07-07)",
@@ -3178,8 +3176,8 @@
       {
         "artifact": 5,
         "label": "QA-Report",
-        "status": "PENDING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/CR037_044_ARTIFACT_5_QA_REPORT.md"
       },
       {
         "artifact": 6,
@@ -3189,14 +3187,13 @@
       }
     ],
     "completeness": {
-      "done": 5,
+      "done": 6,
       "total": 7,
-      "pct": 71
+      "pct": 86
     },
     "doc_count": 0,
     "is_debt": true,
     "debt_reasons": [
-      "QA-Report: PENDING",
       "Owner-Signoff: PENDING"
     ],
     "sprint_name": "Unassigned"
@@ -3205,7 +3202,7 @@
     "type": "CR",
     "id": "CR-040",
     "title": "Invoice Number Duplicate Pre-Check (G-016)",
-    "status": "IMPLEMENTED",
+    "status": "QA_PASS",
     "severity": "P2",
     "sprint_key": null,
     "phase": "Gap Adoption (backend gaps resolved 2026-07-07)",
@@ -3248,8 +3245,8 @@
       {
         "artifact": 5,
         "label": "QA-Report",
-        "status": "PENDING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/CR037_044_ARTIFACT_5_QA_REPORT.md"
       },
       {
         "artifact": 6,
@@ -3259,14 +3256,13 @@
       }
     ],
     "completeness": {
-      "done": 5,
+      "done": 6,
       "total": 7,
-      "pct": 71
+      "pct": 86
     },
     "doc_count": 0,
     "is_debt": true,
     "debt_reasons": [
-      "QA-Report: PENDING",
       "Owner-Signoff: PENDING"
     ],
     "sprint_name": "Unassigned"
@@ -3275,7 +3271,7 @@
     "type": "CR",
     "id": "CR-041",
     "title": "Segment unit_cost on Stock Detail (G-019)",
-    "status": "IMPLEMENTED",
+    "status": "QA_PASS",
     "severity": "P2",
     "sprint_key": null,
     "phase": "Gap Adoption (backend gaps resolved 2026-07-07)",
@@ -3317,8 +3313,8 @@
       {
         "artifact": 5,
         "label": "QA-Report",
-        "status": "PENDING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/CR037_044_ARTIFACT_5_QA_REPORT.md"
       },
       {
         "artifact": 6,
@@ -3328,14 +3324,13 @@
       }
     ],
     "completeness": {
-      "done": 5,
+      "done": 6,
       "total": 7,
-      "pct": 71
+      "pct": 86
     },
     "doc_count": 0,
     "is_debt": true,
     "debt_reasons": [
-      "QA-Report: PENDING",
       "Owner-Signoff: PENDING"
     ],
     "sprint_name": "Unassigned"
@@ -3344,7 +3339,7 @@
     "type": "CR",
     "id": "CR-042",
     "title": "Custom Unit Conversion Adoption (G-020)",
-    "status": "IMPLEMENTED",
+    "status": "QA_PASS",
     "severity": "P1",
     "sprint_key": null,
     "phase": "Gap Adoption (backend gaps resolved 2026-07-07)",
@@ -3386,8 +3381,8 @@
       {
         "artifact": 5,
         "label": "QA-Report",
-        "status": "PENDING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/CR037_044_ARTIFACT_5_QA_REPORT.md"
       },
       {
         "artifact": 6,
@@ -3397,14 +3392,13 @@
       }
     ],
     "completeness": {
-      "done": 5,
+      "done": 6,
       "total": 7,
-      "pct": 71
+      "pct": 86
     },
     "doc_count": 0,
     "is_debt": true,
     "debt_reasons": [
-      "QA-Report: PENDING",
       "Owner-Signoff: PENDING"
     ],
     "sprint_name": "Unassigned"
@@ -3413,7 +3407,7 @@
     "type": "CR",
     "id": "CR-043",
     "title": "Pushed Catalog Lock UI + Child Edit Policy (G-028/G-029)",
-    "status": "IMPLEMENTED",
+    "status": "QA_PASS",
     "severity": "P1",
     "sprint_key": null,
     "phase": "Gap Adoption (backend gaps resolved 2026-07-07)",
@@ -3461,8 +3455,8 @@
       {
         "artifact": 5,
         "label": "QA-Report",
-        "status": "PENDING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/CR037_044_ARTIFACT_5_QA_REPORT.md"
       },
       {
         "artifact": 6,
@@ -3472,14 +3466,13 @@
       }
     ],
     "completeness": {
-      "done": 5,
+      "done": 6,
       "total": 7,
-      "pct": 71
+      "pct": 86
     },
     "doc_count": 0,
     "is_debt": true,
     "debt_reasons": [
-      "QA-Report: PENDING",
       "Owner-Signoff: PENDING"
     ],
     "sprint_name": "Unassigned"
@@ -3488,7 +3481,7 @@
     "type": "CR",
     "id": "CR-044",
     "title": "Manufactured Recipe Auto Sub-Recipe (G-030)",
-    "status": "IMPLEMENTED",
+    "status": "QA_PASS",
     "severity": "P2",
     "sprint_key": null,
     "phase": "Gap Adoption (backend gaps resolved 2026-07-07)",
@@ -3531,8 +3524,8 @@
       {
         "artifact": 5,
         "label": "QA-Report",
-        "status": "PENDING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/CR037_044_ARTIFACT_5_QA_REPORT.md"
       },
       {
         "artifact": 6,
@@ -3542,14 +3535,13 @@
       }
     ],
     "completeness": {
-      "done": 5,
+      "done": 6,
       "total": 7,
-      "pct": 71
+      "pct": 86
     },
     "doc_count": 0,
     "is_debt": true,
     "debt_reasons": [
-      "QA-Report: PENDING",
       "Owner-Signoff: PENDING"
     ],
     "sprint_name": "Unassigned"

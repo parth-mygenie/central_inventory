@@ -18,8 +18,9 @@ export function useWastageReasons() {
     try {
       const resp = await api.getWastageReasons();
       const body = resp.data || {};
-      // API may return {reasons:[], is_master, can_edit} or a flat array
-      const apiReasons = Array.isArray(body) ? body : (body.reasons || body.data || []);
+      // CR-038: /wastage-reasons/list returns {reasons:[], is_master, can_edit}
+      // The api.js method now normalizes both list and legacy paths.
+      const apiReasons = Array.isArray(body) ? body : (body.reasons || []);
       const edit = body.can_edit === true; // CR-038
       setCanEdit(edit);
       if (apiReasons.length > 0) {

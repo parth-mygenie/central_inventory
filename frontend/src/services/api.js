@@ -400,7 +400,7 @@ function initiateReturn({ originalTransferId, lines }) {
 }
 
 function addWastageReason(reason) {
-  return client.post("/proxy/v2/inventory/wastage-reasons/add", { reason })
+  return client.post("/proxy/v2/wastage-reasons/add", { reason })
     .then(r => { _invalidateCache(["getWastageReasons:"]); return r; });
 }
 
@@ -615,12 +615,19 @@ function recordWastage(payload) {
 
 /**
  * P25: Get store's configured wastage reasons (for picker dropdown).
- * Falls back to master reasons (rid=0) if store has none.
+ * CR-038 — Uses /wastage-reasons/list (not /inventory/wastage-reasons) to get can_edit + is_master.
+ * Falls back to /inventory/wastage-reasons if list endpoint fails.
  */
 function getWastageReasons() {
-  return client.get("/proxy/v2/inventory/wastage-reasons").then((resp) => {
-    const data = resp.data;
-    return { ...resp, data: data?.reasons || [] };
+  return client.get("/proxy/v2/wastage-reasons/list").then((resp) => {
+    const body = resp.data?.data || resp.data || {};
+    return { ...resp, data: body };
+  }).catch(() => {
+    // Fallback to legacy path
+    return client.get("/proxy/v2/inventory/wastage-reasons").then((resp) => {
+      const data = resp.data;
+      return { ...resp, data: { reasons: data?.reasons || [], can_edit: false } };
+    });
   });
 }
 
