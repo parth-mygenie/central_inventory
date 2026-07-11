@@ -1,0 +1,107 @@
+{
+  "summary": "P24 FEFO Stock Detail UI - All features tested and verified. Fixed critical bug: getStockDetail function was missing from api.js (exported but not defined). After fix, all 16 frontend tests pass and 5 backend tests pass.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_p24_stock_detail.py",
+    "/app/test_reports/pytest/p24_stock_detail_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "FIXED: getStockDetail function was exported in api.js but never defined - this was breaking the entire frontend with 'getStockDetail is not defined' error",
+    "StockDetailPanel.jsx correctly implements all P24 requirements with proper data-testid attributes",
+    "useStockDetail.js hook properly handles API calls with date parameters for consumption history",
+    "Backend proxy route /proxy/v2/inventory/stock-inventory/{id} correctly forwards to POS API",
+    "Expiry badges show correct visual states: healthy (green), expiring soon (amber), expired (red), no expiry (gray)",
+    "Reconciliation section shows balanced/mismatch status correctly",
+    "All sections render correctly: Summary, Batch Inventory, Reconciliation, Consumption History",
+    "Read-only notice displayed at bottom as required"
+  ],
+  "updated_files": [
+    "/app/frontend/src/services/api.js"
+  ],
+  "success_rate": {
+    "backend": "100% (5/5 tests passed)",
+    "frontend": "100% (16/16 features tested)"
+  },
+  "test_credentials": {
+    "master_user": "abhishek@kalabahia.com / Qplazm@10 (rid=1, type=master)"
+  },
+  "seed_data_creation": "None - using real POS API via proxy. Test item: Cooking Oil (ID: 16980) with 4 batches.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "P24 Stock Detail fully tested. Critical fix applied: added missing getStockDetail function to api.js. All features working: inventory row click navigation, back button, summary section, batch inventory table with expiry badges, reconciliation section with balanced/mismatch indicators, consumption history with date filters, read-only notice. Test item used: Cooking Oil (ID: 16980).",
+  "features_tested": {
+    "TEST-1": "PASS - Navigate to /inventory page via sidebar",
+    "TEST-2": "PASS - ChevronRight icons visible on each inventory row (4 icons found)",
+    "TEST-3": "PASS - Row click navigates to /inventory/:id (URL: /inventory/16980)",
+    "TEST-4": "PASS - Back to Inventory button present (data-testid='back-to-inventory')",
+    "TEST-5": "PASS - Summary section present (data-testid='stock-detail-summary')",
+    "TEST-6": "PASS - Summary fields: ingredient name, current stock, unit, category all present",
+    "TEST-7": "PASS - Status badge present (In Stock green badge)",
+    "TEST-8": "PASS - Batch Inventory section present (data-testid='stock-detail-batches')",
+    "TEST-9": "PASS - Batch rows rendered (4 batch rows found)",
+    "TEST-10": "PASS - Expiry badges present (4 badges: 2 healthy '216d left', 2 'No expiry')",
+    "TEST-11": "PASS - Reconciliation section present (data-testid='stock-detail-reconciliation')",
+    "TEST-12": "PASS - Reconciliation values: aggregate (24,820), segment total (24,820), difference (0)",
+    "TEST-13": "PASS - Reconciliation status: 'Balanced — aggregate and segment totals match.'",
+    "TEST-14": "PASS - Consumption History section present (data-testid='stock-detail-consumption')",
+    "TEST-15": "PASS - Consumption date filters present (from, to, Apply button)",
+    "TEST-16": "PASS - Read-only notice present: 'Read-only view — operational visibility only. No stock mutations.'"
+  },
+  "data_verified": {
+    "test_item": "Cooking Oil (ID: 16980)",
+    "current_stock": "24.82 ltr",
+    "category": "veggies",
+    "min_alert": "200.00 ml",
+    "status": "In Stock",
+    "batches": [
+      {"name": "OIL-BATCH-01", "available_qty": 14800, "display_qty": "14.8 ltr", "expiry": "31 Dec 2026", "badge": "216d left (green)"},
+      {"name": "FINAL-OIL-01", "available_qty": 10000, "display_qty": "10 ltr", "expiry": "31 Dec 2026", "badge": "216d left (green)"},
+      {"name": "TEST_BATCH_1779886518", "available_qty": 10, "display_qty": "0.01 ltr", "expiry": null, "badge": "No expiry (gray)"},
+      {"name": "TEST_BATCH_1779886727", "available_qty": 10, "display_qty": "0.01 ltr", "expiry": null, "badge": "No expiry (gray)"}
+    ],
+    "reconciliation": {
+      "aggregate_quantity": 24820,
+      "segment_total": 24820,
+      "difference": 0,
+      "status": "Balanced"
+    }
+  },
+  "ui_components_verified": {
+    "data-testid-stock-detail-page": "FOUND",
+    "data-testid-back-to-inventory": "FOUND",
+    "data-testid-stock-detail-summary": "FOUND",
+    "data-testid-detail-stock-title": "FOUND",
+    "data-testid-detail-display-qty": "FOUND",
+    "data-testid-detail-unit": "FOUND",
+    "data-testid-detail-category": "FOUND",
+    "data-testid-detail-ok-stock-badge": "FOUND",
+    "data-testid-stock-detail-batches": "FOUND",
+    "data-testid-batch-row-*": "FOUND (4 rows)",
+    "data-testid-expiry-badge-*": "FOUND (4 badges)",
+    "data-testid-stock-detail-reconciliation": "FOUND",
+    "data-testid-recon-aggregate": "FOUND",
+    "data-testid-recon-segment-total": "FOUND",
+    "data-testid-recon-difference": "FOUND",
+    "data-testid-recon-balanced": "FOUND",
+    "data-testid-stock-detail-consumption": "FOUND",
+    "data-testid-consumption-date-from": "FOUND",
+    "data-testid-consumption-date-to": "FOUND",
+    "data-testid-consumption-filter-btn": "FOUND",
+    "data-testid-read-only-notice": "FOUND"
+  },
+  "bug_fixed": {
+    "issue": "getStockDetail is not defined - ReferenceError breaking entire frontend",
+    "root_cause": "Function was exported in api.js line 791 but never defined in the file",
+    "fix_applied": "Added getStockDetail function definition at line 490 in api.js",
+    "fix_details": "Function makes GET request to /proxy/v2/inventory/stock-inventory/{inventoryMasterId} with optional query params for consumption date range and limit"
+  }
+}

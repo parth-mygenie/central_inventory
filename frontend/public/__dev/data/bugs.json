@@ -1,0 +1,3172 @@
+[
+  {
+    "type": "BUG",
+    "id": "BUG-001",
+    "title": "Read-only mode banner still shows after write flows implemented",
+    "status": "ACCEPTED",
+    "severity": "LOW",
+    "sprint_key": "S0",
+    "phase": "Slice 1-4",
+    "files": [
+      "AppHeader.jsx"
+    ],
+    "notes": "Cosmetic. Text update deferred. Write flows work regardless.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_1_TO_4_FINAL_ACCEPTANCE_AND_CLOSURE_REPORT.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 1,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-002",
+    "title": "Transfer History lacks store type badges",
+    "status": "ACCEPTED",
+    "severity": "LOW",
+    "sprint_key": "S0",
+    "phase": "Slice 3",
+    "files": [
+      "HistoryLedger.jsx"
+    ],
+    "notes": "Backend limitation. History API doesn't return restaurant_type. Store names shown correctly.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_1_TO_4_FINAL_ACCEPTANCE_AND_CLOSURE_REPORT.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 1,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-003",
+    "title": "Stock Ledger N+1 API calls (lazy-loads transfer details)",
+    "status": "DEFERRED",
+    "severity": "MEDIUM",
+    "sprint_key": "S0",
+    "phase": "Slice 3",
+    "files": [
+      "HistoryLedger.jsx"
+    ],
+    "notes": "Acceptable at current scale. Needs dedicated ledger API from backend for production.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_1_TO_4_FINAL_ACCEPTANCE_AND_CLOSURE_REPORT.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 1,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-004",
+    "title": "Before/After quantity always shows dash",
+    "status": "ACCEPTED",
+    "severity": "MEDIUM",
+    "sprint_key": "S0",
+    "phase": "Slice 3",
+    "files": [
+      "HistoryLedger.jsx"
+    ],
+    "notes": "Backend limitation. No before/after data in API. Owner approved (Q-S3-010: A).",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_1_TO_4_FINAL_ACCEPTANCE_AND_CLOSURE_REPORT.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 1,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-005",
+    "title": "Actor names display as numeric IDs instead of names",
+    "status": "ACCEPTED",
+    "severity": "LOW",
+    "sprint_key": "S0",
+    "phase": "Slice 3",
+    "files": [
+      "HistoryLedger.jsx",
+      "TransferDetail.jsx"
+    ],
+    "notes": "Backend limitation. No user name resolution API. Owner approved (Q-S3-007: A).",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_1_TO_4_FINAL_ACCEPTANCE_AND_CLOSURE_REPORT.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 1,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-006",
+    "title": "filter_bucket source selector may fail with batched stock",
+    "status": "ACCEPTED",
+    "severity": "LOW",
+    "sprint_key": "S0",
+    "phase": "Slice 4",
+    "files": [
+      "DirectDispatchForm.jsx"
+    ],
+    "notes": "Warning shown to users. Segment mode is default and 100% reliable.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_1_TO_4_FINAL_ACCEPTANCE_AND_CLOSURE_REPORT.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 1,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-007",
+    "title": "Stock Adjustment has no history/traceability API",
+    "status": "ACCEPTED",
+    "severity": "MEDIUM",
+    "sprint_key": "S0",
+    "phase": "Slice 5",
+    "files": [
+      "StockAdjustmentForm.jsx"
+    ],
+    "notes": "No adjustment history API exists. Accepted risk per Implementation Plan Risk #3.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_5_FINAL_QA_VALIDATION_REPORT.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 1,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-008",
+    "title": "Wastage ledger rows empty in preprod (no wastage recorded yet)",
+    "status": "ACCEPTED",
+    "severity": "LOW",
+    "sprint_key": "S0",
+    "phase": "Slice 5",
+    "files": [
+      "HistoryLedger.jsx"
+    ],
+    "notes": "Expected. deriveWastageEntries() ready for when data exists.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_5_FINAL_QA_VALIDATION_REPORT.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 1,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-009",
+    "title": "Wastage Report may error for Master/Outlet roles",
+    "status": "ACCEPTED",
+    "severity": "LOW",
+    "sprint_key": "S0",
+    "phase": "Slice 5",
+    "files": [
+      "WastageReport.jsx"
+    ],
+    "notes": "Preprod API scope restriction. Error state with Retry is correct UX.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_5_FINAL_QA_VALIDATION_REPORT.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 1,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-010",
+    "title": "add-stock increase API payload estimated (may need runtime adjustment)",
+    "status": "ACCEPTED",
+    "severity": "MEDIUM",
+    "sprint_key": "S0",
+    "phase": "Slice 5",
+    "files": [
+      "api.js"
+    ],
+    "notes": "Decrease verified_ready. Increase payload estimated from docs.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_5_FINAL_QA_VALIDATION_REPORT.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 1,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-011",
+    "title": "Edit Transfer button was noop (resolved in P17)",
+    "status": "RESOLVED",
+    "severity": "LOW",
+    "sprint_key": "S0",
+    "phase": "P17",
+    "files": [
+      "TransferDetail.jsx"
+    ],
+    "notes": "Was OI-001. Resolved by CR-006 (P17 Amend/Withdraw).",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_POST_SLICE_4_OPEN_ITEMS_REGISTER.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/api_implementation_status_p17_addendum.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 2,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-012",
+    "title": "Parent store resolution uses hierarchy heuristic",
+    "status": "DEFERRED",
+    "severity": "LOW",
+    "sprint_key": "S0",
+    "phase": "Slice 4",
+    "files": [
+      "DirectDispatchForm.jsx",
+      "RequestStockForm.jsx"
+    ],
+    "notes": "Works with current data. May need refinement for complex hierarchies.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_1_TO_4_FINAL_ACCEPTANCE_AND_CLOSURE_REPORT.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 1,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-013",
+    "title": "Date range filter is client-side only (seed data ignores params)",
+    "status": "ACCEPTED",
+    "severity": "LOW",
+    "sprint_key": "S0",
+    "phase": "Slice 3",
+    "files": [
+      "HistoryLedger.jsx"
+    ],
+    "notes": "Works with real POS API. Seed data (now removed) was the cause.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/CENTRAL_INVENTORY_SLICE_1_TO_4_FINAL_ACCEPTANCE_AND_CLOSURE_REPORT.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 1,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-014",
+    "title": "Test entities 787/788/789 created in live POS during P23 probing",
+    "status": "RESOLVED",
+    "severity": "INFO",
+    "sprint_key": "S0",
+    "phase": "P23",
+    "files": [],
+    "notes": "RESOLVED: Test entities 787/788/789 no longer visible in franchise/list API. Confirmed cleaned up 2026-06-14.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "AI/Plans/PROJECT_LEDGER.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 1,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-015",
+    "title": "Negative stock exists in legacy data",
+    "status": "ACCEPTED",
+    "severity": "INFO",
+    "sprint_key": "S0",
+    "phase": "Pre-existing",
+    "files": [],
+    "notes": "Legacy data from before strict enforcement. Does not affect new transfers. May confuse stock reports.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "paths": [
+          "memory/central_inventory/SYSTEM_HANDOVER_DOCUMENT.md"
+        ],
+        "tags": []
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "paths": [],
+        "tags": [
+          "PRE-GOVERNANCE"
+        ]
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 1,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "Pre-Governance (Retroactive)"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-016",
+    "title": "display_qty string causes TypeError in arithmetic operations",
+    "status": "RESOLVED",
+    "severity": "HIGH",
+    "sprint_key": "S2",
+    "phase": "Sprint C",
+    "files": [
+      "StockAdjustmentForm.jsx",
+      "WastageEntryForm.jsx"
+    ],
+    "notes": "POS API returns display_qty as string. Arithmetic without Number() wrapper caused toFixed() TypeError. Fixed by wrapping in Number().",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "DONE",
+        "tags": [
+          "RETROACTIVE"
+        ],
+        "paths": [
+          "control/sessions/BUG016_SESSION_START.md"
+        ]
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "tags": [],
+        "paths": [
+          "control/sessions/BUG016_SESSION_START.md"
+        ]
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "tags": [],
+        "paths": []
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "tags": [],
+        "paths": []
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "tags": [],
+        "paths": []
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "tags": [],
+        "paths": [
+          "test_reports/iteration_29.json"
+        ]
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "tags": [
+          "BUG-FIX"
+        ],
+        "paths": []
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 3,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "Intelligent UI Implementation"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-017",
+    "title": "Duplicate Ingredient Selection Allowed in Recipe & Sub-Recipe BOM",
+    "status": "CLOSED",
+    "severity": "MEDIUM",
+    "sprint_key": "S3",
+    "phase": "Catalogue",
+    "files": [
+      "frontend/src/components/central-inventory/RecipeCatalogue.jsx",
+      "frontend/src/components/central-inventory/SubRecipeMaster.jsx"
+    ],
+    "notes": "CLOSED: Added .filter() to exclude already-selected ingredient IDs from dropdown options. Verified 49→48→47 count reduction. Owner signed off 2026-06-14.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "DONE",
+        "path": "control/sessions/BUG017_SESSION_START.md"
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/BUG017_ARTIFACT_1_INTAKE.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "control/sessions/BUG017_ARTIFACT_2_IMPACT_ANALYSIS.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "path": "control/sessions/BUG017_ARTIFACT_3_IMPLEMENTATION_PLAN.md"
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "DONE",
+        "path": "control/sessions/BUG017_ARTIFACT_4_CODE_GATE.md"
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "path": "control/sessions/BUG017_ARTIFACT_5_QA_REPORT.md"
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "DONE",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 7,
+      "total": 7,
+      "pct": 100
+    },
+    "doc_count": 0,
+    "is_debt": false,
+    "debt_reasons": [],
+    "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-018",
+    "title": "Push status '125 items behind' is misleading (push-form API gap)",
+    "status": "QA_PASS",
+    "severity": "MEDIUM",
+    "sprint_key": "S3",
+    "phase": "Store Management",
+    "files": [
+      "frontend/src/components/central-inventory/StoreManagement.jsx"
+    ],
+    "notes": "UNBLOCKED: G-023 resolved. Backend now returns push_summary with total_behind + status + breakdown. Frontend needs to read push_summary instead of manual computation in StoreManagement.jsx.",
+    "artifact_refs": [
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/OWNER_BUG_INTAKE_20260614_BATCH.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "control/sessions/BUGBATCH_ARTIFACT_2_IMPACT_ANALYSIS.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "path": "control/sessions/BUG018_ARTIFACT_3_IMPLEMENTATION_PLAN.md"
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "DONE",
+        "path": "control/sessions/BUG018_ARTIFACT_4_CODE_GATE.md"
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "path": "control/sessions/BUG018_ARTIFACT_5_QA_REPORT.md"
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 5,
+      "total": 6,
+      "pct": 83
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-019",
+    "title": "Stock Inventory should split FG (Outward) / RM (Inward)",
+    "status": "QA_PASS",
+    "severity": "MEDIUM",
+    "sprint_key": "S3",
+    "phase": "Navigation",
+    "files": [
+      "frontend/src/components/central-inventory/StockInventorySummary.jsx",
+      "frontend/src/lib/screenVisibility.js",
+      "frontend/src/App.js"
+    ],
+    "notes": "Owner approved unfreeze of screenVisibility.js for this change. Add RM Stock under Inward, default Outward to FG.",
+    "artifact_refs": [
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/OWNER_BUG_INTAKE_20260614_BATCH.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "control/sessions/BUGBATCH_ARTIFACT_2_IMPACT_ANALYSIS.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "path": "control/sessions/BUGBATCH_ARTIFACT_3_IMPLEMENTATION_PLAN.md"
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "DONE",
+        "path": "control/sessions/BUGBATCH_PHASE2_ARTIFACT_4_CODE_GATE.md"
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "path": "control/sessions/BUGBATCH_PHASE2_ARTIFACT_5_QA_REPORT.md"
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 5,
+      "total": 6,
+      "pct": 83
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-020",
+    "title": "\"Unknown: —\" in From/To on Store Detail Recent Transactions",
+    "status": "QA_PASS",
+    "severity": "HIGH",
+    "sprint_key": "S3",
+    "phase": "Store Detail",
+    "files": [
+      "frontend/src/components/central-inventory/StoreDetail.jsx"
+    ],
+    "notes": "Wire existing useRestaurantMap hook. API returns from_restaurant_id/to_restaurant_id — resolve to names via map.",
+    "artifact_refs": [
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/OWNER_BUG_INTAKE_20260614_BATCH.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "control/sessions/BUGBATCH_ARTIFACT_2_IMPACT_ANALYSIS.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "path": "control/sessions/BUGBATCH_ARTIFACT_3_IMPLEMENTATION_PLAN.md"
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "DONE",
+        "path": "control/sessions/BUGBATCH_ARTIFACT_4_CODE_GATE.md"
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "path": "control/sessions/BUGBATCH_ARTIFACT_5_QA_REPORT.md"
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 5,
+      "total": 6,
+      "pct": 83
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-021",
+    "title": "Remove 'Adjust Stock' from Operations Hub Quick Actions",
+    "status": "QA_PASS",
+    "severity": "LOW",
+    "sprint_key": "S3",
+    "phase": "Operations Hub",
+    "files": [
+      "frontend/src/components/central-inventory/OperationsHub.jsx"
+    ],
+    "notes": "Card-only removal. Route and component kept on disk. No frozen file touch needed.",
+    "artifact_refs": [
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/OWNER_BUG_INTAKE_20260614_BATCH.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "control/sessions/BUGBATCH_ARTIFACT_2_IMPACT_ANALYSIS.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "path": "control/sessions/BUGBATCH_ARTIFACT_3_IMPLEMENTATION_PLAN.md"
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "DONE",
+        "path": "control/sessions/BUGBATCH_ARTIFACT_4_CODE_GATE.md"
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "path": "control/sessions/BUGBATCH_ARTIFACT_5_QA_REPORT.md"
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 5,
+      "total": 6,
+      "pct": 83
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-022",
+    "title": "Unnecessary 'Direct Stock Entry Disabled' gate page — auto-redirect to PO",
+    "status": "QA_PASS",
+    "severity": "LOW",
+    "sprint_key": "S3",
+    "phase": "Purchase",
+    "files": [
+      "frontend/src/components/central-inventory/AddStockPurchaseForm.jsx"
+    ],
+    "notes": "Auto-redirect in AddStockPurchaseForm when require_po_for_purchase=true. Covers all entry points without touching frozen files.",
+    "artifact_refs": [
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/OWNER_BUG_INTAKE_20260614_BATCH.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "control/sessions/BUGBATCH_ARTIFACT_2_IMPACT_ANALYSIS.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "path": "control/sessions/BUGBATCH_ARTIFACT_3_IMPLEMENTATION_PLAN.md"
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "DONE",
+        "path": "control/sessions/BUGBATCH_ARTIFACT_4_CODE_GATE.md"
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "path": "control/sessions/BUGBATCH_ARTIFACT_5_QA_REPORT.md"
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 5,
+      "total": 6,
+      "pct": 83
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-023",
+    "title": "Dollar sign ($) icon should be Rupee (₹) across app",
+    "status": "QA_PASS",
+    "severity": "MEDIUM",
+    "sprint_key": "S3",
+    "phase": "Locale",
+    "files": [
+      "frontend/src/components/central-inventory/ProductionRunForm.jsx",
+      "frontend/src/components/central-inventory/ProductionHistory.jsx",
+      "frontend/src/components/central-inventory/SubRecipeMaster.jsx",
+      "frontend/src/components/central-inventory/RecipeCatalogue.jsx"
+    ],
+    "notes": "Replace DollarSign import with IndianRupee from lucide-react in 4 files. Text values already show ₹ correctly.",
+    "artifact_refs": [
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/OWNER_BUG_INTAKE_20260614_BATCH.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "control/sessions/BUGBATCH_ARTIFACT_2_IMPACT_ANALYSIS.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "path": "control/sessions/BUGBATCH_ARTIFACT_3_IMPLEMENTATION_PLAN.md"
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "DONE",
+        "path": "control/sessions/BUGBATCH_ARTIFACT_4_CODE_GATE.md"
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "path": "control/sessions/BUGBATCH_ARTIFACT_5_QA_REPORT.md"
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 5,
+      "total": 6,
+      "pct": 83
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-024",
+    "title": "Production Run layout → Master-Detail (owner confirmed Option B)",
+    "status": "QA_PASS",
+    "severity": "MEDIUM",
+    "sprint_key": "S3",
+    "phase": "Production",
+    "files": [
+      "frontend/src/components/central-inventory/ProductionRunForm.jsx"
+    ],
+    "notes": "Full rewrite of ProductionRunForm.jsx (~628 lines) from vertical to master-detail (30/70 split). All BOM/cost/FEFO logic preserved. Mock at /__dev/previews/RUN_PRODUCTION_LAYOUT_COMPARISON.html.",
+    "artifact_refs": [
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/OWNER_BUG_INTAKE_20260614_BATCH.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "control/sessions/BUGBATCH_ARTIFACT_2_IMPACT_ANALYSIS.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "path": "control/sessions/BUGBATCH_ARTIFACT_3_IMPLEMENTATION_PLAN.md"
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "DONE",
+        "path": "control/sessions/BUGBATCH_PHASE2_ARTIFACT_4_CODE_GATE.md"
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "path": "control/sessions/BUGBATCH_PHASE2_ARTIFACT_5_QA_REPORT.md"
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 5,
+      "total": 6,
+      "pct": 83
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-025",
+    "title": "Food edit popup → Side Sheet (owner confirmed Option C)",
+    "status": "QA_PASS",
+    "severity": "LOW",
+    "sprint_key": "S3",
+    "phase": "Product Catalog",
+    "files": [
+      "frontend/src/components/central-inventory/ProductCatalogue.jsx"
+    ],
+    "notes": "Replace Dialog with Sheet component for food edit. Table stays visible, edit form slides in from right. Quick Info shows linked recipe + FG stock. Mock at /__dev/previews/FOOD_EDIT_PATTERN_COMPARISON.html.",
+    "artifact_refs": [
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/OWNER_BUG_INTAKE_20260614_BATCH.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "control/sessions/BUGBATCH_ARTIFACT_2_IMPACT_ANALYSIS.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "path": "control/sessions/BUGBATCH_ARTIFACT_3_IMPLEMENTATION_PLAN.md"
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "DONE",
+        "path": "control/sessions/BUGBATCH_PHASE2_ARTIFACT_4_CODE_GATE.md"
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "path": "control/sessions/BUGBATCH_PHASE2_ARTIFACT_5_QA_REPORT.md"
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 5,
+      "total": 6,
+      "pct": 83
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-026",
+    "title": "Raw Material Master — Sub-recipe items/categories contaminating Ingredients view",
+    "status": "QA_PASS",
+    "severity": "HIGH",
+    "sprint_key": "S3",
+    "phase": "Raw Material Master",
+    "files": [
+      "frontend/src/components/central-inventory/IngredientCatalogue.jsx"
+    ],
+    "notes": "5 sub-issues FIXED: (1) Filtered sub-recipe items from list, (2) Hidden 'Sub Recipe' from category dropdowns, (3) Hidden from Categories tab + replaced delete with toggle, (4) Filter dropdown auto-resolved, (5) 'Used In' column counts recipe+sub-recipe usage. QA 15/15 PASS.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "DONE",
+        "path": "control/sessions/BUG026_027_028_SESSION_START.md"
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/BUG026_027_028_SESSION_START.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "control/sessions/BUG026_027_028_ARTIFACT_2_IMPACT_ANALYSIS.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "path": "control/sessions/BUG026_027_028_ARTIFACT_3_IMPLEMENTATION_PLAN.md"
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "path": "test_reports/iteration_55.json"
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 6,
+      "total": 7,
+      "pct": 86
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-027",
+    "title": "Raw Material Master — Consumption & Days of Stock calculation wildly incorrect",
+    "status": "QA_PASS",
+    "severity": "HIGH",
+    "sprint_key": "S3",
+    "phase": "Raw Material Master",
+    "files": [
+      "frontend/src/components/central-inventory/IngredientCatalogue.jsx"
+    ],
+    "notes": "FIXED: Switched from purchase-history-based consumption to daily-consumption-report API. Uses display_qty for stock. Normalizes units (gm→kg). QA PASS.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "DONE",
+        "path": "control/sessions/BUG026_027_028_SESSION_START.md"
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/BUG026_027_028_SESSION_START.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "control/sessions/BUG026_027_028_ARTIFACT_2_IMPACT_ANALYSIS.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "path": "control/sessions/BUG026_027_028_ARTIFACT_3_IMPLEMENTATION_PLAN.md"
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "path": "test_reports/iteration_55.json"
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 6,
+      "total": 7,
+      "pct": 86
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-028",
+    "title": "Purchase Order Create — Sub-recipe contamination + UX issues (search, cheapest, rate, columns, vendor selection)",
+    "status": "QA_PASS",
+    "severity": "HIGH",
+    "sprint_key": "S3",
+    "phase": "Purchase Order",
+    "files": [
+      "frontend/src/components/central-inventory/PurchaseOrderCreate.jsx"
+    ],
+    "notes": "9 sub-issues FIXED: sub-recipe filter, search field, cheapest rendering, Expected Rate read-only, vendor picker for no-history, column renames, tooltip. QA PASS.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "DONE",
+        "path": "control/sessions/BUG026_027_028_SESSION_START.md"
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/BUG026_027_028_SESSION_START.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "control/sessions/BUG026_027_028_ARTIFACT_2_IMPACT_ANALYSIS.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "path": "control/sessions/BUG026_027_028_ARTIFACT_3_IMPLEMENTATION_PLAN.md"
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "DONE",
+        "path": "test_reports/iteration_55.json"
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 6,
+      "total": 7,
+      "pct": 86
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-029",
+    "title": "Raw Material Master — Consumption still 0.0 kg/day (ingredient_id join mismatch with consumption API)",
+    "status": "IMPLEMENTED",
+    "severity": "HIGH",
+    "sprint_key": "S3",
+    "phase": "Raw Material Master",
+    "files": [
+      "frontend/src/components/central-inventory/IngredientCatalogue.jsx"
+    ],
+    "notes": "Residual from BUG-027 fix. daily-consumption-report returns ingredient_id that doesn't match inventory_master_id from stock-inventory. Whole Wheat Flour: 0.0 kg/day, 3116d. Need to join by ingredient_name fallback or investigate ID mapping.",
+    "artifact_refs": [
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/SESSION_CLOSE_20260615_HANDOVER.md"
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 1,
+      "total": 3,
+      "pct": 33
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "QA-Report: PENDING",
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-030",
+    "title": "PO Create — Residual: send rate=0 to API, display_qty not cal_quantity, consumption/DoC wrong, search missing on By Item Need",
+    "status": "IMPLEMENTED",
+    "severity": "HIGH",
+    "sprint_key": "S3",
+    "phase": "Purchase Order",
+    "files": [
+      "frontend/src/components/central-inventory/PurchaseOrderCreate.jsx"
+    ],
+    "notes": "6 sub-issues: (2a) Expected Rate display-only, always send 0 to API for both modes, (2b) Stock shows cal_quantity (29865 kg) not display_qty (29.87 kg), (2c) DoC shows 995d — same consumption bug, (2d) Search bar only on By Vendor not By Item Need, (2e/2f) Same display_qty+DoC on By Item Need.",
+    "artifact_refs": [
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/SESSION_CLOSE_20260615_HANDOVER.md"
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 1,
+      "total": 3,
+      "pct": 33
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "QA-Report: PENDING",
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-031",
+    "title": "RM Stock page — Remove All/FG tabs (RM only), hide Sub Recipe from category filter",
+    "status": "IMPLEMENTED",
+    "severity": "MEDIUM",
+    "sprint_key": "S3",
+    "phase": "Stock Inventory",
+    "files": [
+      "frontend/src/components/central-inventory/StockInventorySummary.jsx"
+    ],
+    "notes": "2 sub-issues: (3a) /inventory?type=raw should only show Raw Materials tab — remove All(75) and Finished Goods(31) tabs, (3b) Categories filter dropdown shows 'Sub Recipe (31)' — should be hidden.",
+    "artifact_refs": [
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/SESSION_CLOSE_20260615_HANDOVER.md"
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 1,
+      "total": 3,
+      "pct": 33
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "QA-Report: PENDING",
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-032",
+    "title": "Stock Inventory expanded row — Expiry Risk inline date, hide Adjust Stock, load FEFO segments",
+    "status": "IMPLEMENTED",
+    "severity": "HIGH",
+    "sprint_key": "S3",
+    "phase": "Stock Inventory",
+    "files": [
+      "frontend/src/components/central-inventory/StockInventorySummary.jsx"
+    ],
+    "notes": "3 sub-issues: (4) Expiry Risk column shows 'View detail' — should show closest batch expiry date inline, (5a) Hide 'Adjust Stock' quick action button from expanded row, (5b) Expanded row shows 'No segments' but full detail has FEFO segments — load segments in expanded view.",
+    "artifact_refs": [
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/SESSION_CLOSE_20260615_HANDOVER.md"
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 1,
+      "total": 3,
+      "pct": 33
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "QA-Report: PENDING",
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-033",
+    "title": "Stock Inventory Quick Actions — Dispatch/Wastage don't pre-select ingredient",
+    "status": "IMPLEMENTED",
+    "severity": "MEDIUM",
+    "sprint_key": "S3",
+    "phase": "Stock Inventory",
+    "files": [
+      "frontend/src/components/central-inventory/StockInventorySummary.jsx",
+      "frontend/src/components/central-inventory/DirectDispatchForm.jsx",
+      "frontend/src/components/central-inventory/WastageEntryForm.jsx"
+    ],
+    "notes": "2 sub-issues: (6a) Clicking Dispatch from expanded row should pre-select the ingredient on DirectDispatchForm, (6b) Clicking Record Wastage should pre-select the ingredient on WastageEntryForm. Navigation state needs to carry inventory_master_id + stock_title.",
+    "artifact_refs": [
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/SESSION_CLOSE_20260615_HANDOVER.md"
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 1,
+      "total": 3,
+      "pct": 33
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "QA-Report: PENDING",
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-034",
+    "title": "Sub-Recipe Master — Delete button → Active/Inactive toggle (backend API pending)",
+    "status": "IMPLEMENTED",
+    "severity": "MEDIUM",
+    "sprint_key": "S3",
+    "phase": "Sub-Recipe Master",
+    "files": [
+      "frontend/src/components/central-inventory/SubRecipeMaster.jsx"
+    ],
+    "notes": "Replace red 'Delete' button with active/inactive toggle switch (same pattern as Categories tab BUG-026 fix). Backend flag needed — API will be provided later. UI stub with toast.",
+    "artifact_refs": [
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/SESSION_CLOSE_20260615_HANDOVER.md"
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 1,
+      "total": 3,
+      "pct": 33
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "QA-Report: PENDING",
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-035",
+    "title": "Production History — Consumed Ingredients Qty shows dash, should show batch total with unit normalization",
+    "status": "IMPLEMENTED",
+    "severity": "MEDIUM",
+    "sprint_key": "S3",
+    "phase": "Production",
+    "files": [
+      "frontend/src/components/central-inventory/ProductionHistory.jsx"
+    ],
+    "notes": "2 sub-issues: (8a) Ingredient-level Qty shows '—' but batch-level shows 1000.00 — should sum batches and show total at ingredient level without expanding, (8b) Normalize units when summing across batches (e.g. gm+kg → kg).",
+    "artifact_refs": [
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/SESSION_CLOSE_20260615_HANDOVER.md"
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 1,
+      "total": 3,
+      "pct": 33
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "QA-Report: PENDING",
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-036",
+    "title": "App-Wide Consumption Unit Mismatch — gm values displayed/calculated as kg (causes 1000x over-ordering in PO Create)",
+    "status": "IMPLEMENTED",
+    "severity": "CRITICAL",
+    "sprint_key": "S3",
+    "phase": "Cross-cutting (Inward + Production + Outward)",
+    "files": [
+      "frontend/src/lib/formatters.js",
+      "frontend/src/components/central-inventory/PurchaseOrderCreate.jsx",
+      "frontend/src/components/central-inventory/IngredientCatalogue.jsx",
+      "frontend/src/components/central-inventory/DirectDispatchForm.jsx",
+      "frontend/src/components/central-inventory/RequestStockForm.jsx",
+      "frontend/src/hooks/useProductionRun.js",
+      "frontend/src/components/central-inventory/StockInventorySummary.jsx",
+      "frontend/src/components/central-inventory/StockDetailPanel.jsx"
+    ],
+    "notes": "4 bug sub-classes: (1) .toFixed(1) precision truncation, (2) gm value with kg label + unit-mismatched calculations in PO Create, (3) parseFloat/Number unit stripping in Dispatch/Request/Production, (4) ambiguous unit scale in StockInventory expanded row. Root cause: POS API returns consumption in base unit (gm/ml) but frontend uses display unit (kg/ltr) without conversion. Related: BUG-029, BUG-030, G-020.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/BUG036_ARTIFACT_1_INTAKE.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "control/sessions/BUG036_ARTIFACT_2_IMPACT_ANALYSIS.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "path": "control/sessions/BUG036_ARTIFACT_3_IMPLEMENTATION_PLAN.md"
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "PENDING",
+        "path": null
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "PENDING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 4,
+      "total": 7,
+      "pct": 57
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "Code-Gate: PENDING",
+      "QA-Report: PENDING",
+      "Owner-Signoff: PENDING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-037",
+    "title": "Food Categories Not Showing — getFoodCategories() doesn't extract r.data.categories",
+    "status": "CLOSED",
+    "severity": "HIGH",
+    "sprint_key": "S3",
+    "phase": "Product Catalog",
+    "files": [
+      "frontend/src/services/api.js"
+    ],
+    "notes": "RESOLVED — POS API now returns categories as direct array (was {categories:[...]} during initial investigation, fixed backend-side). Code Array.isArray(r.data) works correctly. Closed 2026-07-10.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/BUG037-045_ARTIFACT_1_INTAKE.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "MISSING",
+        "path": null
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "MISSING",
+        "path": null
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "MISSING",
+        "path": null
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 4,
+      "total": 7,
+      "pct": 57
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "Impact-Analysis: MISSING",
+      "Impl-Plan: MISSING",
+      "QA-Report: MISSING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-038",
+    "title": "PO List — Items Column Empty (Backend Gap: no item count in list API)",
+    "status": "OPEN",
+    "severity": "MEDIUM",
+    "sprint_key": "S3",
+    "phase": "Purchase Orders",
+    "files": [
+      "frontend/src/components/central-inventory/PurchaseOrderList.jsx"
+    ],
+    "notes": "POS API purchase-order/list has no line_count/items_count field. Transfer history has both. Backend gap — no frontend fix without N+1 calls. Workaround: hide Items column or show item_total.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/BUG037-045_ARTIFACT_1_INTAKE.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "control/sessions/BUG038-045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "path": "control/sessions/BUG038-045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "MISSING",
+        "path": null
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 6,
+      "total": 7,
+      "pct": 86
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "QA-Report: MISSING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-039",
+    "title": "PO Create Item Need — Can't Select Non-History Vendors (dropdown limited to purchase-history vendors only)",
+    "status": "OPEN",
+    "severity": "HIGH",
+    "sprint_key": "S3",
+    "phase": "Purchase Orders",
+    "files": [
+      "frontend/src/components/central-inventory/PurchaseOrderCreate.jsx"
+    ],
+    "notes": "When vendorOptions.length>0, Select only shows history vendors. Other vendors excluded. Related: BUG-028 (fixed no-history case, this is partial-history case). Fix: merge vendorOptions + all vendors in dropdown.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/BUG037-045_ARTIFACT_1_INTAKE.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "control/sessions/BUG038-045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "path": "control/sessions/BUG038-045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "MISSING",
+        "path": null
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 6,
+      "total": 7,
+      "pct": 86
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "QA-Report: MISSING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-040",
+    "title": "Store Management — Indirect Outlets (Grandchildren) Show No Detail Info",
+    "status": "OPEN",
+    "severity": "MEDIUM",
+    "sprint_key": "S3",
+    "phase": "Store Management",
+    "files": [
+      "frontend/src/components/central-inventory/StoreManagement.jsx"
+    ],
+    "notes": "HK Outlet North/South are grandchildren (belong to Master Stores). franchise/list returns direct children only. Merged outlet objects have hardcoded email:'' and no phone/address/vendor. Stock health stuck on 'Loading'.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/BUG037-045_ARTIFACT_1_INTAKE.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "control/sessions/BUG038-045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "path": "control/sessions/BUG038-045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "MISSING",
+        "path": null
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 6,
+      "total": 7,
+      "pct": 86
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "QA-Report: MISSING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-041",
+    "title": "Transfer Detail FROM Block Empty — restaurantMap Missing Parent for Outlet Users",
+    "status": "OPEN",
+    "severity": "HIGH",
+    "sprint_key": "S3",
+    "phase": "Transfer Detail",
+    "files": [
+      "frontend/src/components/central-inventory/TransferDetail.jsx",
+      "frontend/src/hooks/useRestaurantMap.js"
+    ],
+    "notes": "CR-033 added restaurantMap lookup but map only has children. Outlet users see '—' for parent-sent transfers. Backend gap: detail API missing from/to_restaurant_name (history API has them). Fix: enhance restaurantMap to include parents via hierarchy-detail.restaurants[].",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/BUG037-045_ARTIFACT_1_INTAKE.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "control/sessions/BUG038-045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "path": "control/sessions/BUG038-045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "MISSING",
+        "path": null
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 6,
+      "total": 7,
+      "pct": 86
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "QA-Report: MISSING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-042",
+    "title": "Consumption Report — Current Stock Shows Parent's Qty for Child Store Rows",
+    "status": "OPEN",
+    "severity": "HIGH",
+    "sprint_key": "S3",
+    "phase": "Daily Consumption Report",
+    "files": [
+      "frontend/src/components/central-inventory/DailyConsumptionReport.jsx"
+    ],
+    "notes": "stockLookup built from logged-in user's getStockInventory(). In hierarchy view, child rows resolve to parent's stock by name. HK Express Olive Oil shows 36.1kg (parent) instead of 1.98ltr (child). Fix: use row.closing_stock in multi-store mode.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/BUG037-045_ARTIFACT_1_INTAKE.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "control/sessions/BUG038-045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "path": "control/sessions/BUG038-045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "MISSING",
+        "path": null
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 6,
+      "total": 7,
+      "pct": 86
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "QA-Report: MISSING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-043",
+    "title": "PO Create — Qty Input Allows Negative Values",
+    "status": "OPEN",
+    "severity": "MEDIUM",
+    "sprint_key": "S3",
+    "phase": "Purchase Orders",
+    "files": [
+      "frontend/src/components/central-inventory/PurchaseOrderCreate.jsx"
+    ],
+    "notes": "Input type=number without min=0 at lines 527,678. User can type -13. Filter excludes negatives from submission but UI allows it. Fix: add min=0 + clamp in onChange.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/BUG037-045_ARTIFACT_1_INTAKE.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "control/sessions/BUG038-045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "path": "control/sessions/BUG038-045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "MISSING",
+        "path": null
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 6,
+      "total": 7,
+      "pct": 86
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "QA-Report: MISSING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-044",
+    "title": "PO Lifecycle — Payment Info Visible Before Receive (Should Only Appear at Receive Goods)",
+    "status": "OPEN",
+    "severity": "MEDIUM",
+    "sprint_key": "S3",
+    "phase": "Purchase Orders",
+    "files": [
+      "frontend/src/components/central-inventory/PurchaseOrderCreate.jsx",
+      "frontend/src/components/central-inventory/PurchaseOrderDetail.jsx",
+      "frontend/src/components/central-inventory/PurchaseOrderList.jsx"
+    ],
+    "notes": "Owner requirement: Payment dropdown + Total should NOT appear during create/draft/approved/sent. Only at Receive Goods. Exception: By Vendor items page shows 'Expected Total' header (Qty x Expected Rate reference). Review step: remove Rate/Total/Payment. PO List: hide Payment+Total for pre-receive statuses. PO Detail: hide for non-received. Remove payment_type from create API payload.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/BUG037-045_ARTIFACT_1_INTAKE.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "control/sessions/BUG038-045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "path": "control/sessions/BUG038-045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "MISSING",
+        "path": null
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 6,
+      "total": 7,
+      "pct": 86
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "QA-Report: MISSING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-045",
+    "title": "Pending Queues — No Dispatched/In-Transit Tab for Sender to Track Sent Stock",
+    "status": "OPEN",
+    "severity": "MEDIUM",
+    "sprint_key": "S3",
+    "phase": "Pending Queues",
+    "files": [
+      "frontend/src/components/central-inventory/PendingQueues.jsx"
+    ],
+    "notes": "After dispatching, transfer disappears from sender's view. API returns dispatch_pending field (unused). Need 5th tab showing dispatched-but-not-received transfers where user is sender. CODE NONE — new tab needed.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/BUG037-045_ARTIFACT_1_INTAKE.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "DONE",
+        "path": "control/sessions/BUG038-045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "DONE",
+        "path": "control/sessions/BUG038-045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "MISSING",
+        "path": null
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 6,
+      "total": 7,
+      "pct": 86
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "QA-Report: MISSING"
+    ],
+    "sprint_name": "API Reality Check + Intelligent PO"
+  }
+]
