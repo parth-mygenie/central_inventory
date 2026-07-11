@@ -1,0 +1,108 @@
+{
+  "summary": "P21 Catalogue Gaps Testing Complete. All 17 features tested and verified. Backend APIs (30/30 pytest tests passed) and Frontend UI (all GAP-A, GAP-B, GAP-C features working correctly). Food Categories CRUD, Addons CRUD, and Ingredient Rename with warning flow all working as expected.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Edit Ingredient Dialog",
+        "issues": ["Console warning: Missing Description or aria-describedby for DialogContent - accessibility improvement needed"]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_p21_catalogue_gaps.py",
+    "/app/test_reports/pytest/p21_gaps_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "api.js correctly implements Food Category CRUD: createFoodCategory (POST), updateFoodCategory (POST not PUT), deleteFoodCategory (DELETE)",
+    "api.js correctly implements Addon CRUD: createAddon (POST→201), updateAddon (PUT /addon-update/{id}), deleteAddon (DELETE /delete-addon/{id})",
+    "api.js correctly implements updateStockItem with stock_title field for ingredient rename",
+    "ProductCatalogue.jsx FoodCategoriesTab has Add Category button, Edit/Delete actions per row",
+    "ProductCatalogue.jsx AddonsTab has Add Addon button, Edit/Delete actions per row",
+    "IngredientCatalogue.jsx EditIngredientDialog shows editable Ingredient Name field with rename warning on name change",
+    "Rename warning correctly appears on first Save when name changed, button changes to 'Confirm Rename & Save'",
+    "Duplicate food category correctly returns 400 with error message",
+    "Duplicate addon correctly returns 409 with errors array"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_p21_catalogue_gaps.py"
+  ],
+  "success_rate": {
+    "backend": "100% (30/30 pytest tests passed)",
+    "frontend": "100% (17/17 features tested)"
+  },
+  "test_credentials": {
+    "master_user": "abhishek@kalabahia.com / Qplazm@10 (rid=1, type=master)"
+  },
+  "seed_data_creation": "None - using real POS API via proxy. Test data created and cleaned up during testing.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "P21 Catalogue Gaps fully tested. All CRUD operations working: Food Categories (POST add, POST update, DELETE), Addons (POST add→201, PUT addon-update, DELETE delete-addon), Ingredient rename (PUT update-stock with stock_title). Rename warning flow working correctly - appears on first Save when name changed, second Save confirms. Duplicate validation working (400 for food cat, 409 for addon). Test data cleaned up.",
+  "features_tested": {
+    "GAP-A1": "PASS - Food Categories tab shows Add Category button, Edit and Delete actions per row (3 edit, 3 delete buttons found)",
+    "GAP-A2": "PASS - Creating food category via POST /product/add-categories works (returns category_id)",
+    "GAP-A3": "PASS - Editing food category via POST /product/update-categories/{id} works (POST not PUT)",
+    "GAP-A4": "PASS - Deleting food category via DELETE /product/delete-categories/{id} works with confirmation dialog",
+    "GAP-A5": "PASS - Duplicate food category name returns 400 with error message",
+    "GAP-B1": "PASS - Addons tab shows Add Addon button, Edit and Delete actions per row (1 edit, 1 delete button found)",
+    "GAP-B2": "PASS - Creating addon via POST /product/add-addon returns 201",
+    "GAP-B3": "PASS - Editing addon via PUT /product/addon-update/{id} works (noun-verb route)",
+    "GAP-B4": "PASS - Deleting addon via DELETE /product/delete-addon/{id} works with confirmation dialog",
+    "GAP-B5": "PASS - Duplicate addon name returns 409 with errors array",
+    "GAP-C1": "PASS - Edit Ingredient dialog shows editable 'Ingredient Name' field (stock_title)",
+    "GAP-C2": "PASS - Changing ingredient name shows amber rename warning on first Save click",
+    "GAP-C3": "PASS - Second Save click confirms rename via PUT /inventory/update-stock/{id} with stock_title",
+    "GAP-C4": "PASS - Saving without changing name does NOT show rename warning",
+    "REGRESSION-1": "PASS - Recipes page loads correctly (2 recipes: aloo parantha, mutton keema)",
+    "REGRESSION-2": "PASS - Addon Recipes page loads correctly (1 addon recipe: rossa)",
+    "REGRESSION-3": "PASS - Operations Hub works for master user (3 Pending Approvals, 4 Stock Items)"
+  },
+  "api_routes_verified": {
+    "food_categories": {
+      "list": "GET /product/categories → 200",
+      "create": "POST /product/add-categories → 200 (returns category_id)",
+      "update": "POST /product/update-categories/{id} → 200 (NOTE: POST not PUT)",
+      "delete": "DELETE /product/delete-categories/{id} → 200",
+      "duplicate_error": "POST /product/add-categories → 400 {error: ...}"
+    },
+    "addons": {
+      "list": "GET /product/addon-list → 200",
+      "create": "POST /product/add-addon → 201",
+      "update": "PUT /product/addon-update/{id} → 200 (noun-verb route)",
+      "delete": "DELETE /product/delete-addon/{id} → 200",
+      "duplicate_error": "POST /product/add-addon → 409 {errors: [...]}"
+    },
+    "ingredient_rename": {
+      "update_with_stock_title": "PUT /inventory/update-stock/{id} → 200"
+    }
+  },
+  "ui_verification": {
+    "food_categories_tab": {
+      "add_button": "data-testid='add-food-cat-btn' - FOUND",
+      "edit_buttons": "data-testid='edit-fcat-{id}' - 3 FOUND",
+      "delete_buttons": "data-testid='del-fcat-{id}' - 3 FOUND",
+      "form_dialog": "data-testid='fcat-name-input', 'save-fcat-btn' - WORKING"
+    },
+    "addons_tab": {
+      "add_button": "data-testid='add-addon-btn' - FOUND",
+      "edit_buttons": "data-testid='edit-addon-{id}' - 1 FOUND",
+      "delete_buttons": "data-testid='del-addon-{id}' - 1 FOUND",
+      "form_dialog": "data-testid='addon-name-input', 'addon-price-input', 'save-addon-btn' - WORKING"
+    },
+    "edit_ingredient_dialog": {
+      "name_field": "data-testid='edit-ing-name' - FOUND",
+      "rename_warning": "data-testid='rename-warning' - APPEARS ON NAME CHANGE",
+      "save_button": "data-testid='save-ing-btn' - CHANGES TO 'Confirm Rename & Save'"
+    }
+  },
+  "cleanup_performed": {
+    "test_categories_deleted": ["TEST_Category_P21_Updated", "TEST_Category_P21"],
+    "ingredient_name_reverted": "Cooking Oil (was Cooking Oil_TEST_RENAME)"
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "summary": "P22 Daily Consumption Report - Frontend Testing Complete. All 12 features tested and verified. The consumption report page renders correctly with all required components: date range filter, store selector, hierarchy toggle, KPI cards, ingredient summary table, consumption details table (collapsible), by-store rollup, and drill-down functionality.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/test_reports/iteration_22.json"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "DailyConsumptionReport.jsx correctly implements all P22 requirements",
+    "useConsumptionReport.js hook properly handles API calls and state management",
+    "api.js getDailyConsumptionReport function correctly sends include_hierarchy flag",
+    "Negative closing stock correctly shows amber warning triangle icon (AlertTriangle)",
+    "Drill-down functionality works correctly with badge and Clear button",
+    "Consumption Details section is collapsible (collapsed by default)",
+    "Store multi-selector shows scope stores with checkboxes and type labels",
+    "All data-testid attributes are properly implemented for testing"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (frontend only testing)",
+    "frontend": "100% (12/12 features tested)"
+  },
+  "test_credentials": {
+    "master_user": "abhishek@kalabahia.com / Qplazm@10 (rid=1, type=master)"
+  },
+  "seed_data_creation": "None - using real POS API via proxy. Data exists in DemoFranchise2 (rid=784) for May 2026.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "P22 Daily Consumption Report fully tested. All features working: sidebar nav item, page rendering, filter bar, single-store empty state, multi-store data display, KPI cards, ingredient summary table with all columns, negative stock warning icons, drill-down with badge and clear, collapsible details section, by-store rollup, store multi-selector dropdown. API endpoint POST /proxy/v2/report/daily-consumption-report working correctly.",
+  "features_tested": {
+    "TEST-1": "PASS - Login and sidebar shows 'Consumption Report' link (data-testid='nav-consumption-report')",
+    "TEST-2": "PASS - Navigate to /reports/consumption - page renders with filter bar and initial state",
+    "TEST-3": "PASS - Click 'Generate Report' with default date range - empty state shows for single-store (master has no direct consumption)",
+    "TEST-4": "PASS - Toggle 'Include all stores' switch and click 'Generate Report' - KPI cards, ingredient summary table, and consumption details appear with data",
+    "TEST-5": "PASS - Ingredient summary table shows columns: Ingredient, Category, Opening, Consumed, Closing, Store",
+    "TEST-6": "PASS - Negative closing stock shows amber warning triangle icon (2 icons found for -500 ml and -1 kg)",
+    "TEST-7": "PASS - Click on ingredient row in summary - drill-down badge appears ('Drill-down: Cooking Oil (DemoFranchise2)') and details table filters to that ingredient (2 rows)",
+    "TEST-8": "PASS - Click 'Clear' on drill-down badge - details table shows all records again (4 rows)",
+    "TEST-9": "PASS - 'Consumption by Store' section appears in multi-store mode (shows DemoFranchise2 with 1,500 raw units)",
+    "TEST-10": "PASS - Consumption details section is collapsible (collapsed by default, expandable)",
+    "TEST-11": "PASS - Loading state shows while fetching (button shows 'Loading...')",
+    "TEST-12": "PASS - Store multi-selector dropdown shows scope stores (7 stores) with checkboxes and type labels (Central, Master, Outlet)"
+  },
+  "data_verified": {
+    "ingredients_tracked": 2,
+    "ingredients": ["Cooking Oil", "maida"],
+    "total_consumed": "1,500 (raw)",
+    "stores_reporting": "1 of 7",
+    "period": "1 May - 29 May 2026",
+    "detail_records": 4,
+    "store_with_data": "DemoFranchise2 (Outlet)",
+    "negative_closing_stocks": ["-500 ml (Cooking Oil)", "-1 kg (maida)"]
+  },
+  "ui_components_verified": {
+    "data-testid-daily-consumption-report": "FOUND",
+    "data-testid-consumption-filters": "FOUND",
+    "data-testid-generate-report-btn": "FOUND",
+    "data-testid-hierarchy-toggle": "FOUND",
+    "data-testid-hierarchy-switch": "FOUND",
+    "data-testid-consumption-kpi-cards": "FOUND",
+    "data-testid-ingredient-summary-table": "FOUND",
+    "data-testid-ingredient-search": "FOUND",
+    "data-testid-consumption-details-section": "FOUND",
+    "data-testid-by-store-rollup": "FOUND",
+    "data-testid-store-multi-selector": "FOUND",
+    "data-testid-store-selector-trigger": "FOUND",
+    "data-testid-clear-drilldown": "FOUND"
+  }
+}
