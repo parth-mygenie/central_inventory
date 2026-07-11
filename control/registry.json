@@ -4818,6 +4818,522 @@
           "path": null
         }
       ]
+    },
+    {
+      "type": "BUG",
+      "id": "BUG-037",
+      "title": "Food Categories Not Showing \u2014 getFoodCategories() doesn't extract r.data.categories",
+      "status": "OPEN",
+      "severity": "HIGH",
+      "sprint_key": "S3",
+      "phase": "Product Catalog",
+      "files": [
+        "frontend/src/services/api.js"
+      ],
+      "notes": "API returns {categories:[...]} but code does Array.isArray(r.data) which is false for objects. 1-line fix. Related: CR-012 (CLOSED, different scope).",
+      "artifact_refs": [
+        {
+          "artifact": 0,
+          "label": "Session-Start",
+          "status": "WAIVED",
+          "path": null
+        },
+        {
+          "artifact": 1,
+          "label": "Intake",
+          "status": "DONE",
+          "path": "control/sessions/BUG037-045_ARTIFACT_1_INTAKE.md"
+        },
+        {
+          "artifact": 2,
+          "label": "Impact-Analysis",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 3,
+          "label": "Impl-Plan",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 4,
+          "label": "Code-Gate",
+          "status": "WAIVED",
+          "path": null
+        },
+        {
+          "artifact": 5,
+          "label": "QA-Report",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 6,
+          "label": "Owner-Signoff",
+          "status": "WAIVED",
+          "path": null
+        }
+      ]
+    },
+    {
+      "type": "BUG",
+      "id": "BUG-038",
+      "title": "PO List \u2014 Items Column Empty (Backend Gap: no item count in list API)",
+      "status": "OPEN",
+      "severity": "MEDIUM",
+      "sprint_key": "S3",
+      "phase": "Purchase Orders",
+      "files": [
+        "frontend/src/components/central-inventory/PurchaseOrderList.jsx"
+      ],
+      "notes": "POS API purchase-order/list has no line_count/items_count field. Transfer history has both. Backend gap \u2014 no frontend fix without N+1 calls. Workaround: hide Items column or show item_total.",
+      "artifact_refs": [
+        {
+          "artifact": 0,
+          "label": "Session-Start",
+          "status": "WAIVED",
+          "path": null
+        },
+        {
+          "artifact": 1,
+          "label": "Intake",
+          "status": "DONE",
+          "path": "control/sessions/BUG037-045_ARTIFACT_1_INTAKE.md"
+        },
+        {
+          "artifact": 2,
+          "label": "Impact-Analysis",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 3,
+          "label": "Impl-Plan",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 4,
+          "label": "Code-Gate",
+          "status": "WAIVED",
+          "path": null
+        },
+        {
+          "artifact": 5,
+          "label": "QA-Report",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 6,
+          "label": "Owner-Signoff",
+          "status": "WAIVED",
+          "path": null
+        }
+      ]
+    },
+    {
+      "type": "BUG",
+      "id": "BUG-039",
+      "title": "PO Create Item Need \u2014 Can't Select Non-History Vendors (dropdown limited to purchase-history vendors only)",
+      "status": "OPEN",
+      "severity": "HIGH",
+      "sprint_key": "S3",
+      "phase": "Purchase Orders",
+      "files": [
+        "frontend/src/components/central-inventory/PurchaseOrderCreate.jsx"
+      ],
+      "notes": "When vendorOptions.length>0, Select only shows history vendors. Other vendors excluded. Related: BUG-028 (fixed no-history case, this is partial-history case). Fix: merge vendorOptions + all vendors in dropdown.",
+      "artifact_refs": [
+        {
+          "artifact": 0,
+          "label": "Session-Start",
+          "status": "WAIVED",
+          "path": null
+        },
+        {
+          "artifact": 1,
+          "label": "Intake",
+          "status": "DONE",
+          "path": "control/sessions/BUG037-045_ARTIFACT_1_INTAKE.md"
+        },
+        {
+          "artifact": 2,
+          "label": "Impact-Analysis",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 3,
+          "label": "Impl-Plan",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 4,
+          "label": "Code-Gate",
+          "status": "WAIVED",
+          "path": null
+        },
+        {
+          "artifact": 5,
+          "label": "QA-Report",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 6,
+          "label": "Owner-Signoff",
+          "status": "WAIVED",
+          "path": null
+        }
+      ]
+    },
+    {
+      "type": "BUG",
+      "id": "BUG-040",
+      "title": "Store Management \u2014 Indirect Outlets (Grandchildren) Show No Detail Info",
+      "status": "OPEN",
+      "severity": "MEDIUM",
+      "sprint_key": "S3",
+      "phase": "Store Management",
+      "files": [
+        "frontend/src/components/central-inventory/StoreManagement.jsx"
+      ],
+      "notes": "HK Outlet North/South are grandchildren (belong to Master Stores). franchise/list returns direct children only. Merged outlet objects have hardcoded email:'' and no phone/address/vendor. Stock health stuck on 'Loading'.",
+      "artifact_refs": [
+        {
+          "artifact": 0,
+          "label": "Session-Start",
+          "status": "WAIVED",
+          "path": null
+        },
+        {
+          "artifact": 1,
+          "label": "Intake",
+          "status": "DONE",
+          "path": "control/sessions/BUG037-045_ARTIFACT_1_INTAKE.md"
+        },
+        {
+          "artifact": 2,
+          "label": "Impact-Analysis",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 3,
+          "label": "Impl-Plan",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 4,
+          "label": "Code-Gate",
+          "status": "WAIVED",
+          "path": null
+        },
+        {
+          "artifact": 5,
+          "label": "QA-Report",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 6,
+          "label": "Owner-Signoff",
+          "status": "WAIVED",
+          "path": null
+        }
+      ]
+    },
+    {
+      "type": "BUG",
+      "id": "BUG-041",
+      "title": "Transfer Detail FROM Block Empty \u2014 restaurantMap Missing Parent for Outlet Users",
+      "status": "OPEN",
+      "severity": "HIGH",
+      "sprint_key": "S3",
+      "phase": "Transfer Detail",
+      "files": [
+        "frontend/src/components/central-inventory/TransferDetail.jsx",
+        "frontend/src/hooks/useRestaurantMap.js"
+      ],
+      "notes": "CR-033 added restaurantMap lookup but map only has children. Outlet users see '\u2014' for parent-sent transfers. Backend gap: detail API missing from/to_restaurant_name (history API has them). Fix: enhance restaurantMap to include parents via hierarchy-detail.restaurants[].",
+      "artifact_refs": [
+        {
+          "artifact": 0,
+          "label": "Session-Start",
+          "status": "WAIVED",
+          "path": null
+        },
+        {
+          "artifact": 1,
+          "label": "Intake",
+          "status": "DONE",
+          "path": "control/sessions/BUG037-045_ARTIFACT_1_INTAKE.md"
+        },
+        {
+          "artifact": 2,
+          "label": "Impact-Analysis",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 3,
+          "label": "Impl-Plan",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 4,
+          "label": "Code-Gate",
+          "status": "WAIVED",
+          "path": null
+        },
+        {
+          "artifact": 5,
+          "label": "QA-Report",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 6,
+          "label": "Owner-Signoff",
+          "status": "WAIVED",
+          "path": null
+        }
+      ]
+    },
+    {
+      "type": "BUG",
+      "id": "BUG-042",
+      "title": "Consumption Report \u2014 Current Stock Shows Parent's Qty for Child Store Rows",
+      "status": "OPEN",
+      "severity": "HIGH",
+      "sprint_key": "S3",
+      "phase": "Daily Consumption Report",
+      "files": [
+        "frontend/src/components/central-inventory/DailyConsumptionReport.jsx"
+      ],
+      "notes": "stockLookup built from logged-in user's getStockInventory(). In hierarchy view, child rows resolve to parent's stock by name. HK Express Olive Oil shows 36.1kg (parent) instead of 1.98ltr (child). Fix: use row.closing_stock in multi-store mode.",
+      "artifact_refs": [
+        {
+          "artifact": 0,
+          "label": "Session-Start",
+          "status": "WAIVED",
+          "path": null
+        },
+        {
+          "artifact": 1,
+          "label": "Intake",
+          "status": "DONE",
+          "path": "control/sessions/BUG037-045_ARTIFACT_1_INTAKE.md"
+        },
+        {
+          "artifact": 2,
+          "label": "Impact-Analysis",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 3,
+          "label": "Impl-Plan",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 4,
+          "label": "Code-Gate",
+          "status": "WAIVED",
+          "path": null
+        },
+        {
+          "artifact": 5,
+          "label": "QA-Report",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 6,
+          "label": "Owner-Signoff",
+          "status": "WAIVED",
+          "path": null
+        }
+      ]
+    },
+    {
+      "type": "BUG",
+      "id": "BUG-043",
+      "title": "PO Create \u2014 Qty Input Allows Negative Values",
+      "status": "OPEN",
+      "severity": "MEDIUM",
+      "sprint_key": "S3",
+      "phase": "Purchase Orders",
+      "files": [
+        "frontend/src/components/central-inventory/PurchaseOrderCreate.jsx"
+      ],
+      "notes": "Input type=number without min=0 at lines 527,678. User can type -13. Filter excludes negatives from submission but UI allows it. Fix: add min=0 + clamp in onChange.",
+      "artifact_refs": [
+        {
+          "artifact": 0,
+          "label": "Session-Start",
+          "status": "WAIVED",
+          "path": null
+        },
+        {
+          "artifact": 1,
+          "label": "Intake",
+          "status": "DONE",
+          "path": "control/sessions/BUG037-045_ARTIFACT_1_INTAKE.md"
+        },
+        {
+          "artifact": 2,
+          "label": "Impact-Analysis",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 3,
+          "label": "Impl-Plan",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 4,
+          "label": "Code-Gate",
+          "status": "WAIVED",
+          "path": null
+        },
+        {
+          "artifact": 5,
+          "label": "QA-Report",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 6,
+          "label": "Owner-Signoff",
+          "status": "WAIVED",
+          "path": null
+        }
+      ]
+    },
+    {
+      "type": "BUG",
+      "id": "BUG-044",
+      "title": "PO Lifecycle \u2014 Payment Info Visible Before Receive (Should Only Appear at Receive Goods)",
+      "status": "OPEN",
+      "severity": "MEDIUM",
+      "sprint_key": "S3",
+      "phase": "Purchase Orders",
+      "files": [
+        "frontend/src/components/central-inventory/PurchaseOrderCreate.jsx",
+        "frontend/src/components/central-inventory/PurchaseOrderDetail.jsx",
+        "frontend/src/components/central-inventory/PurchaseOrderList.jsx"
+      ],
+      "notes": "Owner requirement: Payment dropdown + Total should NOT appear during create/draft/approved/sent. Only at Receive Goods. Exception: By Vendor items page shows 'Expected Total' header (Qty x Expected Rate reference). Review step: remove Rate/Total/Payment. PO List: hide Payment+Total for pre-receive statuses. PO Detail: hide for non-received. Remove payment_type from create API payload.",
+      "artifact_refs": [
+        {
+          "artifact": 0,
+          "label": "Session-Start",
+          "status": "WAIVED",
+          "path": null
+        },
+        {
+          "artifact": 1,
+          "label": "Intake",
+          "status": "DONE",
+          "path": "control/sessions/BUG037-045_ARTIFACT_1_INTAKE.md"
+        },
+        {
+          "artifact": 2,
+          "label": "Impact-Analysis",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 3,
+          "label": "Impl-Plan",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 4,
+          "label": "Code-Gate",
+          "status": "WAIVED",
+          "path": null
+        },
+        {
+          "artifact": 5,
+          "label": "QA-Report",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 6,
+          "label": "Owner-Signoff",
+          "status": "WAIVED",
+          "path": null
+        }
+      ]
+    },
+    {
+      "type": "BUG",
+      "id": "BUG-045",
+      "title": "Pending Queues \u2014 No Dispatched/In-Transit Tab for Sender to Track Sent Stock",
+      "status": "OPEN",
+      "severity": "MEDIUM",
+      "sprint_key": "S3",
+      "phase": "Pending Queues",
+      "files": [
+        "frontend/src/components/central-inventory/PendingQueues.jsx"
+      ],
+      "notes": "After dispatching, transfer disappears from sender's view. API returns dispatch_pending field (unused). Need 5th tab showing dispatched-but-not-received transfers where user is sender. CODE NONE \u2014 new tab needed.",
+      "artifact_refs": [
+        {
+          "artifact": 0,
+          "label": "Session-Start",
+          "status": "WAIVED",
+          "path": null
+        },
+        {
+          "artifact": 1,
+          "label": "Intake",
+          "status": "DONE",
+          "path": "control/sessions/BUG037-045_ARTIFACT_1_INTAKE.md"
+        },
+        {
+          "artifact": 2,
+          "label": "Impact-Analysis",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 3,
+          "label": "Impl-Plan",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 4,
+          "label": "Code-Gate",
+          "status": "WAIVED",
+          "path": null
+        },
+        {
+          "artifact": 5,
+          "label": "QA-Report",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 6,
+          "label": "Owner-Signoff",
+          "status": "WAIVED",
+          "path": null
+        }
+      ]
     }
   ]
 }

@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-06-15T20:08:53.357Z",
+  "generated_at": "2026-07-11T06:11:52.929Z",
   "project": "Central Inventory",
   "repo": "parth-mygenie/central_inventory",
   "branch": "13-6-26",
   "totals": {
-    "items": 71,
+    "items": 80,
     "crs": 35,
-    "bugs": 36,
-    "debt": 46
+    "bugs": 45,
+    "debt": 55
   },
   "crs_by_status": {
     "CLOSED": 22,
@@ -21,18 +21,19 @@
     "RESOLVED": 3,
     "CLOSED": 1,
     "QA_PASS": 11,
-    "IMPLEMENTED": 8
+    "IMPLEMENTED": 8,
+    "OPEN": 9
   },
   "bugs_by_severity": {
     "LOW": 12,
-    "MEDIUM": 13,
+    "MEDIUM": 18,
     "INFO": 2,
-    "HIGH": 8,
+    "HIGH": 12,
     "CRITICAL": 1
   },
   "debt_by_type": {
     "CR": 27,
-    "BUG": 19
+    "BUG": 28
   },
   "sprints": [
     {
@@ -73,7 +74,7 @@
       "end": null,
       "goal": "Fix 18 API-mismatch bugs (CR-023), add API cache (CR-024), build coverage-based Intelligent PO for Request Stock + Direct Dispatch (CR-025), FEFO Batch Stock Detail (CR-015), wire reference_code as PO number (CR-025 sub-task)",
       "cr_count": 15,
-      "bug_count": 20
+      "bug_count": 29
     }
   ],
   "signoff_pending": 43,
@@ -147,7 +148,16 @@
       "BUG-013",
       "BUG-014",
       "BUG-015",
-      "BUG-016"
+      "BUG-016",
+      "BUG-037",
+      "BUG-038",
+      "BUG-039",
+      "BUG-040",
+      "BUG-041",
+      "BUG-042",
+      "BUG-043",
+      "BUG-044",
+      "BUG-045"
     ]
   }
 }
