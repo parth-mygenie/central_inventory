@@ -4,7 +4,7 @@
     "repo": "parth-mygenie/central_inventory",
     "branch": "13-6-26",
     "schema_version": "1.0",
-    "last_updated": "2026-06-15",
+    "last_updated": "2026-07-11",
     "generator": "control/gen_dashboard_data.js"
   },
   "sprints": {
@@ -41,7 +41,7 @@
     {
       "type": "CR",
       "id": "CR-001",
-      "title": "Slice 1 \u2014 Read-only Screens (Hub, Hierarchy, Store Detail, Login)",
+      "title": "Slice 1 — Read-only Screens (Hub, Hierarchy, Store Detail, Login)",
       "status": "CLOSED",
       "severity": null,
       "sprint_key": "S0",
@@ -129,7 +129,7 @@
     {
       "type": "CR",
       "id": "CR-002",
-      "title": "Slice 2 \u2014 Pending Queues, Transfer Detail, Status Timeline",
+      "title": "Slice 2 — Pending Queues, Transfer Detail, Status Timeline",
       "status": "CLOSED",
       "severity": null,
       "sprint_key": "S0",
@@ -211,7 +211,7 @@
     {
       "type": "CR",
       "id": "CR-003",
-      "title": "Slice 3 \u2014 History & Ledger, Date/Status Filters",
+      "title": "Slice 3 — History & Ledger, Date/Status Filters",
       "status": "CLOSED",
       "severity": null,
       "sprint_key": "S0",
@@ -290,7 +290,7 @@
     {
       "type": "CR",
       "id": "CR-004",
-      "title": "Slice 4 \u2014 Transfer Write Flows (Dispatch, Request, Approve, Reject, Receive, Cancel)",
+      "title": "Slice 4 — Transfer Write Flows (Dispatch, Request, Approve, Reject, Receive, Cancel)",
       "status": "CLOSED",
       "severity": null,
       "sprint_key": "S0",
@@ -376,7 +376,7 @@
     {
       "type": "CR",
       "id": "CR-005",
-      "title": "Slice 5 \u2014 Stock Adjustment, Wastage, Source Selector, Seed Shutdown",
+      "title": "Slice 5 — Stock Adjustment, Wastage, Source Selector, Seed Shutdown",
       "status": "CLOSED",
       "severity": null,
       "sprint_key": "S0",
@@ -460,7 +460,7 @@
     {
       "type": "CR",
       "id": "CR-006",
-      "title": "P17 \u2014 Amend / Withdraw / Modification",
+      "title": "P17 — Amend / Withdraw / Modification",
       "status": "CLOSED",
       "severity": null,
       "sprint_key": "S0",
@@ -539,7 +539,7 @@
     {
       "type": "CR",
       "id": "CR-007",
-      "title": "P17-Settings \u2014 Operational Settings CRUD",
+      "title": "P17-Settings — Operational Settings CRUD",
       "status": "CLOSED",
       "severity": null,
       "sprint_key": "S0",
@@ -618,7 +618,7 @@
     {
       "type": "CR",
       "id": "CR-008",
-      "title": "P18 \u2014 Vendor Management CRUD",
+      "title": "P18 — Vendor Management CRUD",
       "status": "CLOSED",
       "severity": null,
       "sprint_key": "S0",
@@ -697,7 +697,7 @@
     {
       "type": "CR",
       "id": "CR-009",
-      "title": "P19 \u2014 Add Stock / Procurement",
+      "title": "P19 — Add Stock / Procurement",
       "status": "CLOSED",
       "severity": null,
       "sprint_key": "S0",
@@ -776,7 +776,7 @@
     {
       "type": "CR",
       "id": "CR-010",
-      "title": "P20 \u2014 Stock Inventory Summary (Self-Store)",
+      "title": "P20 — Stock Inventory Summary (Self-Store)",
       "status": "CLOSED",
       "severity": null,
       "sprint_key": "S0",
@@ -856,7 +856,7 @@
     {
       "type": "CR",
       "id": "CR-011",
-      "title": "P21 \u2014 Catalogue CRUD (Ingredient/Product/Recipe/Addon-Recipe)",
+      "title": "P21 — Catalogue CRUD (Ingredient/Product/Recipe/Addon-Recipe)",
       "status": "CLOSED",
       "severity": null,
       "sprint_key": "S0",
@@ -940,7 +940,7 @@
     {
       "type": "CR",
       "id": "CR-012",
-      "title": "P21-Gaps \u2014 Food Category + Addon CRUD + Ingredient Rename",
+      "title": "P21-Gaps — Food Category + Addon CRUD + Ingredient Rename",
       "status": "CLOSED",
       "severity": null,
       "sprint_key": "S0",
@@ -1019,7 +1019,7 @@
     {
       "type": "CR",
       "id": "CR-013",
-      "title": "P22 \u2014 Daily Consumption Report",
+      "title": "P22 — Daily Consumption Report",
       "status": "CLOSED",
       "severity": null,
       "sprint_key": "S0",
@@ -1099,7 +1099,7 @@
     {
       "type": "CR",
       "id": "CR-014",
-      "title": "P23 \u2014 Hierarchy Management + Bundle Push",
+      "title": "P23 — Hierarchy Management + Bundle Push",
       "status": "CLOSED",
       "severity": null,
       "sprint_key": "S0",
@@ -1179,7 +1179,7 @@
     {
       "type": "CR",
       "id": "CR-015",
-      "title": "P24 \u2014 FEFO Batch Stock Detail Panel",
+      "title": "P24 — FEFO Batch Stock Detail Panel",
       "status": "CLOSED",
       "severity": null,
       "sprint_key": "S3",
@@ -1258,7 +1258,7 @@
     {
       "type": "CR",
       "id": "CR-016",
-      "title": "P20-Phase2 \u2014 Stock Inventory Hierarchy Toggle",
+      "title": "P20-Phase2 — Stock Inventory Hierarchy Toggle",
       "status": "QA",
       "severity": null,
       "sprint_key": "S3",
@@ -1342,7 +1342,7 @@
     {
       "type": "CR",
       "id": "CR-017",
-      "title": "P21-Smart \u2014 Smart Dispatch / Request Assistance",
+      "title": "P21-Smart — Smart Dispatch / Request Assistance",
       "status": "PROPOSED",
       "severity": null,
       "sprint_key": null,
@@ -1406,7 +1406,7 @@
     {
       "type": "CR",
       "id": "CR-018",
-      "title": "P25 \u2014 Wastage Report Enhancements",
+      "title": "P25 — Wastage Report Enhancements",
       "status": "QA_PASS",
       "severity": null,
       "sprint_key": "S3",
@@ -2650,7 +2650,7 @@
     {
       "type": "CR",
       "id": "CR-019",
-      "title": "Intelligent UI Freeze \u2014 Screen Intelligence Layer",
+      "title": "Intelligent UI Freeze — Screen Intelligence Layer",
       "status": "CLOSED",
       "severity": null,
       "sprint_key": "S1",
@@ -2791,7 +2791,7 @@
     {
       "type": "CR",
       "id": "CR-021",
-      "title": "Intelligent UI Implementation \u2014 Sprint A+B+C + Polish",
+      "title": "Intelligent UI Implementation — Sprint A+B+C + Polish",
       "status": "CLOSED",
       "severity": null,
       "sprint_key": "S2",
@@ -2914,7 +2914,7 @@
     {
       "type": "CR",
       "id": "CR-022",
-      "title": "Code Quality Review Fixes \u2014 Security + React Patterns",
+      "title": "Code Quality Review Fixes — Security + React Patterns",
       "status": "CLOSED",
       "severity": null,
       "sprint_key": "S2",
@@ -3099,7 +3099,7 @@
       "status": "CLOSED",
       "severity": null,
       "sprint_key": "S3",
-      "phase": "Code Gate PASSED \u2192 Batch 1 Implementation",
+      "phase": "Code Gate PASSED → Batch 1 Implementation",
       "files": [
         "hooks/useRestaurantMap.js",
         "OperationsHub.jsx",
@@ -3168,7 +3168,7 @@
     {
       "type": "CR",
       "id": "CR-024",
-      "title": "API Response Cache \u2014 Performance Optimization",
+      "title": "API Response Cache — Performance Optimization",
       "status": "CLOSED",
       "severity": null,
       "sprint_key": "S3",
@@ -3176,7 +3176,7 @@
       "files": [
         "frontend/src/services/api.js"
       ],
-      "notes": "In-memory cache with TTL. 71\u219220 API calls (72% reduction). Gate waived (velocity exception).",
+      "notes": "In-memory cache with TTL. 71→20 API calls (72% reduction). Gate waived (velocity exception).",
       "artifact_refs": [
         {
           "artifact": 0,
@@ -3225,7 +3225,7 @@
     {
       "type": "CR",
       "id": "CR-025",
-      "title": "Coverage-Based Intelligent PO \u2014 Request Stock + Direct Dispatch",
+      "title": "Coverage-Based Intelligent PO — Request Stock + Direct Dispatch",
       "status": "CLOSED",
       "severity": null,
       "sprint_key": "S3",
@@ -3283,7 +3283,7 @@
     {
       "type": "CR",
       "id": "CR-026",
-      "title": "P28 \u2014 Production Unit Module (Production Run UI + History)",
+      "title": "P28 — Production Unit Module (Production Run UI + History)",
       "status": "QA",
       "severity": null,
       "sprint_key": "S3",
@@ -3348,7 +3348,7 @@
     {
       "type": "CR",
       "id": "CR-027",
-      "title": "Navigation Restructure \u2014 Grouped Sidebar (INWARD / PRODUCTION / OUTWARD / REPORTS / SETTINGS)",
+      "title": "Navigation Restructure — Grouped Sidebar (INWARD / PRODUCTION / OUTWARD / REPORTS / SETTINGS)",
       "status": "QA",
       "severity": null,
       "sprint_key": "S3",
@@ -3358,7 +3358,7 @@
         "frontend/src/components/layout/Sidebar.jsx",
         "frontend/src/App.js"
       ],
-      "notes": "Grouped sidebar sections: DASHBOARD, INWARD (Vendor Management, Raw Material Master, Purchase), PRODUCTION (Sub-Recipe Master, Run Production, Production History), OUTWARD (Store Management, Product Catalog, Stock Inventory, Pending Queues, History & Ledger), REPORTS (Consumption, Wastage), SETTINGS. Renames: Vendors\u2192Vendor Management, Ingredients\u2192Raw Material Master, Add Stock\u2192Purchase, Products\u2192Product Catalog. Remove Recipe + Addon Recipe as separate nav items (absorbed into Product Catalog). Hierarchy Summary merged into Store Management.",
+      "notes": "Grouped sidebar sections: DASHBOARD, INWARD (Vendor Management, Raw Material Master, Purchase), PRODUCTION (Sub-Recipe Master, Run Production, Production History), OUTWARD (Store Management, Product Catalog, Stock Inventory, Pending Queues, History & Ledger), REPORTS (Consumption, Wastage), SETTINGS. Renames: Vendors→Vendor Management, Ingredients→Raw Material Master, Add Stock→Purchase, Products→Product Catalog. Remove Recipe + Addon Recipe as separate nav items (absorbed into Product Catalog). Hierarchy Summary merged into Store Management.",
       "artifact_refs": [
         {
           "artifact": 0,
@@ -3407,7 +3407,7 @@
     {
       "type": "CR",
       "id": "CR-028",
-      "title": "Product Catalog Overhaul \u2014 Excel-like Bulk Editor + Inline Recipe/Addon/Sub-Recipe Linking",
+      "title": "Product Catalog Overhaul — Excel-like Bulk Editor + Inline Recipe/Addon/Sub-Recipe Linking",
       "status": "PROPOSED",
       "severity": null,
       "sprint_key": null,
@@ -3415,7 +3415,7 @@
       "files": [
         "frontend/src/components/central-inventory/ProductCatalogue.jsx"
       ],
-      "notes": "Full redesign of Products page \u2192 Product Catalog. Excel-like spreadsheet UI with: inline cell editing, bulk upload (Excel import), Excel export, column toggles, mandatory category enforcement, search + filter, unsaved changes indicator, + Add Item quick row. Each product shows linked Recipe, Sub-Recipe, and Addons inline. Expand row to see ingredient BOM from sub-recipe. Category is compulsory \u2014 UX enforces without friction. Reference: owner-shared screenshot of bulk editor pattern.",
+      "notes": "Full redesign of Products page → Product Catalog. Excel-like spreadsheet UI with: inline cell editing, bulk upload (Excel import), Excel export, column toggles, mandatory category enforcement, search + filter, unsaved changes indicator, + Add Item quick row. Each product shows linked Recipe, Sub-Recipe, and Addons inline. Expand row to see ingredient BOM from sub-recipe. Category is compulsory — UX enforces without friction. Reference: owner-shared screenshot of bulk editor pattern.",
       "artifact_refs": [
         {
           "artifact": 0,
@@ -3464,7 +3464,7 @@
     {
       "type": "CR",
       "id": "CR-029",
-      "title": "Stock Inventory Split \u2014 Finished Goods vs Raw Materials Tabs",
+      "title": "Stock Inventory Split — Finished Goods vs Raw Materials Tabs",
       "status": "QA",
       "severity": null,
       "sprint_key": "S3",
@@ -3473,7 +3473,7 @@
         "frontend/src/components/central-inventory/StockInventorySummary.jsx",
         "frontend/src/hooks/useStockInventory.js"
       ],
-      "notes": "Split Stock Inventory into tabs: Finished Goods (items with subrecipe_id / is_sub_recipe) and Raw Materials (ingredient type). Each tab shows own KPIs, own table. Optional 'All' tab for power users. Clarifies the inward/outward confusion \u2014 raw materials are inward procurement, FG is outward distribution.",
+      "notes": "Split Stock Inventory into tabs: Finished Goods (items with subrecipe_id / is_sub_recipe) and Raw Materials (ingredient type). Each tab shows own KPIs, own table. Optional 'All' tab for power users. Clarifies the inward/outward confusion — raw materials are inward procurement, FG is outward distribution.",
       "artifact_refs": [
         {
           "artifact": 0,
@@ -3826,7 +3826,7 @@
     {
       "type": "CR",
       "id": "CR-035",
-      "title": "Store Creation \u2014 2-Step Create & Push Flow + Outlet Visibility",
+      "title": "Store Creation — 2-Step Create & Push Flow + Outlet Visibility",
       "status": "CLOSED",
       "severity": null,
       "sprint_key": "S3",
@@ -3892,7 +3892,7 @@
         "frontend/src/components/central-inventory/RecipeCatalogue.jsx",
         "frontend/src/components/central-inventory/SubRecipeMaster.jsx"
       ],
-      "notes": "CLOSED: Added .filter() to exclude already-selected ingredient IDs from dropdown options. Verified 49\u219248\u219247 count reduction. Owner signed off 2026-06-14.",
+      "notes": "CLOSED: Added .filter() to exclude already-selected ingredient IDs from dropdown options. Verified 49→48→47 count reduction. Owner signed off 2026-06-14.",
       "artifact_refs": [
         {
           "artifact": 0,
@@ -4045,7 +4045,7 @@
     {
       "type": "BUG",
       "id": "BUG-020",
-      "title": "\"Unknown: \u2014\" in From/To on Store Detail Recent Transactions",
+      "title": "\"Unknown: —\" in From/To on Store Detail Recent Transactions",
       "status": "QA_PASS",
       "severity": "HIGH",
       "sprint_key": "S3",
@@ -4053,7 +4053,7 @@
       "files": [
         "frontend/src/components/central-inventory/StoreDetail.jsx"
       ],
-      "notes": "Wire existing useRestaurantMap hook. API returns from_restaurant_id/to_restaurant_id \u2014 resolve to names via map.",
+      "notes": "Wire existing useRestaurantMap hook. API returns from_restaurant_id/to_restaurant_id — resolve to names via map.",
       "artifact_refs": [
         {
           "artifact": 1,
@@ -4147,7 +4147,7 @@
     {
       "type": "BUG",
       "id": "BUG-022",
-      "title": "Unnecessary 'Direct Stock Entry Disabled' gate page \u2014 auto-redirect to PO",
+      "title": "Unnecessary 'Direct Stock Entry Disabled' gate page — auto-redirect to PO",
       "status": "QA_PASS",
       "severity": "LOW",
       "sprint_key": "S3",
@@ -4198,7 +4198,7 @@
     {
       "type": "BUG",
       "id": "BUG-023",
-      "title": "Dollar sign ($) icon should be Rupee (\u20b9) across app",
+      "title": "Dollar sign ($) icon should be Rupee (₹) across app",
       "status": "QA_PASS",
       "severity": "MEDIUM",
       "sprint_key": "S3",
@@ -4209,7 +4209,7 @@
         "frontend/src/components/central-inventory/SubRecipeMaster.jsx",
         "frontend/src/components/central-inventory/RecipeCatalogue.jsx"
       ],
-      "notes": "Replace DollarSign import with IndianRupee from lucide-react in 4 files. Text values already show \u20b9 correctly.",
+      "notes": "Replace DollarSign import with IndianRupee from lucide-react in 4 files. Text values already show ₹ correctly.",
       "artifact_refs": [
         {
           "artifact": 1,
@@ -4252,7 +4252,7 @@
     {
       "type": "BUG",
       "id": "BUG-024",
-      "title": "Production Run layout \u2192 Master-Detail (owner confirmed Option B)",
+      "title": "Production Run layout → Master-Detail (owner confirmed Option B)",
       "status": "QA_PASS",
       "severity": "MEDIUM",
       "sprint_key": "S3",
@@ -4303,7 +4303,7 @@
     {
       "type": "BUG",
       "id": "BUG-025",
-      "title": "Food edit popup \u2192 Side Sheet (owner confirmed Option C)",
+      "title": "Food edit popup → Side Sheet (owner confirmed Option C)",
       "status": "QA_PASS",
       "severity": "LOW",
       "sprint_key": "S3",
@@ -4354,7 +4354,7 @@
     {
       "type": "BUG",
       "id": "BUG-026",
-      "title": "Raw Material Master \u2014 Sub-recipe items/categories contaminating Ingredients view",
+      "title": "Raw Material Master — Sub-recipe items/categories contaminating Ingredients view",
       "status": "QA_PASS",
       "severity": "HIGH",
       "sprint_key": "S3",
@@ -4411,7 +4411,7 @@
     {
       "type": "BUG",
       "id": "BUG-027",
-      "title": "Raw Material Master \u2014 Consumption & Days of Stock calculation wildly incorrect",
+      "title": "Raw Material Master — Consumption & Days of Stock calculation wildly incorrect",
       "status": "QA_PASS",
       "severity": "HIGH",
       "sprint_key": "S3",
@@ -4419,7 +4419,7 @@
       "files": [
         "frontend/src/components/central-inventory/IngredientCatalogue.jsx"
       ],
-      "notes": "FIXED: Switched from purchase-history-based consumption to daily-consumption-report API. Uses display_qty for stock. Normalizes units (gm\u2192kg). QA PASS.",
+      "notes": "FIXED: Switched from purchase-history-based consumption to daily-consumption-report API. Uses display_qty for stock. Normalizes units (gm→kg). QA PASS.",
       "artifact_refs": [
         {
           "artifact": 0,
@@ -4468,7 +4468,7 @@
     {
       "type": "BUG",
       "id": "BUG-028",
-      "title": "Purchase Order Create \u2014 Sub-recipe contamination + UX issues (search, cheapest, rate, columns, vendor selection)",
+      "title": "Purchase Order Create — Sub-recipe contamination + UX issues (search, cheapest, rate, columns, vendor selection)",
       "status": "QA_PASS",
       "severity": "HIGH",
       "sprint_key": "S3",
@@ -4525,7 +4525,7 @@
     {
       "type": "BUG",
       "id": "BUG-029",
-      "title": "Raw Material Master \u2014 Consumption still 0.0 kg/day (ingredient_id join mismatch with consumption API)",
+      "title": "Raw Material Master — Consumption still 0.0 kg/day (ingredient_id join mismatch with consumption API)",
       "status": "IMPLEMENTED",
       "severity": "HIGH",
       "sprint_key": "S3",
@@ -4558,7 +4558,7 @@
     {
       "type": "BUG",
       "id": "BUG-030",
-      "title": "PO Create \u2014 Residual: send rate=0 to API, display_qty not cal_quantity, consumption/DoC wrong, search missing on By Item Need",
+      "title": "PO Create — Residual: send rate=0 to API, display_qty not cal_quantity, consumption/DoC wrong, search missing on By Item Need",
       "status": "IMPLEMENTED",
       "severity": "HIGH",
       "sprint_key": "S3",
@@ -4566,7 +4566,7 @@
       "files": [
         "frontend/src/components/central-inventory/PurchaseOrderCreate.jsx"
       ],
-      "notes": "6 sub-issues: (2a) Expected Rate display-only, always send 0 to API for both modes, (2b) Stock shows cal_quantity (29865 kg) not display_qty (29.87 kg), (2c) DoC shows 995d \u2014 same consumption bug, (2d) Search bar only on By Vendor not By Item Need, (2e/2f) Same display_qty+DoC on By Item Need.",
+      "notes": "6 sub-issues: (2a) Expected Rate display-only, always send 0 to API for both modes, (2b) Stock shows cal_quantity (29865 kg) not display_qty (29.87 kg), (2c) DoC shows 995d — same consumption bug, (2d) Search bar only on By Vendor not By Item Need, (2e/2f) Same display_qty+DoC on By Item Need.",
       "artifact_refs": [
         {
           "artifact": 1,
@@ -4591,7 +4591,7 @@
     {
       "type": "BUG",
       "id": "BUG-031",
-      "title": "RM Stock page \u2014 Remove All/FG tabs (RM only), hide Sub Recipe from category filter",
+      "title": "RM Stock page — Remove All/FG tabs (RM only), hide Sub Recipe from category filter",
       "status": "IMPLEMENTED",
       "severity": "MEDIUM",
       "sprint_key": "S3",
@@ -4599,7 +4599,7 @@
       "files": [
         "frontend/src/components/central-inventory/StockInventorySummary.jsx"
       ],
-      "notes": "2 sub-issues: (3a) /inventory?type=raw should only show Raw Materials tab \u2014 remove All(75) and Finished Goods(31) tabs, (3b) Categories filter dropdown shows 'Sub Recipe (31)' \u2014 should be hidden.",
+      "notes": "2 sub-issues: (3a) /inventory?type=raw should only show Raw Materials tab — remove All(75) and Finished Goods(31) tabs, (3b) Categories filter dropdown shows 'Sub Recipe (31)' — should be hidden.",
       "artifact_refs": [
         {
           "artifact": 1,
@@ -4624,7 +4624,7 @@
     {
       "type": "BUG",
       "id": "BUG-032",
-      "title": "Stock Inventory expanded row \u2014 Expiry Risk inline date, hide Adjust Stock, load FEFO segments",
+      "title": "Stock Inventory expanded row — Expiry Risk inline date, hide Adjust Stock, load FEFO segments",
       "status": "IMPLEMENTED",
       "severity": "HIGH",
       "sprint_key": "S3",
@@ -4632,7 +4632,7 @@
       "files": [
         "frontend/src/components/central-inventory/StockInventorySummary.jsx"
       ],
-      "notes": "3 sub-issues: (4) Expiry Risk column shows 'View detail' \u2014 should show closest batch expiry date inline, (5a) Hide 'Adjust Stock' quick action button from expanded row, (5b) Expanded row shows 'No segments' but full detail has FEFO segments \u2014 load segments in expanded view.",
+      "notes": "3 sub-issues: (4) Expiry Risk column shows 'View detail' — should show closest batch expiry date inline, (5a) Hide 'Adjust Stock' quick action button from expanded row, (5b) Expanded row shows 'No segments' but full detail has FEFO segments — load segments in expanded view.",
       "artifact_refs": [
         {
           "artifact": 1,
@@ -4657,7 +4657,7 @@
     {
       "type": "BUG",
       "id": "BUG-033",
-      "title": "Stock Inventory Quick Actions \u2014 Dispatch/Wastage don't pre-select ingredient",
+      "title": "Stock Inventory Quick Actions — Dispatch/Wastage don't pre-select ingredient",
       "status": "IMPLEMENTED",
       "severity": "MEDIUM",
       "sprint_key": "S3",
@@ -4692,7 +4692,7 @@
     {
       "type": "BUG",
       "id": "BUG-034",
-      "title": "Sub-Recipe Master \u2014 Delete button \u2192 Active/Inactive toggle (backend API pending)",
+      "title": "Sub-Recipe Master — Delete button → Active/Inactive toggle (backend API pending)",
       "status": "IMPLEMENTED",
       "severity": "MEDIUM",
       "sprint_key": "S3",
@@ -4700,7 +4700,7 @@
       "files": [
         "frontend/src/components/central-inventory/SubRecipeMaster.jsx"
       ],
-      "notes": "Replace red 'Delete' button with active/inactive toggle switch (same pattern as Categories tab BUG-026 fix). Backend flag needed \u2014 API will be provided later. UI stub with toast.",
+      "notes": "Replace red 'Delete' button with active/inactive toggle switch (same pattern as Categories tab BUG-026 fix). Backend flag needed — API will be provided later. UI stub with toast.",
       "artifact_refs": [
         {
           "artifact": 1,
@@ -4725,7 +4725,7 @@
     {
       "type": "BUG",
       "id": "BUG-035",
-      "title": "Production History \u2014 Consumed Ingredients Qty shows dash, should show batch total with unit normalization",
+      "title": "Production History — Consumed Ingredients Qty shows dash, should show batch total with unit normalization",
       "status": "IMPLEMENTED",
       "severity": "MEDIUM",
       "sprint_key": "S3",
@@ -4733,7 +4733,7 @@
       "files": [
         "frontend/src/components/central-inventory/ProductionHistory.jsx"
       ],
-      "notes": "2 sub-issues: (8a) Ingredient-level Qty shows '\u2014' but batch-level shows 1000.00 \u2014 should sum batches and show total at ingredient level without expanding, (8b) Normalize units when summing across batches (e.g. gm+kg \u2192 kg).",
+      "notes": "2 sub-issues: (8a) Ingredient-level Qty shows '—' but batch-level shows 1000.00 — should sum batches and show total at ingredient level without expanding, (8b) Normalize units when summing across batches (e.g. gm+kg → kg).",
       "artifact_refs": [
         {
           "artifact": 1,
@@ -4758,7 +4758,7 @@
     {
       "type": "BUG",
       "id": "BUG-036",
-      "title": "App-Wide Consumption Unit Mismatch \u2014 gm values displayed/calculated as kg (causes 1000x over-ordering in PO Create)",
+      "title": "App-Wide Consumption Unit Mismatch — gm values displayed/calculated as kg (causes 1000x over-ordering in PO Create)",
       "status": "IMPLEMENTED",
       "severity": "CRITICAL",
       "sprint_key": "S3",
@@ -4822,7 +4822,7 @@
     {
       "type": "BUG",
       "id": "BUG-037",
-      "title": "Food Categories Not Showing \u2014 getFoodCategories() doesn't extract r.data.categories",
+      "title": "Food Categories Not Showing — getFoodCategories() doesn't extract r.data.categories",
       "status": "CLOSED",
       "severity": "HIGH",
       "sprint_key": "S3",
@@ -4830,7 +4830,7 @@
       "files": [
         "frontend/src/services/api.js"
       ],
-      "notes": "RESOLVED \u2014 POS API now returns categories as direct array (was {categories:[...]} during initial investigation, fixed backend-side). Code Array.isArray(r.data) works correctly. Closed 2026-07-10.",
+      "notes": "RESOLVED — POS API now returns categories as direct array (was {categories:[...]} during initial investigation, fixed backend-side). Code Array.isArray(r.data) works correctly. Closed 2026-07-10.",
       "artifact_refs": [
         {
           "artifact": 0,
@@ -4879,15 +4879,15 @@
     {
       "type": "BUG",
       "id": "BUG-038",
-      "title": "PO List \u2014 Items Column Empty (Backend Gap: no item count in list API)",
-      "status": "OPEN",
+      "title": "PO List — Items Column Empty (Backend Gap: no item count in list API)",
+      "status": "IMPLEMENTED",
       "severity": "MEDIUM",
       "sprint_key": "S3",
       "phase": "Purchase Orders",
       "files": [
         "frontend/src/components/central-inventory/PurchaseOrderList.jsx"
       ],
-      "notes": "POS API purchase-order/list has no line_count/items_count field. Transfer history has both. Backend gap \u2014 no frontend fix without N+1 calls. Workaround: hide Items column or show item_total.",
+      "notes": "POS API purchase-order/list has no line_count/items_count field. Transfer history has both. Backend gap — no frontend fix without N+1 calls. Workaround: hide Items column or show item_total.",
       "artifact_refs": [
         {
           "artifact": 0,
@@ -4936,8 +4936,8 @@
     {
       "type": "BUG",
       "id": "BUG-039",
-      "title": "PO Create Item Need \u2014 Can't Select Non-History Vendors (dropdown limited to purchase-history vendors only)",
-      "status": "OPEN",
+      "title": "PO Create Item Need — Can't Select Non-History Vendors (dropdown limited to purchase-history vendors only)",
+      "status": "IMPLEMENTED",
       "severity": "HIGH",
       "sprint_key": "S3",
       "phase": "Purchase Orders",
@@ -4993,8 +4993,8 @@
     {
       "type": "BUG",
       "id": "BUG-040",
-      "title": "Store Management \u2014 Indirect Outlets (Grandchildren) Show No Detail Info",
-      "status": "OPEN",
+      "title": "Store Management — Indirect Outlets (Grandchildren) Show No Detail Info",
+      "status": "IMPLEMENTED",
       "severity": "MEDIUM",
       "sprint_key": "S3",
       "phase": "Store Management",
@@ -5050,8 +5050,8 @@
     {
       "type": "BUG",
       "id": "BUG-041",
-      "title": "Transfer Detail FROM Block Empty \u2014 restaurantMap Missing Parent for Outlet Users",
-      "status": "OPEN",
+      "title": "Transfer Detail FROM Block Empty — restaurantMap Missing Parent for Outlet Users",
+      "status": "IMPLEMENTED",
       "severity": "HIGH",
       "sprint_key": "S3",
       "phase": "Transfer Detail",
@@ -5059,7 +5059,7 @@
         "frontend/src/components/central-inventory/TransferDetail.jsx",
         "frontend/src/hooks/useRestaurantMap.js"
       ],
-      "notes": "CR-033 added restaurantMap lookup but map only has children. Outlet users see '\u2014' for parent-sent transfers. Backend gap: detail API missing from/to_restaurant_name (history API has them). Fix: enhance restaurantMap to include parents via hierarchy-detail.restaurants[].",
+      "notes": "CR-033 added restaurantMap lookup but map only has children. Outlet users see '—' for parent-sent transfers. Backend gap: detail API missing from/to_restaurant_name (history API has them). Fix: enhance restaurantMap to include parents via hierarchy-detail.restaurants[].",
       "artifact_refs": [
         {
           "artifact": 0,
@@ -5108,8 +5108,8 @@
     {
       "type": "BUG",
       "id": "BUG-042",
-      "title": "Consumption Report \u2014 Current Stock Shows Parent's Qty for Child Store Rows",
-      "status": "OPEN",
+      "title": "Consumption Report — Current Stock Shows Parent's Qty for Child Store Rows",
+      "status": "IMPLEMENTED",
       "severity": "HIGH",
       "sprint_key": "S3",
       "phase": "Daily Consumption Report",
@@ -5165,8 +5165,8 @@
     {
       "type": "BUG",
       "id": "BUG-043",
-      "title": "PO Create \u2014 Qty Input Allows Negative Values",
-      "status": "OPEN",
+      "title": "PO Create — Qty Input Allows Negative Values",
+      "status": "IMPLEMENTED",
       "severity": "MEDIUM",
       "sprint_key": "S3",
       "phase": "Purchase Orders",
@@ -5222,8 +5222,8 @@
     {
       "type": "BUG",
       "id": "BUG-044",
-      "title": "PO Lifecycle \u2014 Payment Info Visible Before Receive (Should Only Appear at Receive Goods)",
-      "status": "OPEN",
+      "title": "PO Lifecycle — Payment Info Visible Before Receive (Should Only Appear at Receive Goods)",
+      "status": "IMPLEMENTED",
       "severity": "MEDIUM",
       "sprint_key": "S3",
       "phase": "Purchase Orders",
@@ -5281,15 +5281,15 @@
     {
       "type": "BUG",
       "id": "BUG-045",
-      "title": "Pending Queues \u2014 No Dispatched/In-Transit Tab for Sender to Track Sent Stock",
-      "status": "OPEN",
+      "title": "Pending Queues — No Dispatched/In-Transit Tab for Sender to Track Sent Stock",
+      "status": "IMPLEMENTED",
       "severity": "MEDIUM",
       "sprint_key": "S3",
       "phase": "Pending Queues",
       "files": [
         "frontend/src/components/central-inventory/PendingQueues.jsx"
       ],
-      "notes": "After dispatching, transfer disappears from sender's view. API returns dispatch_pending field (unused). Need 5th tab showing dispatched-but-not-received transfers where user is sender. CODE NONE \u2014 new tab needed.",
+      "notes": "After dispatching, transfer disappears from sender's view. API returns dispatch_pending field (unused). Need 5th tab showing dispatched-but-not-received transfers where user is sender. CODE NONE — new tab needed.",
       "artifact_refs": [
         {
           "artifact": 0,

@@ -99,6 +99,17 @@
 |------|--------|
 | `VendorFormDialog.jsx` | Replaced by inline form in VendorManagement. Still on disk, no longer imported. |
 
+### BUG-038→045: Implementation Batch (7 files, session 2026-07-11)
+| File | Change | Bug |
+|------|--------|-----|
+| `frontend/src/hooks/useRestaurantMap.js` | MODIFIED — Added hierarchy-detail fetch for parent/sibling resolution | BUG-041 |
+| `frontend/src/components/central-inventory/DailyConsumptionReport.jsx` | MODIFIED — Per-restaurant closing_stock in multi-store mode | BUG-042 |
+| `frontend/src/components/central-inventory/PurchaseOrderCreate.jsx` | MODIFIED — Merged vendor dropdown (BUG-039), min=0 on qty (BUG-043), payment/total removed (BUG-044) | BUG-039, BUG-043, BUG-044 |
+| `frontend/src/components/central-inventory/PurchaseOrderDetail.jsx` | MODIFIED — Payment/Total conditional on received/closed status | BUG-044 |
+| `frontend/src/components/central-inventory/PurchaseOrderList.jsx` | MODIFIED — Items column removed (BUG-038), Payment/Total conditional (BUG-044) | BUG-038, BUG-044 |
+| `frontend/src/components/central-inventory/StoreManagement.jsx` | MODIFIED — Indirect outlet label with parent name | BUG-040 |
+| `frontend/src/components/central-inventory/PendingQueues.jsx` | MODIFIED — Dispatched tab added | BUG-045 |
+
 ## Key Dependencies
 
 ### BUG-036: App-Wide Consumption Unit Mismatch (2026-06-15)

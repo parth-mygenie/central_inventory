@@ -312,7 +312,7 @@ export default function PurchaseOrderCreate() {
         vendor_id: Number(selectedVendorId),
         expected_delivery_date: expectedDate || undefined,
         notes: notes || undefined,
-        payment_type: paymentType,
+        // BUG-044: payment_type removed from PO creation
         tot_tax: 0,
         lines: checkedVendorLines.map((l) => ({
           inventory_master_id: l.inventory_master_id,
@@ -340,7 +340,7 @@ export default function PurchaseOrderCreate() {
           vendor_id: Number(group.vendorId),
           expected_delivery_date: expectedDate || undefined,
           notes: notes || undefined,
-          payment_type: paymentType,
+          // BUG-044: payment_type removed from PO creation
           tot_tax: 0,
           lines: group.items.map((l) => ({
             inventory_master_id: l.inventory_master_id,
@@ -468,11 +468,9 @@ export default function PurchaseOrderCreate() {
           <Card>
             <CardHeader className="py-2 px-4"><CardTitle className="text-sm flex items-center gap-2"><ShoppingCart className="h-4 w-4" />PO for {selectedVendor?.vendor_name}</CardTitle></CardHeader>
             <CardContent className="p-4">
-              <div className="grid grid-cols-4 gap-3">
+              {/* BUG-044: Payment removed from PO creation — only visible at Receive Goods */}
+              <div className="grid grid-cols-3 gap-3">
                 <div><Label className="text-xs">Expected Delivery</Label><Input type="date" value={expectedDate} onChange={(e) => setExpectedDate(e.target.value)} className="h-8 text-xs" data-testid="po-expected-date" /></div>
-                <div><Label className="text-xs">Payment</Label>
-                  <Select value={paymentType} onValueChange={setPaymentType}><SelectTrigger className="h-8 text-xs" data-testid="po-payment-type"><SelectValue /></SelectTrigger>
-                    <SelectContent><SelectItem value="Cash">Cash</SelectItem><SelectItem value="Credit">Credit</SelectItem><SelectItem value="Online">Online</SelectItem></SelectContent></Select></div>
                 <div className="col-span-2"><Label className="text-xs">Notes</Label><Input value={notes} onChange={(e) => setNotes(e.target.value)} className="h-8 text-xs" placeholder="Optional" data-testid="po-notes" /></div>
               </div>
             </CardContent>
@@ -496,7 +494,7 @@ export default function PurchaseOrderCreate() {
                 <TableHead className="text-[10px] text-right">DoC</TableHead>
                 <TableHead className="text-[10px] text-right">Qty</TableHead>
                 <TableHead className="text-[10px] text-right">Expected Rate</TableHead>
-                <TableHead className="text-[10px] text-right">Total</TableHead>
+                <TableHead className="text-[10px] text-right">Expected Total</TableHead>
               </TableRow></TableHeader>
               <TableBody>
                 {vendorLines.filter((l) => !vendorSearch.trim() || (l.stock_title || "").toLowerCase().includes(vendorSearch.toLowerCase())).map((l, idx) => {
@@ -524,7 +522,7 @@ export default function PurchaseOrderCreate() {
                           {l.daysOfCover !== null ? `${l.daysOfCover}d` : "\u2014"}
                         </span>
                       </TableCell>
-                      <TableCell className="py-1.5"><Input type="number" value={l.ordered_qty} onChange={(e) => updateVendorLine(realIdx, "ordered_qty", e.target.value)} className="h-7 text-xs w-16 ml-auto text-right" disabled={!l.checked} /></TableCell>
+                      <TableCell className="py-1.5"><Input type="number" min="0" value={l.ordered_qty} onChange={(e) => updateVendorLine(realIdx, "ordered_qty", e.target.value)} className="h-7 text-xs w-16 ml-auto text-right" disabled={!l.checked} /></TableCell>{/* BUG-043 */}
                       <TableCell className="py-1.5 text-xs text-right font-mono text-muted-foreground">{l.expected_rate ? formatCurrency(Number(l.expected_rate)) : "\u20B90"}</TableCell>
                       <TableCell className="py-1.5 text-xs text-right font-mono">{l.checked && t > 0 ? formatCurrency(t) : "\u2014"}</TableCell>
                     </TableRow>
@@ -552,7 +550,7 @@ export default function PurchaseOrderCreate() {
           <div className="flex items-center justify-between">
             <p className="text-xs text-muted-foreground">{checkedVendorLines.length} items</p>
             <div className="flex items-center gap-3">
-              <p className="text-sm font-semibold" data-testid="po-vendor-total">Total: {formatCurrency(vendorTotal)}</p>
+              {/* BUG-044: Total removed from pre-receive view */}
               <Button size="sm" className="h-8 text-xs gap-1" onClick={() => setStep("review")} disabled={checkedVendorLines.length === 0} data-testid="po-vendor-review">Review <ArrowRight className="h-3 w-3" /></Button>
             </div>
           </div>
@@ -563,20 +561,19 @@ export default function PurchaseOrderCreate() {
         <div className="space-y-4" data-testid="po-vendor-review-step">
           <Card><CardHeader className="py-2 px-4"><CardTitle className="text-sm">Order Summary</CardTitle></CardHeader>
             <CardContent className="p-4">
-              <div className="grid grid-cols-4 gap-4 text-xs mb-4">
+              {/* BUG-044: Payment removed from review summary */}
+              <div className="grid grid-cols-3 gap-4 text-xs mb-4">
                 <div><span className="text-muted-foreground">Vendor:</span> <span className="font-medium">{selectedVendor?.vendor_name}</span></div>
-                <div><span className="text-muted-foreground">Payment:</span> <span className="font-medium">{paymentType}</span></div>
                 <div><span className="text-muted-foreground">Delivery:</span> <span className="font-medium">{expectedDate || "Not set"}</span></div>
                 <div><span className="text-muted-foreground">Items:</span> <span className="font-medium">{checkedVendorLines.length}</span></div>
               </div>
               <Table><TableHeader><TableRow>
-                <TableHead className="text-[10px]">Item</TableHead><TableHead className="text-[10px] text-right">Qty</TableHead><TableHead className="text-[10px]">Unit</TableHead><TableHead className="text-[10px] text-right">Rate</TableHead><TableHead className="text-[10px] text-right">Total</TableHead>
+                <TableHead className="text-[10px]">Item</TableHead><TableHead className="text-[10px] text-right">Qty</TableHead><TableHead className="text-[10px]">Unit</TableHead>
               </TableRow></TableHeader><TableBody>
                 {checkedVendorLines.map((l) => (
-                  <TableRow key={l.inventory_master_id}><TableCell className="text-xs font-medium">{l.stock_title}</TableCell><TableCell className="text-xs text-right tabular-nums">{l.ordered_qty}</TableCell><TableCell className="text-xs">{l.ordered_unit}</TableCell><TableCell className="text-xs text-right font-mono">{formatCurrency(Number(l.expected_rate))}</TableCell><TableCell className="text-xs text-right font-mono">{formatCurrency(Number(l.ordered_qty) * Number(l.expected_rate))}</TableCell></TableRow>
+                  <TableRow key={l.inventory_master_id}><TableCell className="text-xs font-medium">{l.stock_title}</TableCell><TableCell className="text-xs text-right tabular-nums">{l.ordered_qty}</TableCell><TableCell className="text-xs">{l.ordered_unit}</TableCell></TableRow>
                 ))}
               </TableBody></Table>
-              <div className="flex justify-end pt-3 border-t mt-3"><p className="text-sm font-bold">Total: {formatCurrency(vendorTotal)}</p></div>
             </CardContent>
           </Card>
           <div className="flex justify-between">
@@ -649,24 +646,19 @@ export default function PurchaseOrderCreate() {
                         {l.daysOfCover !== null ? `${l.daysOfCover}d` : "\u2014"}
                       </span>
                     </TableCell>
+                    {/* BUG-039: Merged vendor dropdown — history vendors (with rate) + remaining vendors */}
                     <TableCell className="py-1.5">
-                      {l.vendorOptions.length > 0 ? (
-                        <Select value={l.selectedVendorId} onValueChange={(v) => updateNeedLine(idx, "selectedVendorId", v)}>
-                          <SelectTrigger className="h-7 text-[10px] w-36"><SelectValue placeholder="Vendor" /></SelectTrigger>
-                          <SelectContent>{l.vendorOptions.map((vo) => (
+                      <Select value={l.selectedVendorId} onValueChange={(v) => updateNeedLine(idx, "selectedVendorId", v)}>
+                        <SelectTrigger className="h-7 text-[10px] w-40"><SelectValue placeholder="Select vendor" /></SelectTrigger>
+                        <SelectContent>
+                          {l.vendorOptions.map((vo) => (
                             <SelectItem key={vo.vendorId} value={String(vo.vendorId)}>{vo.vendorName} {formatCurrency(vo.rate)}</SelectItem>
-                          ))}</SelectContent>
-                        </Select>
-                      ) : (
-                        <Select value={l.selectedVendorId} onValueChange={(v) => updateNeedLine(idx, "selectedVendorId", v)}>
-                          <SelectTrigger className="h-7 text-[10px] w-36">
-                            <SelectValue placeholder={<span className="flex items-center gap-1 text-muted-foreground"><UserPlus className="h-3 w-3" />Pick vendor</span>} />
-                          </SelectTrigger>
-                          <SelectContent>{vendors.map((v) => (
+                          ))}
+                          {vendors.filter(v => !l.vendorOptions.some(vo => String(vo.vendorId) === String(v.id))).map(v => (
                             <SelectItem key={v.id} value={String(v.id)}>{v.vendor_name}</SelectItem>
-                          ))}</SelectContent>
-                        </Select>
-                      )}
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </TableCell>
                     <TableCell className="py-1.5 text-xs text-right font-mono text-muted-foreground">{l.expected_rate ? formatCurrency(Number(l.expected_rate)) : "\u20B90"}</TableCell>
                     <TableCell className="py-1.5 text-[10px] text-muted-foreground">
@@ -675,7 +667,7 @@ export default function PurchaseOrderCreate() {
                       ))}
                       {(!l.otherVendors || l.otherVendors.length === 0) && "\u2014"}
                     </TableCell>
-                    <TableCell className="py-1.5"><Input type="number" value={l.ordered_qty} onChange={(e) => updateNeedLine(idx, "ordered_qty", e.target.value)} className="h-7 text-[10px] w-16 ml-auto text-right" disabled={!l.checked} /></TableCell>
+                    <TableCell className="py-1.5"><Input type="number" min="0" value={l.ordered_qty} onChange={(e) => updateNeedLine(idx, "ordered_qty", e.target.value)} className="h-7 text-[10px] w-16 ml-auto text-right" disabled={!l.checked} /></TableCell>{/* BUG-043 */}
                   </TableRow>
                 ))}
               </TableBody>
@@ -712,21 +704,18 @@ export default function PurchaseOrderCreate() {
             </div>
           )}
 
-          {/* Order details + submit */}
+          {/* BUG-044: Payment removed from By Item Need order details */}
           <Card><CardContent className="p-4">
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <div><Label className="text-xs">Expected Delivery</Label><Input type="date" value={expectedDate} onChange={(e) => setExpectedDate(e.target.value)} className="h-8 text-xs" data-testid="po-need-date" /></div>
-              <div><Label className="text-xs">Payment</Label>
-                <Select value={paymentType} onValueChange={setPaymentType}><SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                  <SelectContent><SelectItem value="Cash">Cash</SelectItem><SelectItem value="Credit">Credit</SelectItem><SelectItem value="Online">Online</SelectItem></SelectContent></Select></div>
               <div><Label className="text-xs">Notes</Label><Input value={notes} onChange={(e) => setNotes(e.target.value)} className="h-8 text-xs" placeholder="Optional" /></div>
             </div>
           </CardContent></Card>
 
           <div className="flex items-center justify-between">
-            <p className="text-xs text-muted-foreground">{checkedNeedLines.length} items \u2192 {poGroups.length} PO{poGroups.length > 1 ? "s" : ""}</p>
+            <p className="text-xs text-muted-foreground">{checkedNeedLines.length} items &#8594; {poGroups.length} PO{poGroups.length > 1 ? "s" : ""}</p>
             <div className="flex items-center gap-3">
-              <p className="text-sm font-semibold" data-testid="po-need-total">Total: {formatCurrency(needTotal)}</p>
+              {/* BUG-044: Total removed from pre-receive view */}
               <Button size="sm" className="h-8 text-xs gap-1" onClick={handleSubmitNeed} disabled={submitting || poGroups.length === 0} data-testid="po-need-submit">
                 {submitting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
                 Create {poGroups.length} PO{poGroups.length > 1 ? "s" : ""}

@@ -199,13 +199,18 @@ export default function PurchaseOrderDetail() {
       {!showReceive ? (
         <>
           {/* PO Details */}
+          {/* BUG-044: Payment + Total hidden for pre-receive statuses */}
           <Card className="mb-4">
             <CardContent className="p-4">
-              <div className="grid grid-cols-4 gap-4 text-xs">
+              <div className={`grid ${["received","closed","partially_received"].includes(status) ? "grid-cols-4" : "grid-cols-2"} gap-4 text-xs`}>
                 <div><span className="text-muted-foreground block">Vendor</span><span className="font-medium">{po.vendor_name || "\u2014"}</span></div>
-                <div><span className="text-muted-foreground block">Payment</span><span className="font-medium">{po.payment_type || "\u2014"}</span></div>
                 <div><span className="text-muted-foreground block">Expected Delivery</span><span className="font-medium">{po.expected_delivery_date || "Not set"}</span></div>
-                <div><span className="text-muted-foreground block">Total</span><span className="font-semibold text-sm">{formatCurrency(po.tot_amount)}</span></div>
+                {["received","closed","partially_received"].includes(status) && (
+                  <>
+                    <div><span className="text-muted-foreground block">Payment</span><span className="font-medium">{po.payment_type || "\u2014"}</span></div>
+                    <div><span className="text-muted-foreground block">Total</span><span className="font-semibold text-sm">{formatCurrency(po.tot_amount)}</span></div>
+                  </>
+                )}
               </div>
               {po.notes && <p className="text-xs text-muted-foreground mt-2 border-t pt-2">{po.notes}</p>}
               {po.cancel_reason && (
@@ -229,8 +234,9 @@ export default function PurchaseOrderDetail() {
                     <TableHead className="text-[10px]">Item</TableHead>
                     <TableHead className="text-[10px] text-right">Ordered</TableHead>
                     <TableHead className="text-[10px]">Unit</TableHead>
-                    <TableHead className="text-[10px] text-right">Rate</TableHead>
-                    <TableHead className="text-[10px] text-right">Total</TableHead>
+                    {/* BUG-044: Rate/Total only visible for received/closed statuses */}
+                    {["received","closed","partially_received"].includes(status) && <TableHead className="text-[10px] text-right">Rate</TableHead>}
+                    {["received","closed","partially_received"].includes(status) && <TableHead className="text-[10px] text-right">Total</TableHead>}
                     <TableHead className="text-[10px] text-right">Your Stock</TableHead>
                     <TableHead className="text-[10px] text-right">Days</TableHead>
                     <TableHead className="text-[10px] text-right">After Recv</TableHead>
@@ -250,8 +256,9 @@ export default function PurchaseOrderDetail() {
                       </TableCell>
                       <TableCell className="text-xs text-right tabular-nums">{line.ordered_qty}</TableCell>
                       <TableCell className="text-xs">{line.ordered_unit || line.unit}</TableCell>
-                      <TableCell className="text-xs text-right font-mono">{formatCurrency(line.expected_rate)}</TableCell>
-                      <TableCell className="text-xs text-right font-mono">{formatCurrency(Number(line.ordered_qty) * Number(line.expected_rate))}</TableCell>
+                      {/* BUG-044: Rate/Total cells conditional */}
+                      {["received","closed","partially_received"].includes(status) && <TableCell className="text-xs text-right font-mono">{formatCurrency(line.expected_rate)}</TableCell>}
+                      {["received","closed","partially_received"].includes(status) && <TableCell className="text-xs text-right font-mono">{formatCurrency(Number(line.ordered_qty) * Number(line.expected_rate))}</TableCell>}
                       <TableCell className={`text-xs text-right tabular-nums ${curQty === 0 ? "text-red-600 font-semibold" : stock?.is_low_stock ? "text-amber-600" : "text-muted-foreground"}`}>
                         {curQty !== null ? `${curQty} ${stock?.unit || ""}` : "\u2014"}
                       </TableCell>

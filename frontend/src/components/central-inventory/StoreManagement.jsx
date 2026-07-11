@@ -128,6 +128,7 @@ export default function StoreManagement() {
         restaurantTypeFlag: s.restaurant_type,
         email: "",
         isNested: true,
+        parentRestaurantId: s.parent_restaurant_id, // BUG-040: track parent for display
       }));
     return [...children, ...outlets];
   }, [children, allStores, isTopLevel]);
@@ -452,7 +453,7 @@ export default function StoreManagement() {
                     </TableRow>
                     {isExpanded && (
                       <TableRow><TableCell colSpan={9} className="p-0">
-                        <ExpandedStoreDetail child={child} pushStatus={ps} health={health} onPush={() => handlePush(child.id)} pushing={pushing === child.id} />
+                        <ExpandedStoreDetail child={child} pushStatus={ps} health={health} onPush={() => handlePush(child.id)} pushing={pushing === child.id} allStores={allStores} />
                       </TableCell></TableRow>
                     )}
                   </React.Fragment>
@@ -466,7 +467,7 @@ export default function StoreManagement() {
   );
 }
 
-function ExpandedStoreDetail({ child, pushStatus, health, onPush, pushing }) {
+function ExpandedStoreDetail({ child, pushStatus, health, onPush, pushing, allStores }) {
   const [pushHistory, setPushHistory] = useState([]);
   const [histLoading, setHistLoading] = useState(true);
 
@@ -482,6 +483,20 @@ function ExpandedStoreDetail({ child, pushStatus, health, onPush, pushing }) {
 
   return (
     <div className="py-4 px-5 bg-muted/20 border-t border-border" data-testid={`store-detail-${child.id}`}>
+      {/* BUG-040: For nested/indirect outlets, show label instead of empty fields */}
+      {child.isNested ? (
+        <div className="space-y-2">
+          <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Indirect Outlet</h4>
+          <p className="text-xs text-muted-foreground">
+            This outlet is managed by a Master Store
+            {child.parentRestaurantId && allStores.length > 0 && (() => {
+              const parent = allStores.find(s => s.restaurant_id === child.parentRestaurantId);
+              return parent ? ` (${parent.restaurant_name})` : "";
+            })()}
+            . View details from the parent store's management screen.
+          </p>
+        </div>
+      ) : (
       <div className="grid grid-cols-3 gap-5">
         {/* Left: Store Info */}
         <div className="space-y-2">
@@ -552,6 +567,7 @@ function ExpandedStoreDetail({ child, pushStatus, health, onPush, pushing }) {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }

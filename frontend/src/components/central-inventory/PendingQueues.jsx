@@ -45,6 +45,7 @@ export default function PendingQueues() {
 
   const [data, setData] = useState(null);
   const [readyToDispatch, setReadyToDispatch] = useState([]);
+  const [dispatched, setDispatched] = useState([]); // BUG-045: Dispatched tab
   const [transferDetails, setTransferDetails] = useState({});
   const [ownStock, setOwnStock] = useState([]);
   const [requesterHealth, setRequesterHealth] = useState({});
@@ -123,7 +124,13 @@ export default function PendingQueues() {
                    String(t.from_restaurant_id) === String(restaurantId)
           );
           setReadyToDispatch(dispatchReady);
-        } catch { setReadyToDispatch([]); }
+          // BUG-045: Filter dispatched items from same history
+          const dispatchedItems = histItems.filter(
+            (t) => t.status === "dispatched" &&
+                   String(t.from_restaurant_id) === String(restaurantId)
+          );
+          setDispatched(dispatchedItems);
+        } catch { setReadyToDispatch([]); setDispatched([]); }
       }
     } catch (err) {
       setError(err?.response?.data?.message || "Failed to load queues");
@@ -399,6 +406,18 @@ export default function PendingQueues() {
                 )}
               </TabsTrigger>
             )}
+            {/* BUG-045: Dispatched tab */}
+            {canDo("dispatch") && (
+              <TabsTrigger data-testid="tab-dispatched" value="dispatched" className="gap-1.5">
+                <Truck className="h-3.5 w-3.5" />
+                Dispatched
+                {dispatched.length > 0 && (
+                  <span className="ml-1 bg-blue-100 text-blue-700 text-[10px] px-1.5 py-0.5 rounded-full">
+                    {dispatched.length}
+                  </span>
+                )}
+              </TabsTrigger>
+            )}
             <TabsTrigger data-testid="tab-receive" value="receive" className="gap-1.5">
               <Inbox className="h-3.5 w-3.5" />
               Receives
@@ -453,6 +472,17 @@ export default function PendingQueues() {
                 <EmptyState title="No transfers ready to dispatch" description="Approved transfers awaiting dispatch will appear here" />
               ) : (
                 readyToDispatch.map((item, idx) => renderSimpleCard(item, idx))
+              )}
+            </TabsContent>
+          )}
+
+          {/* ═══ BUG-045: Dispatched ═══ */}
+          {canDo("dispatch") && (
+            <TabsContent value="dispatched">
+              {dispatched.length === 0 ? (
+                <EmptyState title="No dispatched transfers" description="Dispatched transfers awaiting receipt will appear here" />
+              ) : (
+                dispatched.map((item, idx) => renderSimpleCard(item, idx))
               )}
             </TabsContent>
           )}

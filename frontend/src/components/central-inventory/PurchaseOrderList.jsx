@@ -194,16 +194,19 @@ export default function PurchaseOrderList() {
                 <TableRow>
                   <TableHead className="text-[10px]">PO #</TableHead>
                   <TableHead className="text-[10px]">Vendor</TableHead>
-                  <TableHead className="text-[10px] text-right">Items</TableHead>
-                  <TableHead className="text-[10px] text-right">Total</TableHead>
+                  {/* BUG-038: Items column removed — no item count in PO list API */}
+                  {/* BUG-044: Total + Payment hidden for pre-receive status filters */}
+                  {!["draft","approved","sent"].includes(statusFilter) && <TableHead className="text-[10px] text-right">Total</TableHead>}
                   <TableHead className="text-[10px]">Expected</TableHead>
                   <TableHead className="text-[10px] text-center">Status</TableHead>
-                  <TableHead className="text-[10px]">Payment</TableHead>
+                  {!["draft","approved","sent"].includes(statusFilter) && <TableHead className="text-[10px]">Payment</TableHead>}
                   <TableHead className="text-[10px]">Created</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((po) => (
+                {filtered.map((po) => {
+                  const isPreReceive = ["draft","approved","sent"].includes(po.status);
+                  return (
                   <TableRow
                     key={po.id}
                     data-testid={`po-row-${po.id}`}
@@ -212,18 +215,18 @@ export default function PurchaseOrderList() {
                   >
                     <TableCell className="text-xs font-medium font-mono">{po.reference_code || `PO-${po.id}`}</TableCell>
                     <TableCell className="text-xs">{po.vendor_name || "\u2014"}</TableCell>
-                    <TableCell className="text-xs text-right tabular-nums">{po.line_count || po.lines?.length || "\u2014"}</TableCell>
-                    <TableCell className="text-xs text-right font-mono">{formatCurrency(po.tot_amount)}</TableCell>
+                    {!["draft","approved","sent"].includes(statusFilter) && <TableCell className="text-xs text-right font-mono">{isPreReceive ? "\u2014" : formatCurrency(po.tot_amount)}</TableCell>}
                     <TableCell className="text-xs text-muted-foreground">{po.expected_delivery_date || "\u2014"}</TableCell>
                     <TableCell className="text-center">
                       <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${STATUS_COLORS[po.status] || ""}`}>
                         {(po.status || "").replace(/_/g, " ")}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{po.payment_type || "\u2014"}</TableCell>
+                    {!["draft","approved","sent"].includes(statusFilter) && <TableCell className="text-xs text-muted-foreground">{isPreReceive ? "\u2014" : (po.payment_type || "\u2014")}</TableCell>}
                     <TableCell className="text-xs text-muted-foreground">{po.created_at ? new Date(po.created_at).toLocaleDateString("en-IN") : "\u2014"}</TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           </CardContent>

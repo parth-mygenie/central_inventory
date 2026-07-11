@@ -59,6 +59,20 @@ export function useRestaurantMap() {
           });
         }
 
+        // BUG-041: Also fetch hierarchy-detail for self to get parent + all hierarchy members
+        try {
+          const detailResp = await api.getHierarchyDetail({ storeRestaurantId: restaurantId });
+          const detailData = detailResp.data?.data || detailResp.data;
+          (detailData?.restaurants || []).forEach((r) => {
+            if (r.restaurant_id && !map[String(r.restaurant_id)]) {
+              map[String(r.restaurant_id)] = {
+                name: r.restaurant_name,
+                type: r.restaurant_type,
+              };
+            }
+          });
+        } catch { /* non-critical — existing map still works for most cases */ }
+
         setRestaurantMap(map);
       } catch (e) {
         console.warn("[useRestaurantMap] Failed:", e);

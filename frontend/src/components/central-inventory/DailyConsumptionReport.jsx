@@ -204,10 +204,18 @@ function IngredientSummaryTable({ summary, scope, isMultiStore, onDrillDown, sto
             {filtered.map((row, i) => {
               const closingNeg = parseQtyValue(row.closing_stock) < 0;
               const consumed = parseQtyValue(row.total_consumed);
-              // B9: Cross-join with stock inventory for current stock
+              // BUG-042: In multi-store mode, use per-restaurant closing_stock instead of parent's stockLookup
               const stockItem = stockLookup[(row.ingredient_name || "").toLowerCase()];
-              const currentStock = stockItem ? stockItem.display_qty : null;
-              const currentUnit = stockItem?.display_unit || "";
+              let currentStock, currentUnit;
+              if (isMultiStore && row.closing_stock) {
+                const parsed = parseQtyValue(row.closing_stock);
+                const parts = String(row.closing_stock).trim().split(/\s+/);
+                currentStock = parsed;
+                currentUnit = parts[1] || stockItem?.display_unit || "";
+              } else {
+                currentStock = stockItem ? stockItem.display_qty : null;
+                currentUnit = stockItem?.display_unit || "";
+              }
               // B9: Compute avg daily and days of cover using actual date range
               const avgDaily = consumed > 0 ? consumed / dateRangeDays : 0;
               const daysOfCover = (currentStock != null && avgDaily > 0) ? Math.round(currentStock / avgDaily) : null;
