@@ -293,7 +293,7 @@ function _getHierarchySummary({ storeType, fromDate, toDate } = {}) {
 }
 const getHierarchySummary = _cached("getHierarchySummary", TTL.LONG, _getHierarchySummary);
 
-function _getHierarchyDetail({ storeRestaurantId, selectedStockTitle, selectedUnitId, transactionsStockTitle, fromDate, toDate } = {}) {
+function _getHierarchyDetail({ storeRestaurantId, selectedStockTitle, selectedUnitId, transactionsStockTitle, fromDate, toDate, includeStockHealthSummary } = {}) {
   const payload = {};
   if (storeRestaurantId) payload.store_restaurant_id = storeRestaurantId;
   if (selectedStockTitle) payload.selected_stock_title = selectedStockTitle;
@@ -301,6 +301,7 @@ function _getHierarchyDetail({ storeRestaurantId, selectedStockTitle, selectedUn
   if (transactionsStockTitle) payload.transactions_stock_title = transactionsStockTitle;
   if (fromDate) payload.from_date = fromDate;
   if (toDate) payload.to_date = toDate;
+  if (includeStockHealthSummary) payload.include_stock_health_summary = true; // Indirect outlets API wiring
   return client.post("/proxy/v2/inventory-transfer/hierarchy-detail", payload).then((resp) => {
     const data = resp.data?.data || resp.data;
     if (data?.child_stock_summary) {
@@ -866,6 +867,7 @@ function getHierarchyHistory({ limit, page } = {}) {
  * Normalize a child restaurant from franchise/list.
  * Raw objects have ~150 fields; extract only what UI needs.
  */
+// Indirect outlets API wiring — add new fields from franchise/list
 function normalizeHierarchyChild(raw) {
   if (!raw) return raw;
   return {
@@ -880,6 +882,10 @@ function normalizeHierarchyChild(raw) {
     parentRestaurantId: raw.parent_restaurant_id,
     slug: raw.slug,
     createdAt: raw.created_at,
+    isDirectChild: raw.is_direct_child,
+    hierarchyLink: raw.hierarchy_link,
+    managingParentRestaurantId: raw.managing_parent_restaurant_id,
+    managingParentName: raw.managing_parent_name,
     vendor: raw.vendor ? {
       id: raw.vendor.id,
       name: raw.vendor.f_name,

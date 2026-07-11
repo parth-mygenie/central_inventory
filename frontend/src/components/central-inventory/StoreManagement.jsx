@@ -23,7 +23,7 @@ import {
  * Expandable rows with stock health, push status, push history.
  */
 export default function StoreManagement() {
-  const { isTopLevel, isMiddleLevel } = useLoginContext();
+  const { isTopLevel, isMiddleLevel, restaurantId } = useLoginContext();
   const {
     children, listLoading, listError, fetchList,
     createMeta, fetchCreateMeta, createChild,
@@ -50,7 +50,6 @@ export default function StoreManagement() {
   const [creating, setCreating] = useState(false);
   const [createStep, setCreateStep] = useState(1);
   const [createProgress, setCreateProgress] = useState("");
-  const [allStores, setAllStores] = useState([]);
 
   useEffect(() => { fetchList(); }, [fetchList]);
 
@@ -82,117 +81,30 @@ export default function StoreManagement() {
     });
   }, [children]);
 
-  // Fetch health for each child (OOS/Low/OK counts)
+  // Indirect outlets API wiring — single-call health via store_stock_health
   useEffect(() => {
     if (children.length === 0) return;
-    Promise.allSettled(
-      children.slice(0, 15).map(c =>
-        api.getHierarchyDetail({ storeRestaurantId: c.id })
-      )
-    ).then(results => {
-      const map = {};
-      let allRestaurants = [];
-      children.slice(0, 15).forEach((child, idx) => {
-        if (results[idx].status === "fulfilled") {
-          const d = results[idx].value?.data?.data || results[idx].value?.data;
-          // Extract full restaurant list from first successful response
-          if (allRestaurants.length === 0 && d?.restaurants) {
-            allRestaurants = d.restaurants;
-          }
-          const stocks = d?.child_stock_summary || d?.stock_summary || [];
-          let oos = 0, low = 0, ok = 0;
-          const oosItems = [];
-          stocks.forEach(s => {
-            const qty = Number(s.cal_quantity || s.display_qty || 0);
-            if (qty === 0) { oos++; oosItems.push(s.stock_title || "Unknown"); }
-            else if (s.is_low_stock) low++;
-            else ok++;
-          });
-          map[child.id] = { oos, low, ok, total: stocks.length, oosItems: oosItems.slice(0, 5), oosMore: Math.max(0, oosItems.length - 5) };
-        }
-      });
-      setChildHealthMap(prev => ({ ...prev, ...map }));
-      if (allRestaurants.length > 0) setAllStores(allRestaurants);
-    });
-  }, [children]);
+    api.getHierarchyDetail({ storeRestaurantId: restaurantId, includeStockHealthSummary: true })
+      .then(resp => {
+        const d = resp.data?.data || resp.data;
+        const healthEntries = d?.store_stock_health || [];
+        const map = {};
+        healthEntries.forEach(h => {
+          map[h.restaurant_id] = {
+            oos: h.out_of_stock_rows || 0,
+            low: h.low_stock_rows || 0,
+            ok: h.ok_stock_rows || 0,
+            total: h.stock_rows || 0,
+            oosItems: [], oosMore: 0,
+          };
+        });
+        setChildHealthMap(map);
+      })
+      .catch(() => {});
+  }, [children, restaurantId]);
 
-  // Merge outlets into children for Central Store view
-  const displayChildren = useMemo(() => {
-    if (!isTopLevel || allStores.length === 0) return children;
-    const directIds = new Set(children.map(c => c.id));
-    const outlets = allStores
-      .filter(s => s.restaurant_type === "franchise" && !directIds.has(s.restaurant_id))
-      .map(s => ({
-        id: s.restaurant_id,
-        name: s.restaurant_name,
-        restaurantTypeFlag: s.restaurant_type,
-        email: "",
-        isNested: true,
-        parentRestaurantId: s.parent_restaurant_id, // BUG-040: track parent for display
-      }));
-    return [...children, ...outlets];
-  }, [children, allStores, isTopLevel]);
-
-  // INVESTIGATION-FIX: Fetch push status + health for indirect outlets once discovered
-  useEffect(() => {
-    if (!isTopLevel || allStores.length === 0 || children.length === 0) return;
-    const directIds = new Set(children.map(c => c.id));
-    const indirectOutlets = allStores
-      .filter(s => s.restaurant_type === "franchise" && !directIds.has(s.restaurant_id));
-    if (indirectOutlets.length === 0) return;
-
-    // Fetch push status for indirect outlets
-    Promise.allSettled(
-      indirectOutlets.map(s => api.getPushForm(s.restaurant_id))
-    ).then(results => {
-      const updates = {};
-      indirectOutlets.forEach((s, idx) => {
-        if (results[idx].status === "fulfilled") {
-          const data = results[idx].value?.data?.data || results[idx].value?.data;
-          const summary = data?.push_summary;
-          if (summary) {
-            updates[s.restaurant_id] = { behind: summary.total_behind, status: summary.status === "synced" ? "synced" : "stale" };
-          } else {
-            const src = data?.source_entities || {};
-            const existing = data?.child_existing || {};
-            let totalSrc = 0, totalChild = 0;
-            Object.values(src).forEach(items => { totalSrc += Array.isArray(items) ? items.length : 0; });
-            Object.values(existing).forEach(items => { totalChild += Array.isArray(items) ? items.length : 0; });
-            const behind = Math.max(0, totalSrc - totalChild);
-            updates[s.restaurant_id] = { behind, status: behind > 0 ? "stale" : "synced" };
-          }
-        }
-      });
-      if (Object.keys(updates).length > 0) {
-        setPushStatusMap(prev => ({ ...prev, ...updates }));
-      }
-    });
-
-    // Fetch health for indirect outlets
-    Promise.allSettled(
-      indirectOutlets.map(s => api.getHierarchyDetail({ storeRestaurantId: s.restaurant_id }))
-    ).then(results => {
-      const updates = {};
-      indirectOutlets.forEach((s, idx) => {
-        if (results[idx].status === "fulfilled") {
-          const d = results[idx].value?.data?.data || results[idx].value?.data;
-          const stocks = d?.child_stock_summary || d?.stock_summary || [];
-          let oos = 0, low = 0, ok = 0;
-          const oosItems = [];
-          stocks.forEach(st => {
-            const qty = Number(st.cal_quantity || st.display_qty || 0);
-            if (qty === 0) { oos++; oosItems.push(st.stock_title || "Unknown"); }
-            else if (st.is_low_stock) low++;
-            else ok++;
-          });
-          updates[s.restaurant_id] = { oos, low, ok, total: stocks.length, oosItems: oosItems.slice(0, 5), oosMore: Math.max(0, oosItems.length - 5) };
-        }
-      });
-      if (Object.keys(updates).length > 0) {
-        setChildHealthMap(prev => ({ ...prev, ...updates }));
-      }
-    });
-  }, [allStores, children, isTopLevel]);
+  // Indirect outlets API wiring — franchise/list now returns indirect outlets directly
+  const displayChildren = children;
 
   // Filter
   const filtered = useMemo(() => {
@@ -469,7 +381,7 @@ export default function StoreManagement() {
                         {isExpanded ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
                       </TableCell>
                       <TableCell className="py-2.5 font-semibold text-sm">
-                        {child.isNested && <span className="text-[9px] text-muted-foreground mr-1" data-testid={`nested-outlet-${child.id}`}>↳</span>}
+                        {child.isDirectChild === false && <span className="text-[9px] text-muted-foreground mr-1" data-testid={`nested-outlet-${child.id}`}>↳</span>}
                         {child.name}
                       </TableCell>
                       <TableCell className="py-2.5">
@@ -497,7 +409,7 @@ export default function StoreManagement() {
                         <span className="text-xs tabular-nums text-emerald-600">{health?.ok ?? "—"}</span>
                       </TableCell>
                       <TableCell className="py-2.5">
-                        {ps?.status === "stale" && (
+                        {ps && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -514,7 +426,7 @@ export default function StoreManagement() {
                     </TableRow>
                     {isExpanded && (
                       <TableRow><TableCell colSpan={9} className="p-0">
-                        <ExpandedStoreDetail child={child} pushStatus={ps} health={health} onPush={() => handlePush(child.id)} pushing={pushing === child.id} allStores={allStores} />
+                        <ExpandedStoreDetail child={child} pushStatus={ps} health={health} onPush={() => handlePush(child.id)} pushing={pushing === child.id} />
                       </TableCell></TableRow>
                     )}
                   </React.Fragment>
@@ -528,7 +440,7 @@ export default function StoreManagement() {
   );
 }
 
-function ExpandedStoreDetail({ child, pushStatus, health, onPush, pushing, allStores }) {
+function ExpandedStoreDetail({ child, pushStatus, health, onPush, pushing }) {
   const [pushHistory, setPushHistory] = useState([]);
   const [histLoading, setHistLoading] = useState(true);
 
@@ -544,17 +456,13 @@ function ExpandedStoreDetail({ child, pushStatus, health, onPush, pushing, allSt
 
   return (
     <div className="py-4 px-5 bg-muted/20 border-t border-border" data-testid={`store-detail-${child.id}`}>
-      {/* BUG-040: For nested/indirect outlets, show label instead of empty fields */}
-      {child.isNested ? (
+      {/* Indirect outlets API wiring — use isDirectChild + managingParentName from API */}
+      {child.isDirectChild === false ? (
         <div className="space-y-2">
           <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Indirect Outlet</h4>
           <p className="text-xs text-muted-foreground">
-            This outlet is managed by a Master Store
-            {child.parentRestaurantId && allStores.length > 0 && (() => {
-              const parent = allStores.find(s => s.restaurant_id === child.parentRestaurantId);
-              return parent ? ` (${parent.restaurant_name})` : "";
-            })()}
-            . View details from the parent store's management screen.
+            This outlet is managed by {child.managingParentName || "a Master Store"}.
+            View details from the parent store's management screen.
           </p>
         </div>
       ) : (
@@ -568,10 +476,10 @@ function ExpandedStoreDetail({ child, pushStatus, health, onPush, pushing, allSt
             <div className="flex items-center gap-2"><Calendar className="h-3 w-3 text-muted-foreground" /><span>{child.createdAt ? new Date(child.createdAt).toLocaleDateString("en-IN") : "—"}</span></div>
             <div className="flex items-start gap-2"><MapPin className="h-3 w-3 text-muted-foreground mt-0.5" /><span className="text-muted-foreground">{child.address || "—"}</span></div>
           </div>
-          {pushStatus?.status === "stale" && (
+          {pushStatus && (
             <Button size="sm" className="mt-2 text-xs gap-1 w-full" onClick={onPush} disabled={pushing} data-testid={`push-now-${child.id}`}>
               {pushing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
-              Push Now — {pushStatus.behind} items to push
+              {pushStatus.status === "stale" ? `Push Now — ${pushStatus.behind} items to push` : "Push Now"}
             </Button>
           )}
         </div>
