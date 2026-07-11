@@ -4880,7 +4880,7 @@
       "type": "BUG",
       "id": "BUG-038",
       "title": "PO List — Items Column Empty (Backend Gap: no item count in list API)",
-      "status": "IMPLEMENTED",
+      "status": "QA_PASS",
       "severity": "MEDIUM",
       "sprint_key": "S3",
       "phase": "Purchase Orders",
@@ -4922,8 +4922,8 @@
         {
           "artifact": 5,
           "label": "QA-Report",
-          "status": "MISSING",
-          "path": null
+          "status": "DONE",
+          "path": "control/sessions/BUG038-045_ARTIFACT_5_QA_REPORT.md"
         },
         {
           "artifact": 6,
@@ -4937,7 +4937,7 @@
       "type": "BUG",
       "id": "BUG-039",
       "title": "PO Create Item Need — Can't Select Non-History Vendors (dropdown limited to purchase-history vendors only)",
-      "status": "IMPLEMENTED",
+      "status": "QA_PASS",
       "severity": "HIGH",
       "sprint_key": "S3",
       "phase": "Purchase Orders",
@@ -4979,8 +4979,8 @@
         {
           "artifact": 5,
           "label": "QA-Report",
-          "status": "MISSING",
-          "path": null
+          "status": "DONE",
+          "path": "control/sessions/BUG038-045_ARTIFACT_5_QA_REPORT.md"
         },
         {
           "artifact": 6,
@@ -4994,7 +4994,7 @@
       "type": "BUG",
       "id": "BUG-040",
       "title": "Store Management — Indirect Outlets (Grandchildren) Show No Detail Info",
-      "status": "IMPLEMENTED",
+      "status": "QA_PASS",
       "severity": "MEDIUM",
       "sprint_key": "S3",
       "phase": "Store Management",
@@ -5036,8 +5036,8 @@
         {
           "artifact": 5,
           "label": "QA-Report",
-          "status": "MISSING",
-          "path": null
+          "status": "DONE",
+          "path": "control/sessions/BUG038-045_ARTIFACT_5_QA_REPORT.md"
         },
         {
           "artifact": 6,
@@ -5051,7 +5051,7 @@
       "type": "BUG",
       "id": "BUG-041",
       "title": "Transfer Detail FROM Block Empty — restaurantMap Missing Parent for Outlet Users",
-      "status": "IMPLEMENTED",
+      "status": "QA_PASS",
       "severity": "HIGH",
       "sprint_key": "S3",
       "phase": "Transfer Detail",
@@ -5094,8 +5094,8 @@
         {
           "artifact": 5,
           "label": "QA-Report",
-          "status": "MISSING",
-          "path": null
+          "status": "DONE",
+          "path": "control/sessions/BUG038-045_ARTIFACT_5_QA_REPORT.md"
         },
         {
           "artifact": 6,
@@ -5109,7 +5109,7 @@
       "type": "BUG",
       "id": "BUG-042",
       "title": "Consumption Report — Current Stock Shows Parent's Qty for Child Store Rows",
-      "status": "IMPLEMENTED",
+      "status": "QA_PASS",
       "severity": "HIGH",
       "sprint_key": "S3",
       "phase": "Daily Consumption Report",
@@ -5151,8 +5151,8 @@
         {
           "artifact": 5,
           "label": "QA-Report",
-          "status": "MISSING",
-          "path": null
+          "status": "DONE",
+          "path": "control/sessions/BUG038-045_ARTIFACT_5_QA_REPORT.md"
         },
         {
           "artifact": 6,
@@ -5166,7 +5166,7 @@
       "type": "BUG",
       "id": "BUG-043",
       "title": "PO Create — Qty Input Allows Negative Values",
-      "status": "IMPLEMENTED",
+      "status": "QA_PASS",
       "severity": "MEDIUM",
       "sprint_key": "S3",
       "phase": "Purchase Orders",
@@ -5208,8 +5208,8 @@
         {
           "artifact": 5,
           "label": "QA-Report",
-          "status": "MISSING",
-          "path": null
+          "status": "DONE",
+          "path": "control/sessions/BUG038-045_ARTIFACT_5_QA_REPORT.md"
         },
         {
           "artifact": 6,
@@ -5223,7 +5223,7 @@
       "type": "BUG",
       "id": "BUG-044",
       "title": "PO Lifecycle — Payment Info Visible Before Receive (Should Only Appear at Receive Goods)",
-      "status": "IMPLEMENTED",
+      "status": "QA_PASS",
       "severity": "MEDIUM",
       "sprint_key": "S3",
       "phase": "Purchase Orders",
@@ -5267,8 +5267,8 @@
         {
           "artifact": 5,
           "label": "QA-Report",
-          "status": "MISSING",
-          "path": null
+          "status": "DONE",
+          "path": "control/sessions/BUG038-045_ARTIFACT_5_QA_REPORT.md"
         },
         {
           "artifact": 6,
@@ -5282,7 +5282,7 @@
       "type": "BUG",
       "id": "BUG-045",
       "title": "Pending Queues — No Dispatched/In-Transit Tab for Sender to Track Sent Stock",
-      "status": "IMPLEMENTED",
+      "status": "QA_PASS",
       "severity": "MEDIUM",
       "sprint_key": "S3",
       "phase": "Pending Queues",
@@ -5324,8 +5324,8 @@
         {
           "artifact": 5,
           "label": "QA-Report",
-          "status": "MISSING",
-          "path": null
+          "status": "DONE",
+          "path": "control/sessions/BUG038-045_ARTIFACT_5_QA_REPORT.md"
         },
         {
           "artifact": 6,

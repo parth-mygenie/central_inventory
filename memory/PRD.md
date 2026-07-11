@@ -8,33 +8,28 @@ Cloned from `https://github.com/parth-mygenie/central_inventory.git`, branch `bu
 - **Backend**: Python FastAPI proxy to preprod.mygenie.online (zero business logic)
 - **Frontend**: React 19 + Craco + Tailwind CSS + Radix UI (shadcn)
 - **Database**: MongoDB (local, minimal usage — backend is proxy)
-- **Other**: recharts, react-router-dom, axios, zod, react-hook-form
 
 ## Architecture
 - Backend acts as API proxy to preprod.mygenie.online APIs
-- Frontend is a full inventory management UI with:
-  - Login/Auth (MyGenie vendor accounts)
-  - Hierarchy management, stock inventory, product/recipe catalogues
-  - Purchase orders, production runs, wastage reports
-  - Transfer/dispatch workflows, pending queues
-  - Daily consumption reports, stock detail panels
+- Frontend is a full inventory management UI with hierarchy, stock, catalogues, POs, production, wastage, transfers
 
 ## What's Been Implemented (Jul 11, 2026)
-### Session: BUG-038→045 IMPLEMENTATION
-- **BUG-038**: Removed empty "Items" column from PO List
-- **BUG-039**: Merged vendor dropdown in PO Create (history + non-history)
-- **BUG-040**: Indirect outlets show "Managed by {parent}" label
-- **BUG-041**: useRestaurantMap enhanced with hierarchy-detail for parent resolution
-- **BUG-042**: Consumption report uses per-restaurant closing_stock in multi-store
-- **BUG-043**: min="0" on PO qty inputs
-- **BUG-044**: Payment/Total hidden before Receive Goods stage
-- **BUG-045**: Dispatched tab added to Pending Queues
 
-## Prioritized Backlog
-- P0: None
-- P1: QA pass for BUG-038→045
-- P2: POS preprod credential verification (returned "Invalid credentials")
+### Session 1: BUG-038→045 IMPLEMENTATION + QA — ALL 8/8 PASS
+| Bug | Title | Status |
+|-----|-------|:------:|
+| BUG-038 | PO List Items Column Removed | QA_PASS |
+| BUG-039 | Merged vendor dropdown (history + non-history) | QA_PASS |
+| BUG-040 | Indirect outlet label with parent name | QA_PASS |
+| BUG-041 | useRestaurantMap parent resolution fallback | QA_PASS |
+| BUG-042 | Per-restaurant closing_stock in consumption report | QA_PASS |
+| BUG-043 | min=0 on PO qty inputs | QA_PASS |
+| BUG-044 | Payment/Total hidden before Receive Goods | QA_PASS |
+| BUG-045 | Dispatched tab in Pending Queues | QA_PASS |
+
+## Known API Gaps
+- BUG-041: POS API doesn't return `parent_restaurant_name` in login or `from_restaurant_name` in transfer detail for outlets. Workaround: show "Parent Store" with type badge.
 
 ## Next Tasks
-1. QA role for BUG-038→045 (browser verification per Verification Matrix)
-2. Owner smoke testing for verified items
+1. Owner smoke testing for BUG-038→045
+2. Consider backend enhancement request for parent name resolution

@@ -71,7 +71,16 @@ export function useRestaurantMap() {
               };
             }
           });
-        } catch { /* non-critical — existing map still works for most cases */ }
+        } catch { /* hierarchy-detail not available for this user type */ }
+
+        // BUG-041: Fallback — for outlets where hierarchy-detail doesn't include parent,
+        // add parent from login context if we know the parent_restaurant_id
+        if (user?.parent_restaurant_id && !map[String(user.parent_restaurant_id)]) {
+          map[String(user.parent_restaurant_id)] = {
+            name: user.parent_restaurant_name || "Parent Store",
+            type: "master",
+          };
+        }
 
         setRestaurantMap(map);
       } catch (e) {
