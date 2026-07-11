@@ -1,0 +1,92 @@
+{
+  "iteration": 52,
+  "test_date": "2026-01-14",
+  "test_type": "Bug Batch Phase 2: BUG-025, BUG-019, BUG-024",
+  "overall_status": "PASS",
+  "summary": "All 3 bugs verified as fixed. BUG-025 (Food edit Dialog→Sheet), BUG-019 (Stock Inventory split FG/RM via sidebar nav), BUG-024 (Production Run master-detail layout) all working correctly.",
+
+  "features_tested": [
+    {
+      "feature": "BUG-025: Click edit pencil on food item → Sheet slides in from right",
+      "status": "PASS",
+      "details": "Sheet component opens from right side (not popup dialog). Contains Name, Category, Price (₹), Description fields. Quick Info section shows Recipe badge ('Yes') and Status badge ('Active')."
+    },
+    {
+      "feature": "BUG-025: Click 'Add Food' button → Sheet opens without Quick Info",
+      "status": "PASS",
+      "details": "Add Food button opens Sheet for new food. Quick Info section is correctly NOT present since no food is selected."
+    },
+    {
+      "feature": "BUG-025: Close sheet (X or Cancel) → table stays visible behind",
+      "status": "PASS",
+      "details": "Cancel button closes sheet properly. Foods table remains visible behind the sheet overlay."
+    },
+    {
+      "feature": "BUG-019: Sidebar Inward section has 'RM Stock' link → /inventory?type=raw",
+      "status": "PASS",
+      "details": "RM Stock link in Inward section navigates to /inventory?type=raw. Page title shows 'Raw Material Stock'. Raw Materials tab is selected by default."
+    },
+    {
+      "feature": "BUG-019: Sidebar Outward section has 'FG Stock' link → /inventory?type=fg",
+      "status": "PASS",
+      "details": "FG Stock link (renamed from 'Stock Inventory') in Outward section navigates to /inventory?type=fg. Page title shows 'Finished Goods Stock'. Finished Goods tab is selected by default."
+    },
+    {
+      "feature": "BUG-019: Direct URL /inventory shows 'Stock Inventory' with All tab",
+      "status": "PASS",
+      "details": "Direct navigation to /inventory (no type param) shows 'Stock Inventory' title with All tab selected by default."
+    },
+    {
+      "feature": "BUG-024: Production Run page shows master-detail layout (30/70 split)",
+      "status": "PASS",
+      "details": "Left panel (280px width) contains recipe list. Right panel (70%) shows empty state initially. Layout uses flex with border-separated panels."
+    },
+    {
+      "feature": "BUG-024: Left panel has search input and recipe cards with stock badges",
+      "status": "PASS",
+      "details": "Search input filters recipe list. Recipe cards show stock badges (No stock/Low/OK) with color coding. Cards sorted by demand (lowest FG stock first)."
+    },
+    {
+      "feature": "BUG-024: Click recipe → right panel shows batch form + BOM + confirmation",
+      "status": "PASS",
+      "details": "Selecting recipe shows: Batch Details (multiplier, total output, batch label, expiry), Coverage estimate, Ingredient Requirements BOM table, Estimated Material Cost, and Confirmation card."
+    },
+    {
+      "feature": "BUG-024: Recipe search filters the list in left panel",
+      "status": "PASS",
+      "details": "Searching 'elachi' filtered 5 recipes down to 1. Search is case-insensitive and filters by recipe name."
+    }
+  ],
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "BUG-025: FoodFormDialog renamed to FoodFormSheet. Uses Sheet/SheetContent from @/components/ui/sheet.jsx. Quick Info section conditionally rendered only when food prop exists.",
+    "BUG-019: screenVisibility.js updated - 'rm-stock' added under Inward with path '/inventory?type=raw', 'stock-inventory' renamed to 'FG Stock' under Outward with path '/inventory?type=fg'.",
+    "BUG-019: StockInventorySummary.jsx reads ?type= from useSearchParams, passes initialStockType to useStockInventory hook, dynamic title based on defaultStockType.",
+    "BUG-024: ProductionRunForm.jsx rewritten with master-detail layout. Left panel 280px with recipe cards, right panel flex-1 with form. Added recipeSearch state and filteredRecipes memo. All business logic preserved."
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (frontend only test)",
+    "frontend": "100% (10/10 features verified)"
+  },
+  "test_credentials": {
+    "central_store": "manager@germanfluid.com / Qplazm@10"
+  },
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Bug batch phase 2 (BUG-025, BUG-019, BUG-024) all verified. Food edit now uses Sheet component sliding from right with Quick Info section. Stock Inventory has split navigation via sidebar (RM Stock under Inward, FG Stock under Outward) with dynamic titles and tab selection based on URL params. Production Run page has master-detail layout with recipe list on left (30%) and form on right (70%), including search, stock badges, BOM table, cost estimate, and confirmation card."
+}

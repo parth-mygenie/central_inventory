@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CR-018 — Wastage Report Enhanced (Intelligence Preview)</title>
+<style>
+:root{--bg:#fff;--surface:#fff;--surface2:#f4f4f5;--surface3:#fafafa;--border:#e4e4e7;--border-light:#f4f4f5;--text:#09090b;--text-sec:#52525b;--text-muted:#a1a1aa;--primary:#18181b;--primary-fg:#fafafa;--amber:#b45309;--amber-light:#fffbeb;--amber-border:#fde68a;--red:#dc2626;--red-light:#fef2f2;--red-border:#fecaca;--green:#16a34a;--green-light:#f0fdf4;--green-border:#bbf7d0;--blue:#2563eb;--blue-light:#eff6ff;--blue-border:#bfdbfe;--violet:#7c3aed;--violet-light:#f5f3ff;--violet-border:#ddd6fe;--font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;--mono:'SF Mono',Consolas,monospace;--sidebar-w:200px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--surface2);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5;}
+.shell{display:flex;min-height:100vh;}
+.sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);padding:16px 0;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.sidebar .logo{padding:0 16px 16px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.sidebar .logo .icon{width:24px;height:24px;background:var(--primary);border-radius:6px;}
+.sidebar .section-label{padding:4px 16px;font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:700;margin-top:10px;}
+.sidebar nav a{display:flex;align-items:center;padding:7px 16px;font-size:12px;color:var(--text-sec);text-decoration:none;gap:8px;}
+.sidebar nav a:hover{background:var(--surface2);}
+.sidebar nav a.active{background:var(--surface2);color:var(--text);font-weight:600;border-right:2px solid var(--primary);}
+.sidebar nav a .dot{width:4px;height:4px;border-radius:50%;}
+.main{flex:1;display:flex;flex-direction:column;}
+.topbar{height:48px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;background:var(--surface);}
+.topbar .store-name{font-size:13px;font-weight:600;}
+.topbar .badge{font-size:10px;padding:2px 8px;border-radius:4px;background:var(--surface2);color:var(--text-sec);border:1px solid var(--border);font-weight:600;margin-left:8px;}
+.content{flex:1;padding:20px 28px 40px;}
+.back{font-size:12px;color:var(--text-muted);margin-bottom:10px;display:inline-flex;align-items:center;gap:4px;cursor:pointer;text-decoration:none;}
+.back:hover{color:var(--text);}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.page-header h1{font-size:18px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.header-actions{display:flex;align-items:center;gap:8px;}
+.btn{font-size:11px;font-weight:500;padding:5px 12px;border-radius:5px;border:1px solid var(--border);background:var(--surface);color:var(--text-sec);cursor:pointer;display:inline-flex;align-items:center;gap:4px;}
+.btn-sm{padding:4px 10px;font-size:10px;}
+.btn:hover{background:var(--surface2);}
+.date-pill{font-size:11px;padding:5px 12px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text-sec);}
+.preview-tag{display:inline-block;padding:3px 10px;background:var(--violet-light);color:var(--violet);border:1px solid var(--violet-border);border-radius:4px;font-size:10px;font-weight:600;margin-bottom:12px;letter-spacing:.5px;}
+
+/* KPI Cards */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:10px;}
+.kpi .icon-box{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.kpi .val{font-size:20px;font-weight:700;font-family:var(--mono);}
+.kpi .lbl{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.3px;}
+.kpi.red{border-color:var(--red-border);background:var(--red-light);}
+.kpi.red .val{color:var(--red);}
+
+/* NEW: Intelligence Section */
+.intel-section{margin-bottom:20px;}
+.intel-section h2{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.intel-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media(max-width:768px){.intel-grid{grid-template-columns:1fr;}.kpi-grid{grid-template-columns:repeat(2,1fr);}}
+
+/* Top Wasted Items */
+.ranking-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;}
+.ranking-card h3{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:10px;}
+.ranking-item{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border-light);}
+.ranking-item:last-child{border-bottom:none;}
+.ranking-rank{font-size:11px;font-weight:700;color:var(--text-muted);width:18px;text-align:center;font-family:var(--mono);}
+.ranking-bar-wrap{flex:1;min-width:0;}
+.ranking-name{font-size:12px;font-weight:500;margin-bottom:2px;display:flex;justify-content:space-between;align-items:center;}
+.ranking-qty{font-size:11px;font-family:var(--mono);color:var(--red);font-weight:600;}
+.ranking-bar{height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;}
+.ranking-bar-fill{height:100%;border-radius:2px;background:var(--red);}
+.ranking-pct{font-size:10px;color:var(--text-muted);margin-top:1px;}
+
+/* Reason Breakdown */
+.reason-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;}
+.reason-card h3{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:10px;}
+.reason-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border-light);}
+.reason-row:last-child{border-bottom:none;}
+.reason-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.reason-info{flex:1;min-width:0;}
+.reason-name{font-size:12px;font-weight:500;}
+.reason-bar{height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;margin-top:3px;}
+.reason-bar-fill{height:100%;border-radius:2px;}
+.reason-stats{font-size:11px;font-family:var(--mono);color:var(--text-sec);white-space:nowrap;}
+
+/* Trend Card */
+.trend-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:16px;}
+.trend-card h3{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:10px;}
+.trend-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.trend-period{text-align:center;}
+.trend-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px;}
+.trend-val{font-size:18px;font-weight:700;font-family:var(--mono);}
+.trend-sub{font-size:10px;color:var(--text-muted);}
+.trend-delta{text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.trend-delta .arrow{font-size:16px;font-weight:700;}
+.trend-delta .arrow.up{color:var(--red);}
+.trend-delta .arrow.down{color:var(--green);}
+.trend-delta .pct{font-size:13px;font-weight:700;font-family:var(--mono);}
+.trend-delta .pct.up{color:var(--red);}
+.trend-delta .pct.down{color:var(--green);}
+.trend-delta .note{font-size:10px;color:var(--text-muted);}
+
+/* Filters */
+.filter-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.filter-row select{font-size:11px;padding:4px 8px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text-sec);}
+.toggle-wrap{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-sec);}
+.toggle{width:28px;height:16px;background:var(--border);border-radius:8px;position:relative;cursor:pointer;}
+.toggle.on{background:var(--primary);}
+.toggle::after{content:'';width:12px;height:12px;background:var(--surface);border-radius:50%;position:absolute;top:2px;left:2px;transition:left .15s;}
+.toggle.on::after{left:14px;}
+
+/* Table */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.card-head{padding:8px 14px;border-bottom:1px solid var(--border-light);font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted);font-weight:600;}
+table{width:100%;border-collapse:collapse;}
+th{text-align:left;padding:7px 14px;font-size:10px;text-transform:uppercase;letter-spacing:.3px;color:var(--text-muted);font-weight:600;border-bottom:1px solid var(--border);background:var(--surface3);}
+td{padding:8px 14px;border-bottom:1px solid var(--border-light);font-size:12px;}
+tr:last-child td{border-bottom:none;}
+.badge-loss{display:inline-block;font-size:10px;font-weight:600;padding:1px 6px;border-radius:3px;background:var(--red-light);color:var(--red);border:1px solid var(--red-border);}
+.badge-gain{display:inline-block;font-size:10px;font-weight:600;padding:1px 6px;border-radius:3px;background:var(--green-light);color:var(--green);border:1px solid var(--green-border);}
+.badge-source{display:inline-block;font-size:10px;font-weight:500;padding:1px 6px;border-radius:3px;border:1px solid var(--border);}
+.badge-source.hierarchy{background:var(--blue-light);color:var(--blue);border-color:var(--blue-border);}
+.badge-source.physical{background:var(--amber-light);color:var(--amber);border-color:var(--amber-border);}
+.badge-source.sub-recipe{background:var(--violet-light);color:var(--violet);border-color:var(--violet-border);}
+.badge-batch{font-size:10px;font-weight:500;font-family:var(--mono);}
+.alloc-expand{font-size:10px;color:var(--blue);cursor:pointer;display:inline-flex;align-items:center;gap:2px;}
+.alloc-detail{font-size:10px;color:var(--text-muted);padding-left:4px;margin-top:2px;}
+.text-mono{font-family:var(--mono);}
+.text-right{text-align:right;}
+.text-center{text-align:center;}
+.text-muted{color:var(--text-muted);}
+.fefo-row{background:rgba(37,99,235,.03);}
+.footer{font-size:10px;color:var(--text-muted);padding:8px 14px;display:flex;gap:16px;}
+
+/* Annotation arrows */
+.annotation{position:relative;}
+.new-tag{position:absolute;top:-6px;right:-6px;background:var(--violet);color:#fff;font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;letter-spacing:.5px;text-transform:uppercase;z-index:1;}
+.section-new{border:2px solid var(--violet-border);border-radius:10px;position:relative;padding:2px;}
+.section-new::before{content:'NEW — CR-018';position:absolute;top:-10px;left:12px;background:var(--violet);color:#fff;font-size:9px;font-weight:700;padding:1px 8px;border-radius:3px;letter-spacing:.5px;}
+</style>
+</head>
+<body>
+<div class="shell">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="logo"><div class="icon"></div>Central Inventory</div>
+    <div class="section-label">Dashboard</div>
+    <nav>
+      <a href="#">Operations Hub</a>
+    </nav>
+    <div class="section-label">Inward</div>
+    <nav>
+      <a href="#">Vendor Management</a>
+      <a href="#">Raw Material Master</a>
+      <a href="#">Purchase</a>
+    </nav>
+    <div class="section-label">Production</div>
+    <nav>
+      <a href="#">Sub-Recipe Master</a>
+      <a href="#">Run Production</a>
+      <a href="#">Production History</a>
+    </nav>
+    <div class="section-label">Outward</div>
+    <nav>
+      <a href="#">Store Management</a>
+      <a href="#">Product Catalog</a>
+      <a href="#">Stock Inventory</a>
+      <a href="#">Pending Queues</a>
+      <a href="#">History &amp; Ledger</a>
+    </nav>
+    <div class="section-label">Reports</div>
+    <nav>
+      <a href="#">Consumption Report</a>
+      <a href="#" class="active">Wastage Report</a>
+    </nav>
+    <div class="section-label">Settings</div>
+    <nav>
+      <a href="#">Settings</a>
+    </nav>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <span class="store-name">german fluid</span>
+      <span class="badge">Central Store</span>
+      <span class="badge" style="margin-left:4px">RID 806</span>
+    </div>
+    <div class="content">
+      <span class="preview-tag">MOCK PREVIEW — CR-018 Wastage Report Intelligence</span>
+      <a class="back">&larr; Back</a>
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <h1>&#128196; Wastage Report</h1>
+        <div class="header-actions">
+          <button class="btn">&#8635; Refresh</button>
+          <button class="btn">&#8615; CSV</button>
+          <span class="date-pill">1 Jun &ndash; 13 Jun 2026</span>
+        </div>
+      </div>
+
+      <!-- KPI Cards (EXISTING) -->
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="icon-box" style="background:var(--surface2)">&#128203;</div>
+          <div>
+            <div class="val">24</div>
+            <div class="lbl">Total Records</div>
+          </div>
+        </div>
+        <div class="kpi red">
+          <div class="icon-box" style="background:#fee2e2">&#128200;</div>
+          <div>
+            <div class="val">18.7 kg</div>
+            <div class="lbl">Net Wastage</div>
+          </div>
+        </div>
+        <div class="kpi">
+          <div class="icon-box" style="background:var(--blue-light)">&#9881;</div>
+          <div>
+            <div class="val">6</div>
+            <div class="lbl">Batch Audited</div>
+          </div>
+        </div>
+        <div class="kpi">
+          <div class="icon-box" style="background:var(--amber-light)">&#9878;</div>
+          <div>
+            <div class="val">3</div>
+            <div class="lbl">Physical Count</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================ -->
+      <!-- NEW: INTELLIGENCE SECTION (CR-018)           -->
+      <!-- ============================================ -->
+
+      <!-- Trend vs Previous Period -->
+      <div class="section-new" style="margin-bottom:18px;">
+        <div class="trend-card">
+          <h3>&#128200; Period Comparison</h3>
+          <div class="trend-row">
+            <div class="trend-period">
+              <div class="trend-label">This Period (1–13 Jun)</div>
+              <div class="trend-val" style="color:var(--red)">18.7 kg</div>
+              <div class="trend-sub">24 records across 3 stores</div>
+            </div>
+            <div class="trend-delta">
+              <div class="arrow up">&#9650;</div>
+              <div class="pct up">+34%</div>
+              <div class="note">vs previous 13 days</div>
+            </div>
+            <div class="trend-period">
+              <div class="trend-label">Previous Period (19–31 May)</div>
+              <div class="trend-val">13.9 kg</div>
+              <div class="trend-sub">18 records across 2 stores</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Intelligence Cards: Top Wasted + Reason Breakdown -->
+      <div class="section-new" style="margin-bottom:18px;">
+        <div class="intel-grid">
+          <!-- Top Wasted Items -->
+          <div class="ranking-card">
+            <h3>&#128293; Top Wasted Items</h3>
+            <div class="ranking-item">
+              <div class="ranking-rank">1</div>
+              <div class="ranking-bar-wrap">
+                <div class="ranking-name">
+                  <span>Maida (Flour)</span>
+                  <span class="ranking-qty">5.2 kg</span>
+                </div>
+                <div class="ranking-bar"><div class="ranking-bar-fill" style="width:100%"></div></div>
+                <div class="ranking-pct">27.8% of total wastage</div>
+              </div>
+            </div>
+            <div class="ranking-item">
+              <div class="ranking-rank">2</div>
+              <div class="ranking-bar-wrap">
+                <div class="ranking-name">
+                  <span>Butter (Unsalted)</span>
+                  <span class="ranking-qty">4.1 kg</span>
+                </div>
+                <div class="ranking-bar"><div class="ranking-bar-fill" style="width:79%;background:var(--amber)"></div></div>
+                <div class="ranking-pct">21.9% of total wastage</div>
+              </div>
+            </div>
+            <div class="ranking-item">
+              <div class="ranking-rank">3</div>
+              <div class="ranking-bar-wrap">
+                <div class="ranking-name">
+                  <span>Sugar (White)</span>
+                  <span class="ranking-qty">3.5 kg</span>
+                </div>
+                <div class="ranking-bar"><div class="ranking-bar-fill" style="width:67%;background:var(--amber)"></div></div>
+                <div class="ranking-pct">18.7% of total wastage</div>
+              </div>
+            </div>
+            <div class="ranking-item">
+              <div class="ranking-rank">4</div>
+              <div class="ranking-bar-wrap">
+                <div class="ranking-name">
+                  <span>Elaichi Powder</span>
+                  <span class="ranking-qty">2.8 kg</span>
+                </div>
+                <div class="ranking-bar"><div class="ranking-bar-fill" style="width:54%;background:#94a3b8"></div></div>
+                <div class="ranking-pct">15.0% of total wastage</div>
+              </div>
+            </div>
+            <div class="ranking-item">
+              <div class="ranking-rank">5</div>
+              <div class="ranking-bar-wrap">
+                <div class="ranking-name">
+                  <span>Sesame Seeds</span>
+                  <span class="ranking-qty">3.1 kg</span>
+                </div>
+                <div class="ranking-bar"><div class="ranking-bar-fill" style="width:60%;background:#94a3b8"></div></div>
+                <div class="ranking-pct">16.6% of total wastage</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Reason Breakdown -->
+          <div class="reason-card">
+            <h3>&#128202; Reason Breakdown</h3>
+            <div class="reason-row">
+              <div class="reason-dot" style="background:var(--red)"></div>
+              <div class="reason-info">
+                <div class="reason-name">Expired</div>
+                <div class="reason-bar"><div class="reason-bar-fill" style="width:42%;background:var(--red)"></div></div>
+              </div>
+              <div class="reason-stats">10 &middot; 42%</div>
+            </div>
+            <div class="reason-row">
+              <div class="reason-dot" style="background:var(--amber)"></div>
+              <div class="reason-info">
+                <div class="reason-name">Spillage</div>
+                <div class="reason-bar"><div class="reason-bar-fill" style="width:25%;background:var(--amber)"></div></div>
+              </div>
+              <div class="reason-stats">6 &middot; 25%</div>
+            </div>
+            <div class="reason-row">
+              <div class="reason-dot" style="background:var(--violet)"></div>
+              <div class="reason-info">
+                <div class="reason-name">Pilferage</div>
+                <div class="reason-bar"><div class="reason-bar-fill" style="width:17%;background:var(--violet)"></div></div>
+              </div>
+              <div class="reason-stats">4 &middot; 17%</div>
+            </div>
+            <div class="reason-row">
+              <div class="reason-dot" style="background:var(--blue)"></div>
+              <div class="reason-info">
+                <div class="reason-name">Hierarchy Wastage</div>
+                <div class="reason-bar"><div class="reason-bar-fill" style="width:8%;background:var(--blue)"></div></div>
+              </div>
+              <div class="reason-stats">2 &middot; 8%</div>
+            </div>
+            <div class="reason-row">
+              <div class="reason-dot" style="background:#94a3b8"></div>
+              <div class="reason-info">
+                <div class="reason-name">Others</div>
+                <div class="reason-bar"><div class="reason-bar-fill" style="width:8%;background:#94a3b8"></div></div>
+              </div>
+              <div class="reason-stats">2 &middot; 8%</div>
+            </div>
+
+            <!-- Loss vs Gain mini summary -->
+            <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border-light);display:flex;gap:16px;">
+              <div style="font-size:11px;">
+                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red);vertical-align:middle;margin-right:4px;"></span>
+                Loss: <strong style="font-family:var(--mono)">22</strong> records
+              </div>
+              <div style="font-size:11px;">
+                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);vertical-align:middle;margin-right:4px;"></span>
+                Gain: <strong style="font-family:var(--mono)">2</strong> records
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- END NEW INTELLIGENCE SECTION -->
+
+      <!-- Filters (EXISTING) -->
+      <div class="filter-row">
+        <select>
+          <option>All Types</option>
+          <option>Loss</option>
+          <option>Gain</option>
+        </select>
+        <div class="toggle-wrap">
+          <div class="toggle"></div>
+          <span>Batch audited only</span>
+        </div>
+      </div>
+
+      <!-- Table (EXISTING) -->
+      <div class="card">
+        <div class="card-head">24 entries</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Item</th>
+              <th>Type</th>
+              <th class="text-right">Quantity</th>
+              <th>Unit</th>
+              <th>Reason</th>
+              <th>Batch</th>
+              <th>Expiry</th>
+              <th>Source</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="fefo-row">
+              <td>13 Jun 2026</td>
+              <td style="font-weight:500">Maida (Flour) <span class="text-muted" style="font-size:10px">(Ingredient)</span></td>
+              <td><span class="badge-loss">Loss</span></td>
+              <td class="text-right text-mono">2.5</td>
+              <td>kg</td>
+              <td>Expired</td>
+              <td>
+                <span class="badge-batch">MAIDA-BATCH-03</span><br>
+                <span class="alloc-expand">&#9660; 1 alloc</span>
+                <div class="alloc-detail">Seg #45 &middot; 2,500 cal &middot; exp 10 Jun 2026</div>
+              </td>
+              <td>10 Jun 2026</td>
+              <td><span class="badge-source hierarchy">Hierarchy</span></td>
+            </tr>
+            <tr>
+              <td>12 Jun 2026</td>
+              <td style="font-weight:500">Butter (Unsalted)</td>
+              <td><span class="badge-loss">Loss</span></td>
+              <td class="text-right text-mono">1.8</td>
+              <td>kg</td>
+              <td>Spillage</td>
+              <td><span class="text-muted" style="font-size:10px;font-style:italic">&mdash;</span></td>
+              <td>&mdash;</td>
+              <td><span class="badge-source" style="background:var(--surface2);color:var(--text-muted)">legacy</span></td>
+            </tr>
+            <tr class="fefo-row">
+              <td>11 Jun 2026</td>
+              <td style="font-weight:500">Sugar (White)</td>
+              <td><span class="badge-loss">Loss</span></td>
+              <td class="text-right text-mono">1.2</td>
+              <td>kg</td>
+              <td>Pilferage</td>
+              <td>
+                <span class="badge-batch">SUGAR-BATCH-01</span><br>
+                <span class="alloc-expand">&#9660; 2 alloc</span>
+              </td>
+              <td>15 Aug 2026</td>
+              <td><span class="badge-source physical">Physical Count</span></td>
+            </tr>
+            <tr>
+              <td>10 Jun 2026</td>
+              <td style="font-weight:500">Elaichi Powder</td>
+              <td><span class="badge-loss">Loss</span></td>
+              <td class="text-right text-mono">0.8</td>
+              <td>kg</td>
+              <td>Expired</td>
+              <td><span class="text-muted" style="font-size:10px;font-style:italic">&mdash;</span></td>
+              <td>&mdash;</td>
+              <td><span class="badge-source hierarchy">Hierarchy</span></td>
+            </tr>
+            <tr>
+              <td>9 Jun 2026</td>
+              <td style="font-weight:500">Sesame Seeds</td>
+              <td><span class="badge-gain">Gain</span></td>
+              <td class="text-right text-mono">0.5</td>
+              <td>kg</td>
+              <td>Others</td>
+              <td><span class="text-muted" style="font-size:10px;font-style:italic">&mdash;</span></td>
+              <td>&mdash;</td>
+              <td><span class="badge-source sub-recipe">Sub-Recipe</span></td>
+            </tr>
+            <tr>
+              <td colspan="9" style="text-align:center;color:var(--text-muted);font-size:11px;padding:6px;">... 19 more rows</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="footer">
+          <span>Loss: 19.2 kg</span>
+          <span>Gain: 0.5 kg</span>
+          <span>Stores: 3</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Legend -->
+<div style="position:fixed;bottom:12px;right:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:10px;color:var(--text-sec);box-shadow:0 2px 8px rgba(0,0,0,.08);max-width:280px;">
+  <strong style="font-size:11px;">CR-018 Mock Legend</strong><br>
+  <span style="display:inline-block;width:8px;height:8px;background:var(--violet);border-radius:2px;vertical-align:middle;margin-right:4px;"></span>
+  <strong>Purple border</strong> = NEW intelligence sections (CR-018)<br>
+  <span style="color:var(--text-muted)">Everything else = existing (already built)</span><br><br>
+  <strong>New sections:</strong><br>
+  1. Period Comparison (trend vs previous)<br>
+  2. Top Wasted Items (ranked bar chart)<br>
+  3. Reason Breakdown (grouped counts)
+</div>
+</body>
+</html>

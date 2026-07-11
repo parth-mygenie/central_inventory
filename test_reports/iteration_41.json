@@ -1,0 +1,86 @@
+{
+  "iteration": 41,
+  "test_date": "2026-06-13",
+  "test_type": "Frontend + Backend - CR-015 FEFO Batch Stock Detail Panel (GAP-1 & GAP-2 fixes)",
+  "overall_status": "PASS",
+  "summary": "Verified both GAP fixes in StockDetailPanel.jsx. GAP-1: Source store names now display real names (e.g., 'german fluid') instead of 'Store #807' via useRestaurantMap hook. GAP-2: Action buttons 'Dispatch' and 'Record Wastage' are wired with navigate() handlers. All 4 sections (Summary, Batch Inventory, Reconciliation, Consumption) load correctly.",
+  "tests": [
+    {
+      "feature": "StockDetailPanel.jsx compiles without errors",
+      "status": "PASS",
+      "details": "Component loads successfully at /inventory/{id} route. No console errors."
+    },
+    {
+      "feature": "Login as manager@germanfluid.com",
+      "status": "PASS",
+      "details": "Login successful with credentials manager@germanfluid.com / Qplazm@10. Returns token and restaurant_id=806."
+    },
+    {
+      "feature": "Navigate to Stock Inventory → click item → detail panel loads",
+      "status": "PASS",
+      "details": "Navigated to /inventory, clicked on 'Baking Powder' item, detail panel loaded at /inventory/17635 with all 4 sections: Summary, Batch Inventory (5 batches), Reconciliation, Consumption History."
+    },
+    {
+      "feature": "Backend API /api/proxy/auth/login works",
+      "status": "PASS",
+      "details": "POST /api/proxy/auth/login returns 200 with token, restaurant_id=806, restaurant_name='german fluid'."
+    },
+    {
+      "feature": "Backend API /api/ returns 200",
+      "status": "PASS",
+      "details": "GET /api/ returns 200 with message 'Central Inventory API Proxy'."
+    },
+    {
+      "feature": "GAP-1: Source store name shows real name (not 'Store #807')",
+      "status": "PASS",
+      "details": "Batch table Source Store column displays 'german fluid' (real restaurant name) for all 5 batches. useRestaurantMap hook correctly resolves source_restaurant_id to restaurant name. Fallback 'Store #ID' would only show if restaurantMap lookup fails."
+    },
+    {
+      "feature": "GAP-2: 'Dispatch' action button is clickable and navigates",
+      "status": "PASS",
+      "details": "Clicked 'Dispatch' button on first batch row (BP-LOT-001 with 'Dispatch first' badge). Successfully navigated to /dispatch/new (Direct Dispatch page)."
+    },
+    {
+      "feature": "GAP-2: 'Record Wastage' action button wiring",
+      "status": "PASS (code verified)",
+      "details": "No expired batches exist in test data to click 'Record Wastage' button. Code review confirms onClick={() => onNavigate('/wastage/new')} is correctly wired at line 291. Button only appears when isExpired=true (days < 0)."
+    },
+    {
+      "feature": "Back to Inventory button works",
+      "status": "PASS",
+      "details": "Clicked 'Back to Inventory' button from detail page. Successfully navigated back to /inventory."
+    }
+  ],
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/test_reports/iteration_41.json"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Line 4: useRestaurantMap correctly imported from @/hooks/useRestaurantMap",
+    "Line 595: restaurantMap destructured from useRestaurantMap() hook",
+    "Line 655: BatchInventorySection receives restaurantMap and onNavigate={navigate} props",
+    "Line 283: Store name resolution uses restaurantMap[String(seg.source_restaurant_id)]?.name with fallback to 'Store #ID'",
+    "Line 291-293: Record Wastage onClick={() => onNavigate('/wastage/new')} correctly wired",
+    "Line 296-298: Dispatch onClick={() => onNavigate('/dispatch/new')} correctly wired",
+    "Line 227-229: isExpired and isFirstExpiry logic correctly determines which action button to show"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "100% (2/2 API tests passed)",
+    "frontend": "100% (7/7 features verified, 1 code-verified due to no test data)"
+  },
+  "test_credentials": {
+    "central_store_806": "manager@germanfluid.com / Qplazm@10"
+  },
+  "seed_data_creation": "None - used existing POS API data",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "CR-015 FEFO Batch Stock Detail Panel GAP fixes verified. GAP-1 (source store name) and GAP-2 (action button handlers) both working. Tested with Baking Powder (ID 17635) and Baking Soda (ID 17636) which have 5 batches each. No expired batches exist in current data, so 'Record Wastage' button couldn't be clicked but code is verified. 'Dispatch' button tested and navigates to /dispatch/new correctly."
+}

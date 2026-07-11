@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>B5 — Direct Dispatch (Intelligent UI Preview)</title>
+<style>
+:root{--bg:#fff;--surface:#fff;--surface2:#f4f4f5;--surface3:#fafafa;--border:#e4e4e7;--border-light:#f4f4f5;--text:#09090b;--text-sec:#52525b;--text-muted:#a1a1aa;--primary:#18181b;--primary-fg:#fafafa;--amber:#b45309;--amber-light:#fffbeb;--amber-border:#fde68a;--red:#dc2626;--red-light:#fef2f2;--red-border:#fecaca;--green:#16a34a;--green-light:#f0fdf4;--green-border:#bbf7d0;--font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;--mono:'SF Mono',Consolas,monospace;--sidebar-w:200px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--surface2);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5;}
+.shell{display:flex;min-height:100vh;}
+.sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);padding:16px 0;flex-shrink:0;position:sticky;top:0;height:100vh;}
+.sidebar .logo{padding:0 16px 16px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.sidebar .logo .icon{width:24px;height:24px;background:var(--primary);border-radius:6px;}
+.sidebar nav a{display:flex;align-items:center;padding:8px 16px;font-size:13px;color:var(--text-sec);text-decoration:none;}
+.sidebar nav a:hover{background:var(--surface2);}
+.sidebar nav a.active{background:var(--surface2);color:var(--text);font-weight:600;border-right:2px solid var(--primary);}
+.topbar{height:48px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;justify-content:space-between;background:var(--surface);}
+.topbar .store-name{font-size:13px;font-weight:600;}
+.topbar .badge{font-size:10px;padding:2px 8px;border-radius:4px;background:var(--surface2);color:var(--text-sec);border:1px solid var(--border);font-weight:600;margin-left:8px;}
+.main{flex:1;display:flex;flex-direction:column;}
+.content{flex:1;padding:20px 28px 40px;max-width:1100px;}
+.preview-bar{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 12px;margin-bottom:16px;font-size:11px;color:var(--text-sec);}
+.back{font-size:12px;color:var(--text-muted);margin-bottom:10px;display:inline-block;cursor:pointer;}
+h1{font-size:20px;font-weight:700;margin-bottom:4px;}
+.sub{font-size:13px;color:var(--text-muted);margin-bottom:16px;}
+
+/* Card */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:12px;overflow:hidden;}
+.card-head{padding:10px 16px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between;}
+.card-head h2{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:600;}
+
+/* Destination picker */
+.dest-select{width:100%;border:1px solid var(--border);border-radius:6px;padding:10px 12px;font-size:13px;color:var(--text);background:var(--surface);}
+.dest-select:focus{outline:none;border-color:var(--text-sec);}
+
+/* Destination health strip (shown after selection) */
+.dest-health{display:flex;align-items:center;gap:12px;padding:10px 16px;border-top:1px solid var(--border-light);font-size:11px;flex-wrap:wrap;}
+.dh-name{font-weight:600;font-size:12px;}
+.dh-stat{display:flex;align-items:center;gap:3px;}
+.dh-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.dh-muted{color:var(--text-muted);}
+.dest-health.urgent{background:var(--red-light);}
+
+/* Destination needs table */
+.needs-card{border-left:3px solid var(--amber);}
+.needs-head{padding:10px 16px;border-bottom:1px solid var(--border-light);font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--amber);font-weight:700;}
+table{width:100%;border-collapse:collapse;}
+th{text-align:left;padding:8px 16px;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:600;border-bottom:1px solid var(--border);background:var(--surface3);}
+td{padding:10px 16px;border-bottom:1px solid var(--border-light);font-size:12px;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+.item-name{font-weight:600;}
+.item-unit{color:var(--text-muted);font-size:11px;margin-left:3px;}
+.mono{font-family:var(--mono);}
+
+/* Stock indicators */
+.sv{display:flex;align-items:center;gap:4px;font-size:12px;}
+.sv .d{width:5px;height:5px;border-radius:50%;}
+.sv.out{color:var(--red);font-weight:600;} .sv.out .d{background:var(--red);}
+.sv.low{color:var(--amber);font-weight:600;} .sv.low .d{background:var(--amber);}
+.sv.ok{color:var(--text-sec);} .sv.ok .d{background:#d4d4d8;}
+.sl{font-size:10px;color:var(--text-muted);}
+
+/* Qty input */
+.qty-input{width:90px;border:1px solid var(--border);border-radius:4px;padding:6px 8px;font-size:13px;color:var(--text);}
+.qty-input:focus{outline:none;border-color:var(--text-sec);box-shadow:0 0 0 2px rgba(0,0,0,.05);}
+.qty-input.warn{border-color:var(--amber);}
+.ulbl{font-size:12px;color:var(--text-muted);margin-left:4px;}
+.note{font-size:10px;margin-top:3px;}
+.note.warn{color:var(--amber);}
+.note.ok{color:var(--text-muted);}
+
+/* Source segment selector (simplified for preview) */
+.seg-select{width:100%;border:1px solid var(--border);border-radius:4px;padding:6px 8px;font-size:12px;color:var(--text);background:var(--surface);}
+.fefo-badge{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:600;padding:1px 6px;border-radius:3px;background:var(--surface2);color:var(--text-sec);border:1px solid var(--border);margin-left:6px;}
+.fefo-badge.expiry{color:var(--amber);background:var(--amber-light);border-color:var(--amber-border);}
+
+/* Projection */
+.proj{font-size:11px;color:var(--text-muted);margin-top:2px;}
+.proj.neg{color:var(--red);}
+
+/* Buttons */
+.btn{font-size:12px;font-weight:500;padding:6px 16px;border-radius:5px;border:1px solid var(--border);background:var(--surface);color:var(--text-sec);cursor:pointer;}
+.add-btn{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--text-sec);cursor:pointer;border:none;background:none;padding:8px 16px;text-decoration:underline;}
+
+/* Footer */
+.footer{display:flex;gap:12px;align-items:flex-start;margin-top:16px;}
+.footer-left{flex:1;}
+.footer-right{width:280px;flex-shrink:0;}
+.summary-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:10px;}
+.summary-box .line{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;}
+.summary-box .total{font-weight:700;border-top:1px solid var(--border);padding-top:6px;margin-top:6px;}
+.val-box{background:var(--amber-light);border:1px solid var(--amber-border);border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:11px;color:var(--amber);}
+.val-box ul{margin:4px 0 0 16px;}
+.submit-btn{width:100%;padding:10px 16px;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;background:var(--primary);color:var(--primary-fg);}
+
+/* Duplicate warning */
+.dup-banner{background:var(--amber-light);border:1px solid var(--amber-border);border-radius:6px;padding:8px 12px;margin-bottom:12px;font-size:12px;color:#92400e;display:flex;align-items:center;gap:8px;}
+
+@media(max-width:900px){.sidebar{display:none;}.footer{flex-direction:column;}.footer-right{width:100%;}.content{padding:16px;}}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside class="sidebar">
+  <div class="logo"><div class="icon"></div>Central Inventory</div>
+  <nav>
+    <a href="#">Operations Hub</a>
+    <a href="#">Pending Queues</a>
+    <a href="#">Stock Inventory</a>
+    <a href="#" class="active">Direct Dispatch</a>
+    <a href="#">History & Ledger</a>
+  </nav>
+</aside>
+<div class="main">
+<div class="topbar"><div class="store-name">Kala Bahia Central<span class="badge">Central Store</span></div></div>
+<div class="content">
+<div class="preview-bar">PREVIEW — B5 Direct Dispatch — Intelligent dispatch with destination stock visibility</div>
+<a class="back">← Back</a>
+<h1>Direct Dispatch</h1>
+<div class="sub">Send stock to a store in your hierarchy</div>
+
+<!-- Destination picker with health -->
+<div class="card">
+  <div class="card-head"><h2>Destination Store</h2></div>
+  <div style="padding:12px 16px;">
+    <select class="dest-select">
+      <option>DemoFranchise1 (Outlet) — 3 out of stock, 1 low</option>
+    </select>
+  </div>
+  <!-- B5-02: Destination health strip -->
+  <div class="dest-health urgent">
+    <span class="dh-name">DemoFranchise1</span>
+    <span class="dh-stat"><span class="dh-dot" style="background:var(--red)"></span><strong style="color:var(--red)">3 out</strong></span>
+    <span class="dh-stat"><span class="dh-dot" style="background:var(--amber)"></span>1 low</span>
+    <span class="dh-muted">0 adequate</span>
+    <span style="margin-left:auto;font-size:10px;color:var(--text-muted);">4 items total</span>
+  </div>
+</div>
+
+<!-- B5-04: Duplicate dispatch warning -->
+<div class="dup-banner">⚠ You dispatched to this store <strong>today</strong> (PO-XXXX, 2 items). <a href="#" style="color:var(--text-sec);text-decoration:underline;">View →</a></div>
+
+<!-- B5-01: Destination needs — what they're missing -->
+<div class="card needs-card">
+  <div class="needs-head">What This Store Needs (Auto-Detected)</div>
+  <table>
+    <thead>
+      <tr><th>Item</th><th>Their Stock</th><th>Min Threshold</th><th>Gap</th><th>Qty to Send</th><th>Source Segment</th><th>Your Stock After</th></tr>
+    </thead>
+    <tbody>
+      <!-- Row 1: Red Meat — OUT at destination -->
+      <tr>
+        <td><span class="item-name">Red Meat</span><span class="item-unit">gm</span></td>
+        <td><div class="sv out"><span class="d"></span><strong>0 gm</strong></div><div class="sl">Out of stock</div></td>
+        <td class="mono" style="font-size:11px;color:var(--text-muted);">500 gm</td>
+        <td class="mono" style="color:var(--red);">500 gm</td>
+        <td>
+          <input type="number" class="qty-input" value="500" />
+          <span class="ulbl">gm</span>
+        </td>
+        <td>
+          <select class="seg-select">
+            <option>Seg #42 — 800 gm (exp: 2026-06-15)</option>
+          </select>
+          <span class="fefo-badge expiry">FEFO — expires in 15 days</span>
+        </td>
+        <td>
+          <span class="mono">750 gm</span>
+          <div class="proj">You'll retain 60%</div>
+        </td>
+      </tr>
+      <!-- Row 2: Patri — OUT -->
+      <tr>
+        <td><span class="item-name">Patri</span><span class="item-unit">gm</span></td>
+        <td><div class="sv out"><span class="d"></span><strong>0 gm</strong></div><div class="sl">Out of stock</div></td>
+        <td class="mono" style="font-size:11px;color:var(--text-muted);">800 gm</td>
+        <td class="mono" style="color:var(--red);">800 gm</td>
+        <td>
+          <input type="number" class="qty-input" value="800" />
+          <span class="ulbl">gm</span>
+        </td>
+        <td>
+          <select class="seg-select">
+            <option>Seg #51 — 2,000 gm (no expiry)</option>
+          </select>
+          <span class="fefo-badge">No expiry</span>
+        </td>
+        <td>
+          <span class="mono">3,150 gm</span>
+          <div class="proj">You'll retain 80%</div>
+        </td>
+      </tr>
+      <!-- Row 3: Cooking Oil — OUT but qty exceeds -->
+      <tr>
+        <td><span class="item-name">Cooking Oil</span><span class="item-unit">ltr</span></td>
+        <td><div class="sv out"><span class="d"></span><strong>0 ltr</strong></div><div class="sl">Out of stock</div></td>
+        <td class="mono" style="font-size:11px;color:var(--text-muted);">5 ltr</td>
+        <td class="mono" style="color:var(--red);">5 ltr</td>
+        <td>
+          <input type="number" class="qty-input" value="5" />
+          <span class="ulbl">ltr</span>
+        </td>
+        <td>
+          <select class="seg-select">
+            <option>Seg #18 — 24.82 ltr (exp: 2026-07-01)</option>
+          </select>
+          <span class="fefo-badge expiry">FEFO — expires in 31 days</span>
+        </td>
+        <td>
+          <span class="mono">19.82 ltr</span>
+          <div class="proj">You'll retain 80%</div>
+        </td>
+      </tr>
+      <!-- Row 4: Maida — LOW, your stock insufficient -->
+      <tr style="background:var(--amber-light);">
+        <td><span class="item-name">Maida</span><span class="item-unit">kg</span></td>
+        <td><div class="sv low"><span class="d"></span><strong>0.5 kg</strong></div><div class="sl">Low stock</div></td>
+        <td class="mono" style="font-size:11px;color:var(--text-muted);">10 kg</td>
+        <td class="mono" style="color:var(--amber);">9.5 kg</td>
+        <td>
+          <input type="number" class="qty-input warn" value="9.5" />
+          <span class="ulbl">kg</span>
+          <div class="note warn">⚠ You only have 3.2 kg</div>
+        </td>
+        <td>
+          <select class="seg-select">
+            <option>Seg #33 — 3.2 kg (no expiry)</option>
+          </select>
+        </td>
+        <td>
+          <span class="mono" style="color:var(--red);">-6.3 kg</span>
+          <div class="proj neg">Insufficient — reduce qty</div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <div style="padding:4px 16px 12px;">
+    <button class="add-btn">+ Add item manually</button>
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="footer">
+  <div class="footer-left">
+    <div class="val-box">
+      <strong>Review:</strong>
+      <ul>
+        <li>Maida: qty (9.5 kg) exceeds your stock (3.2 kg) — reduce to max 3.2</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-right">
+    <div class="summary-box">
+      <div class="line"><span>Red Meat</span><span>500 gm</span></div>
+      <div class="line"><span>Patri</span><span>800 gm</span></div>
+      <div class="line"><span>Cooking Oil</span><span>5 ltr</span></div>
+      <div class="line"><span>Maida</span><span>9.5 kg</span></div>
+      <div class="line total"><span>4 items to DemoFranchise1</span></div>
+    </div>
+    <button class="submit-btn">Create Dispatch (4 items)</button>
+    <div style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:6px;">A PO will be auto-generated for DemoFranchise1 on dispatch creation</div>
+  </div>
+</div>
+
+<!-- Legend -->
+<div style="margin-top:24px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;">
+  <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;color:var(--text-sec);">Intelligence Elements</div>
+  <div style="font-size:11px;color:var(--text-sec);line-height:2;">
+    <div><strong>B5-01</strong> Destination current stock — "Their Stock" column per item with status</div>
+    <div><strong>B5-02</strong> Destination health strip — "3 out, 1 low" shown on store selection</div>
+    <div><strong>B5-03</strong> Source post-dispatch projection — "You'll retain 60%", negative in red</div>
+    <div><strong>B5-04</strong> Duplicate dispatch warning — "You dispatched here today already"</div>
+    <div><strong>B5-05</strong> FEFO segment badges — "expires in 15 days" on source selector</div>
+    <div><strong>B5-06</strong> Qty exceeds stock warning — Maida row highlighted, "You only have 3.2 kg"</div>
+    <div><strong>B5-07</strong> Gap column — auto-calculated: min_threshold - their_stock</div>
+    <div><strong>Auto-detect needs</strong> — "What This Store Needs" pre-populates items where destination is below min</div>
+    <div style="margin-top:4px;color:var(--text-muted);font-size:10px;"><em>Data: getHierarchyDetail(destination) for their stock, getSourceOptions() for segments, getStockInventory() for your stock, getTransferHistory() for duplicate check</em></div>
+  </div>
+</div>
+
+</div></div></div>
+</body>
+</html>
