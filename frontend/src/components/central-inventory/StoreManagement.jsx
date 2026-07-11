@@ -78,7 +78,7 @@ export default function StoreManagement() {
           }
         }
       });
-      setPushStatusMap(map);
+      setPushStatusMap(prev => ({ ...prev, ...map }));
     });
   }, [children]);
 
@@ -111,7 +111,7 @@ export default function StoreManagement() {
           map[child.id] = { oos, low, ok, total: stocks.length, oosItems: oosItems.slice(0, 5), oosMore: Math.max(0, oosItems.length - 5) };
         }
       });
-      setChildHealthMap(map);
+      setChildHealthMap(prev => ({ ...prev, ...map }));
       if (allRestaurants.length > 0) setAllStores(allRestaurants);
     });
   }, [children]);
@@ -132,6 +132,67 @@ export default function StoreManagement() {
       }));
     return [...children, ...outlets];
   }, [children, allStores, isTopLevel]);
+
+  // INVESTIGATION-FIX: Fetch push status + health for indirect outlets once discovered
+  useEffect(() => {
+    if (!isTopLevel || allStores.length === 0 || children.length === 0) return;
+    const directIds = new Set(children.map(c => c.id));
+    const indirectOutlets = allStores
+      .filter(s => s.restaurant_type === "franchise" && !directIds.has(s.restaurant_id));
+    if (indirectOutlets.length === 0) return;
+
+    // Fetch push status for indirect outlets
+    Promise.allSettled(
+      indirectOutlets.map(s => api.getPushForm(s.restaurant_id))
+    ).then(results => {
+      const updates = {};
+      indirectOutlets.forEach((s, idx) => {
+        if (results[idx].status === "fulfilled") {
+          const data = results[idx].value?.data?.data || results[idx].value?.data;
+          const summary = data?.push_summary;
+          if (summary) {
+            updates[s.restaurant_id] = { behind: summary.total_behind, status: summary.status === "synced" ? "synced" : "stale" };
+          } else {
+            const src = data?.source_entities || {};
+            const existing = data?.child_existing || {};
+            let totalSrc = 0, totalChild = 0;
+            Object.values(src).forEach(items => { totalSrc += Array.isArray(items) ? items.length : 0; });
+            Object.values(existing).forEach(items => { totalChild += Array.isArray(items) ? items.length : 0; });
+            const behind = Math.max(0, totalSrc - totalChild);
+            updates[s.restaurant_id] = { behind, status: behind > 0 ? "stale" : "synced" };
+          }
+        }
+      });
+      if (Object.keys(updates).length > 0) {
+        setPushStatusMap(prev => ({ ...prev, ...updates }));
+      }
+    });
+
+    // Fetch health for indirect outlets
+    Promise.allSettled(
+      indirectOutlets.map(s => api.getHierarchyDetail({ storeRestaurantId: s.restaurant_id }))
+    ).then(results => {
+      const updates = {};
+      indirectOutlets.forEach((s, idx) => {
+        if (results[idx].status === "fulfilled") {
+          const d = results[idx].value?.data?.data || results[idx].value?.data;
+          const stocks = d?.child_stock_summary || d?.stock_summary || [];
+          let oos = 0, low = 0, ok = 0;
+          const oosItems = [];
+          stocks.forEach(st => {
+            const qty = Number(st.cal_quantity || st.display_qty || 0);
+            if (qty === 0) { oos++; oosItems.push(st.stock_title || "Unknown"); }
+            else if (st.is_low_stock) low++;
+            else ok++;
+          });
+          updates[s.restaurant_id] = { oos, low, ok, total: stocks.length, oosItems: oosItems.slice(0, 5), oosMore: Math.max(0, oosItems.length - 5) };
+        }
+      });
+      if (Object.keys(updates).length > 0) {
+        setChildHealthMap(prev => ({ ...prev, ...updates }));
+      }
+    });
+  }, [allStores, children, isTopLevel]);
 
   // Filter
   const filtered = useMemo(() => {

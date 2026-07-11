@@ -1,35 +1,37 @@
 # Central Inventory - PRD
 
 ## Overview
-Central Inventory management system by MyGenie — multi-store hierarchy stock management module for the MyGenie POS platform.
-Cloned from `https://github.com/parth-mygenie/central_inventory.git`, branch `bug_fix_plan_11_07`.
+Central Inventory management system by MyGenie — multi-store hierarchy stock management module.
+Branch: `bug_fix_plan_11_07`
 
 ## Tech Stack
-- **Backend**: Python FastAPI proxy to preprod.mygenie.online (zero business logic)
+- **Backend**: Python FastAPI proxy to preprod.mygenie.online
 - **Frontend**: React 19 + Craco + Tailwind CSS + Radix UI (shadcn)
-- **Database**: MongoDB (local, minimal usage — backend is proxy)
-
-## Architecture
-- Backend acts as API proxy to preprod.mygenie.online APIs
-- Frontend is a full inventory management UI with hierarchy, stock, catalogues, POs, production, wastage, transfers
 
 ## What's Been Implemented (Jul 11, 2026)
 
-### Session 1: BUG-038→045 IMPLEMENTATION + QA — ALL 8/8 PASS
+### Session 1: BUG-038→045 — ALL 8/8 QA PASS
 | Bug | Title | Status |
 |-----|-------|:------:|
 | BUG-038 | PO List Items Column Removed | QA_PASS |
-| BUG-039 | Merged vendor dropdown (history + non-history) | QA_PASS |
-| BUG-040 | Indirect outlet label with parent name | QA_PASS |
-| BUG-041 | useRestaurantMap parent resolution fallback | QA_PASS |
-| BUG-042 | Per-restaurant closing_stock in consumption report | QA_PASS |
+| BUG-039 | Merged vendor dropdown | QA_PASS |
+| BUG-040 | Indirect outlet label | QA_PASS |
+| BUG-041 | useRestaurantMap parent resolution | QA_PASS |
+| BUG-042 | Per-restaurant closing_stock | QA_PASS |
 | BUG-043 | min=0 on PO qty inputs | QA_PASS |
-| BUG-044 | Payment/Total hidden before Receive Goods | QA_PASS |
+| BUG-044 | Payment/Total hidden pre-receive | QA_PASS |
 | BUG-045 | Dispatched tab in Pending Queues | QA_PASS |
 
+### Session 2: INVESTIGATION + FIX — Indirect Outlets Data
+- **Issue**: Central Store (master) saw "—" for Push Status and Stock Health on indirect outlets (grandchildren)
+- **Root cause**: Push status + health data only fetched for direct children; indirect outlets added as shell objects without data
+- **Fix**: Added secondary fetch for indirect outlets' push status + health once discovered via hierarchy-detail. Fixed race condition (state merger pattern).
+- **Result**: Indirect outlets now show push status (e.g., "19 items not pushed" + Push button) and OOS/Low/OK counts. Email still "—" (API gap).
+
 ## Known API Gaps
-- BUG-041: POS API doesn't return `parent_restaurant_name` in login or `from_restaurant_name` in transfer detail for outlets. Workaround: show "Parent Store" with type badge.
+- Email for indirect outlets: `franchise/list` only returns direct children. No API provides email for indirect outlets.
+- BUG-041: `from_restaurant_name` not in transfer detail API for outlets.
 
 ## Next Tasks
-1. Owner smoke testing for BUG-038→045
-2. Consider backend enhancement request for parent name resolution
+- Owner smoke testing
+- Register indirect outlets fix as formal BUG item if desired
