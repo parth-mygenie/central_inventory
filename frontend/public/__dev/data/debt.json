@@ -656,7 +656,7 @@
     "type": "BUG",
     "id": "BUG-037",
     "title": "Food Categories Not Showing — getFoodCategories() doesn't extract r.data.categories",
-    "status": "OPEN",
+    "status": "CLOSED",
     "severity": "HIGH",
     "sprint_key": "S3",
     "sprint_name": "API Reality Check + Intelligent PO",

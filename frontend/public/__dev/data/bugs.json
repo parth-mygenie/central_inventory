@@ -2556,14 +2556,14 @@
     "type": "BUG",
     "id": "BUG-037",
     "title": "Food Categories Not Showing — getFoodCategories() doesn't extract r.data.categories",
-    "status": "OPEN",
+    "status": "CLOSED",
     "severity": "HIGH",
     "sprint_key": "S3",
     "phase": "Product Catalog",
     "files": [
       "frontend/src/services/api.js"
     ],
-    "notes": "API returns {categories:[...]} but code does Array.isArray(r.data) which is false for objects. 1-line fix. Related: CR-012 (CLOSED, different scope).",
+    "notes": "RESOLVED — POS API now returns categories as direct array (was {categories:[...]} during initial investigation, fixed backend-side). Code Array.isArray(r.data) works correctly. Closed 2026-07-10.",
     "artifact_refs": [
       {
         "artifact": 0,
