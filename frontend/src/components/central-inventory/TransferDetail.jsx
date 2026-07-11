@@ -14,12 +14,13 @@ import ReceiveDialog from "./ReceiveDialog";
 import ApproveWaveDialog from "./ApproveWaveDialog";
 import DisputeResolutionDialog from "./DisputeResolutionDialog";
 import ItemEditorDialog from "./ItemEditorDialog";
+import ReturnStockDialog from "./ReturnStockDialog"; // CR-038 — G-006
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { LoadingState, ErrorState, EmptyState } from "@/components/common/StateDisplays";
 import { StoreTypeBadge, StatusBadge } from "@/components/common/Badges";
-import { ArrowLeft, Package, FileWarning, Loader2, Clock, ShieldCheck, BarChart3, RefreshCw, Link2, GitBranch } from "lucide-react";
+import { ArrowLeft, Package, FileWarning, Loader2, Clock, ShieldCheck, BarChart3, RefreshCw, Link2, GitBranch, RotateCcw } from "lucide-react";
 
 /** Line-level status badge (P16) */
 function LineStatusBadge({ status }) {
@@ -84,6 +85,7 @@ export default function TransferDetail() {
   const [disputeOpen, setDisputeOpen] = useState(false);
   const [amendOpen, setAmendOpen] = useState(false);
   const [modificationOpen, setModificationOpen] = useState(false);
+  const [returnOpen, setReturnOpen] = useState(false); // CR-038 — G-006 stock return
 
   const fetchDetail = useCallback(async () => {
     if (!id) return;
@@ -341,6 +343,10 @@ export default function TransferDetail() {
     data.from_restaurant_id, data.to_restaurant_id,
     { hasOutstandingHold, hasApprovedUndispatched }
   );
+
+  // CR-038 — G-006: Return Items shown when viewer is destination AND status is received/partially_received.
+  const canReturn = String(data.to_restaurant_id) === String(restaurantId) &&
+    ["received", "partially_received"].includes(data.status);
 
   return (
     <div data-testid="transfer-detail">
@@ -801,11 +807,25 @@ export default function TransferDetail() {
       )}
 
       {/* Action buttons */}
-      {actions.length > 0 && (
+      {(actions.length > 0 || canReturn) && (
         <Card>
           <CardContent className="py-3 px-4">
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">Actions</p>
             <div className="flex flex-wrap gap-2">
+              {/* CR-038 — G-006 Return Items (destination store, status received/partially_received) */}
+              {canReturn && (
+                <Button
+                  data-testid="action-return-items"
+                  variant="outline"
+                  size="sm"
+                  disabled={submitting}
+                  onClick={() => setReturnOpen(true)}
+                  className="h-7 text-[11px] gap-1"
+                  title="Return items back to the sender"
+                >
+                  <RotateCcw className="h-3 w-3" /> Return Items
+                </Button>
+              )}
               {actions.map((action) => {
                 const tooltips = {
                   approve: "Accept this request and reserve stock for dispatch",
@@ -904,6 +924,14 @@ export default function TransferDetail() {
         submitLabel="Submit Modification"
         onSubmit={handleModificationSubmit}
         submitting={submitting}
+      />
+      {/* CR-038 — G-006 Return Stock dialog */}
+      <ReturnStockDialog
+        transfer={data}
+        lines={lines}
+        open={returnOpen}
+        onClose={() => setReturnOpen(false)}
+        onSuccess={() => fetchDetail()}
       />
     </div>
   );

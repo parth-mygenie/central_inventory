@@ -14,13 +14,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LoadingState, PermissionDenied } from "@/components/common/StateDisplays";
-import { ArrowLeft, Loader2, Trash, AlertTriangle, Info } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { ArrowLeft, Loader2, Trash, AlertTriangle, Info, Plus } from "lucide-react";
 
 export default function WastageEntryForm() {
   const navigate = useNavigate();
   const { restaurantId, canDo } = useLoginContext();
   const { submitting, execute } = useWriteAction();
-  const { reasons: wastageReasons, loading: reasonsLoading, usingFallback } = useWastageReasons();
+  const { reasons: wastageReasons, loading: reasonsLoading, usingFallback, canEdit: canAddReason, refresh: refreshReasons } = useWastageReasons();
 
   const [items, setItems] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
@@ -34,6 +35,10 @@ export default function WastageEntryForm() {
   const [otherReason, setOtherReason] = useState("");
   const [sourceSelector, setSourceSelector] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
+  // CR-038 — G-006 add-reason inline
+  const [showAddReason, setShowAddReason] = useState(false);
+  const [newReasonText, setNewReasonText] = useState("");
+  const [addingReason, setAddingReason] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -259,6 +264,51 @@ export default function WastageEntryForm() {
                 ))}
               </SelectContent>
             </Select>
+            {/* CR-038 — G-006 add new wastage reason (only when API says can_edit) */}
+            {canAddReason && !showAddReason && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 text-[10px] gap-1 mt-1 text-primary"
+                onClick={() => setShowAddReason(true)}
+                data-testid="add-reason-btn"
+              >
+                <Plus className="h-3 w-3" /> Add new reason
+              </Button>
+            )}
+            {canAddReason && showAddReason && (
+              <div className="flex items-center gap-2 mt-1.5" data-testid="add-reason-inline">
+                <Input
+                  value={newReasonText}
+                  onChange={(e) => setNewReasonText(e.target.value)}
+                  placeholder="New reason"
+                  className="h-7 text-xs flex-1"
+                  data-testid="new-reason-input"
+                  disabled={addingReason}
+                />
+                <Button
+                  size="sm"
+                  className="h-7 text-[10px]"
+                  disabled={!newReasonText.trim() || addingReason}
+                  data-testid="save-reason-btn"
+                  onClick={async () => {
+                    setAddingReason(true);
+                    try {
+                      await api.addWastageReason(newReasonText.trim());
+                      toast({ title: "Reason added" });
+                      setNewReasonText("");
+                      setShowAddReason(false);
+                      refreshReasons();
+                    } catch (e) {
+                      toast({ title: e?.response?.data?.message || "Failed to add reason", variant: "destructive" });
+                    } finally { setAddingReason(false); }
+                  }}
+                >
+                  {addingReason ? <Loader2 className="h-3 w-3 animate-spin" /> : "Save"}
+                </Button>
+                <Button variant="ghost" size="sm" className="h-7 text-[10px]" onClick={() => { setShowAddReason(false); setNewReasonText(""); }}>Cancel</Button>
+              </div>
+            )}
           </div>
 
           {reason === "other" && (

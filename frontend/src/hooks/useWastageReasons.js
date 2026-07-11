@@ -5,17 +5,23 @@ import { WASTAGE_REASONS } from "@/lib/reasonCategories";
 /**
  * P25: Fetches store's configured wastage reasons from API.
  * Falls back to hardcoded WASTAGE_REASONS on error.
+ * CR-038 — exposes canEdit from API for add-reason inline.
  */
 export function useWastageReasons() {
   const [reasons, setReasons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [usingFallback, setUsingFallback] = useState(false);
+  const [canEdit, setCanEdit] = useState(false); // CR-038
 
   const fetch = useCallback(async () => {
     setLoading(true);
     try {
       const resp = await api.getWastageReasons();
-      const apiReasons = resp.data || [];
+      const body = resp.data || {};
+      // API may return {reasons:[], is_master, can_edit} or a flat array
+      const apiReasons = Array.isArray(body) ? body : (body.reasons || body.data || []);
+      const edit = body.can_edit === true; // CR-038
+      setCanEdit(edit);
       if (apiReasons.length > 0) {
         const mapped = apiReasons.map((r) => ({
           value: String(r.id),
@@ -39,5 +45,5 @@ export function useWastageReasons() {
 
   useEffect(() => { fetch(); }, [fetch]);
 
-  return { reasons, loading, usingFallback, refresh: fetch };
+  return { reasons, loading, usingFallback, canEdit, refresh: fetch };
 }

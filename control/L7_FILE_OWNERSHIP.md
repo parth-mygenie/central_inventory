@@ -1,6 +1,6 @@
 # L7 — File Ownership (Frozen vs Active)
 
-> **Updated:** 2026-06-15 (BUG-029→035 implemented — 8 files modified)
+> **Updated:** 2026-07-11 (CR-037→044 Gap Adoption batch implemented — 16 files: 2 new + 14 modified)
 
 ---
 
@@ -109,6 +109,27 @@
 | `frontend/src/components/central-inventory/PurchaseOrderList.jsx` | MODIFIED — Items column removed (BUG-038), Payment/Total conditional (BUG-044) | BUG-038, BUG-044 |
 | `frontend/src/components/central-inventory/StoreManagement.jsx` | MODIFIED — Indirect outlet label with parent name | BUG-040 |
 | `frontend/src/components/central-inventory/PendingQueues.jsx` | MODIFIED — Dispatched tab added | BUG-045 |
+
+### CR-037→044: Gap Adoption Batch (16 files: 2 new + 14 modified, session 2026-07-11)
+| File | Change | CR |
+|------|--------|-----|
+| `frontend/src/services/api.js` | MODIFIED — +10 methods: getStockLedger, getReturnEligible, initiateReturn, addWastageReason, checkInvoiceNumber, getCatalogPolicy, updateCatalogPolicy, getPOImportTemplate, parsePOImport; cache invalidation | CR-037/038/039/040/043 |
+| `frontend/src/components/central-inventory/HistoryLedger.jsx` | MODIFIED — Server-driven ledger (G-005), source_type badges, before/after, pagination | CR-037 |
+| `frontend/src/components/central-inventory/TransferDetail.jsx` | MODIFIED — qty_before/after columns + Return Items button + ReturnStockDialog | CR-037/038 |
+| `frontend/src/components/central-inventory/ReturnStockDialog.jsx` | **NEW** — Stock return dialog (line picker, qty subset, error mapping) | CR-038 |
+| `frontend/src/hooks/useWastageReasons.js` | MODIFIED — Exposed canEdit from API for add-reason inline | CR-038 |
+| `frontend/src/components/central-inventory/WastageEntryForm.jsx` | MODIFIED — Add new reason inline (when can_edit) | CR-038 |
+| `frontend/src/components/central-inventory/PurchaseOrderDetail.jsx` | MODIFIED — Invoice duplicate pre-check (debounced, warn-only) | CR-040 |
+| `frontend/src/components/central-inventory/StockDetailPanel.jsx` | MODIFIED — Unit Cost + Batch Value columns in FEFO table, total value | CR-041 |
+| `frontend/src/components/central-inventory/IngredientCatalogue.jsx` | MODIFIED — Unit conversion edit/create/display (G-020) + pushed lock badge + error mapping (G-028/029) | CR-042/043 |
+| `frontend/src/components/central-inventory/ProductCatalogue.jsx` | MODIFIED — Pushed lock badge + friendly 403 mapping | CR-043 |
+| `frontend/src/components/central-inventory/SubRecipeMaster.jsx` | MODIFIED — Pushed lock badge + friendly 403 mapping | CR-043 |
+| `frontend/src/components/central-inventory/RecipeCatalogue.jsx` | MODIFIED — Manufactured toggle + fields (G-030) + pushed lock badge + error mapping | CR-043/044 |
+| `frontend/src/components/central-inventory/StoreManagement.jsx` | MODIFIED — CatalogPolicyCard (6 switches, per-child, G-029) | CR-043 |
+| `frontend/src/lib/apiErrors.js` | **NEW** — friendlyCatalogError() for PUSHED_CATALOG_LOCKED/CHILD_CATALOG_POLICY_DENIED | CR-043 |
+| `backend/server.py` | MODIFIED — +2 passthrough routes (binary template GET, multipart parse POST) | CR-039 |
+| `frontend/src/components/central-inventory/AddStockPurchaseForm.jsx` | MODIFIED — Template download + file upload + parse preview + continue to PO | CR-039 |
+| `frontend/src/components/central-inventory/PurchaseOrderCreate.jsx` | MODIFIED — Accept importedLines from location.state | CR-039 |
 
 ## Key Dependencies
 

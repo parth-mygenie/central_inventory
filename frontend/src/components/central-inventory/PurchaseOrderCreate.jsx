@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { useLoginContext } from "@/hooks/useLoginContext";
 import api from "@/services/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -55,6 +55,7 @@ function getCheapestVendor(itemName, itemId, purchaseData, vendors) {
 export default function PurchaseOrderCreate() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation(); // CR-039
   const { restaurantId } = useLoginContext();
 
   const [vendors, setVendors] = useState([]);
@@ -107,6 +108,36 @@ export default function PurchaseOrderCreate() {
   }, [restaurantId]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  // CR-039 — G-015: Hydrate vendor lines from imported Excel rows (via location.state.importedLines).
+  useEffect(() => {
+    const imported = location.state?.importedLines;
+    if (!imported || !Array.isArray(imported) || imported.length === 0) return;
+    if (!rawMaterialItems.length) return; // wait for data
+    // Map imported rows to vendor lines shape (best-effort by name/id match)
+    const mapped = imported.map((row) => {
+      const name = (row.stock_title || row.name || row.ingredient_name || "").toLowerCase().trim();
+      const match = rawMaterialItems.find((i) =>
+        String(i.id) === String(row.inventory_master_id || row.id) ||
+        (i.stock_title || "").toLowerCase().trim() === name
+      );
+      return {
+        id: match?.id || row.inventory_master_id || row.id || "",
+        stock_title: match?.stock_title || row.stock_title || row.name || "",
+        unit: row.unit || match?.unit || "kg",
+        qty: String(row.quantity || row.qty || ""),
+        rate: String(row.rate || row.price || ""),
+        selected: true,
+      };
+    }).filter((l) => l.id);
+    if (mapped.length > 0) {
+      setVendorLines(mapped);
+      setMode("vendor");
+      setStep("items");
+      toast({ title: `${mapped.length} items imported from Excel` });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rawMaterialItems]);
 
   // BUG-030: Fetch real consumption data from daily-consumption-report
   useEffect(() => {

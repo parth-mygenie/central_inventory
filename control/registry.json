@@ -4,7 +4,7 @@
     "repo": "parth-mygenie/central_inventory",
     "branch": "13-6-26",
     "schema_version": "1.0",
-    "last_updated": "2026-07-11",
+    "last_updated": "2026-07-11T16:34:43Z",
     "generator": "control/gen_dashboard_data.js"
   },
   "sprints": {
@@ -5339,7 +5339,7 @@
       "type": "CR",
       "id": "CR-037",
       "title": "Unified Stock Ledger Adoption (G-005 + G-002/003/004)",
-      "status": "PLANNED",
+      "status": "IMPLEMENTED",
       "severity": "P1",
       "sprint_key": null,
       "phase": "Gap Adoption (backend gaps resolved 2026-07-07)",
@@ -5377,8 +5377,8 @@
         {
           "artifact": 4,
           "label": "Code-Gate",
-          "status": "PENDING",
-          "path": null
+          "status": "DONE",
+          "path": "control/sessions/SESSION_HANDOVER_20260711_CR037_044_IMPL.md"
         },
         {
           "artifact": 5,
@@ -5398,7 +5398,7 @@
       "type": "CR",
       "id": "CR-038",
       "title": "Stock Return Flow + Wastage Reasons CRUD (G-006)",
-      "status": "PLANNED",
+      "status": "IMPLEMENTED",
       "severity": "P1",
       "sprint_key": null,
       "phase": "Gap Adoption (backend gaps resolved 2026-07-07)",
@@ -5437,8 +5437,8 @@
         {
           "artifact": 4,
           "label": "Code-Gate",
-          "status": "PENDING",
-          "path": null
+          "status": "DONE",
+          "path": "control/sessions/SESSION_HANDOVER_20260711_CR037_044_IMPL.md"
         },
         {
           "artifact": 5,
@@ -5458,7 +5458,7 @@
       "type": "CR",
       "id": "CR-039",
       "title": "Procurement Excel/CSV Import (G-015)",
-      "status": "PLANNED",
+      "status": "IMPLEMENTED",
       "severity": "P2",
       "sprint_key": null,
       "phase": "Gap Adoption (backend gaps resolved 2026-07-07)",
@@ -5497,8 +5497,8 @@
         {
           "artifact": 4,
           "label": "Code-Gate",
-          "status": "PENDING",
-          "path": null
+          "status": "DONE",
+          "path": "control/sessions/SESSION_HANDOVER_20260711_CR037_044_IMPL.md"
         },
         {
           "artifact": 5,
@@ -5518,7 +5518,7 @@
       "type": "CR",
       "id": "CR-040",
       "title": "Invoice Number Duplicate Pre-Check (G-016)",
-      "status": "PLANNED",
+      "status": "IMPLEMENTED",
       "severity": "P2",
       "sprint_key": null,
       "phase": "Gap Adoption (backend gaps resolved 2026-07-07)",
@@ -5555,8 +5555,8 @@
         {
           "artifact": 4,
           "label": "Code-Gate",
-          "status": "PENDING",
-          "path": null
+          "status": "DONE",
+          "path": "control/sessions/SESSION_HANDOVER_20260711_CR037_044_IMPL.md"
         },
         {
           "artifact": 5,
@@ -5576,7 +5576,7 @@
       "type": "CR",
       "id": "CR-041",
       "title": "Segment unit_cost on Stock Detail (G-019)",
-      "status": "PLANNED",
+      "status": "IMPLEMENTED",
       "severity": "P2",
       "sprint_key": null,
       "phase": "Gap Adoption (backend gaps resolved 2026-07-07)",
@@ -5612,8 +5612,8 @@
         {
           "artifact": 4,
           "label": "Code-Gate",
-          "status": "PENDING",
-          "path": null
+          "status": "DONE",
+          "path": "control/sessions/SESSION_HANDOVER_20260711_CR037_044_IMPL.md"
         },
         {
           "artifact": 5,
@@ -5633,7 +5633,7 @@
       "type": "CR",
       "id": "CR-042",
       "title": "Custom Unit Conversion Adoption (G-020)",
-      "status": "PLANNED",
+      "status": "IMPLEMENTED",
       "severity": "P1",
       "sprint_key": null,
       "phase": "Gap Adoption (backend gaps resolved 2026-07-07)",
@@ -5669,8 +5669,8 @@
         {
           "artifact": 4,
           "label": "Code-Gate",
-          "status": "PENDING",
-          "path": null
+          "status": "DONE",
+          "path": "control/sessions/SESSION_HANDOVER_20260711_CR037_044_IMPL.md"
         },
         {
           "artifact": 5,
@@ -5690,7 +5690,7 @@
       "type": "CR",
       "id": "CR-043",
       "title": "Pushed Catalog Lock UI + Child Edit Policy (G-028/G-029)",
-      "status": "PLANNED",
+      "status": "IMPLEMENTED",
       "severity": "P1",
       "sprint_key": null,
       "phase": "Gap Adoption (backend gaps resolved 2026-07-07)",
@@ -5732,8 +5732,8 @@
         {
           "artifact": 4,
           "label": "Code-Gate",
-          "status": "PENDING",
-          "path": null
+          "status": "DONE",
+          "path": "control/sessions/SESSION_HANDOVER_20260711_CR037_044_IMPL.md"
         },
         {
           "artifact": 5,
@@ -5753,7 +5753,7 @@
       "type": "CR",
       "id": "CR-044",
       "title": "Manufactured Recipe Auto Sub-Recipe (G-030)",
-      "status": "PLANNED",
+      "status": "IMPLEMENTED",
       "severity": "P2",
       "sprint_key": null,
       "phase": "Gap Adoption (backend gaps resolved 2026-07-07)",
@@ -5790,8 +5790,8 @@
         {
           "artifact": 4,
           "label": "Code-Gate",
-          "status": "PENDING",
-          "path": null
+          "status": "DONE",
+          "path": "control/sessions/SESSION_HANDOVER_20260711_CR037_044_IMPL.md"
         },
         {
           "artifact": 5,

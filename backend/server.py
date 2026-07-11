@@ -126,6 +126,41 @@ async def proxy_auth_login(request: Request):
     return JSONResponse(content=data, status_code=resp.status_code)
 
 
+# ── CR-039 — G-015 Binary template download passthrough ──────────
+from fastapi.responses import Response as RawResponse
+
+@api_router.get("/proxy/v2/inventory/purchase-order/import-template")
+async def proxy_import_template(request: Request):
+    headers = {"Accept": "*/*"}
+    if request.headers.get("Authorization"):
+        headers["Authorization"] = request.headers["Authorization"]
+    async with httpx.AsyncClient(timeout=60.0) as http:
+        resp = await http.get(f"{PREPROD_V2}/inventory/purchase-order/import-template", headers=headers)
+    return RawResponse(
+        content=resp.content,
+        status_code=resp.status_code,
+        media_type=resp.headers.get("content-type", "application/octet-stream"),
+        headers={"Content-Disposition": resp.headers.get("content-disposition", "attachment; filename=po_import_template.xlsx")},
+    )
+
+# ── CR-039 — G-015 Multipart parse-import passthrough ────────────
+@api_router.post("/proxy/v2/inventory/purchase-order/parse-import")
+async def proxy_parse_import(request: Request):
+    headers = {"Accept": "application/json"}
+    if request.headers.get("Authorization"):
+        headers["Authorization"] = request.headers["Authorization"]
+    form = await request.form()
+    upload = form.get("file")
+    files = {"file": (upload.filename, await upload.read(), upload.content_type)} if upload else None
+    async with httpx.AsyncClient(timeout=60.0) as http:
+        resp = await http.post(f"{PREPROD_V2}/inventory/purchase-order/parse-import", headers=headers, files=files)
+    try:
+        content = resp.json()
+    except Exception:
+        content = {"raw": resp.text}
+    return JSONResponse(content=content, status_code=resp.status_code)
+
+
 # ── Generic proxy for ALL V2 endpoints (real POS API pass-through) ─
 @api_router.api_route("/proxy/v2/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
 async def proxy_v2(path: str, request: Request):

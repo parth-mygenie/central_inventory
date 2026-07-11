@@ -30,6 +30,10 @@ export default function AddStockPurchaseForm() {
   const [showCommercial, setShowCommercial] = useState(false);
   const [confirmMode, setConfirmMode] = useState(false);
   const [successResult, setSuccessResult] = useState(null);
+  // CR-039 — G-015 excel import state
+  const [excelParsing, setExcelParsing] = useState(false);
+  const [excelRows, setExcelRows] = useState([]);
+  const [excelError, setExcelError] = useState(null);
 
   // Multi-line items
   const [lines, setLines] = useState([createEmptyLine()]);
@@ -283,7 +287,7 @@ export default function AddStockPurchaseForm() {
             </CardContent>
           </Card>
 
-          {/* Excel Upload */}
+          {/* Excel Upload — CR-039 G-015 wired */}
           <Card className="mb-4">
             <CardHeader className="py-2.5 px-4">
               <CardTitle className="text-xs uppercase tracking-wider text-muted-foreground">Or Import Excel / CSV</CardTitle>
@@ -294,20 +298,84 @@ export default function AddStockPurchaseForm() {
                   <FileSpreadsheet className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
                   <p className="text-xs font-semibold">Drop Excel/CSV here</p>
                   <p className="text-[10px] text-muted-foreground mt-1">.xlsx, .xls, .csv — max 5MB</p>
-                  <Input type="file" accept=".xlsx,.xls,.csv" className="mt-2 max-w-[200px] mx-auto h-7 text-xs" data-testid="excel-file-input" />
+                  <Input
+                    type="file"
+                    accept=".xlsx,.xls,.csv"
+                    className="mt-2 max-w-[200px] mx-auto h-7 text-xs"
+                    data-testid="excel-file-input"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      if (file.size > 5 * 1024 * 1024) { toast({ title: "File too large (max 5MB)", variant: "destructive" }); return; }
+                      try {
+                        setExcelParsing(true); setExcelError(null); setExcelRows([]);
+                        const resp = await api.parsePOImport(file);
+                        const body = resp.data?.data || resp.data || {};
+                        const rows = body.items || body.rows || body.lines || [];
+                        if (rows.length === 0) { setExcelError("No items parsed from the file."); }
+                        else { setExcelRows(rows); }
+                      } catch (err) {
+                        setExcelError(err?.response?.data?.message || "Failed to parse file");
+                      } finally { setExcelParsing(false); }
+                    }}
+                  />
+                  {excelParsing && <p className="text-[10px] text-muted-foreground mt-2"><Loader2 className="h-3 w-3 inline animate-spin mr-1" />Parsing…</p>}
                 </div>
                 <div className="border border-border rounded-lg p-6 text-center">
                   <p className="text-xs font-semibold mb-1">Need a template?</p>
                   <p className="text-[10px] text-muted-foreground mb-3">Download format with items pre-filled</p>
-                  <Button variant="outline" size="sm" className="text-xs" data-testid="download-template-btn">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                    data-testid="download-template-btn"
+                    onClick={async () => {
+                      try {
+                        const resp = await api.getPOImportTemplate();
+                        const url = URL.createObjectURL(resp.data);
+                        const a = document.createElement("a"); a.href = url; a.download = "po_import_template.xlsx"; a.click();
+                        URL.revokeObjectURL(url);
+                      } catch (err) {
+                        toast({ title: err?.response?.data?.message || "Failed to download template", variant: "destructive" });
+                      }
+                    }}
+                  >
                     <Download className="h-3 w-3 mr-1" /> Download Template
                   </Button>
                 </div>
               </div>
-              <div className="flex items-start gap-2 p-2 mt-3 rounded bg-muted/30 text-[10px] text-muted-foreground">
-                <Info className="h-3 w-3 mt-0.5 shrink-0" />
-                <span>Excel parsing requires backend setup (G-015). Template download will be available once configured.</span>
-              </div>
+              {/* CR-039 — parsed rows preview */}
+              {excelError && (
+                <div className="flex items-start gap-2 p-2 mt-3 rounded bg-destructive/10 text-destructive text-[10px]">
+                  <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
+                  <span>{excelError}</span>
+                </div>
+              )}
+              {excelRows.length > 0 && (
+                <div className="mt-3" data-testid="excel-preview">
+                  <p className="text-[10px] font-semibold text-muted-foreground mb-1">{excelRows.length} items parsed</p>
+                  <div className="border rounded max-h-40 overflow-auto text-[10px]">
+                    <table className="w-full">
+                      <thead className="bg-muted/50 sticky top-0"><tr>
+                        {Object.keys(excelRows[0]).slice(0, 5).map((k) => <th key={k} className="px-2 py-1 text-left font-medium">{k}</th>)}
+                      </tr></thead>
+                      <tbody>
+                        {excelRows.slice(0, 20).map((row, i) => (
+                          <tr key={i} className="border-t">{Object.values(row).slice(0, 5).map((v, j) => <td key={j} className="px-2 py-0.5">{String(v ?? "")}</td>)}</tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <Button
+                    size="sm"
+                    className="mt-2 h-7 text-[10px] gap-1"
+                    data-testid="excel-continue-po"
+                    onClick={() => navigate("/purchase/orders/new", { state: { importedLines: excelRows } })}
+                  >
+                    Continue to PO Create <ArrowRight className="h-3 w-3" />
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
