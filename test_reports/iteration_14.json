@@ -1,0 +1,80 @@
+{
+  "summary": "P12/P14 Contract Testing Complete - Request Stock form correctly implements no-SourceSelector contract. All 10 backend API tests passed (100%). All 13 frontend features tested and working correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_p12_p14_contract.py",
+    "/app/test_reports/pytest/p12_p14_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "RequestStockForm.jsx correctly REMOVED SourceSelector per P12/P14 contract - requester no longer owns batch/segment selection",
+    "source_selector is correctly OMITTED from request payload - sender allocates at dispatch via auto-FEFO",
+    "available_display_qty is correctly shown as informational only - does NOT block submit when 0",
+    "DirectDispatchForm.jsx correctly PRESERVES SourceSelector for own-store segment selection (regression check passed)",
+    "Submit button correctly enabled when item+quantity selected (no selector required)"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_p12_p14_contract.py"
+  ],
+  "success_rate": {
+    "backend": "100% (10/10 pytest tests passed)",
+    "frontend": "100% (13/13 features tested)"
+  },
+  "test_credentials": {
+    "franchise_user": "owner@demofranchise4.com / Qplazm@10 (rid=786, type=franchise, parent=782)",
+    "central_user": "owner@democentral2.com / Qplazm@10 (rid=782, type=central)"
+  },
+  "seed_data_creation": "None - using real POS API via proxy",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "P12/P14 contract fully implemented and tested. Key changes from iteration 13: SourceSelector REMOVED from RequestStockForm (was present before). Now requester only selects source store + SKU + quantity. Sender (central) allocates batch/segment at dispatch via auto-FEFO. Transfer 96 created during testing proves full lifecycle works.",
+  "features_tested": {
+    "backend_api_tests": {
+      "test_01_request_sources_returns_sources": "PASS - Returns sources with can_submit_request and relation",
+      "test_02_request_catalog_returns_items": "PASS - Returns items with source_inventory_master_id",
+      "test_03_request_without_source_selector_succeeds": "PASS - P12 contract: request without selector creates transfer",
+      "test_04_request_with_source_selector_backward_compat": "PASS - Backward compat: request with selector still accepted",
+      "test_05_approve_no_selector_request_succeeds": "PASS - Approve on no-selector request works",
+      "test_06_dispatch_auto_fefo_on_no_selector_request": "PASS - P14 contract: dispatch with {} uses auto-FEFO",
+      "test_07_full_lifecycle_without_source_selector": "PASS - request→approve→dispatch lifecycle works",
+      "test_pending_queues_loads": "PASS - Regression: pending queues endpoint works",
+      "test_transfer_history_loads": "PASS - Regression: transfer history endpoint works",
+      "test_hierarchy_summary_loads": "PASS - Regression: hierarchy summary endpoint works"
+    },
+    "frontend_ui_tests": {
+      "1_request_stock_form_loads": "PASS - Form loads at /request/new",
+      "2_no_source_selector_visible": "PASS - SourceSelector NOT visible (P12/P14 contract)",
+      "3_source_picker_shows_sources": "PASS - Shows 3 sources with relation labels",
+      "4_relation_labels_correct": "PASS - Direct Parent, Upstream Central, Sibling labels shown",
+      "5_catalog_items_load": "PASS - 4 items load from selected source",
+      "6_availability_hint_informational": "PASS - Shows 'Source has ~X unit (indicative)'",
+      "7_no_selector_after_item_selection": "PASS - SourceSelector does NOT appear after item selection",
+      "8_submit_enabled_without_selector": "PASS - Submit button enabled with item+quantity only",
+      "9_request_submission_succeeds": "PASS - Transfer #96 created successfully",
+      "10_navigates_to_transfer_detail": "PASS - Navigated to /transfer/96 after submit",
+      "11_direct_dispatch_has_selector": "PASS - Regression: SourceSelector visible in /dispatch/new",
+      "12_pending_queues_loads": "PASS - Regression: Pending Queues page loads",
+      "13_history_ledger_loads": "PASS - Regression: History & Ledger page loads"
+    }
+  },
+  "api_contracts_verified": {
+    "POST /api/proxy/v2/inventory-transfer/request-sources": "Returns sources[] with can_submit_request and relation",
+    "POST /api/proxy/v2/inventory-transfer/request-catalog": "Returns items[] with source_inventory_master_id and available_display_qty",
+    "POST /api/proxy/v2/inventory-transfer/request": "Accepts items WITHOUT source_selector (P12 contract)",
+    "POST /api/proxy/v2/inventory-transfer/approve/{id}": "Succeeds on no-selector request",
+    "POST /api/proxy/v2/inventory-transfer/dispatch/{id}": "With {} body uses auto-FEFO (P14 contract)"
+  },
+  "key_contract_changes_verified": {
+    "P12_contract": "source_selector is OPTIONAL on request - requester no longer owns batch/segment selection",
+    "P14_contract": "dispatch without stored selector uses auto-FEFO allocation",
+    "selector_ownership": "Requester owns: source store, SKU, quantity. Sender owns: batch/segment allocation at dispatch"
+  }
+}
