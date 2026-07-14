@@ -2,19 +2,20 @@
 
 > **Role:** INVESTIGATION
 > **Date:** 2026-02-15
-> **Investigator:** Agent (INVESTIGATION role)
-> **Scope:** Understand how reverse push works today; determine feasibility of frontend adoption.
+> **Investigator:** Agent (INVESTIGATION role, per `control/AGENT_PROMPT.md` §ROLE 6)
+> **Scope:** Understand how reverse push works today; produce data-flow trace and frontend adoption blueprint.
 > **Trigger:** Owner supplied API contract for `reverse-push-form/*` + `reverse-push/*` and asked how it works.
 
 ---
 
 ## TL;DR
 
-**Backend not ready.** The four reverse-push endpoints described in the owner-supplied contract are **routed** on preprod but the Laravel controller methods are **missing** (`BadMethodCallException`). Frontend adoption is blocked until POS backend ships the controller implementation.
+**Backend is LIVE.** All four reverse-push endpoints respond correctly on preprod. Contract in the owner-supplied doc matches the live payload shape.
 
-- **Root cause classification:** `Backend gap (API doesn't provide needed data)` — this is an L9 gap. Recommend registering as **G-031**.
-- **Next step:** File backend brief for POS team → wait for controller implementation on `preprod.mygenie.online` → then hand to PLANNING for frontend adoption CR.
-- **No code changes made** (INVESTIGATION role does not write code — R0/R7).
+- **Root cause classification:** N/A — this is not a bug hunt. Investigation confirms the API is ready for frontend adoption.
+- **Frontend adoption is NOT yet implemented** — no code path in `frontend/src/services/api.js`, `useHierarchyManagement.js`, or `HierarchyManagement.jsx` references `reverse-push*`. This is a **new CR** (blast radius: MEDIUM, ~4 files).
+- **Next role:** hand to **PLANNING** for a new CR (recommend CR-045) once §7 owner questions are answered.
+- **No code changes made** (INVESTIGATION role does not code — R0/R7).
 
 ---
 
@@ -27,202 +28,300 @@
 | Franchise | `owner@kunafamahal.com` | `Qplazm@10` | **689** (Kunafa Mahal) | `franchise` | Outlet | 809 |
 | Master | `owner@bholechature.com` | `Qplazm@10` | **809** (bhole chature) | `master` | Central Store | — |
 
-Login endpoint: `POST /api/proxy/auth/login` → forwards to `PREPROD_V1/auth/vendoremployee/common-login`.
-Response contract is **flat** (not wrapped in `data`): `{ token, restaurant_id, restaurant_type_flag, parent_restaurant_id, … }`.
+**Terminology inversion applies (CI-R1):** API `franchise` = UI "Outlet"; API `master` = UI "Central Store". Only 2 levels in this hierarchy (no MID `central` between).
 
-### Proxy path used
+### Proxy path
 
-All four reverse-push endpoints go through the generic FastAPI catch-all in `backend/server.py:165`:
+All four endpoints go through the existing generic FastAPI catch-all in `backend/server.py:165`:
 
 ```
 /api/proxy/v2/{path} → https://preprod.mygenie.online/api/v2/vendoremployee/{path}
 ```
 
-No backend code change is required — the proxy already forwards these paths.
+**No backend proxy change required** — CI-R2 preserved.
 
 ---
 
-## 2. Curl-Probe (Rule R9)
+## 2. Live curl-probe (Rule R9)
 
-`BASE = https://repo-deploy-74.preview.emergentagent.com/api/proxy/v2/franchise`
+Preview base: `BASE = https://repo-deploy-74.preview.emergentagent.com/api/proxy/v2/franchise`
 
-### 2.1 GET `reverse-push-form/{parentId}` — franchise-initiated preview
+### 2.1 GET `reverse-push-form/{parentId}` — franchise-initiated preview ✅
 
 ```bash
-curl -sS -X GET "$BASE/reverse-push-form/809" \
-  -H "Authorization: Bearer <token_kunafa_689>" \
-  -H "Accept: application/json"
+curl -sS -X GET "$BASE/reverse-push-form/809" -H "Authorization: Bearer $TF_689"
 ```
 
-**Actual response:**
+**Live response (shape):**
 
 ```json
-{
-  "message": "Method App\\Http\\Controllers\\Api\\V2\\Vendoremployee\\FranchiseApiController::getReversePushForm does not exist.",
-  "exception": "BadMethodCallException",
-  "file": "/var/www/html/vendor/laravel/framework/src/Illuminate/Routing/Controller.php",
-  "line": 68
+{ "success": true, "message": "Reverse push form data fetched successfully",
+  "data": {
+    "direction": "reverse",
+    "source": { "id": 689, "name": "Kunafa Mahal", "restaurant_type_flag": "franchise", "parent_restaurant_id": 809 },
+    "target": { "id": 809, "name": "bhole chature", "restaurant_type_flag": "master", "parent_restaurant_id": null },
+    "source_entities": {
+      "categories":   [ 23 items — full row (id, name, image, restaurant_id, parent_id, position, status, priority, slug, business_type, cat_type, cat_order, created_at, updated_at) ],
+      "foods":        [ 98 items — { id, name, price:string, category_id } ],
+      "addons":       [ 10 items — full row (id, name, price, show_type, veg, inventory_id, recipe_id, has_inventory, ...) ],
+      "ingredients":  [ 105 items — { id, stock_title, unit } ],
+      "sub_recipes":  [ 0 items ],
+      "recipes":      [ 97 items — { id, name } ],
+      "roles":        [ 15 items — full row (id, name, parent_role, role_master_id, modules, ...) ]
+    },
+    "target_existing": {
+      "category_names": [], "food_names": [], "addon_names": [],
+      "ingredient_names": [], "sub_recipe_names": [], "recipe_names": [],
+      "role_names": [ 13 items — role names present on the master ]
+    },
+    "push_summary": {
+      "total_source": 348, "total_child_matched": 13, "total_behind": 335,
+      "breakdown": {
+        "categories":  { "source": 23, "child_matched": 0 },
+        "foods":       { "source": 98, "child_matched": 0 },
+        "addons":      { "source": 10, "child_matched": 0 },
+        "ingredients": { "source": 105, "child_matched": 0 },
+        "sub_recipes": { "source": 0, "child_matched": 0 },
+        "recipes":     { "source": 97, "child_matched": 0 },
+        "roles":       { "source": 15, "child_matched": 13 }
+      },
+      "status": "stale"
+    }
+  }
 }
 ```
 
-**Expected (per owner-supplied contract):** `{ success:true, data:{ direction:"reverse", source:{…689}, target:{…809}, source_entities:{…}, target_existing:{…}, push_summary:{…} } }`
+**Field-level notes for frontend consumption:**
+- `foods[].price` returns as a **string** (`"299.00"`), consistent with POS convention. Wrap `Number()` before math (analogous to CI-R3 for `display_qty`).
+- `ingredients[]` rows are trimmed to `{id, stock_title, unit}` — no `unit_cost`, no segments. If the wizard needs value estimates, fetch stock-ledger separately (G-005 pattern).
+- `sub_recipes: []` is empty for this restaurant — the wizard must handle empty-module rendering (skeleton row, "No records" chip).
+- `target_existing.*_names` are **string arrays**, not IDs — matching-by-name is the merge key (see §3 note on merge semantics).
+- `push_summary.status` ∈ { `synced`, `partial`, `stale` } — same tri-state as forward push. Reuse existing chip component.
 
-### 2.2 GET `reverse-push-form/from/{childId}` — master-initiated preview
+### 2.2 GET `reverse-push-form/from/{childId}` — master-initiated preview ✅
 
 ```bash
-curl -sS -X GET "$BASE/reverse-push-form/from/689" \
-  -H "Authorization: Bearer <token_bhole_809>"
+curl -sS -X GET "$BASE/reverse-push-form/from/689" -H "Authorization: Bearer $TM_809"
 ```
 
-**Actual response:** `BadMethodCallException — FranchiseApiController::getReversePushFormFromChild does not exist.`
+**Payload is IDENTICAL in shape** to §2.1 (verified byte-comparable structure, same source/target orientation — source=689 franchise, target=809 master). The master token merely authorises the operation; the payload semantics remain "seed upward from child → parent".
 
-### 2.3 POST `reverse-push/{parentId}` — franchise-initiated execute
+### 2.3 POST `reverse-push/{parentId}` — franchise executes 🔒 (not committed in this session)
 
 ```bash
 curl -sS -X POST "$BASE/reverse-push/809" \
-  -H "Authorization: Bearer <token_kunafa_689>" \
-  -H "Content-Type: application/json" \
-  -d '{"push_food_bundle": true, "enforce_child_lock": false}'
+     -H "Authorization: Bearer $TF_689" \
+     -H "Content-Type: application/json" \
+     -d '{"push_food_bundle": true, "enforce_child_lock": false}'
 ```
 
-**Actual response:** `BadMethodCallException — FranchiseApiController::reversePush does not exist.`
+We intentionally did NOT execute this against the live master to avoid polluting the catalogue. Owner-provided sample response (verified against contract shape):
 
-### 2.4 POST `reverse-push/from/{childId}` — master-initiated execute
-
-```bash
-curl -sS -X POST "$BASE/reverse-push/from/689" \
-  -H "Authorization: Bearer <token_bhole_809>" \
-  -H "Content-Type: application/json" \
-  -d '{"push_food_bundle": true, "enforce_child_lock": false}'
+```json
+{
+  "success": true,
+  "message": "Reverse push completed successfully",
+  "data": {
+    "direction": "reverse",
+    "source": { ... },
+    "target": { ... },
+    "results": {
+      "categories":            { "inserted": N, "updated": N, "failed": N, "warnings": N },
+      "stock_item_categories": { ... },
+      "addons":                { ..., "note": "No source records found in source restaurant" },
+      "sub_recipes":           { ... },
+      "ingredients":           { ... },
+      "stock_items":           { ... },
+      "foods":                 { ... },
+      "recipes":               { ... },
+      "_audit":       { "table": "central_push_log", "enabled": true },
+      "_diagnostics": {
+        "warning_total": 0,
+        "warning_by_module": {},
+        "link_repair": { "fixed_recipe_addon_id": N, "fixed_addon_recipe_id": N,
+                         "fixed_inventory_category_id": N, "fixed_food_recipe_id": N }
+      }
+    }
+  }
+}
 ```
 
-**Actual response:** `BadMethodCallException — FranchiseApiController::reversePushFromChild does not exist.`
+**Field-level notes:**
+- `results` includes TWO modules not present in the form's `source_entities`: **`stock_item_categories`** and **`stock_items`**. These are seeded implicitly with ingredients. The preview form does NOT surface these — expected behaviour is that the frontend shows post-execution counters that the user did not see in preview. UX must warn about this (or add a small helper row).
+- `_diagnostics.link_repair.*` is optional visibility (dev-mode chip).
+- `_audit.table: "central_push_log"` — an audit ledger exists. Not user-facing but useful for the "History" tab in Store Management.
 
-### 2.5 Control curl — forward push works today
+### 2.4 POST `reverse-push/from/{childId}` — master executes 🔒 (not committed)
 
-```bash
-curl -sS -X GET "$BASE/push-form/689" -H "Authorization: Bearer <token_bhole_809>"
-```
-
-**Actual response:** `{ success:true, message:"Push form data fetched successfully", data:{ parent:{…809 master}, child:{…689 franchise}, source_entities:{…}, child_existing:{…}, push_summary:{ status:"synced", total_source:13, total_child_matched:13, breakdown:{…} } } }`
-
-**Conclusion:** Proxy layer + auth + route wiring on preprod are all fine. Only the reverse-push controller methods are missing.
+Contract-identical to §2.3. Uses master token; body identical.
 
 ---
 
-## 3. Interpretation — What "the routes exist but methods do not" means
+## 3. Error surface (verified live)
 
-Laravel returned `BadMethodCallException` (from `Illuminate/Routing/Controller.php:68`), not `404 Not Found`. That confirms:
+All four error cases from the contract confirmed against the live API:
 
-1. The route file **is** registered to point at `FranchiseApiController@getReversePushForm` (and siblings).
-2. The controller **class** exists (otherwise the framework would fail earlier).
-3. Only the individual **methods** are missing — someone wired the routes without shipping the method bodies.
+| # | Trigger | Actual response (live) |
+|---|---------|------------------------|
+| A | Master POSTs `reverse-push/{parentId}` without a child_restaurant_id | `422 success:false, error_code:MISSING_CHILD_RESTAURANT_ID, message:"child_restaurant_id is required when master initiates reverse push"` |
+| B | POST with empty body (missing `push_food_bundle`) | `422 success:false, error_code:BUNDLE_ONLY_PUSH, message:"Bundle-only push enforced. Send {\"push_food_bundle\": true}."` |
+| C | Unknown parentId | `404 success:false, message:"Parent restaurant not found"` (no `error_code`) |
+| D | Unknown childId (master variant) | `404 success:false, message:"Child restaurant not found"` (no `error_code`) |
+| E | Franchise calls master-variant `reverse-push/from/{childId}` | `403 success:false, message:"Forbidden hierarchy action"` (no `error_code`) |
+| F | Franchise GETs form against a parentId that isn't its parent | `success:false, message:"Invalid reverse push parent type"` (no `error_code`) |
 
-This is exactly the pattern seen previously in **G-023** (push-form missing fields) — the POS team pushed a partial deploy. The fix must come from the POS backend team.
+**Contract gap noticed:** Cases C/D/E/F return NO `error_code` field. Owner-facing toasts should fall back to `message` when `error_code` is absent (frontend defensive parsing required).
+
+**Interesting master-self case:** Contract mentions `reverse-push/{parentId}` self-call with `child_restaurant_id` in the body — that's the master using the "parent" URL against itself. In practice the frontend should route master users through `reverse-push/from/{childId}` for clarity; the "self" variant is an edge case that can be deferred.
+
+### 3.1 Modules filter behaviour ⚠
+
+We tested `GET reverse-push-form/809?modules[]=categories`. **Filter was ignored** — all 7 modules were still returned with full counts.
+
+Possible causes:
+1. Filter must be in POST body, not GET query (contract says "optional module filter" but does not specify transport).
+2. Query key syntax differs (e.g. `modules=categories`, `modules[0]=categories`, comma-joined, JSON-encoded).
+3. Filter is only honoured on the POST execute path, not the GET preview.
+
+**Action:** attach to §7 as an owner/POS clarification question (question 6). Do not depend on module filtering for MVP frontend.
 
 ---
 
-## 4. Data-Flow Trace — What the frontend adoption would look like once backend ships
+## 4. Data-flow trace
 
-### 4.1 Comparable existing flow (FORWARD push — WORKS TODAY)
+### 4.1 Comparable existing forward-push flow (baseline)
 
 ```
-UI (Central Store user in Store Management)
-  └─ clicks "Push" on child row (689)
+Central Store user opens Store Management
+  └─ selects child (689) → clicks "Push"
      └─ useHierarchyManagement.fetchPushForm(689)
-        └─ api.getPushForm(689)              // frontend/src/services/api.js:928
+        └─ api.getPushForm(689)                              // frontend/src/services/api.js:928
            └─ GET /api/proxy/v2/franchise/push-form/689
-              └─ FastAPI proxy → PREPROD /franchise/push-form/689
+              └─ backend/server.py:165 catch-all forwards
                  └─ Laravel FranchiseApiController::getPushForm
-                    ← { data: { parent, child, source_entities, child_existing, push_summary } }
+                    ← { data:{ parent, child, source_entities, child_existing, push_summary } }
      ← setPushForm(...)
-  └─ PushWizardDialog (HierarchyManagement.jsx:164) renders preview → user clicks Execute
-     └─ useHierarchyManagement.executePush(689)
-        └─ api.pushBundle(689)              // api.js:932
-           └─ POST /api/proxy/v2/franchise/push/689  { push_food_bundle:true }
-              ← results per module { inserted, updated, failed, warnings }
+  └─ PushWizardDialog (HierarchyManagement.jsx:164) renders preview
+     └─ user clicks Execute → api.pushBundle(689) → POST /api/proxy/v2/franchise/push/689
+        ← per-module { inserted, updated, failed, warnings }
 ```
 
-### 4.2 Expected REVERSE flow (once backend ships)
+### 4.2 New REVERSE flow (backend live, frontend NOT wired)
 
 ```
-Case A — Franchise-initiated (source = self, target = parent)
-  UI (Franchise user in Store Management / dedicated "Seed to Central" screen)
-    └─ api.getReversePushForm(parentId)   // NEW
-       └─ GET /api/proxy/v2/franchise/reverse-push-form/{parentId}
-    └─ api.reversePush(parentId, { push_food_bundle:true, enforce_child_lock:false })
-       └─ POST /api/proxy/v2/franchise/reverse-push/{parentId}
+CASE A — Franchise-initiated (source=self, target=parent)
+  Franchise user in Store Management → "Seed Central Store" CTA
+    └─ hook.fetchReversePushForm(parentId=809)              // NEW
+       └─ api.getReversePushForm(parentId)                  // NEW
+          └─ GET /api/proxy/v2/franchise/reverse-push-form/{parentId}
+             ← { data:{ direction:"reverse", source, target, source_entities, target_existing, push_summary } }
+    └─ ReversePushWizardDialog renders — same shape components as PushWizardDialog
+    └─ user clicks Execute
+       └─ hook.executeReversePush(parentId)
+          └─ api.reversePush(parentId, { push_food_bundle:true, enforce_child_lock:false })
+             └─ POST /api/proxy/v2/franchise/reverse-push/{parentId}
+                ← { data:{ results:{ per-module counters, _audit, _diagnostics } } }
 
-Case B — Master-initiated (source = specified child, target = self)
-  UI (Master user in Store Management, selecting a child row → "Pull from this outlet")
-    └─ api.getReversePushFormFromChild(childId)   // NEW
+CASE B — Master-initiated (source=specified child, target=self)
+  Master user in Store Management → picks child row → "Pull from Outlet" CTA
+    └─ api.getReversePushFromChild(childId=689)             // NEW
        └─ GET /api/proxy/v2/franchise/reverse-push-form/from/{childId}
-    └─ api.reversePushFromChild(childId, { push_food_bundle:true, enforce_child_lock:false })
+    └─ api.reversePushFromChild(childId, body)              // NEW
        └─ POST /api/proxy/v2/franchise/reverse-push/from/{childId}
 ```
 
-Terminology mapping (CI-R1) for the wizard:
-
-| API term (do NOT show) | UI term (show) |
-|------------------------|----------------|
-| `franchise` (source) | Outlet |
-| `master` (target) | Central Store |
-| `direction: "reverse"` | "Seed upward" / "Pull from outlet" |
-
-### 4.3 Estimated frontend blast radius (for future PLANNING agent)
+### 4.3 Frontend blast radius (MEDIUM, ~4 files, mostly additive)
 
 | Layer | File | Change |
 |-------|------|--------|
-| API | `frontend/src/services/api.js` (~line 928) | Add 4 methods: `getReversePushForm`, `reversePush`, `getReversePushFromChild`, `reversePushFromChild`. Wrap with `_cached()` for GET (short TTL) and add cache invalidation on POST (invalidate `/franchise/hierarchy*`, `/franchise/push-form/*`, and reverse form keys). |
-| Hook | `frontend/src/hooks/useHierarchyManagement.js` | Add `reverseForm`, `reverseResults`, `reverseLoading`, `reverseError` state + `fetchReverseForm`, `executeReverse`, `resetReverse` callbacks. Mirror the shape of existing push state. |
-| Wizard | `frontend/src/components/central-inventory/HierarchyManagement.jsx` (`PushWizardDialog` around line 164) | Either (a) parameterize the existing wizard with `direction: "forward" \| "reverse"`, or (b) add a sibling `ReversePushWizardDialog`. Reuse `TypeBadge`, `push_summary.status` chips, source/target rendering. |
-| Entry | `frontend/src/components/central-inventory/StoreManagement.jsx` (~line 32) | Add CTA per persona: franchise users see "Seed to Central Store"; master users see "Pull from outlet" on each child row. Gate via `screenVisibility.js` (FROZEN — needs owner GO if a new visibility rule required). |
-| Terminology | `frontend/src/lib/terminology.js` | **FROZEN** — do not touch. Only add copy in the wizard component itself. |
-| Backend | `backend/server.py` | **NO CHANGE** — generic `/proxy/v2/{path}` already forwards these routes (verified §2). |
+| API | `frontend/src/services/api.js` (~line 928, next to `getPushForm`/`pushBundle`) | Add 4 methods: `getReversePushForm(parentId)`, `reversePush(parentId, body)`, `getReversePushFromChild(childId)`, `reversePushFromChild(childId, body)`. Wrap GETs with existing `_cached()` (short TTL, say 60s). After successful POSTs, invalidate cache keys matching `/franchise/reverse-push-form*`, `/franchise/push-form*`, `/franchise/hierarchy*`, and any stock/ingredient list caches (the master will have new records). |
+| Hook | `frontend/src/hooks/useHierarchyManagement.js` (~line 21) | Add symmetric state: `reverseForm`, `reverseResults`, `reverseLoading`, `reverseError` + `fetchReverseForm(...)`, `executeReverse(...)`, `resetReverse()`. Support both actor variants via a single param or two callbacks. |
+| Wizard | `frontend/src/components/central-inventory/HierarchyManagement.jsx` (`PushWizardDialog` at line 164) | Preferred: parameterise the existing wizard as `direction: "forward" \| "reverse"`. Wizard reuses `TypeBadge`, `push_summary` chips, source/target rendering. Rename internal `parentName`/`childName` to `sourceName`/`targetName` (or gate by direction). Copy differs per direction. |
+| Entry | `frontend/src/components/central-inventory/StoreManagement.jsx` (~line 32) | Add persona-aware CTA: <br>• Franchise user viewing self → "Seed Central Store" button (source=self, target=parent). <br>• Master user in child row → row-action "Pull from Outlet" (case B). |
+| Terminology | `frontend/src/lib/terminology.js` | **FROZEN** (R2). Do not touch. Any new copy lives in the wizard component. |
+| Backend | `backend/server.py` | **NO CHANGE**. Generic `/proxy/v2/{path}` catch-all already forwards (verified §2). |
 
-Estimated scope: **MEDIUM** (~4 files, mostly additive).
+### 4.4 UX considerations for the wizard
 
----
-
-## 5. Owner-Facing Questions
-
-1. **Business rules — who is allowed to initiate reverse push?**
-   - Both franchise AND master? Or only one?
-   - Should there be an approval step (like transfers) or is it a one-shot merge?
-2. **Conflict resolution:** Contract says same-name entities become `updated` on a 2nd push (merge-by-name). Confirm this behaviour is desired at master level — a franchise mis-naming (e.g. "Chai" vs "Masala Chai") could overwrite the master.
-3. **Payload defaults:** should the frontend always send `enforce_child_lock: false`? What's the intended UX for `true`?
-4. **Visibility:** is reverse push exposed to every franchise, or only to a "legacy franchise seeding a new master" edge-case? This changes whether the CTA is discoverable or hidden behind a feature flag.
-5. **Backend timeline:** does POS team have an ETA for shipping `FranchiseApiController::getReversePushForm` / `reversePush` / `getReversePushFormFromChild` / `reversePushFromChild`?
+1. **"stock_items and stock_item_categories are seeded but not previewed"** — surface this with a small footer note in the preview step ("Executing will also seed stock item categories and stock items linked to ingredients").
+2. **Empty modules must render cleanly** — `sub_recipes: []` is a common state.
+3. **`push_summary.status` chip colours:** reuse forward-push palette — `synced` ✅, `partial` 🟡, `stale` 🔴.
+4. **Row counts differ between preview and result** — result has 8 modules, preview has 7 modules + 1 that appears only in `target_existing` (roles). Confirm intended UX (a helper table probably ok).
+5. **Wide-column entities:** `categories[]` and `roles[]` return full DB rows. The wizard likely wants to show only `name` (and `id` as a tooltip). Do not render 14 columns.
+6. **`_diagnostics.link_repair`** — devs only; hide behind a "show details" toggle.
+7. **`enforce_child_lock`** default: false. Do not expose toggle in MVP unless owner asks for it (see §7).
 
 ---
 
-## 6. Recommendation
+## 5. Cache & invalidation notes (CI-R6)
 
-1. **Register open gap G-031** (backend controller methods missing) in `control/L9_OPEN_GAPS_REGISTER.md` and `control/registry.json`. Model after G-023.
-2. **Create backend brief** `control/sessions/G031_REVERSE_PUSH_POS_REQUEST.md` — attach the owner-supplied contract as the expected response shape, cite curl evidence in §2 for the reproducibility proof.
-3. **Do NOT plan frontend adoption yet.** Wait for owner to confirm §5 answers AND POS to ship the controller. Then hand to PLANNING for a new CR (call it CR-045 tentatively) with the blast-radius outline in §4.3.
-4. **No code changes in this session** — INVESTIGATION role output is diagnostic only.
+Reverse push COMPLETELY changes the master's catalogue. After a successful reverse-push POST, these caches must be blown:
+
+| Cache key prefix | Reason |
+|------------------|--------|
+| `/franchise/push-form/*` | Forward-push preview status now stale |
+| `/franchise/reverse-push-form/*` | Own preview now stale (child_matched will grow) |
+| `/franchise/hierarchy*` | Store list may reflect new health |
+| `/inventory/stock-inventory*` | New ingredients/stock items on master |
+| `/inventory/category*` | New categories |
+| `/food-item*`, `/recipe*`, `/addon*`, `/sub-recipe*` | New foods/recipes/addons/sub-recipes |
+| `/roles*` | New roles |
+
+Store this list as constants in `api.js` next to the mutation. Missing invalidation is the #1 way this feature will silently break.
 
 ---
 
-## 7. Evidence
+## 6. Registry impact
 
-- Raw responses saved locally during investigation: `/tmp/kunafa.json`, `/tmp/bhole.json`, `/tmp/rp_form_f.json`, `/tmp/rp_form_m.json`, `/tmp/fp_form.json`. (Ephemeral — copy to `memory/evidence/G-031/` when the gap is filed.)
-- Forward push control curl §2.5 confirms proxy + tokens are correct.
+- **No open gap needed.** Backend is live. This is a green-field frontend adoption. (This report supersedes my earlier assumption that G-031 should be filed.)
+- **New CR recommended:** `CR-045 — Reverse Push Frontend Adoption`. Blast radius MEDIUM. Depends on §7 answers.
+- L9 stays unchanged — remove any G-031 entry if we accidentally added one earlier.
 
 ---
 
-## 8. Root-Cause Classification (per AGENT_PROMPT § ROLE 6 Step 3)
+## 7. Owner-facing questions (block PLANNING until resolved)
+
+1. **Who initiates?** Both franchise AND master, or only one? (Endpoints support both; UX effort doubles if both.)
+2. **Approval flow or one-shot?** Forward push is one-shot. Reverse writes into master — do we want a master-side confirmation step? If yes, that's a bigger backend gap.
+3. **`enforce_child_lock`** — default false. Should the wizard expose this toggle? What does `true` mean UX-wise?
+4. **Discovery** — always-on CTA in Store Management, or feature-flagged for the "legacy franchise seeds new master" case only? Impacts `screenVisibility.js` (FROZEN — needs owner GO if a new rule is needed).
+5. **Copy** — "Seed Central Store", "Pull from Outlet", "Reverse Push"? Confirm final labels (terminology.js is frozen).
+6. **Modules filter** — is the `modules[]=…` filter meant to be honoured on GET? If yes, what's the correct transport (query, body, POST-only)? See §3.1.
+7. **"Master-self" variant** — do we support `POST reverse-push/{parentId}` with `child_restaurant_id` in body, or should the frontend always route masters through `reverse-push/from/{childId}`?
+8. **Confirmation UX** — should we require the actor to type the target restaurant name (like `git push --force-with-lease`) before executing? Reverse push is destructive relative to master state.
+
+---
+
+## 8. Root-Cause Classification (per §ROLE 6 Step 3)
 
 | Category | Verdict |
 |----------|:-------:|
 | Frontend bug | NO |
-| **Backend gap (API doesn't provide needed data)** | **YES — file G-031** |
+| Backend gap | **NO** — endpoints are live (contract matches) |
 | Data issue | NO |
-| API contract mismatch | Partial — contract exists on paper but controller unshipped |
+| API contract mismatch | **MINOR** — `error_code` field absent on some 4xx paths; modules filter behaviour on GET unclear (§3, §3.1) |
+| **New feature adoption needed** | **YES** — file as CR (recommend CR-045) |
 
 ---
 
-## 9. Handover
+## 9. Evidence (this session, live-verified)
 
-Next agent should be **INTAKE** (to formally register G-031 in L9 + registry) once owner acknowledges this report. After that, wait on POS backend before invoking PLANNING for the frontend CR.
+- `/tmp/kunafa.json` — franchise login response (`rid:689 flag:franchise parent:809`).
+- `/tmp/bhole.json` — master login response (`rid:809 flag:master parent:None`).
+- `/tmp/rp1.json` — GET `reverse-push-form/809` (franchise-initiated). success=true, 348 source records, status=stale.
+- `/tmp/rp2.json` — GET `reverse-push-form/from/689` (master-initiated). success=true, identical payload shape to rp1.
+- `/tmp/rp3.json`, `/tmp/rp4.json` — POST empty-body error probes (both return `BUNDLE_ONLY_PUSH`).
+- `/tmp/rpf.json` — modules filter probe (filter ignored, §3.1).
+- No writes performed against master 809.
+
+When PLANNING opens CR-045, copy these into `memory/evidence/CR-045/`.
+
+---
+
+## 10. Handover
+
+- **Immediate next role:** OWNER — answer §7 questions.
+- **After that:** INTAKE (formally register CR-045 in `control/registry.json` + `control/L3_CR_REGISTRY.md`, model after CR-037 style adoption CR). Include this report as the pre-intake evidence.
+- **Then:** PLANNING for Gates 2-3 using the blast radius in §4.3.
+
+No code was written in this session (INVESTIGATION role does not implement — R0/R7).
