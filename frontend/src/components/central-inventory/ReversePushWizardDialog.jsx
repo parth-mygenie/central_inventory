@@ -30,10 +30,12 @@ const MODULE_LABELS = {
 const PREVIEW_MODULES = ["categories", "foods", "addons", "ingredients", "sub_recipes", "recipes"];
 
 function StatusChip({ status }) {
+  // G-031 BUG-FIX — add not_seeded status for fresh/empty masters
   const map = {
-    synced:  { cls: "bg-emerald-50 text-emerald-700 border-emerald-200", label: "Synced" },
-    partial: { cls: "bg-amber-50 text-amber-700 border-amber-200", label: "Partial" },
-    stale:   { cls: "bg-red-50 text-red-700 border-red-200", label: "Stale" },
+    synced:     { cls: "bg-emerald-50 text-emerald-700 border-emerald-200", label: "Synced" },
+    partial:    { cls: "bg-amber-50 text-amber-700 border-amber-200", label: "Partial" },
+    stale:      { cls: "bg-red-50 text-red-700 border-red-200", label: "Stale" },
+    not_seeded: { cls: "bg-blue-50 text-blue-700 border-blue-200", label: "Ready to Seed" },
   };
   const s = map[status] || map.stale;
   return (

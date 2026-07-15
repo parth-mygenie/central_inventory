@@ -36,6 +36,7 @@
 | **G-029** | **Child catalogue/inventory edit policy** | **Parent control of child edits** | **P1** | **BACKEND CLOSED** — `franchise/catalog-policy/{id}` GET/POST + 403 `CHILD_CATALOG_POLICY_DENIED`. Frontend: CR-043 |
 | **G-030** | **Manufactured recipe → auto sub-recipe** | **Batch-manufactured dishes** | **P2** | **BACKEND CLOSED** — single-call recipe+sub-recipe+FG item. Frontend: CR-044 |
 | G-019 | Segment `unit_cost` (detail follow-up) | Batch valuation on Stock Detail | P2 | **BACKEND CLOSED** — `unit_cost` on segments verified 2026-07-07. Frontend: CR-041 |
+| **G-031** | **Reverse push `stock_items` 500 + timeout** | **Default wizard flow + forward push** | **P1** | **BACKEND CLOSED** (rounds 1-4: skip→dedupe+sanitize, per-module commit, concurrency 409, N+1 speedup). **PROXY FIXED** — timeout 30→50s. Frontend: 409 handling + `not_seeded` status wired. |
 
 ## Implementation Gaps — Status After CR-030
 

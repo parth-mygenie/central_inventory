@@ -950,8 +950,9 @@ function getPushForm(childId) {
   return client.get(`/proxy/v2/franchise/push-form/${childId}`);
 }
 
+// G-031 BUG-FIX — push endpoints take ~33-35s; raise per-call timeout to 50s
 function pushBundle(childId) {
-  return client.post(`/proxy/v2/franchise/push/${childId}`, { push_food_bundle: true });
+  return client.post(`/proxy/v2/franchise/push/${childId}`, { push_food_bundle: true }, { timeout: 50000 });
 }
 
 // CR-045 — Reverse push (master pulls catalogue upward from a legacy outlet).
@@ -977,8 +978,9 @@ function reversePushFromChild(childId, { enforceChildLock = false, modules } = {
       body.modules = filtered;
     }
   }
+  // G-031 BUG-FIX — reverse push takes ~33s; raise per-call timeout to 50s
   return client
-    .post(`/proxy/v2/franchise/reverse-push/from/${childId}`, body)
+    .post(`/proxy/v2/franchise/reverse-push/from/${childId}`, body, { timeout: 50000 })
     .then((r) => { _invalidateCatalogCaches(); return r; });
 }
 

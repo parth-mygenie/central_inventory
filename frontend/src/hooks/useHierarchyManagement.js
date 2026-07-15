@@ -104,6 +104,7 @@ export default function useHierarchyManagement() {
     }
   }, []);
 
+  // G-031 BUG-FIX — handle 409 PUSH_IN_PROGRESS with specific message
   const executePush = useCallback(async (childId) => {
     setPushLoading(true);
     setPushError(null);
@@ -114,7 +115,12 @@ export default function useHierarchyManagement() {
       return d;
     } catch (err) {
       const data = err?.response?.data;
-      setPushError(data?.message || "Push failed");
+      const code = data?.error_code;
+      if (code === "PUSH_IN_PROGRESS") {
+        setPushError("A push is already running for this outlet. Try again shortly.");
+      } else {
+        setPushError(data?.message || "Push failed");
+      }
       throw err;
     } finally {
       setPushLoading(false);
@@ -157,6 +163,7 @@ export default function useHierarchyManagement() {
     }
   }, []);
 
+  // G-031 BUG-FIX — handle 409 REVERSE_PUSH_IN_PROGRESS with specific message
   const executeReverse = useCallback(async (childId, opts = {}) => {
     setReverseLoading(true);
     setReverseError(null);
@@ -167,7 +174,12 @@ export default function useHierarchyManagement() {
       return d;
     } catch (err) {
       const data = err?.response?.data;
-      setReverseError(data?.message || "Reverse push failed");
+      const code = data?.error_code;
+      if (code === "REVERSE_PUSH_IN_PROGRESS") {
+        setReverseError("A reverse push is already running for this outlet. Try again shortly.");
+      } else {
+        setReverseError(data?.message || "Reverse push failed");
+      }
       throw err;
     } finally {
       setReverseLoading(false);

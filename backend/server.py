@@ -174,7 +174,9 @@ async def proxy_v2(path: str, request: Request):
     if query_string:
         target_url += f"?{query_string}"
 
-    async with httpx.AsyncClient(timeout=30.0) as http:
+    # G-031 BUG-FIX — push endpoints take ~33-35s; 30s timeout causes proxy 500
+    timeout = 50.0 if ("franchise/push" in path or "franchise/reverse-push" in path) else 30.0
+    async with httpx.AsyncClient(timeout=timeout) as http:
         method = request.method.lower()
         body = None
         if method in ("post", "put", "delete"):
