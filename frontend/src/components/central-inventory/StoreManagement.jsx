@@ -43,7 +43,15 @@ export default function StoreManagement() {
   const [pushStatusMap, setPushStatusMap] = useState({});
   const [childHealthMap, setChildHealthMap] = useState({});
   const [pushing, setPushing] = useState(null);
+  const [pushElapsed, setPushElapsed] = useState(0); // G-031 — elapsed timer for push loading UI
   const [reversePullTarget, setReversePullTarget] = useState(null); // CR-045
+
+  // G-031 — track elapsed time during forward push
+  useEffect(() => {
+    if (!pushing) { setPushElapsed(0); return; }
+    const t = setInterval(() => setPushElapsed(s => s + 1), 1000);
+    return () => clearInterval(t);
+  }, [pushing]);
 
   // Create form state
   const [formName, setFormName] = useState("");
@@ -463,6 +471,34 @@ export default function StoreManagement() {
         onClose={() => setReversePullTarget(null)}
         target={reversePullTarget}
       />
+
+      {/* G-031 — Forward push loading overlay */}
+      {pushing && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center" data-testid="push-loading-overlay">
+          <div className="bg-background rounded-lg shadow-lg p-8 max-w-sm w-full mx-4 space-y-4">
+            <div className="flex flex-col items-center gap-4">
+              <div className="h-16 w-16 rounded-full border-4 border-muted flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+              <div className="text-center space-y-1">
+                <p className="text-sm font-medium">
+                  {pushElapsed < 10 && "Pushing catalogue to outlet…"}
+                  {pushElapsed >= 10 && pushElapsed < 20 && "Syncing categories and ingredients…"}
+                  {pushElapsed >= 20 && pushElapsed < 35 && "Processing recipes and stock items…"}
+                  {pushElapsed >= 35 && pushElapsed < 50 && "Almost there — finalizing sync…"}
+                  {pushElapsed >= 50 && "Still working — large catalogues take a moment…"}
+                </p>
+                <p className="text-xs text-muted-foreground">{pushElapsed}s elapsed</p>
+              </div>
+              {pushElapsed >= 15 && (
+                <p className="text-[10px] text-muted-foreground text-center">
+                  This operation syncs up to 8 module types. Please don't navigate away.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

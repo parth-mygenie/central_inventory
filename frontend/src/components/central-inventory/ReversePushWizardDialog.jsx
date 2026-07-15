@@ -68,6 +68,15 @@ export default function ReversePushWizardDialog({ open, onClose, target }) {
     }
   }, [open, target]);
 
+  // G-031 — track elapsed time during push for loading UI
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    if (step !== "pushing") { setElapsed(0); return; }
+    const t = setInterval(() => setElapsed(s => s + 1), 1000);
+    return () => clearInterval(t);
+  }, [step]);
+
   useEffect(() => {
     if (reverseResults) setStep("results");
   }, [reverseResults]);
@@ -215,12 +224,35 @@ export default function ReversePushWizardDialog({ open, onClose, target }) {
     </div>
   );
 
-  const renderPushing = () => (
-    <div className="flex flex-col items-center py-8 gap-3" data-testid="reverse-loading">
-      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      <p className="text-sm text-muted-foreground">Pulling catalogue from {sourceName}…</p>
-    </div>
-  );
+  // G-031 — enhanced loading UI with elapsed timer + reassurance messages
+  const renderPushing = () => {
+    const messages = [
+      { at: 0, text: `Pulling catalogue from ${sourceName}…` },
+      { at: 10, text: "Syncing categories and ingredients…" },
+      { at: 20, text: "Processing recipes and foods…" },
+      { at: 30, text: "Almost there — finalizing sync…" },
+      { at: 45, text: "Still working — large catalogues take a moment…" },
+    ];
+    const msg = [...messages].reverse().find(m => elapsed >= m.at)?.text || messages[0].text;
+    return (
+      <div className="flex flex-col items-center py-8 gap-4" data-testid="reverse-loading">
+        <div className="relative">
+          <div className="h-16 w-16 rounded-full border-4 border-muted flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        </div>
+        <div className="text-center space-y-1">
+          <p className="text-sm font-medium">{msg}</p>
+          <p className="text-xs text-muted-foreground">{elapsed}s elapsed</p>
+        </div>
+        {elapsed >= 15 && (
+          <p className="text-[10px] text-muted-foreground text-center max-w-[280px]">
+            This operation syncs up to 8 module types. Please don't close this dialog.
+          </p>
+        )}
+      </div>
+    );
+  };
 
   const renderResults = () => {
     if (!reverseResults) return null;

@@ -94,13 +94,14 @@
 | `SubRecipeMaster.jsx` | MODIFIED — Delete → Active/Inactive toggle (Switch), removed ConfirmActionDialog for delete | BUG-034 |
 | `ProductionHistory.jsx` | MODIFIED — computeAllocQty function, batch qty summing with unit normalization | BUG-035 |
 
-### G-031 BUG-FIX: Push Timeout + 409 Handling (session 2026-07-15)
+### G-031 BUG-FIX: Push Timeout + 409 Handling + Loading UI (session 2026-07-15)
 | File | Change | Item |
 |------|--------|------|
-| `backend/server.py` | MODIFIED — proxy timeout 30→50s for push endpoints | G-031 |
-| `frontend/src/services/api.js` | MODIFIED — per-call timeout 50s for pushBundle + reversePushFromChild | G-031 |
+| `backend/server.py` | MODIFIED — proxy timeout 30→100s for push endpoints | G-031 |
+| `frontend/src/services/api.js` | MODIFIED — per-call timeout 100s for pushBundle + reversePushFromChild | G-031 |
 | `frontend/src/hooks/useHierarchyManagement.js` | MODIFIED — 409 PUSH_IN_PROGRESS + REVERSE_PUSH_IN_PROGRESS handling | G-031 |
-| `frontend/src/components/central-inventory/ReversePushWizardDialog.jsx` | MODIFIED — not_seeded status in StatusChip | G-031 |
+| `frontend/src/components/central-inventory/ReversePushWizardDialog.jsx` | MODIFIED — not_seeded status in StatusChip + enhanced loading UI with elapsed timer + stage messages | G-031 |
+| `frontend/src/components/central-inventory/StoreManagement.jsx` | MODIFIED — forward push loading overlay with elapsed timer + stage messages | G-031 |
 
 ### Orphaned Files (not deleted, not imported)
 | File | Reason |
