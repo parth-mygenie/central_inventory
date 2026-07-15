@@ -5811,7 +5811,7 @@
       "type": "CR",
       "id": "CR-045",
       "title": "Reverse Push Frontend Adoption (Master-Initiated, Feature-Flagged)",
-      "status": "PROPOSED",
+      "status": "PLANNED",
       "severity": "P2",
       "sprint_key": null,
       "phase": "Reverse Push Adoption (backend live 2026-02-15)",
@@ -5838,14 +5838,14 @@
         {
           "artifact": 2,
           "label": "Impact-Analysis",
-          "status": "MISSING",
-          "path": null
+          "status": "DONE",
+          "path": "control/sessions/CR045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
         },
         {
           "artifact": 3,
           "label": "Impl-Plan",
-          "status": "MISSING",
-          "path": null
+          "status": "DONE",
+          "path": "control/sessions/CR045_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
         },
         {
           "artifact": 4,
