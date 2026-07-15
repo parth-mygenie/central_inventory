@@ -103,6 +103,11 @@
 | `frontend/src/components/central-inventory/ReversePushWizardDialog.jsx` | MODIFIED — not_seeded status in StatusChip + enhanced loading UI with elapsed timer + stage messages | G-031 |
 | `frontend/src/components/central-inventory/StoreManagement.jsx` | MODIFIED — forward push loading overlay with elapsed timer + stage messages | G-031 |
 
+### CR-046: PO Create Select All / Unselect All (session 2026-07-15)
+| File | Change | Item |
+|------|--------|------|
+| `frontend/src/components/central-inventory/PurchaseOrderCreate.jsx` | MODIFIED — Select All + Unselect All buttons for both By Vendor and By Item Need modes, with selection counter | CR-046 |
+
 ### Orphaned Files (not deleted, not imported)
 | File | Reason |
 |------|--------|

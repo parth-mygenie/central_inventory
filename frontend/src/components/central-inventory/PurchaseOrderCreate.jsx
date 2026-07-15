@@ -239,6 +239,9 @@ export default function PurchaseOrderCreate() {
   };
 
   const toggleVendorLine = (idx) => setVendorLines((p) => p.map((l, i) => i === idx ? { ...l, checked: !l.checked } : l));
+  // CR-046 — Select All / Unselect All for By Vendor mode
+  const selectAllVendorLines = () => setVendorLines((p) => p.map((l) => ({ ...l, checked: true })));
+  const unselectAllVendorLines = () => setVendorLines((p) => p.map((l) => ({ ...l, checked: false })));
   const updateVendorLine = (idx, f, v) => setVendorLines((p) => p.map((l, i) => i === idx ? { ...l, [f]: v } : l));
   const checkedVendorLines = useMemo(() => vendorLines.filter((l) => l.checked && Number(l.ordered_qty) > 0), [vendorLines]);
   const vendorTotal = useMemo(() => checkedVendorLines.reduce((s, l) => s + Number(l.ordered_qty) * Number(l.expected_rate), 0), [checkedVendorLines]);
@@ -290,6 +293,9 @@ export default function PurchaseOrderCreate() {
   useEffect(() => { if (mode === "item" && needLines.length === 0) initNeedLines(); }, [mode, needLines.length, initNeedLines]);
 
   const toggleNeedLine = (idx) => setNeedLines((p) => p.map((l, i) => i === idx ? { ...l, checked: !l.checked } : l));
+  // CR-046 — Select All / Unselect All for By Item Need mode
+  const selectAllNeedLines = () => setNeedLines((p) => p.map((l) => ({ ...l, checked: true })));
+  const unselectAllNeedLines = () => setNeedLines((p) => p.map((l) => ({ ...l, checked: false })));
   const updateNeedLine = (idx, f, v) => {
     setNeedLines((p) => p.map((l, i) => {
       if (i !== idx) return l;
@@ -513,6 +519,13 @@ export default function PurchaseOrderCreate() {
             <Input data-testid="po-vendor-search" placeholder="Search items..." value={vendorSearch} onChange={(e) => setVendorSearch(e.target.value)} className="pl-8 h-8 text-xs" />
           </div>
 
+          {/* CR-046 — Select All / Unselect All */}
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="h-7 text-[10px] px-2.5" onClick={selectAllVendorLines} data-testid="po-vendor-select-all">Select All</Button>
+            <Button variant="outline" size="sm" className="h-7 text-[10px] px-2.5" onClick={unselectAllVendorLines} data-testid="po-vendor-unselect-all">Unselect All</Button>
+            <span className="text-[10px] text-muted-foreground ml-1">{vendorLines.filter(l => l.checked).length}/{vendorLines.length} selected</span>
+          </div>
+
           <Card><CardContent className="py-0 px-0">
             <Table>
               <TableHeader><TableRow>
@@ -641,6 +654,13 @@ export default function PurchaseOrderCreate() {
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input data-testid="po-need-search" placeholder="Search items..." value={needSearch} onChange={(e) => setNeedSearch(e.target.value)} className="pl-8 h-8 text-xs" />
+          </div>
+
+          {/* CR-046 — Select All / Unselect All */}
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="h-7 text-[10px] px-2.5" onClick={selectAllNeedLines} data-testid="po-need-select-all">Select All</Button>
+            <Button variant="outline" size="sm" className="h-7 text-[10px] px-2.5" onClick={unselectAllNeedLines} data-testid="po-need-unselect-all">Unselect All</Button>
+            <span className="text-[10px] text-muted-foreground ml-1">{needLines.filter(l => l.checked).length}/{needLines.length} selected</span>
           </div>
 
           <Card><CardContent className="py-0 px-0">
