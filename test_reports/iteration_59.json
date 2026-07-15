@@ -1,0 +1,99 @@
+{
+  "summary": "CR-045 Phase 2 re-verification through the wizard against live master (RID 809) / outlet (RID 689). Backend fix VERIFIED for the default full-bundle path — Phase 2a rendered all 8 module rows with the exact expected counters (categories updated:23, stock_item_categories updated:70, addons updated:10, sub_recipes 0/0/0, ingredients updated:105, stock_items 0/0/0 with backend flag skipped:true + note, foods updated:98, recipes updated:97). Phase 2d (enforce_child_lock:true + narrow scope) also PASSES. Phase 2c (enforce_child_lock:true + full bundle) still FAILS with backend HTTP 500 — the earlier iteration_58 finding stands. Phase 2b (idempotency back-to-back) is FLAKY at backend level: an immediate second full-bundle POST returns HTTP 500 at exactly 30s (curl-confirmed), but after a ~60s cooldown the same call returns HTTP 200 with 'all updated / zero inserted' merge-by-name results (curl-verified). Phase 2e (skipped-module rendering) observed — frontend renders stock_items as a plain 0/0/0 row identical to sub_recipes; the backend's skipped:true + note payload fields are NOT surfaced (UX polish gap, already flagged as out-of-scope in review).",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "POST /api/proxy/v2/franchise/reverse-push/from/689 (push_food_bundle:true, enforce_child_lock:true)",
+        "issue": "HTTP 500 'Internal Server Error' after 30s when enforce_child_lock:true is sent with a full bundle (no explicit modules). Curl-reproduced. Confirms iteration_58 finding — the 2026-07-15 backend fix only addressed the stock_items-skip on the DEFAULT path, not the lock+full-bundle combination.",
+        "priority": "HIGH"
+      }
+    ],
+    "minor": [
+      {
+        "endpoint": "POST /api/proxy/v2/franchise/reverse-push/from/689 (immediate second call after a successful full-bundle pull)",
+        "issue": "Back-to-back full-bundle POSTs against RID 689 return HTTP 500 after ~30s on the second attempt. A ~60s cooldown lets the same call succeed and returns updated=23/70/10/105/98/97 with inserted=0 (merge-by-name working). Likely a row-lock / job-lock contention on the master side — this is the G-032 lock contention the review request pre-emptively flagged."
+      },
+      {
+        "endpoint": "GET /api/proxy/v2/franchise/reverse-push-form/from/689",
+        "issue": "Preview breakdown STILL shows child_matched=0 across most modules on the initial mint despite the POST successfully merging by name; however AFTER Phase 2a's writes the preview correctly shows '348 at outlet · 346 already at central · 2 to pull' — so the form endpoint IS reading merged state on subsequent opens. Only the first-ever open (fresh session) misreports."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Reverse Pull — full-bundle back-to-back",
+        "issue": "Wizard axios timeout is 30000ms (api.js line 17). Both curl and wizard hit 30s → 500 on back-to-back full-bundle calls. The 30s wizard-side timeout is coincidentally aligned with the backend's own timeout, so the failure is truly a backend 500 rather than a client abort. UI correctly surfaces 'Reverse push failed' via reverse-error testid.",
+        "affected_selectors": ["[data-testid='reverse-error']"]
+      },
+      {
+        "flow": "Skipped module rendering (Phase 2e)",
+        "issue": "ReversePushWizardDialog.jsx L227-230 iterates result entries and includes any object with an 'inserted' key. The skipped:true stock_items object has inserted:0 and passes this predicate, so it renders as a normal row with 0/0/0. The backend's skipped:true flag and note (\"stock_items is transactional and is not synced on reverse push\") are NOT visualised — no badge, no italic, no tooltip. Users cannot distinguish 'nothing changed' from 'intentionally skipped'.",
+        "affected_selectors": ["[data-testid='reverse-result-row-stock_items']"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_results": {
+    "PHASE_2a_full_bundle_default": {
+      "status": "PASS (CONDITIONAL — cold-cache first attempt)",
+      "evidence": "First attempt in a fresh browser session: HTTP 200 after 30s. reverse-push-results rendered with all 8 rows exactly matching fix doc expectations: categories 0/23/0, stock_item_categories 0/70/0, addons 0/10/0, sub_recipes 0/0/0, ingredients 0/105/0, stock_items 0/0/0 (backend note: skipped:true), foods 0/98/0, recipes 0/97/0. Status chip on wizard open was 'reverse-status-partial'. Screenshot: /app/test_reports/phase2a_result.png. Curl confirms backend response contains stock_items.skipped=true and note='stock_items is transactional and is not synced on reverse push'. Under back-to-back load this same call flips to HTTP 500 — cooldown recovers it."
+    },
+    "PHASE_2b_idempotency_second_pull": {
+      "status": "FAIL via wizard (backend lock contention) but data-layer idempotency VERIFIED via alternate signals",
+      "evidence": "Wizard: Immediately reopened after 2a, ticked no modules, no lock, executed → reverse-error testid = 'Reverse push failed' at 30s. Retry attempt (still within the wizard session) also failed at 30s. HOWEVER: (a) after 60s cooldown, the same POST returns HTTP 200 with updated=23/70/10/105/98/97, inserted=0 across the board — proving merge-by-name idempotency; (b) the wizard preview on the second open showed '348 at outlet · 346 already at central · 2 to pull' — proving the state moved from 'stale' to 'partial' and that Phase 2a's writes persisted. Frontend is correct; backend has a concurrency / lock issue that blocks strictly-back-to-back invocations. Screenshot: /app/test_reports/phase2b_result.png."
+    },
+    "PHASE_2c_enforce_child_lock_full_bundle": {
+      "status": "FAIL as expected — regression confirmed",
+      "evidence": "Wizard: reverse-enforce-lock-checkbox ticked, no modules ticked, executed → reverse-error='Reverse push failed' at 30s. Curl-confirmed HTTP 500 after 30s on POST body {push_food_bundle:true, enforce_child_lock:true}. Backend bug persists — the 2026-07-15 fix did not cover this edge case."
+    },
+    "PHASE_2d_enforce_child_lock_narrow": {
+      "status": "PASS",
+      "evidence": "Wizard: reverse-module-categories ticked + reverse-enforce-lock-checkbox ticked, executed → reverse-push-results renders in 4s with reverse-result-row-categories = 0/23/0. Confirms enforce_child_lock is functional when scope is narrow."
+    },
+    "PHASE_2e_skipped_module_rendering": {
+      "status": "OBSERVED (as expected — UX gap)",
+      "evidence": "In Phase 2a's result table the stock_items row renders identically to sub_recipes (both '0 / 0 / 0'). No visual affordance (no badge, no italic, no 'Skipped' label, no tooltip). Backend payload for stock_items DOES carry {skipped:true, note:'stock_items is transactional and is not synced on reverse push'} but these fields are dropped by ReversePushWizardDialog.jsx L227-230 which only reads inserted/updated/failed. This is the follow-up polish item flagged in the review request."
+    }
+  },
+  "curl_backend_probes": {
+    "note": "All against POST /api/proxy/v2/franchise/reverse-push/from/689 with master token",
+    "full_bundle_default_cold": "HTTP 200 after 30s — returns categories updated:23, stock_item_categories updated:70, addons updated:10, sub_recipes 0/0/0, ingredients updated:105, stock_items 0/0/0 skipped:true note:'stock_items is transactional and is not synced on reverse push', foods updated:98, recipes updated:97, _diagnostics.link_repair all zeros",
+    "full_bundle_default_immediate_second": "HTTP 500 after 30s (lock contention)",
+    "full_bundle_default_after_60s_cooldown": "HTTP 200 with same updated counters as cold call — proving merge-by-name idempotency",
+    "full_bundle_enforce_child_lock_true": "HTTP 500 after 30s — regression, backend fix incomplete for this branch"
+  },
+  "test_report_links": [
+    "/app/test_reports/phase2a_result.png",
+    "/app/test_reports/phase2b_result.png"
+  ],
+  "action_items": [
+    "Backend team: fix reverse-push HTTP 500 when enforce_child_lock:true is combined with full-bundle (no explicit modules). Iteration_58 flagged this; iteration_58's stock_items fix did not address it. Root-cause candidate: enforce_child_lock branch still calls the old stock_items handler that was skipped in the default path.",
+    "Backend team: investigate the ~30s lock contention that makes back-to-back full-bundle POSTs return HTTP 500. This is G-032 territory — either serialize with 202-Accepted+job semantics OR release the write-lock earlier so subsequent calls can succeed immediately.",
+    "Frontend team (polish, follow-up): In ReversePushWizardDialog.jsx renderResults (L223-303), when a module row contains skipped:true, render a small 'Skipped' badge next to the module name and use the backend-supplied note as a tooltip / muted subline. This will resolve the Phase 2e UX gap.",
+    "Frontend team (nice-to-have): raise axios timeout for the reverse-push POST specifically to 90-120s so the wizard can distinguish 'backend still working' from 'backend returned 500'. Currently the 30s ceiling in api.js masks slow-but-successful runs.",
+    "Frontend team (nice-to-have): when reverseError is triggered on a full-bundle default POST, add an inline hint like 'The pull may still be running — try again in ~60s.' to guide users past the lock-contention window."
+  ],
+  "critical_code_review_comments": [
+    "ReversePushWizardDialog.jsx L227-230: filter is `typeof v === 'object' && v !== null && 'inserted' in v`. Skipped modules pass this filter with all-zero counters, losing the skipped:true / note information. Suggest: also check `!v.skipped` OR branch and render a dedicated 'Skipped' row.",
+    "api.js L17: global axios timeout=30000ms is too aggressive for the reverse-push POST which routinely takes 25-30s at scale. Consider a per-call config override on client.post(...) for reverse-push endpoints.",
+    "ReversePushWizardDialog.jsx L69-71: results state transitions to 'results' as soon as reverseResults is truthy. useHierarchyManagement.executeReverse should ensure reverseResults is only set when the underlying API returns 200 — verified working (error path leaves reverseResults=null and reverseError set → UI stays on preview + shows error banner). No code change needed.",
+    "api.js L970-983 reversePushFromChild: correctly omits `modules` when caller passes no selection (per spec). The full-bundle path is now backend-safe for stock_items but not for enforce_child_lock:true — this is 100% a backend problem, no frontend workaround required or advisable."
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "50% (2/4 primary paths pass: full-bundle-cold ✓, full-bundle-cooldown ✓, full-bundle-immediate-second ✗, full-bundle+enforce_lock ✗)",
+    "frontend": "100% (all wizard interactions, testids, error/success surfacing, and idempotency preview-state work correctly — every observed failure originates from the backend)"
+  },
+  "test_credentials": {
+    "master": "owner@bholechature.com / Qplazm@10 (RID 809)",
+    "franchise": "owner@kunafamahal.com / Qplazm@10 (RID 689, parent 809)",
+    "preview_url": "https://repo-deploy-74.preview.emergentagent.com"
+  },
+  "seed_data_creation": "None. Live-catalogue writes to master 809 continue to accumulate. After this session the preview shows '348 at outlet · 346 already at central · 2 to pull' — merge-by-name has fully converged for 346 of 348 items (the 2 remainders are unmatched stock_items which are skipped-by-design).",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Phase 2a is now PASS on cold-cache attempts (backend fix works). Two backend issues remain: (1) enforce_child_lock:true + full bundle still 500s — this is the immediate blocker for the enforce-lock UX; (2) back-to-back full-bundle POSTs 500 due to lock contention (~60s cooldown resolves). Frontend has TWO polish items surfaced (skipped-badge in results table + longer axios timeout / retry-hint copy) but no functional bugs. If backend fixes both remaining issues, re-run Phase 2b (immediate second-pull) and Phase 2c (enforce+full) — both should PASS with counters matching Phase 2a.",
+  "rca_of_the_issue": "PHASE 2c ROOT CAUSE: on the enforce_child_lock:true branch the backend still traverses the pre-skip stock_items handler (or a sibling code path that hasn't been patched). The 2026-07-15 fix short-circuited stock_items only when the default handler builds the module list, not when enforce_child_lock branches off. PHASE 2b ROOT CAUSE: after a successful full-bundle reverse-push, the backend appears to hold a table/job-level lock that isn't released for ~60s. The next POST arriving inside that window fails at the ~30s mark (likely gateway/reverse-proxy timeout). Frontend behaves correctly: reverseError surfaces via the reverse-error testid, wizard stays on the preview step, and re-opening the wizard shows the updated 'partial · 346 already at central · 2 to pull' banner — proving the previous run's writes persisted."
+}
