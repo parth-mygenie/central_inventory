@@ -1,6 +1,6 @@
 # L1 — Control Dashboard (Project Status)
 
-> **Updated:** 2026-07-11 (PLANNING session — CR-037→044 registered & planned from gap_validation.md; L9 synced)
+> **Updated:** 2026-02-15 (INTAKE — CR-045 Reverse Push Frontend Adoption registered; live backend verified)
 
 ---
 
@@ -29,6 +29,7 @@ Backend resolved 22 gaps (verified `AI/openGaps/gap_validation.md`, 2026-07-07).
 | CR-042 | Custom Unit Conversion Adoption | G-020 | P1 | PLANNED |
 | CR-043 | Pushed Catalog Lock + Child Edit Policy | G-028/029 | P1 | PLANNED |
 | CR-044 | Manufactured Recipe Auto Sub-Recipe | G-030 | P2 | PLANNED |
+| **CR-045** | **Reverse Push Frontend Adoption (Master-Initiated, Feature-Flagged)** | — (backend live 2026-02-15) | **P2** | **PROPOSED — needs PLANNING** |
 
 Recommended execution order: CR-037 → CR-040 → CR-041 → CR-042 → CR-043 → CR-044 → CR-038 → CR-039.
 Plans: `control/sessions/CR0XX_ARTIFACT_2_3_IMPACT_AND_PLAN.md`
