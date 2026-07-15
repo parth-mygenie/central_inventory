@@ -279,16 +279,28 @@ Store this list as constants in `api.js` next to the mutation. Missing invalidat
 
 ---
 
-## 7. Owner-facing questions (block PLANNING until resolved)
+## 7. Owner-facing questions — **RESOLVED 2026-02-15**
 
-1. **Who initiates?** Both franchise AND master, or only one? (Endpoints support both; UX effort doubles if both.)
-2. **Approval flow or one-shot?** Forward push is one-shot. Reverse writes into master — do we want a master-side confirmation step? If yes, that's a bigger backend gap.
-3. **`enforce_child_lock`** — default false. Should the wizard expose this toggle? What does `true` mean UX-wise?
-4. **Discovery** — always-on CTA in Store Management, or feature-flagged for the "legacy franchise seeds new master" case only? Impacts `screenVisibility.js` (FROZEN — needs owner GO if a new rule is needed).
-5. **Copy** — "Seed Central Store", "Pull from Outlet", "Reverse Push"? Confirm final labels (terminology.js is frozen).
-6. **Modules filter** — is the `modules[]=…` filter meant to be honoured on GET? If yes, what's the correct transport (query, body, POST-only)? See §3.1.
-7. **"Master-self" variant** — do we support `POST reverse-push/{parentId}` with `child_restaurant_id` in body, or should the frontend always route masters through `reverse-push/from/{childId}`?
-8. **Confirmation UX** — should we require the actor to type the target restaurant name (like `git push --force-with-lease`) before executing? Reverse push is destructive relative to master state.
+Locked answers below. PLANNING is unblocked.
+
+| # | Question | Owner answer | Impact |
+|:-:|----------|--------------|--------|
+| 1 | Who initiates? | **MASTER only** | Franchise-initiated CTA is NOT built. FE never calls `reverse-push/{parentId}`. |
+| 2 | Approval flow? | **One-shot** | Wizard → confirm → POST. No pending queue. |
+| 3 | Expose `enforce_child_lock` toggle? | **YES** | Wizard shows a checkbox (default `false`). |
+| 4 | Discovery | **Feature-flag / legacy-only** | Hidden by default. Gate via feature flag (not `screenVisibility.js` — that stays frozen). Owner enables per legacy franchise migration. |
+| 5 | Copy | **"Pull from Outlet"** | Single copy string. No forward alias in this direction. |
+| 6 | Modules filter | **Not on GET** (form always returns full bundle summary — do NOT send `modules` on the form call). **YES on POST** as a JSON body array: `{"push_food_bundle":true, "modules":["ingredients","sub_recipes"]}`. Must be real array (not comma string). Unknown labels silently skipped. **Valid labels:** `categories, stock_item_categories, addons, sub_recipes, ingredients, stock_items, foods, recipes`. **Use `ingredients` (NOT `inventory_master`).** Module selection UI belongs in the wizard. **Default = omit `modules` = push everything.** | Wizard gets an optional multi-select of module labels. |
+| 7 | Which endpoints? | **`from/{childId}` variants ONLY** (master token). Preview: `GET reverse-push-form/from/{childId}`. Execute: `POST reverse-push/from/{childId}` with `{"push_food_bundle":true, "enforce_child_lock":false}` (+ optional `modules[]`). FE **never** calls the `reverse-push/{parentId}` or master-self+`child_restaurant_id` variants. | `api.js` needs only 2 methods, not 4. Cuts scope in half. |
+| 8 | Type-to-confirm destructive UX? | **No** | Standard confirm modal is sufficient. |
+
+### Consequences for §4.3 blast radius (revised)
+
+- **`api.js`:** only 2 new methods needed — `getReversePushFromChild(childId)` and `reversePushFromChild(childId, { push_food_bundle:true, enforce_child_lock, modules })`. Drop the franchise-initiated pair.
+- **`useHierarchyManagement.js`:** state is single-actor (master). Simpler shape.
+- **`HierarchyManagement.jsx`:** wizard shows: source (child) → target (self/master), module multi-select (optional), `enforce_child_lock` checkbox, execute button.
+- **`StoreManagement.jsx`:** row-level "Pull from Outlet" action on child rows, gated behind a feature flag (e.g. `REACT_APP_FEATURE_REVERSE_PUSH` or a value in `screenVisibility` config surfaced via a NEW config key — but do not modify `screenVisibility.js` directly; use env or a small config file. Confirm with owner in PLANNING.)
+- **Module label mapping:** `ingredients` maps to inventory_master. Do NOT expose the raw label "inventory_master" anywhere in the UI.
 
 ---
 
@@ -320,8 +332,8 @@ When PLANNING opens CR-045, copy these into `memory/evidence/CR-045/`.
 
 ## 10. Handover
 
-- **Immediate next role:** OWNER — answer §7 questions.
-- **After that:** INTAKE (formally register CR-045 in `control/registry.json` + `control/L3_CR_REGISTRY.md`, model after CR-037 style adoption CR). Include this report as the pre-intake evidence.
-- **Then:** PLANNING for Gates 2-3 using the blast radius in §4.3.
+- **Immediate next role:** INTAKE — formally register **CR-045 — Reverse Push Frontend Adoption (Master-Initiated, Feature-Flagged)** in `control/registry.json` + `control/L3_CR_REGISTRY.md`. Include this report as evidence. Duplicate check: DISTINCT (no prior reverse-push CR).
+- **Then:** PLANNING for Gates 2-3 using the revised blast radius in §7 (only 2 API methods, master-only wizard, feature flag).
+- **Then:** Gate 4 (Owner GO) → IMPLEMENTATION → QA → SMOKE.
 
 No code was written in this session (INVESTIGATION role does not implement — R0/R7).
