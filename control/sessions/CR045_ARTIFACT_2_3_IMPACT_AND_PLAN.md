@@ -5,11 +5,18 @@
 ---
 
 > **Author:** PLANNING agent
-> **Date:** 2026-02-15
+> **Date:** 2026-02-15 (revised same-day per owner override — feature flag dropped)
 > **Intake:** `control/sessions/CR045_ARTIFACT_1_INTAKE.md`
 > **Investigation:** `control/sessions/INVESTIGATION_REPORT_REVERSE_PUSH_20260215.md`
 > **Code Reality:** NONE (green-field frontend adoption; backend live)
-> **Scope Lock:** Files WILL change → `services/api.js`, `hooks/useHierarchyManagement.js`, `components/central-inventory/StoreManagement.jsx`, `components/central-inventory/ReversePushWizardDialog.jsx` (**NEW**), `lib/featureFlags.js` (**NEW**), `.env.example` (docs). Files that will NOT be touched → `terminology.js` (frozen), `screenVisibility.js` (frozen), `backend/server.py` (proxy-only), `HierarchyManagement.jsx` (out of primary user flow — mounting via `StoreManagement.jsx` only).
+> **Scope Lock:** Files WILL change → `services/api.js`, `hooks/useHierarchyManagement.js`, `components/central-inventory/StoreManagement.jsx`, `components/central-inventory/ReversePushWizardDialog.jsx` (**NEW**). Files that will NOT be touched → `terminology.js` (frozen), `screenVisibility.js` (frozen), `backend/server.py` (proxy-only), `HierarchyManagement.jsx` (out of primary user flow — mounting via `StoreManagement.jsx` only), `lib/featureFlags.js` (**dropped per owner override**).
+
+---
+
+## Change Log
+
+- **2026-02-15 v1:** Initial plan with feature-flag gate (`featureFlags.reversePush`).
+- **2026-02-15 v2 (this doc):** Owner dropped the feature-flag condition. Visibility is now two-gate only: `isTopLevel && child.restaurantTypeFlag === "franchise"`. `lib/featureFlags.js` removed from scope. File count: 4 (was 5). Cache-invalidation and all other decisions unchanged.
 
 ---
 
@@ -20,7 +27,7 @@
 ```
 Master user opens Store Management (/stores)
   └─ StoreManagement.jsx renders row per child (already exists)
-      └─ NEW: if isMaster && child.restaurantTypeFlag === "franchise" && FEATURE_REVERSE_PUSH
+      └─ NEW: if isTopLevel && child.restaurantTypeFlag === "franchise"
               → show "Pull from Outlet" row action
       └─ user clicks → setReversePullTarget(child)
          └─ ReversePushWizardDialog mounts (NEW)
@@ -46,14 +53,12 @@ Master user opens Store Management (/stores)
 
 | # | File | Lines Touched (approx) | Risk | Downstream Consumers |
 |:-:|------|-----------------------|:----:|----------------------|
-| 1 | `frontend/src/lib/featureFlags.js` **NEW** | ~15 (whole file) | LOW | Imported by StoreManagement.jsx |
-| 2 | `frontend/src/services/api.js` | +~40 near line 928 (`getPushForm`/`pushBundle` neighbourhood); +~15 near line 128 (new `_invalidateCatalogCaches` helper); +2 lines in export block near 1236 | **MEDIUM** (hotspot file, R5) | Called by useHierarchyManagement.js |
-| 3 | `frontend/src/hooks/useHierarchyManagement.js` | +~60 (state block ~line 21, callbacks ~line 86, return block ~line 138) | LOW | Consumed by StoreManagement.jsx |
-| 4 | `frontend/src/components/central-inventory/ReversePushWizardDialog.jsx` **NEW** | ~240 (whole file) | MEDIUM (UX-heavy) | Mounted by StoreManagement.jsx |
-| 5 | `frontend/src/components/central-inventory/StoreManagement.jsx` | +~25 (import + state + row-action + mount) | LOW | End-user UI |
-| 6 | `frontend/.env` (docs only — do NOT auto-add) | 0 (protected file, R-CRITICAL) | none | Owner opts in manually |
+| 1 | `frontend/src/services/api.js` | +~40 near line 928 (`getPushForm`/`pushBundle` neighbourhood); +~15 near line 128 (new `_invalidateCatalogCaches` helper); +2 lines in export block near 1236 | **MEDIUM** (hotspot file, R5) | Called by useHierarchyManagement.js |
+| 2 | `frontend/src/hooks/useHierarchyManagement.js` | +~60 (state block ~line 21, callbacks ~line 86, return block ~line 138) | LOW | Consumed by StoreManagement.jsx |
+| 3 | `frontend/src/components/central-inventory/ReversePushWizardDialog.jsx` **NEW** | ~240 (whole file) | MEDIUM (UX-heavy) | Mounted by StoreManagement.jsx |
+| 4 | `frontend/src/components/central-inventory/StoreManagement.jsx` | +~20 (import + state + row-action + mount) | LOW | End-user UI |
 
-**Total scope:** 2 new files, 3 modified files, ~380 net new lines. Blast radius **MEDIUM** as declared in intake.
+**Total scope:** 1 new file, 3 modified files, ~360 net new lines. Blast radius **MEDIUM**.
 
 ### A.3 Conflict pre-check (L7)
 
@@ -73,7 +78,7 @@ Master user opens Store Management (/stores)
 | R2 | Modules multi-select silently pushes wrong scope (unknown labels skipped by backend) | MEDIUM | Frontend uses a **whitelist constant** for the 8 valid labels (typed source-of-truth in `api.js`); wizard renders only those. `inventory_master` label banned in wizard copy (Investigation §7-q6). |
 | R3 | Master accidentally pulls from wrong outlet (destructive relative to master state) | MEDIUM | Owner explicitly declined type-to-confirm (Q8). Mitigation: preview shows target = master's own name and totals; confirm modal shows both. |
 | R4 | `foods[].price` as string → NaN if used in arithmetic in wizard | LOW | Wizard only displays counts, not prices. If a future rev shows price, wrap `Number()` (CI-R3). |
-| R5 | Feature flag envelope forgotten (feature accidentally exposed to non-legacy masters) | HIGH | Two-gate check: `isMaster && child.restaurantTypeFlag === "franchise" && FEATURE_REVERSE_PUSH`. Default `FEATURE_REVERSE_PUSH = false` in `featureFlags.js`. Owner explicitly opts in per deploy via env override. |
+| R5 | Master accidentally sees Pull on every outlet, even non-legacy ones | LOW-MEDIUM | Two-gate check: `isTopLevel && child.restaurantTypeFlag === "franchise"`. Copy is explicit ("Pull from Outlet"); confirm modal shows source/target names before write. Owner accepts always-on visibility for masters (2026-02-15 override). |
 | R6 | Post-execute stale reads on Store Management (child_matched counts still show old value) | MEDIUM | On successful POST, invalidate `getPushForm:*` AND `getReversePushFromChild:*` cache keys. StoreManagement's push-status polling naturally re-fetches on next render tick. |
 | R7 | Race: user re-opens wizard mid-mutation → duplicate POST | LOW | Existing `pushLoading` pattern in the hook (single-flight) reused as `reverseLoading`; execute button disabled while `reverseLoading` is true. |
 | R8 | Error code missing on 4xx paths (§3 of investigation) | LOW | Frontend defensive: fall back to `message` when `error_code` is absent; user-friendly toast copy in R5 of intake. |
@@ -91,8 +96,9 @@ Master user opens Store Management (/stores)
 | V7 | Modules multi-select | Selecting 2 modules → POST body has `modules:["ingredients","sub_recipes"]` (array) | Playwright checkbox flow + intercept network | Manual |
 | V8 | `enforce_child_lock` checkbox | Toggle changes payload | Playwright + intercept | Manual |
 | V9 | Results renderer | 8 modules including `stock_item_categories` + `stock_items` display | Trigger reverse push against a real outlet (test env only), verify all 8 rows visible in results | Manual |
-| V10 | Feature-flag gate | Row action HIDDEN when `FEATURE_REVERSE_PUSH=false` | Master login with flag off → no "Pull from Outlet" button in any row | Playwright |
-| V11 | Persona gate | Franchise user does NOT see the CTA even with flag on | Franchise login with flag on → no button visible | Playwright |
+| V10 | Persona gate: master sees Pull on franchise rows | Master login → any franchise row shows "Pull" button next to "Push" | Playwright |
+| V11 | Persona gate: master does NOT see Pull on central rows | Master login → central row shows only "Push" button | Playwright |
+| V11b | Persona gate: franchise/non-master user never sees Pull | Franchise login → no "Pull" button on any row | Playwright |
 | V12 | Regression: forward push still works | `handlePush(childId)` on a central row still executes forward push | Master login → "Push" button on central row → toast success | Playwright |
 | V13 | Regression: catalog policy card still loads | Expand a child row → CatalogPolicyCard renders (unchanged) | Master login → expand → observe policy switches | Manual |
 | V14 | Error surface: 403 forbidden | Wrong actor gets friendly toast | Franchise token → force-call the endpoint via dev console → toast reads "You can't pull from this outlet." | Manual |
@@ -106,43 +112,14 @@ Execute in this order. Each step lists exact edit + verification.
 
 ### Execution sequence
 
-1. Create `featureFlags.js` (foundation).
-2. Edit `api.js` (adds 2 methods + cache helper; must be verifiable before UI wires in).
-3. Edit `useHierarchyManagement.js` (state + callbacks).
-4. Create `ReversePushWizardDialog.jsx` (UI).
-5. Edit `StoreManagement.jsx` (mount wizard + row action + flag gate).
+1. Edit `api.js` (adds 2 methods + cache helper; must be verifiable before UI wires in).
+2. Edit `useHierarchyManagement.js` (state + callbacks).
+3. Create `ReversePushWizardDialog.jsx` (UI).
+4. Edit `StoreManagement.jsx` (mount wizard + row action + persona gate).
 
 ---
 
-### Step 1 — Create `frontend/src/lib/featureFlags.js`
-
-**NEW file. Full content:**
-
-```js
-// CR-045 — Feature flags primitive.
-// Extensible per-flag registry. Values are static at build time.
-// Override in preview/prod via .env: REACT_APP_FEATURE_REVERSE_PUSH=true.
-
-function bool(v, fallback = false) {
-  if (v === undefined || v === null) return fallback;
-  const s = String(v).toLowerCase().trim();
-  return s === "true" || s === "1" || s === "yes" || s === "on";
-}
-
-const featureFlags = {
-  // Reverse push — master pulls catalogue upward from a legacy outlet.
-  // Feature-flagged / legacy-only per owner (2026-02-15).
-  reversePush: bool(process.env.REACT_APP_FEATURE_REVERSE_PUSH, false),
-};
-
-export default featureFlags;
-```
-
-**Verification:** import in dev console → `featureFlags.reversePush === false` (default).
-
----
-
-### Step 2 — Edit `frontend/src/services/api.js`
+### Step 1 — Edit `frontend/src/services/api.js`
 
 #### 2a. Add catalog-cache invalidation helper (insert AFTER line 137, before line 138 `function invalidateAll`).
 
@@ -241,7 +218,7 @@ function reversePushFromChild(childId, { enforceChildLock = false, modules } = {
 
 ---
 
-### Step 3 — Edit `frontend/src/hooks/useHierarchyManagement.js`
+### Step 2 — Edit `frontend/src/hooks/useHierarchyManagement.js`
 
 #### 3a. Add reverse state (insert AFTER line 24, before line 26 `// History state`).
 
@@ -338,7 +315,7 @@ function reversePushFromChild(childId, { enforceChildLock = false, modules } = {
 
 ---
 
-### Step 4 — Create `frontend/src/components/central-inventory/ReversePushWizardDialog.jsx`
+### Step 3 — Create `frontend/src/components/central-inventory/ReversePushWizardDialog.jsx`
 
 **NEW file. Full content sketch below** (final tighter code produced during IMPLEMENTATION):
 
@@ -605,21 +582,20 @@ export default function ReversePushWizardDialog({ open, onClose, target }) {
 
 ---
 
-### Step 5 — Edit `frontend/src/components/central-inventory/StoreManagement.jsx`
+### Step 4 — Edit `frontend/src/components/central-inventory/StoreManagement.jsx`
 
-#### 5a. Add imports (top of file, after existing imports).
+#### 4a. Add imports (top of file, after existing imports).
 
 **Insert after line 20 (`import { friendlyCatalogError } ...`):**
 
 ```js
 import ReversePushWizardDialog from "./ReversePushWizardDialog"; // CR-045
-import featureFlags from "@/lib/featureFlags";                    // CR-045
 import { ArrowDownToLine } from "lucide-react";                   // CR-045
 ```
 
 *(If `ArrowDownToLine` is already in the existing lucide-react import block on line 16-19, merge it there instead of a new import line.)*
 
-#### 5b. Add reverse-pull state (near line 43, next to existing `pushing` state).
+#### 4b. Add reverse-pull state (near line 43, next to existing `pushing` state).
 
 **Current (line 43):**
 ```js
@@ -631,7 +607,7 @@ import { ArrowDownToLine } from "lucide-react";                   // CR-045
   const [reversePullTarget, setReversePullTarget] = useState(null); // CR-045
 ```
 
-#### 5c. Add row-action button + feature-flag/persona gate (near line 413-427, the existing Push button `<TableCell>`).
+#### 4c. Add row-action button + persona gate (near line 413-427, the existing Push button `<TableCell>`).
 
 **Current context (lines 413-427):**
 ```js
@@ -669,8 +645,8 @@ import { ArrowDownToLine } from "lucide-react";                   // CR-045
                               Push
                             </Button>
                           )}
-                          {/* CR-045 — Pull from Outlet: master-only, franchise rows only, feature-flag gated */}
-                          {featureFlags.reversePush && isTopLevel && child.restaurantTypeFlag === "franchise" && (
+                          {/* CR-045 — Pull from Outlet: master persona + franchise row (two-gate) */}
+                          {isTopLevel && child.restaurantTypeFlag === "franchise" && (
                             <Button
                               variant="ghost"
                               size="sm"
@@ -686,7 +662,7 @@ import { ArrowDownToLine } from "lucide-react";                   // CR-045
                       </TableCell>
 ```
 
-#### 5d. Mount the wizard (before the closing `</div>` of the component's return, near line 441).
+#### 4d. Mount the wizard (before the closing `</div>` of the component's return, near line 441).
 
 **Current (lines 440-442):**
 ```js
@@ -703,38 +679,35 @@ import { ArrowDownToLine } from "lucide-react";                   // CR-045
       )}
 
       {/* CR-045 — Reverse Push Wizard */}
-      {featureFlags.reversePush && (
-        <ReversePushWizardDialog
-          open={!!reversePullTarget}
-          onClose={() => setReversePullTarget(null)}
-          target={reversePullTarget}
-        />
-      )}
+      <ReversePushWizardDialog
+        open={!!reversePullTarget}
+        onClose={() => setReversePullTarget(null)}
+        target={reversePullTarget}
+      />
     </div>
   );
 }
 ```
 
-**Verification:** V6, V10, V11, V12 in matrix.
+**Verification:** V6, V10, V11, V11b, V12 in matrix.
 
 ---
 
 ## PART C — Scope Lock
 
-**Files WILL change (5 total):**
-1. `frontend/src/lib/featureFlags.js` (NEW, ~15 lines)
-2. `frontend/src/services/api.js` (+~55 lines)
-3. `frontend/src/hooks/useHierarchyManagement.js` (+~60 lines)
-4. `frontend/src/components/central-inventory/ReversePushWizardDialog.jsx` (NEW, ~240 lines)
-5. `frontend/src/components/central-inventory/StoreManagement.jsx` (+~25 lines)
+**Files WILL change (4 total):**
+1. `frontend/src/services/api.js` (+~55 lines)
+2. `frontend/src/hooks/useHierarchyManagement.js` (+~60 lines)
+3. `frontend/src/components/central-inventory/ReversePushWizardDialog.jsx` (NEW, ~240 lines)
+4. `frontend/src/components/central-inventory/StoreManagement.jsx` (+~20 lines)
 
 **Files will NOT touch:**
+- `frontend/src/lib/featureFlags.js` (**dropped from scope per owner override 2026-02-15**)
 - `frontend/src/lib/terminology.js` (FROZEN)
 - `frontend/src/lib/screenVisibility.js` (FROZEN)
 - `frontend/src/components/central-inventory/HierarchyManagement.jsx` (deliberate — separate page, out of primary flow)
 - `backend/server.py` (proxy-only, generic catch-all already forwards)
-- `frontend/.env` (PROTECTED — owner sets `REACT_APP_FEATURE_REVERSE_PUSH=true` manually)
-- `backend/.env`
+- `frontend/.env`, `backend/.env` (PROTECTED)
 - `frontend/package.json` (no new deps)
 - All other files
 
@@ -746,7 +719,7 @@ import { ArrowDownToLine } from "lucide-react";                   // CR-045
 
 - [ ] `control/registry.json`: CR-045 → status: `IMPLEMENTED`, `artifact_refs[2]` (Impact-Analysis) → `DONE` path `control/sessions/CR045_ARTIFACT_2_3_IMPACT_AND_PLAN.md`, `artifact_refs[3]` (Impl-Plan) → same path.
 - [ ] `control/L1_CONTROL_DASHBOARD.md`: CR-045 row → `PLANNED` (after this artifact) → `IMPLEMENTED` (after code).
-- [ ] `control/L7_FILE_OWNERSHIP.md`: New section "CR-045: Reverse Push Adoption (5 files: 2 new + 3 modified)".
+- [ ] `control/L7_FILE_OWNERSHIP.md`: New section "CR-045: Reverse Push Adoption (4 files: 1 new + 3 modified)".
 - [ ] Code markers: `// CR-045` comment in every modified file at the change block.
 - [ ] Dashboard drift check: `cd /app && node control/gen_dashboard_data.js --check` → exit 0.
 
@@ -760,11 +733,11 @@ import { ArrowDownToLine } from "lucide-react";                   // CR-045
 
 ## PART F — Handover (→ Owner for Gate 4 → IMPLEMENTATION)
 
-Plan ready. **5 edits across 5 files** (2 new + 3 modified). Code reality: NONE (green-field). Scope lock: see PART C. Verification matrix: 15 checks (mostly manual, ~4 Playwright).
+Plan ready. **4 edits across 4 files** (1 new + 3 modified). Code reality: NONE (green-field). Scope lock: see PART C. Verification matrix: 16 checks (mostly manual, ~5 Playwright).
 
 **Owner decisions still pending Gate 4 GO:**
 
-1. **Feature-flag mechanism:** confirm option (b) — new `frontend/src/lib/featureFlags.js` (agent recommendation). Alternatives: env-only, or per-restaurant API flag.
+1. ~~**Feature-flag mechanism:**~~ **RESOLVED — feature flag dropped (owner 2026-02-15).** Visibility is two-gate only: `isTopLevel && child.restaurantTypeFlag === "franchise"`.
 2. **Cache-invalidation scope:** confirm broad (12 prefixes in `_invalidateCatalogCaches`) vs conservative. Agent recommendation: broad — reverse push writes across all catalogue tables and rare-event execution frequency means the perf hit is acceptable.
 3. **Severity P2:** confirm from intake (was agent-classified).
 4. **Wizard placement:** row action on franchise rows in Store Management, confirmed by "Pull from Outlet" copy. OK to proceed?
