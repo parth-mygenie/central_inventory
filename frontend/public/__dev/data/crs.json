@@ -3550,7 +3550,7 @@
     "type": "CR",
     "id": "CR-045",
     "title": "Reverse Push Frontend Adoption (Master-Initiated, Feature-Flagged)",
-    "status": "PLANNED",
+    "status": "IMPLEMENTED",
     "severity": "P2",
     "sprint_key": null,
     "phase": "Reverse Push Adoption (backend live 2026-02-15)",
@@ -3589,8 +3589,8 @@
       {
         "artifact": 4,
         "label": "Code-Gate",
-        "status": "MISSING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/CR045_ARTIFACT_4_CODE_GATE.md"
       },
       {
         "artifact": 5,
@@ -3606,14 +3606,13 @@
       }
     ],
     "completeness": {
-      "done": 4,
+      "done": 5,
       "total": 7,
-      "pct": 57
+      "pct": 71
     },
     "doc_count": 0,
     "is_debt": true,
     "debt_reasons": [
-      "Code-Gate: MISSING",
       "QA-Report: MISSING",
       "Owner-Signoff: MISSING"
     ],

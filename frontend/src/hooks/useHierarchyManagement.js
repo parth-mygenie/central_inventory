@@ -23,6 +23,12 @@ export default function useHierarchyManagement() {
   const [pushLoading, setPushLoading] = useState(false);
   const [pushError, setPushError] = useState(null);
 
+  // CR-045 — Reverse push state (master pulls upward from a legacy outlet)
+  const [reverseForm, setReverseForm] = useState(null);
+  const [reverseResults, setReverseResults] = useState(null);
+  const [reverseLoading, setReverseLoading] = useState(false);
+  const [reverseError, setReverseError] = useState(null);
+
   // History state
   const [history, setHistory] = useState([]);
   const [historyMeta, setHistoryMeta] = useState(null);
@@ -135,11 +141,53 @@ export default function useHierarchyManagement() {
     setPushError(null);
   }, []);
 
+  // CR-045 — Reverse push callbacks (master pulls upward from a legacy outlet)
+  const fetchReverseForm = useCallback(async (childId) => {
+    setReverseLoading(true);
+    setReverseError(null);
+    setReverseResults(null);
+    try {
+      const resp = await api.getReversePushFromChild(childId);
+      setReverseForm(resp.data?.data || resp.data);
+    } catch (err) {
+      setReverseError(err?.response?.data?.message || "Failed to load reverse push preview");
+      setReverseForm(null);
+    } finally {
+      setReverseLoading(false);
+    }
+  }, []);
+
+  const executeReverse = useCallback(async (childId, opts = {}) => {
+    setReverseLoading(true);
+    setReverseError(null);
+    try {
+      const resp = await api.reversePushFromChild(childId, opts);
+      const d = resp.data?.data || resp.data;
+      setReverseResults(d.results || d);
+      return d;
+    } catch (err) {
+      const data = err?.response?.data;
+      setReverseError(data?.message || "Reverse push failed");
+      throw err;
+    } finally {
+      setReverseLoading(false);
+    }
+  }, []);
+
+  const resetReverse = useCallback(() => {
+    setReverseForm(null);
+    setReverseResults(null);
+    setReverseError(null);
+  }, []);
+
   return {
     children, listMeta, parentInfo, allowedChildTypes, listLoading, listError, fetchList,
     nestedFranchises, fetchNestedFranchises,
     createMeta, fetchCreateMeta, createChild,
     pushForm, pushResults, pushLoading, pushError, fetchPushForm, executePush, resetPush,
+    // CR-045 — Reverse push
+    reverseForm, reverseResults, reverseLoading, reverseError,
+    fetchReverseForm, executeReverse, resetReverse,
     history, historyMeta, historyLoading, fetchHistory,
   };
 }

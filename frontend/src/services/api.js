@@ -136,6 +136,27 @@ function _invalidateStockCaches() {
   ]);
 }
 
+// CR-045 — Invalidate all catalogue caches after a reverse-push mutation.
+// Reverse push writes across categories/foods/addons/ingredients/sub_recipes/
+// recipes/roles + stock_items on the master, so we blow the whole catalogue
+// tier. Broad by design; execution is a rare legacy-migration event.
+function _invalidateCatalogCaches() {
+  _invalidateCache([
+    "getPushForm:",
+    "getReversePushFromChild:",
+    "getHierarchyList:",
+    "getHierarchyDetail:",
+    "getHierarchySummary:",
+    "getInventoryMaster:",
+    "getStockInventory:",
+    "getFoodList:",       // safe no-op if not cached
+    "getRecipeList:",
+    "getSubRecipeList:",
+    "getAddonRecipes:",
+    "getCategoryList:",
+  ]);
+}
+
 /** Invalidate all caches (nuclear option — used by manual refresh) */
 function invalidateAll() {
   _cacheStore.clear();
@@ -933,6 +954,34 @@ function pushBundle(childId) {
   return client.post(`/proxy/v2/franchise/push/${childId}`, { push_food_bundle: true });
 }
 
+// CR-045 — Reverse push (master pulls catalogue upward from a legacy outlet).
+// Valid module labels per POS contract. `ingredients` maps to inventory_master —
+// do NOT expose the raw "inventory_master" label anywhere in the UI.
+const REVERSE_PUSH_MODULES = [
+  "categories", "stock_item_categories", "addons", "sub_recipes",
+  "ingredients", "stock_items", "foods", "recipes",
+];
+
+function _getReversePushFromChild(childId) {
+  return client.get(`/proxy/v2/franchise/reverse-push-form/from/${childId}`);
+}
+const getReversePushFromChild = _cached("getReversePushFromChild", TTL.SHORT, _getReversePushFromChild);
+
+function reversePushFromChild(childId, { enforceChildLock = false, modules } = {}) {
+  const body = { push_food_bundle: true, enforce_child_lock: !!enforceChildLock };
+  if (Array.isArray(modules) && modules.length > 0) {
+    // Filter to whitelist so unknown labels never reach the API.
+    const filtered = modules.filter((m) => REVERSE_PUSH_MODULES.includes(m));
+    // Only send `modules` when caller narrowed scope (omit = push everything).
+    if (filtered.length > 0 && filtered.length < REVERSE_PUSH_MODULES.length) {
+      body.modules = filtered;
+    }
+  }
+  return client
+    .post(`/proxy/v2/franchise/reverse-push/from/${childId}`, body)
+    .then((r) => { _invalidateCatalogCaches(); return r; });
+}
+
 function getHierarchyHistory({ limit, page } = {}) {
   const payload = {};
   if (limit) payload.limit = limit;
@@ -1221,6 +1270,10 @@ const api = {
   getPushForm,
   pushBundle,
   getHierarchyHistory,
+  // CR-045 — Reverse push (master pulls catalogue upward from a legacy outlet)
+  getReversePushFromChild,
+  reversePushFromChild,
+  REVERSE_PUSH_MODULES,
   // CR-030: Vendor Purchase Intelligence
   getVendorItemList,
   // CR-030: Purchase Order Module (10 endpoints)

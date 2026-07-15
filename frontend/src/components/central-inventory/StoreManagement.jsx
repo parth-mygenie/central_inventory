@@ -16,8 +16,10 @@ import { Switch } from "@/components/ui/switch";
 import {
   GitBranch, Search, Plus, ChevronDown, ChevronRight, RefreshCw, Loader2,
   Upload, Mail, Phone, MapPin, Calendar, Check, ArrowRight, ArrowLeft, Shield, Save,
+  ArrowDownToLine,
 } from "lucide-react";
 import { friendlyCatalogError } from "@/lib/apiErrors"; // CR-043 — G-029
+import ReversePushWizardDialog from "./ReversePushWizardDialog"; // CR-045
 
 /**
  * Store Management — CR-032 unified view
@@ -41,6 +43,7 @@ export default function StoreManagement() {
   const [pushStatusMap, setPushStatusMap] = useState({});
   const [childHealthMap, setChildHealthMap] = useState({});
   const [pushing, setPushing] = useState(null);
+  const [reversePullTarget, setReversePullTarget] = useState(null); // CR-045
 
   // Create form state
   const [formName, setFormName] = useState("");
@@ -411,19 +414,34 @@ export default function StoreManagement() {
                         <span className="text-xs tabular-nums text-emerald-600">{health?.ok ?? "—"}</span>
                       </TableCell>
                       <TableCell className="py-2.5">
-                        {ps && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-6 text-[10px] px-2 gap-1"
-                            onClick={(e) => { e.stopPropagation(); handlePush(child.id); }}
-                            disabled={pushing === child.id}
-                            data-testid={`push-btn-${child.id}`}
-                          >
-                            {pushing === child.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
-                            Push
-                          </Button>
-                        )}
+                        <div className="flex items-center gap-1">
+                          {ps && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-6 text-[10px] px-2 gap-1"
+                              onClick={(e) => { e.stopPropagation(); handlePush(child.id); }}
+                              disabled={pushing === child.id}
+                              data-testid={`push-btn-${child.id}`}
+                            >
+                              {pushing === child.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                              Push
+                            </Button>
+                          )}
+                          {/* CR-045 — Pull from Outlet: master persona + franchise row (two-gate) */}
+                          {isTopLevel && child.restaurantTypeFlag === "franchise" && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 text-[10px] px-2 gap-1"
+                              onClick={(e) => { e.stopPropagation(); setReversePullTarget(child); }}
+                              data-testid={`reverse-pull-btn-${child.id}`}
+                              title="Pull catalogue from this outlet into your central store"
+                            >
+                              <ArrowDownToLine className="h-3 w-3" /> Pull
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                     {isExpanded && (
@@ -438,6 +456,13 @@ export default function StoreManagement() {
           </Table>
         </Card>
       )}
+
+      {/* CR-045 — Reverse Push Wizard */}
+      <ReversePushWizardDialog
+        open={!!reversePullTarget}
+        onClose={() => setReversePullTarget(null)}
+        target={reversePullTarget}
+      />
     </div>
   );
 }
