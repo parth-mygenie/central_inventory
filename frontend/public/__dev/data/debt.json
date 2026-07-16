@@ -1,0 +1,813 @@
+[
+  {
+    "type": "CR",
+    "id": "CR-001",
+    "title": "Slice 1 — Read-only Screens (Hub, Hierarchy, Store Detail, Login)",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "sprint_name": "Pre-Governance (Retroactive)",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-002",
+    "title": "Slice 2 — Pending Queues, Transfer Detail, Status Timeline",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "sprint_name": "Pre-Governance (Retroactive)",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-003",
+    "title": "Slice 3 — History & Ledger, Date/Status Filters",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "sprint_name": "Pre-Governance (Retroactive)",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-004",
+    "title": "Slice 4 — Transfer Write Flows (Dispatch, Request, Approve, Reject, Receive, Cancel)",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "sprint_name": "Pre-Governance (Retroactive)",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-005",
+    "title": "Slice 5 — Stock Adjustment, Wastage, Source Selector, Seed Shutdown",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "sprint_name": "Pre-Governance (Retroactive)",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-006",
+    "title": "P17 — Amend / Withdraw / Modification",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "sprint_name": "Pre-Governance (Retroactive)",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-007",
+    "title": "P17-Settings — Operational Settings CRUD",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "sprint_name": "Pre-Governance (Retroactive)",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-008",
+    "title": "P18 — Vendor Management CRUD",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "sprint_name": "Pre-Governance (Retroactive)",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-009",
+    "title": "P19 — Add Stock / Procurement",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "sprint_name": "Pre-Governance (Retroactive)",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-010",
+    "title": "P20 — Stock Inventory Summary (Self-Store)",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "sprint_name": "Pre-Governance (Retroactive)",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-011",
+    "title": "P21 — Catalogue CRUD (Ingredient/Product/Recipe/Addon-Recipe)",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "sprint_name": "Pre-Governance (Retroactive)",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-012",
+    "title": "P21-Gaps — Food Category + Addon CRUD + Ingredient Rename",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "sprint_name": "Pre-Governance (Retroactive)",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-013",
+    "title": "P22 — Daily Consumption Report",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "sprint_name": "Pre-Governance (Retroactive)",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-014",
+    "title": "P23 — Hierarchy Management + Bundle Push",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S0",
+    "sprint_name": "Pre-Governance (Retroactive)",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-015",
+    "title": "P24 — FEFO Batch Stock Detail Panel",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-016",
+    "title": "P20-Phase2 — Stock Inventory Hierarchy Toggle",
+    "status": "QA",
+    "severity": null,
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-018",
+    "title": "P25 — Wastage Report Enhancements",
+    "status": "QA_PASS",
+    "severity": null,
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "Owner-Signoff: MISSING"
+    ],
+    "missing_count": 1,
+    "pending_count": 0
+  },
+  {
+    "type": "CR",
+    "id": "CR-021",
+    "title": "Intelligent UI Implementation — Sprint A+B+C + Polish",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S2",
+    "sprint_name": "Intelligent UI Implementation",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-022",
+    "title": "Code Quality Review Fixes — Security + React Patterns",
+    "status": "CLOSED",
+    "severity": null,
+    "sprint_key": "S2",
+    "sprint_name": "Intelligent UI Implementation",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-026",
+    "title": "P28 — Production Unit Module (Production Run UI + History)",
+    "status": "QA",
+    "severity": null,
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-027",
+    "title": "Navigation Restructure — Grouped Sidebar (INWARD / PRODUCTION / OUTWARD / REPORTS / SETTINGS)",
+    "status": "QA",
+    "severity": null,
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-029",
+    "title": "Stock Inventory Split — Finished Goods vs Raw Materials Tabs",
+    "status": "QA",
+    "severity": null,
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-030",
+    "title": "Inward Screens Audit (Vendor Management, Raw Material Master, Purchase)",
+    "status": "QA",
+    "severity": null,
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-031",
+    "title": "Production Screens Audit (Sub-Recipe Master, Run Production, Production History)",
+    "status": "QA",
+    "severity": null,
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "Owner-Signoff: MISSING"
+    ],
+    "missing_count": 1,
+    "pending_count": 0
+  },
+  {
+    "type": "CR",
+    "id": "CR-032",
+    "title": "Outward Screens Audit (Store Mgmt, Product Catalog, Stock Inventory, Pending Queues, History & Ledger)",
+    "status": "QA",
+    "severity": null,
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "Owner-Signoff: MISSING"
+    ],
+    "missing_count": 1,
+    "pending_count": 0
+  },
+  {
+    "type": "CR",
+    "id": "CR-033",
+    "title": "Action Screens Audit (Direct Dispatch, Request Stock, Stock Adjustment, Wastage Entry, Transfer Detail)",
+    "status": "QA",
+    "severity": null,
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "Owner-Signoff: MISSING"
+    ],
+    "missing_count": 1,
+    "pending_count": 0
+  },
+  {
+    "type": "CR",
+    "id": "CR-034",
+    "title": "Recipe & Sub-Recipe API Contract Fix (POS Field Name Mismatch)",
+    "status": "QA",
+    "severity": null,
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-018",
+    "title": "Push status '125 items behind' is misleading (push-form API gap)",
+    "status": "QA_PASS",
+    "severity": "MEDIUM",
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-019",
+    "title": "Stock Inventory should split FG (Outward) / RM (Inward)",
+    "status": "QA_PASS",
+    "severity": "MEDIUM",
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-020",
+    "title": "\"Unknown: —\" in From/To on Store Detail Recent Transactions",
+    "status": "QA_PASS",
+    "severity": "HIGH",
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-021",
+    "title": "Remove 'Adjust Stock' from Operations Hub Quick Actions",
+    "status": "QA_PASS",
+    "severity": "LOW",
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-022",
+    "title": "Unnecessary 'Direct Stock Entry Disabled' gate page — auto-redirect to PO",
+    "status": "QA_PASS",
+    "severity": "LOW",
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-023",
+    "title": "Dollar sign ($) icon should be Rupee (₹) across app",
+    "status": "QA_PASS",
+    "severity": "MEDIUM",
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-024",
+    "title": "Production Run layout → Master-Detail (owner confirmed Option B)",
+    "status": "QA_PASS",
+    "severity": "MEDIUM",
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-025",
+    "title": "Food edit popup → Side Sheet (owner confirmed Option C)",
+    "status": "QA_PASS",
+    "severity": "LOW",
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-026",
+    "title": "Raw Material Master — Sub-recipe items/categories contaminating Ingredients view",
+    "status": "QA_PASS",
+    "severity": "HIGH",
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-027",
+    "title": "Raw Material Master — Consumption & Days of Stock calculation wildly incorrect",
+    "status": "QA_PASS",
+    "severity": "HIGH",
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-028",
+    "title": "Purchase Order Create — Sub-recipe contamination + UX issues (search, cheapest, rate, columns, vendor selection)",
+    "status": "QA_PASS",
+    "severity": "HIGH",
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-029",
+    "title": "Raw Material Master — Consumption still 0.0 kg/day (ingredient_id join mismatch with consumption API)",
+    "status": "IMPLEMENTED",
+    "severity": "HIGH",
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "QA-Report: PENDING",
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 2
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-030",
+    "title": "PO Create — Residual: send rate=0 to API, display_qty not cal_quantity, consumption/DoC wrong, search missing on By Item Need",
+    "status": "IMPLEMENTED",
+    "severity": "HIGH",
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "QA-Report: PENDING",
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 2
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-031",
+    "title": "RM Stock page — Remove All/FG tabs (RM only), hide Sub Recipe from category filter",
+    "status": "IMPLEMENTED",
+    "severity": "MEDIUM",
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "QA-Report: PENDING",
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 2
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-032",
+    "title": "Stock Inventory expanded row — Expiry Risk inline date, hide Adjust Stock, load FEFO segments",
+    "status": "IMPLEMENTED",
+    "severity": "HIGH",
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "QA-Report: PENDING",
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 2
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-033",
+    "title": "Stock Inventory Quick Actions — Dispatch/Wastage don't pre-select ingredient",
+    "status": "IMPLEMENTED",
+    "severity": "MEDIUM",
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "QA-Report: PENDING",
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 2
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-034",
+    "title": "Sub-Recipe Master — Delete button → Active/Inactive toggle (backend API pending)",
+    "status": "IMPLEMENTED",
+    "severity": "MEDIUM",
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "QA-Report: PENDING",
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 2
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-035",
+    "title": "Production History — Consumed Ingredients Qty shows dash, should show batch total with unit normalization",
+    "status": "IMPLEMENTED",
+    "severity": "MEDIUM",
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "QA-Report: PENDING",
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 2
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-036",
+    "title": "App-Wide Consumption Unit Mismatch — gm values displayed/calculated as kg (causes 1000x over-ordering in PO Create)",
+    "status": "IMPLEMENTED",
+    "severity": "CRITICAL",
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "Code-Gate: PENDING",
+      "QA-Report: PENDING",
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 3
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-037",
+    "title": "Food Categories Not Showing — getFoodCategories() doesn't extract r.data.categories",
+    "status": "CLOSED",
+    "severity": "HIGH",
+    "sprint_key": "S3",
+    "sprint_name": "API Reality Check + Intelligent PO",
+    "debt_reasons": [
+      "Impact-Analysis: MISSING",
+      "Impl-Plan: MISSING",
+      "QA-Report: MISSING"
+    ],
+    "missing_count": 3,
+    "pending_count": 0
+  },
+  {
+    "type": "CR",
+    "id": "CR-037",
+    "title": "Unified Stock Ledger Adoption (G-005 + G-002/003/004)",
+    "status": "QA_PASS",
+    "severity": "P1",
+    "sprint_key": null,
+    "sprint_name": "Unassigned",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-038",
+    "title": "Stock Return Flow + Wastage Reasons CRUD (G-006)",
+    "status": "QA_PASS",
+    "severity": "P1",
+    "sprint_key": null,
+    "sprint_name": "Unassigned",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-039",
+    "title": "Procurement Excel/CSV Import (G-015)",
+    "status": "QA_PASS",
+    "severity": "P2",
+    "sprint_key": null,
+    "sprint_name": "Unassigned",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-040",
+    "title": "Invoice Number Duplicate Pre-Check (G-016)",
+    "status": "QA_PASS",
+    "severity": "P2",
+    "sprint_key": null,
+    "sprint_name": "Unassigned",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-041",
+    "title": "Segment unit_cost on Stock Detail (G-019)",
+    "status": "QA_PASS",
+    "severity": "P2",
+    "sprint_key": null,
+    "sprint_name": "Unassigned",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-042",
+    "title": "Custom Unit Conversion Adoption (G-020)",
+    "status": "QA_PASS",
+    "severity": "P1",
+    "sprint_key": null,
+    "sprint_name": "Unassigned",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-043",
+    "title": "Pushed Catalog Lock UI + Child Edit Policy (G-028/G-029)",
+    "status": "QA_PASS",
+    "severity": "P1",
+    "sprint_key": null,
+    "sprint_name": "Unassigned",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-044",
+    "title": "Manufactured Recipe Auto Sub-Recipe (G-030)",
+    "status": "QA_PASS",
+    "severity": "P2",
+    "sprint_key": null,
+    "sprint_name": "Unassigned",
+    "debt_reasons": [
+      "Owner-Signoff: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 1
+  },
+  {
+    "type": "CR",
+    "id": "CR-045",
+    "title": "Reverse Push Frontend Adoption (Master-Initiated, Feature-Flagged)",
+    "status": "IMPLEMENTED",
+    "severity": "P2",
+    "sprint_key": null,
+    "sprint_name": "Unassigned",
+    "debt_reasons": [
+      "QA-Report: MISSING",
+      "Owner-Signoff: MISSING"
+    ],
+    "missing_count": 2,
+    "pending_count": 0
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-046",
+    "title": "Recipe Create — Linked Food dropdown missing in add mode",
+    "status": "RESOLVED",
+    "severity": "HIGH",
+    "sprint_key": null,
+    "sprint_name": "Unassigned",
+    "debt_reasons": [
+      "QA-Report: MISSING",
+      "Owner-Signoff: MISSING"
+    ],
+    "missing_count": 2,
+    "pending_count": 0
+  }
+]

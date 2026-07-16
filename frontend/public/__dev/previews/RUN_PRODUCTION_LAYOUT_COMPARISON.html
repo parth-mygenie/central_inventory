@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Run Production — Layout Comparison</title>
+<style>
+:root{--bg:#fff;--surface:#fff;--surface2:#f4f4f5;--surface3:#fafafa;--border:#e4e4e7;--text:#09090b;--text-sec:#52525b;--text-muted:#a1a1aa;--primary:#18181b;--primary-fg:#fafafa;--amber:#b45309;--amber-light:#fffbeb;--amber-border:#fde68a;--red:#dc2626;--red-light:#fef2f2;--red-border:#fecaca;--green:#16a34a;--green-light:#f0fdf4;--green-border:#bbf7d0;--blue:#2563eb;--blue-light:#eff6ff;--blue-border:#bfdbfe;--font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;--mono:'SF Mono',Consolas,monospace;--sidebar-w:180px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--surface2);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5;}
+
+/* Topbar */
+.topbar{display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;}
+.topbar .logo{font-weight:700;font-size:15px;}
+.topbar .badge{font-size:10px;padding:2px 8px;border-radius:4px;background:var(--surface2);color:var(--text-sec);border:1px solid var(--border);font-weight:600;}
+
+/* Tab bar for comparison */
+.tab-bar{display:flex;gap:0;background:var(--surface);border-bottom:2px solid var(--border);padding:0 20px;position:sticky;top:45px;z-index:99;}
+.tab-bar button{padding:10px 20px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-muted);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s;}
+.tab-bar button.active{color:var(--text);border-bottom-color:var(--primary);}
+.tab-bar button:hover{color:var(--text-sec);}
+.tab-content{display:none;}.tab-content.active{display:block;}
+
+/* Layout wrapper */
+.wrapper{display:flex;min-height:calc(100vh - 90px);}
+.sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);padding:16px 0;flex-shrink:0;}
+.sidebar nav a{display:block;padding:6px 16px;font-size:13px;color:var(--text-sec);text-decoration:none;}
+.sidebar nav a.active{background:var(--surface2);font-weight:600;color:var(--text);border-right:2px solid var(--primary);}
+.sidebar .section-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);padding:12px 16px 4px;font-weight:600;}
+.main{flex:1;padding:24px;max-width:1200px;}
+
+/* Compare banner */
+.compare-banner{background:var(--blue-light);border:1px solid var(--blue-border);border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:12px;color:var(--blue);}
+.compare-banner strong{font-size:13px;}
+
+/* ═══════ OPTION A: Current vertical layout ═══════ */
+.recipe-cards{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;}
+.recipe-card{border:1px solid var(--border);border-radius:8px;padding:12px 14px;min-width:160px;cursor:pointer;background:var(--surface);transition:all .15s;}
+.recipe-card:hover{border-color:var(--text-muted);}
+.recipe-card.selected{border-color:var(--blue);background:var(--blue-light);}
+.recipe-card.urgent{border-left:3px solid var(--red);}
+.recipe-card.caution{border-left:3px solid var(--amber);}
+.recipe-card.ok{border-left:3px solid var(--green);}
+.recipe-card .name{font-weight:600;font-size:13px;margin-bottom:2px;}
+.recipe-card .meta{font-size:11px;color:var(--text-muted);}
+.recipe-card .stock{font-size:22px;font-weight:700;text-align:right;margin-top:4px;}
+.recipe-card .stock.red{color:var(--red);}
+.recipe-card .stock.amber{color:var(--amber);}
+.recipe-card .stock.green{color:var(--green);}
+.recipe-card .stock-label{font-size:9px;text-transform:uppercase;color:var(--text-muted);text-align:right;}
+
+.section-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px;}
+.section-card h3{font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:10px;font-weight:600;}
+
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.form-field label{display:block;font-size:11px;color:var(--text-muted);margin-bottom:3px;font-weight:500;}
+.form-field input{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;}
+
+.coverage-card{background:var(--blue-light);border:1px solid var(--blue-border);border-radius:8px;padding:12px 16px;margin-bottom:16px;}
+.coverage-card .main-text{font-size:13px;font-weight:600;color:#1d4ed8;}
+.coverage-card .sub-text{font-size:11px;color:#3b82f6;margin-top:2px;}
+
+table{width:100%;border-collapse:collapse;}
+th{text-align:left;padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:600;border-bottom:1px solid var(--border);background:var(--surface3);}
+td{padding:8px 12px;font-size:12px;border-bottom:1px solid var(--surface2);}
+.mono{font-family:var(--mono);font-size:12px;}
+
+.health-bar{width:60px;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;display:inline-block;vertical-align:middle;}
+.health-bar .fill{height:100%;border-radius:3px;}
+.health-bar .fill.green{background:var(--green);}
+.health-bar .fill.amber{background:var(--amber);}
+.health-bar .fill.red{background:var(--red);}
+
+.cost-card{background:var(--surface3);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;}
+.cost-card .icon{font-size:18px;color:var(--text-muted);}
+.cost-card .label{font-size:11px;color:var(--text-muted);}
+.cost-card .value{font-size:16px;font-weight:700;font-family:var(--mono);}
+.cost-card .per-unit{font-size:11px;color:var(--text-muted);margin-left:6px;}
+
+.confirm-card{background:var(--green-light);border:2px solid var(--green-border);border-radius:8px;padding:16px;margin-bottom:16px;}
+.confirm-card h3{font-size:13px;font-weight:700;color:var(--green);margin-bottom:10px;}
+.confirm-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;}
+.confirm-item{font-size:12px;}.confirm-item .lbl{color:var(--text-muted);font-size:10px;}
+.confirm-actions{display:flex;gap:10px;margin-top:14px;justify-content:flex-end;}
+.btn{padding:8px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .15s;}
+.btn-primary{background:var(--primary);color:var(--primary-fg);}
+.btn-primary:hover{opacity:0.9;}
+.btn-outline{background:var(--surface);color:var(--text);border:1px solid var(--border);}
+
+/* ═══════ OPTION B: Master-Detail Layout ═══════ */
+.master-detail{display:flex;gap:0;min-height:calc(100vh - 140px);}
+.left-panel{width:280px;flex-shrink:0;border-right:1px solid var(--border);background:var(--surface);padding:16px;overflow-y:auto;}
+.right-panel{flex:1;padding:20px;overflow-y:auto;background:var(--surface3);}
+
+.left-panel h2{font-size:12px;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:10px;font-weight:600;}
+.left-panel .search{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;margin-bottom:10px;}
+
+.recipe-list-item{padding:10px 12px;border:1px solid var(--border);border-radius:6px;margin-bottom:6px;cursor:pointer;background:var(--surface);transition:all .15s;}
+.recipe-list-item:hover{border-color:var(--text-muted);}
+.recipe-list-item.selected{border-color:var(--blue);background:var(--blue-light);border-left:3px solid var(--blue);}
+.recipe-list-item .name{font-weight:600;font-size:13px;}
+.recipe-list-item .detail{font-size:11px;color:var(--text-muted);margin-top:1px;}
+.recipe-list-item .stock-row{display:flex;justify-content:space-between;align-items:center;margin-top:4px;}
+.recipe-list-item .stock-num{font-size:16px;font-weight:700;font-family:var(--mono);}
+.recipe-list-item .stock-badge{font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600;}
+.recipe-list-item .stock-badge.red{background:var(--red-light);color:var(--red);border:1px solid var(--red-border);}
+.recipe-list-item .stock-badge.amber{background:var(--amber-light);color:var(--amber);border:1px solid var(--amber-border);}
+.recipe-list-item .stock-badge.green{background:var(--green-light);color:var(--green);border:1px solid var(--green-border);}
+
+.right-panel .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;color:var(--text-muted);font-size:14px;}
+
+.right-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.right-header h2{font-size:16px;font-weight:700;}
+.right-header .badge{font-size:10px;padding:3px 8px;border-radius:4px;}
+
+/* Sections in right panel */
+.rp-section{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:14px;}
+.rp-section h4{font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:8px;font-weight:600;}
+
+.status-ok{color:var(--green);font-weight:600;}
+.status-warn{color:var(--amber);font-weight:600;}
+.status-bad{color:var(--red);font-weight:600;}
+
+/* Responsive */
+@media(max-width:900px){.master-detail{flex-direction:column;}.left-panel{width:100%;border-right:none;border-bottom:1px solid var(--border);}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="logo">Central Inventory</span>
+  <span class="badge">Chai 813</span>
+  <span class="badge">Central Store</span>
+  <span style="flex:1"></span>
+  <span style="font-size:11px;color:var(--text-muted)">MOCK — Run Production Layout Comparison</span>
+</div>
+
+<div class="tab-bar">
+  <button class="active" onclick="showTab('optionB')">Option B: Master-Detail (NEW)</button>
+  <button onclick="showTab('optionA')">Option A: Current Vertical</button>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- OPTION B: MASTER-DETAIL (Owner's preference) -->
+<!-- ═══════════════════════════════════════════ -->
+<div id="optionB" class="tab-content active">
+<div class="wrapper" style="padding:0;">
+<div class="sidebar">
+  <div class="section-label">Dashboard</div>
+  <nav><a href="#">Operations Hub</a></nav>
+  <div class="section-label">Production</div>
+  <nav>
+    <a href="#">Sub-Recipe Master</a>
+    <a href="#" class="active">Run Production</a>
+    <a href="#">Production History</a>
+  </nav>
+  <div class="section-label">Outward</div>
+  <nav><a href="#">Stock Inventory</a></nav>
+</div>
+
+<div style="flex:1;display:flex;flex-direction:column;">
+  <div class="compare-banner" style="margin:16px 20px 0;">
+    <strong>Option B: Master-Detail Layout</strong> — Recipe list on the left (30%), form + ingredients + confirmation on the right (70%). Same pattern as Sub-Recipe Master.
+  </div>
+
+  <div class="master-detail" style="margin:16px 20px;">
+
+    <!-- LEFT PANEL: Recipe List -->
+    <div class="left-panel">
+      <h2>Sub-Recipes <span style="font-size:10px;font-weight:400;color:var(--text-muted)">(sorted by demand)</span></h2>
+      <input type="text" class="search" placeholder="Search recipes..." />
+
+      <div class="recipe-list-item selected urgent" style="border-left:3px solid var(--red);">
+        <div class="name">Sesame Cookie</div>
+        <div class="detail">9 ingredients · 50 pc/batch</div>
+        <div class="stock-row">
+          <span class="stock-badge red">Low stock</span>
+          <span class="stock-num" style="color:var(--red);">6</span>
+        </div>
+      </div>
+
+      <div class="recipe-list-item caution" style="border-left:3px solid var(--amber);">
+        <div class="name">Oats Cookie</div>
+        <div class="detail">10 ingredients · 25 pc/batch</div>
+        <div class="stock-row">
+          <span class="stock-badge amber">Moderate</span>
+          <span class="stock-num" style="color:var(--amber);">24</span>
+        </div>
+      </div>
+
+      <div class="recipe-list-item" style="border-left:3px solid var(--green);">
+        <div class="name">Ragi Cookie</div>
+        <div class="detail">8 ingredients · 25 pc/batch</div>
+        <div class="stock-row">
+          <span class="stock-badge green">Adequate</span>
+          <span class="stock-num" style="color:var(--green);">37</span>
+        </div>
+      </div>
+
+      <div class="recipe-list-item" style="border-left:3px solid var(--green);">
+        <div class="name">Whole Wheat Elachi</div>
+        <div class="detail">12 ingredients · 31 pc/batch</div>
+        <div class="stock-row">
+          <span class="stock-badge green">Adequate</span>
+          <span class="stock-num" style="color:var(--green);">1657</span>
+        </div>
+      </div>
+
+      <div class="recipe-list-item" style="border-left:3px solid var(--green);">
+        <div class="name">Chocolate Chip Muffin</div>
+        <div class="detail">6 ingredients · 20 pc/batch</div>
+        <div class="stock-row">
+          <span class="stock-badge green">Adequate</span>
+          <span class="stock-num" style="color:var(--green);">450</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL: Form + BOM + Confirm -->
+    <div class="right-panel">
+      <div class="right-header">
+        <div>
+          <h2>Sesame Cookie</h2>
+          <span style="font-size:11px;color:var(--text-muted);">50 pcs per batch · 9 ingredients</span>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:24px;font-weight:700;color:var(--red);font-family:var(--mono);">6</div>
+          <div style="font-size:9px;text-transform:uppercase;color:var(--text-muted);">FG Stock</div>
+        </div>
+      </div>
+
+      <!-- Batch Form -->
+      <div class="rp-section">
+        <h4>Batch Details</h4>
+        <div class="form-row">
+          <div class="form-field">
+            <label>Batches (Multiplier)</label>
+            <input type="number" value="30" />
+          </div>
+          <div class="form-field">
+            <label>Total Output</label>
+            <input type="text" value="1500 piece" disabled style="background:var(--surface2);color:var(--text-sec);" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label>Batch Label</label>
+            <input type="text" value="SESAME-20260614-001" />
+          </div>
+          <div class="form-field">
+            <label>Expiry Date</label>
+            <input type="date" value="2026-12-31" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Coverage Estimate -->
+      <div class="coverage-card">
+        <div class="main-text">📊 1500 Sesame Cookies covers ~250 days across 3 stores</div>
+        <div class="sub-text">Based on avg daily consumption of 6 pcs/day. Current FG: 6.</div>
+      </div>
+
+      <!-- Ingredient BOM Table -->
+      <div class="rp-section">
+        <h4>Ingredient Requirements</h4>
+        <table>
+          <thead>
+            <tr><th>Ingredient</th><th>Health</th><th style="text-align:right">Required</th><th style="text-align:right">Available</th><th style="text-align:right">Est. Cost</th><th style="text-align:center">Status</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Wheat Flour (Atta)</strong></td>
+              <td><div class="health-bar"><div class="fill green" style="width:78%"></div></div> 78%</td>
+              <td class="mono" style="text-align:right">6,000 gm</td>
+              <td class="mono" style="text-align:right">8,825 gm</td>
+              <td class="mono" style="text-align:right">₹330</td>
+              <td style="text-align:center" class="status-ok">✓</td>
+            </tr>
+            <tr>
+              <td><strong>Sesame Till</strong></td>
+              <td><div class="health-bar"><div class="fill green" style="width:85%"></div></div> 85%</td>
+              <td class="mono" style="text-align:right">600 gm</td>
+              <td class="mono" style="text-align:right">3,970 gm</td>
+              <td class="mono" style="text-align:right">₹114</td>
+              <td style="text-align:center" class="status-ok">✓</td>
+            </tr>
+            <tr>
+              <td><strong>Jaggery Powder</strong></td>
+              <td><div class="health-bar"><div class="fill amber" style="width:42%"></div></div> 42%</td>
+              <td class="mono" style="text-align:right">3,000 gm</td>
+              <td class="mono" style="text-align:right">3,850 gm</td>
+              <td class="mono" style="text-align:right">₹420</td>
+              <td style="text-align:center" class="status-ok">✓</td>
+            </tr>
+            <tr>
+              <td><strong>GSM</strong></td>
+              <td><div class="health-bar"><div class="fill green" style="width:90%"></div></div> 90%</td>
+              <td class="mono" style="text-align:right">1,500 gm</td>
+              <td class="mono" style="text-align:right">5,200 gm</td>
+              <td class="mono" style="text-align:right">₹180</td>
+              <td style="text-align:center" class="status-ok">✓</td>
+            </tr>
+            <tr>
+              <td><strong>Baking Powder</strong></td>
+              <td><div class="health-bar"><div class="fill green" style="width:72%"></div></div> 72%</td>
+              <td class="mono" style="text-align:right">90 gm</td>
+              <td class="mono" style="text-align:right">3,210 gm</td>
+              <td class="mono" style="text-align:right">₹15</td>
+              <td style="text-align:center" class="status-ok">✓</td>
+            </tr>
+            <tr>
+              <td><strong>Butter (Unsalted)</strong></td>
+              <td><div class="health-bar"><div class="fill red" style="width:18%"></div></div> 18%</td>
+              <td class="mono" style="text-align:right">1,200 gm</td>
+              <td class="mono" style="text-align:right" style="color:var(--red)">850 gm</td>
+              <td class="mono" style="text-align:right">₹255</td>
+              <td style="text-align:center" class="status-bad">✗</td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="margin-top:8px;padding:8px 12px;background:var(--amber-light);border:1px solid var(--amber-border);border-radius:6px;font-size:11px;color:var(--amber);">
+          ⚠ 1 ingredient insufficient. Production will proceed (negative stock allowed).
+        </div>
+      </div>
+
+      <!-- Cost Summary -->
+      <div class="cost-card">
+        <span class="icon">₹</span>
+        <div>
+          <div class="label">Estimated Material Cost</div>
+          <div><span class="value">₹8,805.56</span> <span class="per-unit">(₹5.87/piece)</span></div>
+        </div>
+      </div>
+
+      <!-- Confirmation -->
+      <div class="confirm-card">
+        <h3>Review Before Running</h3>
+        <div class="confirm-grid">
+          <div class="confirm-item"><div class="lbl">Recipe</div>Sesame Cookie</div>
+          <div class="confirm-item"><div class="lbl">Quantity</div>1500 pieces (30 batches × 50 pc)</div>
+          <div class="confirm-item"><div class="lbl">Batch</div>SESAME-20260614-001</div>
+          <div class="confirm-item"><div class="lbl">Expiry</div>2026-12-31</div>
+          <div class="confirm-item"><div class="lbl">Est. Cost</div>₹8,805.56 (₹5.87/piece)</div>
+          <div class="confirm-item"><div class="lbl">Insufficient</div><span style="color:var(--amber);">1 ingredient below required qty</span></div>
+        </div>
+        <div class="confirm-actions">
+          <button class="btn btn-outline">Back to Edit</button>
+          <button class="btn btn-primary">Confirm & Run Production</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- OPTION A: CURRENT VERTICAL LAYOUT          -->
+<!-- ═══════════════════════════════════════════ -->
+<div id="optionA" class="tab-content">
+<div class="wrapper">
+<div class="sidebar">
+  <div class="section-label">Dashboard</div>
+  <nav><a href="#">Operations Hub</a></nav>
+  <div class="section-label">Production</div>
+  <nav>
+    <a href="#">Sub-Recipe Master</a>
+    <a href="#" class="active">Run Production</a>
+    <a href="#">Production History</a>
+  </nav>
+  <div class="section-label">Outward</div>
+  <nav><a href="#">Stock Inventory</a></nav>
+</div>
+
+<div class="main">
+  <div class="compare-banner">
+    <strong>Option A: Current Vertical Layout</strong> — Recipe cards at top, form + ingredients + confirmation all stacked vertically. Currently implemented. Matches P28 mock and CR-031 freeze.
+  </div>
+
+  <h1 style="font-size:18px;font-weight:700;margin-bottom:4px;">Run Production</h1>
+  <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Select a sub-recipe, specify batch details, and execute.</p>
+
+  <!-- Recipe Selector Cards -->
+  <div class="section-card">
+    <h3>Sub-Recipe <span style="background:var(--blue);color:#fff;font-size:9px;padding:2px 6px;border-radius:3px;margin-left:6px;">SORTED BY DEMAND</span></h3>
+    <div class="recipe-cards">
+      <div class="recipe-card selected urgent">
+        <div class="name">Sesame Cookie</div>
+        <div class="meta">50 pc/batch · 9 ingredients</div>
+        <div class="stock red">6</div>
+        <div class="stock-label">FG Stock</div>
+      </div>
+      <div class="recipe-card caution">
+        <div class="name">Oats Cookie</div>
+        <div class="meta">25 pc/batch · 10 ingredients</div>
+        <div class="stock amber">24</div>
+        <div class="stock-label">FG Stock</div>
+      </div>
+      <div class="recipe-card ok">
+        <div class="name">Ragi Cookie</div>
+        <div class="meta">25 pc/batch · 8 ingredients</div>
+        <div class="stock green">37</div>
+        <div class="stock-label">FG Stock</div>
+      </div>
+      <div class="recipe-card ok">
+        <div class="name">Whole Wheat Elachi</div>
+        <div class="meta">31 pc/batch · 12 ingredients</div>
+        <div class="stock green">1657</div>
+        <div class="stock-label">FG Stock</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form -->
+  <div class="section-card">
+    <h3>Batch Details — Sesame Cookie</h3>
+    <div class="form-row">
+      <div class="form-field"><label>Batches</label><input type="number" value="30" /></div>
+      <div class="form-field"><label>Total Output</label><input type="text" value="1500 piece" disabled style="background:var(--surface2);" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-field"><label>Batch Label</label><input type="text" value="SESAME-20260614-001" /></div>
+      <div class="form-field"><label>Expiry Date</label><input type="date" value="2026-12-31" /></div>
+    </div>
+  </div>
+
+  <!-- Coverage -->
+  <div class="coverage-card">
+    <div class="main-text">📊 1500 Sesame Cookies covers ~250 days across 3 stores</div>
+    <div class="sub-text">Based on avg daily consumption of 6 pcs/day. Current FG: 6.</div>
+  </div>
+
+  <!-- Ingredients -->
+  <div class="section-card">
+    <h3>Ingredient Requirements</h3>
+    <table>
+      <thead><tr><th>Ingredient</th><th>Health</th><th style="text-align:right">Required</th><th style="text-align:right">Available</th><th style="text-align:right">Est. Cost</th><th style="text-align:center">Status</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Wheat Flour (Atta)</strong></td><td><div class="health-bar"><div class="fill green" style="width:78%"></div></div> 78%</td><td class="mono" style="text-align:right">6,000 gm</td><td class="mono" style="text-align:right">8,825 gm</td><td class="mono" style="text-align:right">₹330</td><td class="status-ok" style="text-align:center">✓</td></tr>
+        <tr><td><strong>Sesame Till</strong></td><td><div class="health-bar"><div class="fill green" style="width:85%"></div></div> 85%</td><td class="mono" style="text-align:right">600 gm</td><td class="mono" style="text-align:right">3,970 gm</td><td class="mono" style="text-align:right">₹114</td><td class="status-ok" style="text-align:center">✓</td></tr>
+        <tr><td><strong>Jaggery Powder</strong></td><td><div class="health-bar"><div class="fill amber" style="width:42%"></div></div> 42%</td><td class="mono" style="text-align:right">3,000 gm</td><td class="mono" style="text-align:right">3,850 gm</td><td class="mono" style="text-align:right">₹420</td><td class="status-ok" style="text-align:center">✓</td></tr>
+        <tr><td><strong>GSM</strong></td><td><div class="health-bar"><div class="fill green" style="width:90%"></div></div> 90%</td><td class="mono" style="text-align:right">1,500 gm</td><td class="mono" style="text-align:right">5,200 gm</td><td class="mono" style="text-align:right">₹180</td><td class="status-ok" style="text-align:center">✓</td></tr>
+        <tr><td><strong>Baking Powder</strong></td><td><div class="health-bar"><div class="fill green" style="width:72%"></div></div> 72%</td><td class="mono" style="text-align:right">90 gm</td><td class="mono" style="text-align:right">3,210 gm</td><td class="mono" style="text-align:right">₹15</td><td class="status-ok" style="text-align:center">✓</td></tr>
+        <tr><td><strong>Butter (Unsalted)</strong></td><td><div class="health-bar"><div class="fill red" style="width:18%"></div></div> 18%</td><td class="mono" style="text-align:right">1,200 gm</td><td class="mono" style="text-align:right">850 gm</td><td class="mono" style="text-align:right">₹255</td><td class="status-bad" style="text-align:center">✗</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Cost -->
+  <div class="cost-card">
+    <span class="icon">₹</span>
+    <div>
+      <div class="label">Estimated Material Cost</div>
+      <div><span class="value">₹8,805.56</span> <span class="per-unit">(₹5.87/piece)</span></div>
+    </div>
+  </div>
+
+  <!-- Confirmation -->
+  <div class="confirm-card">
+    <h3>Review Before Running</h3>
+    <div class="confirm-grid">
+      <div class="confirm-item"><div class="lbl">Recipe</div>Sesame Cookie</div>
+      <div class="confirm-item"><div class="lbl">Quantity</div>1500 pieces (30 batches × 50 pc)</div>
+      <div class="confirm-item"><div class="lbl">Batch</div>SESAME-20260614-001</div>
+      <div class="confirm-item"><div class="lbl">Expiry</div>2026-12-31</div>
+      <div class="confirm-item"><div class="lbl">Est. Cost</div>₹8,805.56 (₹5.87/piece)</div>
+      <div class="confirm-item"><div class="lbl">Insufficient</div><span style="color:var(--amber);">1 ingredient below required qty</span></div>
+    </div>
+    <div class="confirm-actions">
+      <button class="btn btn-outline">Back to Edit</button>
+      <button class="btn btn-primary">Confirm & Run Production</button>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<script>
+function showTab(id) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-bar button').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>

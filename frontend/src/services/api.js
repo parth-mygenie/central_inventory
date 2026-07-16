@@ -1,0 +1,1294 @@
+import axios from "axios";
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
+/**
+ * Central Inventory — API Service Layer
+ *
+ * Post-seed-shutdown: all calls go through proxy → real POS API.
+ * This layer handles route paths, payload building, and response
+ * normalization so components receive a stable contract.
+ */
+
+const client = axios.create({
+  baseURL: `${BACKEND_URL}/api`,
+  headers: { "Content-Type": "application/json" },
+  timeout: 30000,
+});
+
+// ── Token management ─────────────────────────────────────────────
+
+let _token = null;
+
+function setToken(token) {
+  _token = token;
+  if (token) {
+    client.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+  } else {
+    delete client.defaults.headers.common["Authorization"];
+  }
+  // Clear cache on token change (new user session)
+  if (!token) _cacheStore.clear();
+}
+
+// Eagerly restore token from localStorage on module load
+// so that API calls made before React effects run still carry auth.
+try {
+  const stored = localStorage.getItem("ci_token");
+  if (stored) setToken(stored);
+} catch (e) { console.warn("[api] Failed to restore token from localStorage:", e); }
+
+// ── Response Cache Layer ─────────────────────────────────────────
+//
+// In-memory cache for read endpoints. Reduces 71 API calls across
+// 4 navigations down to ~17 by deduplicating identical requests
+// within a TTL window.
+//
+// Rules:
+// - Only read endpoints are cached (never writes/mutations)
+// - Cache key = fnName + JSON.stringify(args)
+// - TTL per endpoint category (30-60s)
+// - Mutations invalidate related cache groups
+// - In-flight dedup: concurrent identical calls share one promise
+
+const _cacheStore = new Map();    // key → { data, expiry }
+const _inflightMap = new Map();   // key → Promise (dedup concurrent calls)
+
+const TTL = {
+  LONG: 60000,    // 60s — hierarchy-summary, stock-inventory, inventory-master
+  MEDIUM: 45000,  // 45s — hierarchy-detail, transfer-details, source-options
+  SHORT: 30000,   // 30s — pending-queues, history
+};
+
+function _cacheKey(name, args) {
+  try { return name + ":" + JSON.stringify(args); }
+  catch { return name + ":noargs"; }
+}
+
+function _cacheGet(key) {
+  const entry = _cacheStore.get(key);
+  if (!entry) return null;
+  if (Date.now() > entry.expiry) { _cacheStore.delete(key); return null; }
+  return entry.data;
+}
+
+function _cacheSet(key, data, ttl) {
+  _cacheStore.set(key, { data, expiry: Date.now() + ttl });
+}
+
+/** Wrap an API call with cache + in-flight dedup */
+function _cached(name, ttl, fn) {
+  return function (...args) {
+    const key = _cacheKey(name, args);
+
+    // Return cached if valid
+    const cached = _cacheGet(key);
+    if (cached) return Promise.resolve(cached);
+
+    // Dedup in-flight: if same call is already pending, piggyback on it
+    if (_inflightMap.has(key)) return _inflightMap.get(key);
+
+    // Make the actual call
+    const promise = fn.apply(this, args).then((result) => {
+      _cacheSet(key, result, ttl);
+      _inflightMap.delete(key);
+      return result;
+    }).catch((err) => {
+      _inflightMap.delete(key);
+      throw err;
+    });
+
+    _inflightMap.set(key, promise);
+    return promise;
+  };
+}
+
+/** Invalidate cache entries matching a prefix pattern */
+function _invalidateCache(patterns) {
+  for (const key of _cacheStore.keys()) {
+    if (patterns.some(p => key.startsWith(p))) {
+      _cacheStore.delete(key);
+    }
+  }
+}
+
+/** Invalidate all transfer-related caches (after any mutation) */
+function _invalidateTransferCaches() {
+  _invalidateCache([
+    "getPendingQueues:",
+    "getTransferHistory:",
+    "getTransferDetails:",
+    "getHierarchyDetail:",
+    "getStockInventory:",
+    "getSourceOptions:",
+    "getStockLedger:", // CR-037 — ledger includes transfer rows
+  ]);
+}
+
+/** Invalidate all inventory/catalogue caches (after stock mutations) */
+function _invalidateStockCaches() {
+  _invalidateCache([
+    "getStockInventory:",
+    "getInventoryMaster:",
+    "getHierarchyDetail:",
+    "getStockDetail:",
+    "getStockLedger:", // CR-037 — ledger includes grn/production/wastage rows
+  ]);
+}
+
+// CR-045 — Invalidate all catalogue caches after a reverse-push mutation.
+// Reverse push writes across categories/foods/addons/ingredients/sub_recipes/
+// recipes/roles + stock_items on the master, so we blow the whole catalogue
+// tier. Broad by design; execution is a rare legacy-migration event.
+function _invalidateCatalogCaches() {
+  _invalidateCache([
+    "getPushForm:",
+    "getReversePushFromChild:",
+    "getHierarchyList:",
+    "getHierarchyDetail:",
+    "getHierarchySummary:",
+    "getInventoryMaster:",
+    "getStockInventory:",
+    "getFoodList:",       // safe no-op if not cached
+    "getRecipeList:",
+    "getSubRecipeList:",
+    "getAddonRecipes:",
+    "getCategoryList:",
+  ]);
+}
+
+/** Invalidate all caches (nuclear option — used by manual refresh) */
+function invalidateAll() {
+  _cacheStore.clear();
+  _inflightMap.clear();
+}
+
+// ── Response normalizers (shared contract layer) ─────────────────
+
+/**
+ * Normalize a transfer object from POS API.
+ * POS returns transfer + lines as siblings; frontend expects flat with embedded lines.
+ * Also parses resolution_meta from JSON string → object.
+ */
+function normalizeTransfer(raw) {
+  if (!raw) return raw;
+  // If POS shape: { transfer: {...}, lines: [...] }, flatten
+  if (raw.transfer && !raw.status && !raw.id) {
+    const t = { ...raw.transfer, lines: raw.lines || [] };
+    return enrichTransferMeta(parseResolutionMeta(t));
+  }
+  // Already flat shape
+  return enrichTransferMeta(parseResolutionMeta(raw));
+}
+
+/** P17: Enrich transfer with derived P17 fields */
+function enrichTransferMeta(t) {
+  if (!t) return t;
+  t.parentTransferId = t.parent_transfer_id || null;
+  t.isModificationRequest = (t.type === "modification_request");
+  t.isWithdrawn = (t.status === "withdrawn");
+  return t;
+}
+
+/**
+ * Parse resolution_meta if it's a JSON string.
+ */
+function parseResolutionMeta(t) {
+  if (t && typeof t.resolution_meta === "string") {
+    try {
+      t.resolution_meta = JSON.parse(t.resolution_meta);
+    } catch {
+      t.resolution_meta = null;
+    }
+  }
+  return t;
+}
+
+/**
+ * Normalize a transfer line from POS API.
+ * POS field names → frontend expected names.
+ * P16: Parse meta_json.approval for line-level lifecycle fields.
+ */
+function normalizeTransferLine(line) {
+  if (!line) return line;
+  // Parse meta_json from string → object
+  let meta = line.meta_json;
+  if (typeof meta === "string") {
+    try { meta = JSON.parse(meta); } catch { meta = null; }
+  }
+  if (!meta) meta = {};
+
+  const approval = meta.approval || {};
+  const dispatch = meta.dispatch || {};
+
+  // P16: Derive operational line status from POS status + approval meta.
+  // POS returns line.status="approved" even when holdDisplayQty > 0 (partially approved).
+  // We derive a more accurate lineStatus for rendering:
+  //   - "approved" with hold > 0 → "partially_approved" (still re-approvable)
+  //   - "approved" with hold = 0 → "approved" (fully approved)
+  //   - "pending" after dispatch → keep "pending" (POS uses this for dispatched lines)
+  //   - everything else → pass through from POS
+  const rawStatus = (line.status || "requested").toLowerCase();
+  const holdQty = approval.hold_display_qty ?? 0;
+  const approvedQty = approval.approved_display_qty ?? 0;
+  let derivedLineStatus = rawStatus;
+  if (rawStatus === "approved" && holdQty > 0) {
+    derivedLineStatus = "partially_approved";
+  }
+
+  // Compute remaining approvable qty: requested - approved - cancelled
+  const requestedQty = approval.requested_display_qty ?? (line.requested_qty != null ? Number(line.requested_qty) : null);
+  const cancelledQty = approval.cancelled_display_qty ?? 0;
+  const remainingApprovableQty = requestedQty != null ? Math.max(0, requestedQty - approvedQty - cancelledQty) : null;
+
+  return {
+    ...line,
+    stock_title: line.stock_title || line.source_stock_title || null,
+    quantity: line.quantity ?? (line.requested_qty != null ? Number(line.requested_qty) : null),
+    unit: line.unit || line.requested_unit || line.display_unit || null,
+    accepted_qty: line.accepted_qty ?? null,
+    rejected_qty: line.rejected_qty ?? null,
+    // P16 line-level fields
+    lineStatus: derivedLineStatus,
+    rawLineStatus: rawStatus,
+    meta,
+    requestedDisplayQty: requestedQty,
+    originalRequestedDisplayQty: approval.original_requested_display_qty ?? null,
+    approvedDisplayQty: approvedQty || null,
+    holdDisplayQty: holdQty ? Math.round(holdQty * 10000) / 10000 : null,
+    cancelledDisplayQty: cancelledQty ? Math.round(cancelledQty * 10000) / 10000 : null,
+    remainingApprovableQty: remainingApprovableQty != null ? Math.round(remainingApprovableQty * 10000) / 10000 : null,
+    remainderPolicy: approval.remainder_policy ?? null,
+    approvalWaves: approval.approval_waves || [],
+    dispatchedDisplayTotal: dispatch.dispatched_display_total ?? null,
+    hasApprovalMeta: Object.keys(approval).length > 0,
+  };
+}
+
+/**
+ * Normalize hierarchy-detail stock summary item.
+ * POS: total_quantity/display_quantity → frontend: cal_quantity/display_qty.
+ */
+function normalizeStockSummaryItem(item) {
+  if (!item) return item;
+  return {
+    ...item,
+    cal_quantity: item.cal_quantity ?? item.total_quantity ?? item.display_quantity ?? null,
+    display_qty: item.display_qty ?? item.display_quantity ?? null,
+  };
+}
+
+/**
+ * Normalize hierarchy-detail batch item.
+ * POS: available_quantity → frontend: cal_quantity.
+ */
+function normalizeBatchItem(batch) {
+  if (!batch) return batch;
+  return {
+    ...batch,
+    cal_quantity: batch.cal_quantity ?? batch.available_quantity ?? batch.display_quantity ?? null,
+  };
+}
+
+// ── Auth ─────────────────────────────────────────────────────────
+
+function login(email, password) {
+  return client.post("/proxy/auth/login", {
+    email,
+    password,
+    fcm_token: "central_inventory_web",
+  });
+}
+
+// ── Hierarchy & Reporting ────────────────────────────────────────
+
+/**
+ * FIX: POS requires store_type as mandatory.
+ * Default to "franchise" if caller doesn't provide storeType.
+ */
+function _getHierarchySummary({ storeType, fromDate, toDate } = {}) {
+  const payload = {
+    store_type: storeType || "franchise",
+  };
+  if (fromDate) payload.from_date = fromDate;
+  if (toDate) payload.to_date = toDate;
+  return client.post("/proxy/v2/inventory-transfer/hierarchy-summary", payload);
+}
+const getHierarchySummary = _cached("getHierarchySummary", TTL.LONG, _getHierarchySummary);
+
+function _getHierarchyDetail({ storeRestaurantId, selectedStockTitle, selectedUnitId, transactionsStockTitle, fromDate, toDate, includeStockHealthSummary } = {}) {
+  const payload = {};
+  if (storeRestaurantId) payload.store_restaurant_id = storeRestaurantId;
+  if (selectedStockTitle) payload.selected_stock_title = selectedStockTitle;
+  if (selectedUnitId) payload.selected_unit_id = selectedUnitId;
+  if (transactionsStockTitle) payload.transactions_stock_title = transactionsStockTitle;
+  if (fromDate) payload.from_date = fromDate;
+  if (toDate) payload.to_date = toDate;
+  if (includeStockHealthSummary) payload.include_stock_health_summary = true; // Indirect outlets API wiring
+  return client.post("/proxy/v2/inventory-transfer/hierarchy-detail", payload).then((resp) => {
+    const data = resp.data?.data || resp.data;
+    if (data?.child_stock_summary) {
+      data.child_stock_summary = data.child_stock_summary.map(normalizeStockSummaryItem);
+    }
+    if (data?.child_stock_batches) {
+      data.child_stock_batches = data.child_stock_batches.map(normalizeBatchItem);
+    }
+    return resp;
+  });
+}
+const getHierarchyDetail = _cached("getHierarchyDetail", TTL.MEDIUM, _getHierarchyDetail);
+
+// ── Pending Queues ───────────────────────────────────────────────
+
+function _getPendingQueues() {
+  return client.post("/proxy/v2/inventory-transfer/pending-queues", {});
+}
+const getPendingQueues = _cached("getPendingQueues", TTL.SHORT, _getPendingQueues);
+
+// ── Transfer ─────────────────────────────────────────────────────
+
+/**
+ * FIX: POS returns { data: { transfer: {...}, lines: [...] } }.
+ * Normalize to flat object with embedded lines.
+ */
+function _getTransferDetails(transferId) {
+  return client.get(`/proxy/v2/inventory-transfer/details/${transferId}`).then((resp) => {
+    const raw = resp.data?.data || resp.data;
+    const normalized = normalizeTransfer(raw);
+    if (normalized?.lines) {
+      normalized.lines = normalized.lines.map(normalizeTransferLine);
+    }
+    // Replace resp.data.data with normalized
+    if (resp.data?.data) {
+      resp.data.data = normalized;
+    } else {
+      resp.data = normalized;
+    }
+    return resp;
+  });
+}
+const getTransferDetails = _cached("getTransferDetails", TTL.MEDIUM, _getTransferDetails);
+
+/**
+ * FIX: POS history items have resolution_meta as JSON string and missing restaurant names.
+ * Parse resolution_meta for each item.
+ */
+function _getTransferHistory({ fromDate, toDate, status, limit, page } = {}) {
+  const payload = {};
+  if (fromDate) payload.from_date = fromDate;
+  if (toDate) payload.to_date = toDate;
+  if (status) payload.status = status;
+  if (limit) payload.limit = limit;
+  if (page) payload.page = page;
+  return client.post("/proxy/v2/inventory-transfer/history", payload).then((resp) => {
+    const data = resp.data?.data || resp.data;
+    if (Array.isArray(data)) {
+      data.forEach(parseResolutionMeta);
+    }
+    return resp;
+  });
+}
+const getTransferHistory = _cached("getTransferHistory", TTL.SHORT, _getTransferHistory);
+
+// ── CR-037: G-005 Unified Stock Ledger ────────────────────────────
+
+function _getStockLedger({ restaurantId, fromDate, toDate, sourceTypes, page, limit } = {}) {
+  const payload = {};
+  if (restaurantId) payload.restaurant_id = restaurantId;
+  if (fromDate) payload.from_date = fromDate;
+  if (toDate) payload.to_date = toDate;
+  if (sourceTypes && sourceTypes.length) payload.source_types = sourceTypes;
+  if (page) payload.page = page;
+  if (limit) payload.limit = limit;
+  return client.post("/proxy/v2/inventory-transfer/stock-ledger", payload);
+}
+const getStockLedger = _cached("getStockLedger", TTL.SHORT, _getStockLedger);
+
+// ── CR-038: G-006 Stock Return + Wastage Reasons CRUD ─────────────
+
+function getReturnEligible() {
+  return client.get("/proxy/v2/inventory-transfer/return/eligible").then((resp) => {
+    const d = resp.data?.data || resp.data;
+    return { ...resp, data: (d && d.transfers) || [] };
+  });
+}
+
+function initiateReturn({ originalTransferId, lines }) {
+  return client.post("/proxy/v2/inventory-transfer/return/initiate", {
+    original_transfer_id: originalTransferId,
+    lines,
+  }).then(r => { _invalidateTransferCaches(); _invalidateStockCaches(); return r; });
+}
+
+function addWastageReason(reason) {
+  return client.post("/proxy/v2/wastage-reasons/add", { reason })
+    .then(r => { _invalidateCache(["getWastageReasons:"]); return r; });
+}
+
+// ── CR-040: G-016 Invoice Number Duplicate Pre-Check ──────────────
+
+function checkInvoiceNumber(vendorId, invoiceNumber) {
+  return client.post("/proxy/v2/inventory/purchase-order/check-invoice-number", {
+    vendor_id: vendorId,
+    invoice_number: invoiceNumber,
+  });
+}
+
+// ── CR-043: G-029 Child Catalogue Policy ──────────────────────────
+
+function getCatalogPolicy(childId) {
+  return client.get(`/proxy/v2/franchise/catalog-policy/${childId}`);
+}
+
+function updateCatalogPolicy(childId, policy) {
+  return client.post(`/proxy/v2/franchise/catalog-policy/${childId}`, { policy });
+}
+
+// ── CR-039: G-015 Procurement Excel Import ────────────────────────
+
+function getPOImportTemplate() {
+  return client.get("/proxy/v2/inventory/purchase-order/import-template", { responseType: "blob" });
+}
+
+function parsePOImport(file) {
+  const fd = new FormData();
+  fd.append("file", file);
+  return client.post("/proxy/v2/inventory/purchase-order/parse-import", fd, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+}
+
+// ── Source Options ────────────────────────────────────────────────
+
+/**
+ * FIX: POS requires source_inventory_master_id + from_restaurant_id.
+ * Frontend was sending inventory_master_id + restaurant_id.
+ */
+function _getSourceOptions({ inventoryMasterId, restaurantId } = {}) {
+  const payload = {};
+  if (inventoryMasterId) payload.source_inventory_master_id = inventoryMasterId;
+  if (restaurantId) payload.from_restaurant_id = restaurantId;
+  return client.post("/proxy/v2/inventory-transfer/source-options", payload);
+}
+const getSourceOptions = _cached("getSourceOptions", TTL.MEDIUM, _getSourceOptions);
+
+// ── Inventory ────────────────────────────────────────────────────
+
+function _getInventoryMaster() {
+  return client.get("/proxy/v2/inventory/get-inventory-master");
+}
+const getInventoryMaster = _cached("getInventoryMaster", TTL.LONG, _getInventoryMaster);
+
+// ── Franchise ────────────────────────────────────────────────────
+
+function _getFranchiseList(limit = 25) {
+  return client.get(`/proxy/v2/franchise/list?limit=${limit}`);
+}
+const getFranchiseList = _cached("getFranchiseList", TTL.LONG, _getFranchiseList);
+
+function _getFranchiseHistory({ fromDate, toDate } = {}) {
+  const payload = {};
+  if (fromDate) payload.from_date = fromDate;
+  if (toDate) payload.to_date = toDate;
+  return client.post("/proxy/v2/franchise/history", payload);
+}
+const getFranchiseHistory = _cached("getFranchiseHistory", TTL.SHORT, _getFranchiseHistory);
+
+// ── Write APIs (Slice 4 — Transfers) ─────────────────────────────
+
+function initiateTransfer({ fromRestaurantId, toRestaurantId, items }) {
+  return client.post("/proxy/v2/inventory-transfer/initiate", {
+    from_restaurant_id: fromRestaurantId,
+    to_restaurant_id: toRestaurantId,
+    items,
+  }).then(r => { _invalidateTransferCaches(); _invalidateStockCaches(); return r; });
+}
+
+/**
+ * Request Stock — canonical 3-step flow (25 May 2026 contract).
+ *
+ * Step 1: requestSources()   → sources[] with can_submit_request
+ * Step 2: requestCatalog()   → items[] from SOURCE store (source_inventory_master_id)
+ * Step 3: requestStock()     → create transfer (type=request, status=requested)
+ *
+ * Do NOT use getHierarchySummary or getInventoryMaster for request flow.
+ */
+
+function requestSources() {
+  return client.post("/proxy/v2/inventory-transfer/request-sources", {});
+}
+
+function requestCatalog(sourceRestaurantId) {
+  return client.post("/proxy/v2/inventory-transfer/request-catalog", {
+    source_restaurant_id: sourceRestaurantId,
+  });
+}
+
+function requestStock({ items, fromRestaurantId }) {
+  const payload = { items };
+  if (fromRestaurantId) payload.from_restaurant_id = fromRestaurantId;
+  return client.post("/proxy/v2/inventory-transfer/request", payload).then(r => { _invalidateTransferCaches(); return r; });
+}
+
+function approveTransfer(transferId) {
+  return client.post(`/proxy/v2/inventory-transfer/approve/${transferId}`, {}).then(r => { _invalidateTransferCaches(); return r; });
+}
+
+/** P16: Partial approve with approval_lines + segments per line */
+function approveTransferPartial(transferId, { approvalLines, defaultRemainderPolicy = "hold" }) {
+  return client.post(`/proxy/v2/inventory-transfer/approve/${transferId}`, {
+    approval_lines: approvalLines,
+    default_remainder_policy: defaultRemainderPolicy,
+  }).then(r => { _invalidateTransferCaches(); return r; });
+}
+
+/** P16: Cancel hold on partially_approved transfer — pass line_ids for targeted cancel */
+function cancelRemainder(transferId, lineIds) {
+  const payload = {};
+  if (lineIds && lineIds.length > 0) payload.line_ids = lineIds;
+  return client.post(`/proxy/v2/inventory-transfer/approve/${transferId}/cancel-remainder`, payload).then(r => { _invalidateTransferCaches(); return r; });
+}
+
+/** P17: Amend request — franchise replaces lines in-place (status=requested, type=request only) */
+function amendRequest(transferId, items) {
+  return client.post(`/proxy/v2/inventory-transfer/request/${transferId}/amend`, { items }).then(r => { _invalidateTransferCaches(); return r; });
+}
+
+/** P17: Withdraw request — terminal status (status=requested, type=request only) */
+function withdrawRequest(transferId) {
+  return client.post(`/proxy/v2/inventory-transfer/request/${transferId}/withdraw`, {}).then(r => { _invalidateTransferCaches(); return r; });
+}
+
+/** P17: Request modification — creates child transfer (post-approval, type=request only) */
+function requestModification(transferId, items) {
+  return client.post(`/proxy/v2/inventory-transfer/request/${transferId}/modification`, { items }).then(r => { _invalidateTransferCaches(); return r; });
+}
+
+/** P16: Resolve receive dispute (central/sender only) */
+function resolveDispute(transferId, { accept, note }) {
+  return client.post(`/proxy/v2/inventory-transfer/receive-dispute/${transferId}/resolve`, {
+    accept,
+    note,
+  }).then(r => { _invalidateTransferCaches(); return r; });
+}
+
+function rejectTransfer(transferId, payload) {
+  return client.post(`/proxy/v2/inventory-transfer/reject/${transferId}`, payload).then(r => { _invalidateTransferCaches(); return r; });
+}
+
+function dispatchTransfer(transferId) {
+  return client.post(`/proxy/v2/inventory-transfer/dispatch/${transferId}`, {}).then(r => { _invalidateTransferCaches(); _invalidateStockCaches(); return r; });
+}
+
+function receiveTransfer(transferId, payload = {}) {
+  return client.post(`/proxy/v2/inventory-transfer/receive/${transferId}`, payload).then(r => { _invalidateTransferCaches(); _invalidateStockCaches(); return r; });
+}
+
+function cancelTransfer(transferId, payload) {
+  return client.post(`/proxy/v2/inventory-transfer/cancel/${transferId}`, payload).then(r => { _invalidateTransferCaches(); _invalidateStockCaches(); return r; });
+}
+
+// ── Stock Adjustment APIs (Slice 5) ──────────────────────────────
+
+/**
+ * FIX: POS requires restaurant_id in payload.
+ */
+function adjustStockDecrease(payload) {
+  return client.post("/proxy/v2/inventory-transfer/decrease-adjustment", {
+    source_inventory_master_id: payload.sourceInventoryMasterId,
+    quantity: payload.quantity,
+    unit: payload.unit,
+    source_selector: payload.sourceSelector,
+    reason: payload.reason,
+    restaurant_id: payload.restaurantId,
+  }).then(r => { _invalidateStockCaches(); return r; });
+}
+
+/**
+ * FIX: Correct path is /inventory/add-stock/{inventory_master_id} (ID in URL).
+ * POS also requires vendor_id in body.
+ */
+function adjustStockIncrease(payload) {
+  return client.post(`/proxy/v2/inventory/add-stock/${payload.sourceInventoryMasterId}`, {
+    quantity: payload.quantity,
+    unit: payload.unit,
+    reason: payload.reason,
+    vendor_id: payload.vendorId || payload.restaurantId,
+  }).then(r => { _invalidateStockCaches(); return r; });
+}
+
+// ── Wastage APIs ─────────────────────────────────────────────────
+
+/**
+ * FIX: Correct path is /inventory-transfer/record-wastage (not /inventory/record-wastage).
+ * POS also requires restaurant_id in payload.
+ */
+function recordWastage(payload) {
+  return client.post("/proxy/v2/inventory-transfer/record-wastage", {
+    source_inventory_master_id: payload.sourceInventoryMasterId,
+    quantity: payload.quantity,
+    unit: payload.unit,
+    source_selector: payload.sourceSelector,
+    reason: payload.reason,
+    restaurant_id: payload.restaurantId,
+  }).then(r => { _invalidateStockCaches(); return r; });
+}
+
+/**
+ * P25: Get store's configured wastage reasons (for picker dropdown).
+ * CR-038 — Uses /wastage-reasons/list (not /inventory/wastage-reasons) to get can_edit + is_master.
+ * Falls back to /inventory/wastage-reasons if list endpoint fails.
+ */
+function getWastageReasons() {
+  return client.get("/proxy/v2/wastage-reasons/list").then((resp) => {
+    const body = resp.data?.data || resp.data || {};
+    return { ...resp, data: body };
+  }).catch(() => {
+    // Fallback to legacy path
+    return client.get("/proxy/v2/inventory/wastage-reasons").then((resp) => {
+      const data = resp.data;
+      return { ...resp, data: { reasons: data?.reasons || [], can_edit: false } };
+    });
+  });
+}
+
+/**
+ * P25: Wastage report with full filter support.
+ * Preserves full response shape (summary, totals, by_restaurant, wastage_records, segment_snapshot).
+ */
+function getWastageReport({ restaurantIds, fromDate, toDate, wasteType, foodId, hasBatch, includeSegments } = {}) {
+  const payload = {};
+  if (restaurantIds) payload.restaurant_ids = restaurantIds;
+  if (fromDate) payload.start_date = fromDate;
+  if (toDate) payload.end_date = toDate;
+  if (wasteType) payload.waste_type = wasteType;
+  if (foodId) payload.food_id = foodId;
+  if (hasBatch) payload.has_batch = true;
+  if (includeSegments) payload.include_segments = true;
+  return client.post("/proxy/v2/inventory/wastage-report", payload).then((resp) => {
+    const d = resp.data;
+    d.summary = d.summary || { total_records: 0, total_loss: 0, total_gain: 0, net_wastage: 0, applied_restaurant_ids: [] };
+    d.totals = d.totals || {};
+    d.by_restaurant = d.by_restaurant || [];
+    d.wastage_records = d.wastage_records || [];
+    d.segment_snapshot = (d.segment_snapshot || []).map(s => ({
+      ...s,
+      cal_quantity: parseFloat(s.cal_quantity) || 0,
+      display_qty: parseFloat(s.display_qty) || 0,
+    }));
+    d.segment_snapshot_note = d.segment_snapshot_note || "";
+    // Backward compat: also set .data for old consumers
+    d.data = d.wastage_records;
+    return resp;
+  });
+}
+
+// ── P20 Stock Inventory Summary ───────────────────────────────────
+
+/**
+ * P20: Get logged-in store's stock inventory summary.
+ * CAUTION: This is for summary/dashboard only.
+ * Do NOT use for request flow source catalog (use requestCatalog instead).
+ */
+function _getStockInventory({ includeHierarchy, includeSegments, segmentLimit, includeConsumption } = {}) {
+  const params = {};
+  if (includeHierarchy) params.include_hierarchy = true;
+  if (includeSegments) { params.include_segments = true; if (segmentLimit) params.segment_limit = segmentLimit; }
+  if (includeConsumption) params.include_consumption = true;
+  return client.get("/proxy/v2/inventory/stock-inventory", { params }).then((resp) => {
+    const data = resp.data;
+    if (data?.current_stocks) {
+      data.current_stocks = data.current_stocks.map(normalizeStockItem);
+    }
+    return resp;
+  });
+}
+const getStockInventory = _cached("getStockInventory", TTL.LONG, _getStockInventory);
+
+/**
+ * P20: Normalize stock-inventory item.
+ * POS returns quantities as strings; parse to floats for sorting/comparison.
+ */
+function normalizeStockItem(item) {
+  if (!item) return item;
+  return {
+    ...item,
+    cal_quantity: parseFloat(item.cal_quantity) || 0,
+    display_qty: parseFloat(item.display_qty) || 0,
+    quantity: parseFloat(item.quantity) || 0,
+    min_qty_alert: parseFloat(item.min_qty_alert) || 0,
+  };
+}
+
+// ── P24 Stock Detail (FEFO Batch View) ────────────────────────────
+
+/**
+ * P24: Get FEFO stock detail for a single inventory item.
+ * Returns: summary, segments, quantity_reconciliation, consumption_summary, consumption_lines
+ */
+function _getStockDetail(inventoryMasterId, { consumptionFrom, consumptionTo, consumptionLimit } = {}) {
+  const params = new URLSearchParams();
+  if (consumptionFrom) params.set("consumption_from", consumptionFrom);
+  if (consumptionTo) params.set("consumption_to", consumptionTo);
+  if (consumptionLimit) params.set("consumption_limit", consumptionLimit);
+  const queryString = params.toString();
+  const url = `/proxy/v2/inventory/stock-inventory/${inventoryMasterId}${queryString ? `?${queryString}` : ""}`;
+  return client.get(url);
+}
+const getStockDetail = _cached("getStockDetail", TTL.MEDIUM, _getStockDetail);
+
+// ── P17 Operational Settings ─────────────────────────────────────
+
+function _getOperationalSettings(restaurantId) {
+  const payload = {};
+  if (restaurantId) payload.restaurant_id = restaurantId;
+  return client.post("/proxy/v2/inventory-transfer/operational-settings/get", payload);
+}
+const getOperationalSettings = _cached("getOperationalSettings", TTL.LONG, _getOperationalSettings);
+
+function updateOperationalSettings(restaurantId, settings) {
+  return client.post("/proxy/v2/inventory-transfer/operational-settings/update", {
+    restaurant_id: restaurantId,
+    settings,
+  });
+}
+
+// ── P18 Vendor Management ────────────────────────────────────────
+
+function _getVendors() {
+  return client.get("/proxy/v2/inventory/get-vendor").then((resp) => {
+    // Normalize: POS returns raw array, wrap in data if needed
+    if (Array.isArray(resp.data)) {
+      resp.data = { data: resp.data };
+    }
+    return resp;
+  });
+}
+const getVendors = _cached("getVendors", TTL.LONG, _getVendors);
+
+function addVendor(payload) {
+  return client.post("/proxy/v2/inventory/add-vendor", payload).then(r => { _invalidateCache(["getVendors:"]); return r; });
+}
+
+function updateVendor(id, payload) {
+  return client.put(`/proxy/v2/inventory/update-vendor/${id}`, payload).then(r => { _invalidateCache(["getVendors:"]); return r; });
+}
+
+function deleteVendor(id) {
+  return client.delete(`/proxy/v2/inventory/vendor-delete/${id}`).then(r => { _invalidateCache(["getVendors:"]); return r; });
+}
+
+// ── P19 Add Stock (Procurement) ──────────────────────────────────
+
+function addStockPurchase(inventoryMasterId, payload) {
+  return client.post(`/proxy/v2/inventory/add-stock/${inventoryMasterId}`, payload).then(r => { _invalidateStockCaches(); return r; });
+}
+
+// ── P21 Catalogue — Inventory Categories ─────────────────────────
+
+function getStockItemCategories() {
+  return client.get("/proxy/v2/inventory/stock-item-categories").then(r => {
+    const d = r.data; return { ...r, data: d?.data || [] };
+  });
+}
+function getStockItemCategoryById(id) {
+  return client.get(`/proxy/v2/inventory/stock-item-categories/get/${id}`).then(r => {
+    return { ...r, data: r.data?.data || r.data };
+  });
+}
+function createStockItemCategory(payload) {
+  return client.post("/proxy/v2/inventory/stock-item-categories/store", payload);
+}
+function updateStockItemCategory(id, payload) {
+  return client.put(`/proxy/v2/inventory/stock-item-categories/update/${id}`, payload);
+}
+function deleteStockItemCategory(id) {
+  return client.delete(`/proxy/v2/inventory/stock-item-categories/delete/${id}`);
+}
+
+// ── P21 Catalogue — Inventory Items ──────────────────────────────
+
+function addInventoryItem(items) {
+  return client.post("/proxy/v2/inventory/add-inventory", items);
+}
+function updateStockItem(id, payload) {
+  return client.put(`/proxy/v2/inventory/update-stock/${id}`, payload);
+}
+
+// ── P21 Catalogue — Products / Foods ─────────────────────────────
+
+function getFoodsList() {
+  return client.get("/proxy/v2/product/foods-list").then(r => {
+    const foods = (r.data?.foods || []).map(f => ({
+      ...f, price: Number(f.price) || 0, tax: parseFloat(f.tax) || 0,
+    }));
+    return { ...r, data: foods };
+  });
+}
+function getFoodCategories() {
+  return client.get("/proxy/v2/product/categories").then(r => {
+    return { ...r, data: Array.isArray(r.data) ? r.data : [] };
+  });
+}
+function createFoodCategory(payload) {
+  return client.post("/proxy/v2/product/add-categories", payload);
+}
+function updateFoodCategory(id, payload) {
+  // CRITICAL: POS uses POST not PUT for this route
+  return client.post(`/proxy/v2/product/update-categories/${id}`, payload);
+}
+function deleteFoodCategory(id) {
+  return client.delete(`/proxy/v2/product/delete-categories/${id}`);
+}
+function addFood(payload) { return client.post("/proxy/v2/product/add-food", payload); }
+function updateFood(id, payload) { return client.put(`/proxy/v2/product/foods/${id}`, payload); }
+function deleteFood(id) { return client.delete(`/proxy/v2/product/delete/${id}`); }
+function getAddonList() {
+  return client.get("/proxy/v2/product/addon-list").then(r => {
+    return { ...r, data: r.data?.addons || [] };
+  });
+}
+function createAddon(payload) {
+  return client.post("/proxy/v2/product/add-addon", payload);
+}
+function updateAddon(id, payload) {
+  // CRITICAL: route is addon-update (noun-verb), NOT update-addon
+  return client.put(`/proxy/v2/product/addon-update/${id}`, payload);
+}
+function deleteAddon(id) {
+  return client.delete(`/proxy/v2/product/delete-addon/${id}`);
+}
+
+// ── P21 Catalogue — Recipes ──────────────────────────────────────
+
+function getRecipeList() {
+  return client.get("/proxy/v2/recipe/get-recipe").then(r => {
+    return { ...r, data: r.data?.recipes || [] };
+  });
+}
+function getRecipeDetail(id) {
+  return client.get(`/proxy/v2/recipe/recipe/${id}`).then(r => {
+    return { ...r, data: r.data?.recipe || r.data };
+  });
+}
+function createRecipe(payload) { return client.post("/proxy/v2/recipe/store-recipe", payload); }
+function updateRecipe(id, payload) { return client.put(`/proxy/v2/recipe/update-recipe/${id}`, payload); }
+function deleteRecipe(id) {
+  return client.delete(`/proxy/v2/recipe/delete-recipe/${id}`, {
+    data: { reason: "Deleted from Central Inventory" }
+  });
+}
+
+// ── P21 Catalogue — Sub-recipes ──────────────────────────────────
+
+function getSubRecipeList() {
+  return client.get("/proxy/v2/recipe/sub-recipes").then(r => {
+    const d = r.data;
+    if (d?.sub_recipes) return { ...r, data: d.sub_recipes };
+    if (Array.isArray(d)) return { ...r, data: d };
+    return { ...r, data: [] };
+  });
+}
+function createSubRecipe(payload) { return client.post("/proxy/v2/recipe/store-sub-recipe", payload); }
+function updateSubRecipe(id, payload) { return client.put(`/proxy/v2/recipe/update-sub-recipe/${id}`, payload); }
+function deleteSubRecipe(id) {
+  return client.delete(`/proxy/v2/recipe/delete-sub-recipe/${id}`).then(r => {
+    _invalidateCache(["getSubRecipeList:", "getRecipeList:"]);
+    return r;
+  });
+}
+
+// ── P21 Catalogue — Addon-recipes ────────────────────────────────
+
+function getAddonRecipes() {
+  return client.get("/proxy/v2/product/addon-recipe-list").then(r => {
+    return { ...r, data: r.data?.recipes || [] };
+  });
+}
+function getAddonRecipeById(id) {
+  return client.get(`/proxy/v2/product/addon-recipe/${id}`).then(r => {
+    return { ...r, data: r.data?.recipe || r.data };
+  });
+}
+function getAddonsWithoutRecipe() {
+  return client.get("/proxy/v2/product/addons-without-recipe").then(r => {
+    return { ...r, data: r.data?.addons || [] };
+  });
+}
+function createAddonRecipe(payload) { return client.post("/proxy/v2/product/store-addon-recipe", payload); }
+function updateAddonRecipe(id, payload) { return client.put(`/proxy/v2/product/update-addon-recipe/${id}`, payload); }
+function deleteAddonRecipe(id) { return client.delete(`/proxy/v2/product/delete-addon-recipe/${id}`); }
+
+// ── P23 Hierarchy Management ──────────────────────────────────────
+
+function getHierarchyList({ childType, limit, page } = {}) {
+  const params = new URLSearchParams();
+  if (limit) params.set("limit", limit);
+  if (page) params.set("page", page);
+  if (childType) params.set("child_type", childType);
+  return client.get(`/proxy/v2/franchise/list?${params.toString()}`).then((resp) => {
+    const d = resp.data?.data || resp.data;
+    // Normalize massive child objects to essential fields
+    if (d?.children) {
+      d.children = d.children.map(normalizeHierarchyChild);
+    }
+    return resp;
+  });
+}
+
+function getCreateMetadata() {
+  return client.get("/proxy/v2/franchise/create");
+}
+
+function createHierarchyChild({ name, email, phone, password, address, childType }) {
+  const payload = { name, email, phone, password, address };
+  if (childType) payload.child_type = childType;
+  return client.post("/proxy/v2/franchise/create", payload);
+}
+
+function getPushForm(childId) {
+  return client.get(`/proxy/v2/franchise/push-form/${childId}`);
+}
+
+// G-031 — push endpoints take ~33-50s; raised to 100s for safety margin
+function pushBundle(childId) {
+  return client.post(`/proxy/v2/franchise/push/${childId}`, { push_food_bundle: true }, { timeout: 100000 });
+}
+
+// CR-045 — Reverse push (master pulls catalogue upward from a legacy outlet).
+// Valid module labels per POS contract. `ingredients` maps to inventory_master —
+// do NOT expose the raw "inventory_master" label anywhere in the UI.
+const REVERSE_PUSH_MODULES = [
+  "categories", "stock_item_categories", "addons", "sub_recipes",
+  "ingredients", "stock_items", "foods", "recipes",
+];
+
+function _getReversePushFromChild(childId) {
+  return client.get(`/proxy/v2/franchise/reverse-push-form/from/${childId}`);
+}
+const getReversePushFromChild = _cached("getReversePushFromChild", TTL.SHORT, _getReversePushFromChild);
+
+function reversePushFromChild(childId, { enforceChildLock = false, modules } = {}) {
+  const body = { push_food_bundle: true, enforce_child_lock: !!enforceChildLock };
+  if (Array.isArray(modules) && modules.length > 0) {
+    // Filter to whitelist so unknown labels never reach the API.
+    const filtered = modules.filter((m) => REVERSE_PUSH_MODULES.includes(m));
+    // Only send `modules` when caller narrowed scope (omit = push everything).
+    if (filtered.length > 0 && filtered.length < REVERSE_PUSH_MODULES.length) {
+      body.modules = filtered;
+    }
+  }
+  // G-031 — reverse push takes ~33-50s; raised to 100s for safety margin
+  return client
+    .post(`/proxy/v2/franchise/reverse-push/from/${childId}`, body, { timeout: 100000 })
+    .then((r) => { _invalidateCatalogCaches(); return r; });
+}
+
+function getHierarchyHistory({ limit, page } = {}) {
+  const payload = {};
+  if (limit) payload.limit = limit;
+  if (page) payload.page = page;
+  return client.post("/proxy/v2/franchise/history", payload);
+}
+
+/**
+ * Normalize a child restaurant from franchise/list.
+ * Raw objects have ~150 fields; extract only what UI needs.
+ */
+// Indirect outlets API wiring — add new fields from franchise/list
+function normalizeHierarchyChild(raw) {
+  if (!raw) return raw;
+  return {
+    id: raw.id,
+    name: raw.name,
+    phone: raw.phone,
+    email: raw.email,
+    address: raw.address,
+    status: raw.status,
+    active: raw.active,
+    restaurantTypeFlag: raw.restaurant_type_flag,
+    parentRestaurantId: raw.parent_restaurant_id,
+    slug: raw.slug,
+    createdAt: raw.created_at,
+    isDirectChild: raw.is_direct_child,
+    hierarchyLink: raw.hierarchy_link,
+    managingParentRestaurantId: raw.managing_parent_restaurant_id,
+    managingParentName: raw.managing_parent_name,
+    vendor: raw.vendor ? {
+      id: raw.vendor.id,
+      name: raw.vendor.f_name,
+      email: raw.vendor.email,
+      phone: raw.vendor.phone,
+    } : null,
+  };
+}
+
+// ── P28 Production Run ────────────────────────────────────────────
+
+function runProduction({ subRecipeId, quantity, unit, batch, expiryDate }) {
+  return client.post("/proxy/v2/inventory/production-run/complete", {
+    sub_recipe_id: subRecipeId,
+    quantity,
+    unit,
+    batch,
+    expiry_date: expiryDate,
+  }).then(r => {
+    _invalidateStockCaches();
+    _invalidateCache(["getProductionRunHistory:", "getProductionRunDetail:"]);
+    return r;
+  });
+}
+
+function _getProductionRunDetail(runId) {
+  return client.get(`/proxy/v2/inventory/production-run/${runId}`);
+}
+const getProductionRunDetail = _cached("getProductionRunDetail", TTL.MEDIUM, _getProductionRunDetail);
+
+// G-018 CLOSED: production-run list endpoint confirmed working 2026-06-13.
+function _getProductionRunHistory({ fromDate, toDate, limit, page } = {}) {
+  const params = {};
+  if (fromDate) params.from_date = fromDate;
+  if (toDate) params.to_date = toDate;
+  if (limit) params.limit = limit;
+  if (page) params.page = page;
+  return client.get("/proxy/v2/inventory/production-run", { params });
+}
+const getProductionRunHistory = _cached("getProductionRunHistory", TTL.SHORT, _getProductionRunHistory);
+
+// ── P22 Daily Consumption Report ──────────────────────────────────
+
+// ── CR-030: Vendor Item List (Purchase Intelligence) ──────────────
+
+function _getVendorItemList(restaurantId, { fromDate, toDate } = {}) {
+  const params = new URLSearchParams();
+  params.set("restaurant_ids[]", restaurantId);
+  if (fromDate) params.set("from_date", fromDate);
+  if (toDate) params.set("to_date", toDate);
+  return client.get(`/proxy/v2/inventory/vendor-item-list?${params.toString()}`).then((resp) => {
+    return { ...resp, data: resp.data?.data || [] };
+  });
+}
+const getVendorItemList = _cached("getVendorItemList", TTL.LONG, _getVendorItemList);
+
+// ── CR-030: Purchase Order APIs (10 endpoints) ───────────────────
+
+function createPO(payload) {
+  return client.post("/proxy/v2/inventory/purchase-order/create", payload).then(r => {
+    _invalidateCache(["listPOs:"]); return r;
+  });
+}
+
+function _listPOs({ status, vendorId, fromDate, toDate, restaurantIds, limit, offset } = {}) {
+  const params = new URLSearchParams();
+  if (status) params.set("status", status);
+  if (vendorId) params.set("vendor_id", vendorId);
+  if (fromDate) params.set("from_date", fromDate);
+  if (toDate) params.set("to_date", toDate);
+  if (restaurantIds) restaurantIds.forEach(id => params.append("restaurant_ids[]", id));
+  if (limit) params.set("limit", limit);
+  if (offset) params.set("offset", offset);
+  return client.get(`/proxy/v2/inventory/purchase-order/list?${params.toString()}`);
+}
+const listPOs = _cached("listPOs", TTL.SHORT, _listPOs);
+
+function _getPODetail(poId) {
+  return client.get(`/proxy/v2/inventory/purchase-order/${poId}`);
+}
+const getPODetail = _cached("getPODetail", TTL.MEDIUM, _getPODetail);
+
+function updatePO(poId, payload) {
+  return client.put(`/proxy/v2/inventory/purchase-order/${poId}/update`, payload).then(r => {
+    _invalidateCache(["listPOs:", "getPODetail:"]); return r;
+  });
+}
+
+function deletePO(poId) {
+  return client.delete(`/proxy/v2/inventory/purchase-order/${poId}`).then(r => {
+    _invalidateCache(["listPOs:", "getPODetail:"]); return r;
+  });
+}
+
+function approvePO(poId) {
+  return client.post(`/proxy/v2/inventory/purchase-order/${poId}/approve`, {}).then(r => {
+    _invalidateCache(["listPOs:", "getPODetail:"]); return r;
+  });
+}
+
+function sendPO(poId) {
+  return client.post(`/proxy/v2/inventory/purchase-order/${poId}/send`, {}).then(r => {
+    _invalidateCache(["listPOs:", "getPODetail:"]); return r;
+  });
+}
+
+function receivePO(poId, payload) {
+  return client.post(`/proxy/v2/inventory/purchase-order/${poId}/receive`, payload).then(r => {
+    _invalidateCache(["listPOs:", "getPODetail:", "getVendorItemList:"]); _invalidateStockCaches(); return r;
+  });
+}
+
+function cancelPO(poId, cancelReason) {
+  return client.post(`/proxy/v2/inventory/purchase-order/${poId}/cancel`, { cancel_reason: cancelReason }).then(r => {
+    _invalidateCache(["listPOs:", "getPODetail:"]); return r;
+  });
+}
+
+function closePO(poId) {
+  return client.post(`/proxy/v2/inventory/purchase-order/${poId}/close`, {}).then(r => {
+    _invalidateCache(["listPOs:", "getPODetail:"]); return r;
+  });
+}
+
+// ── P22 Daily Consumption Report ──────────────────────────────────
+
+function getDailyConsumptionReport({ fromDate, toDate, restaurantIds, includeHierarchy } = {}) {
+  const payload = {};
+  if (fromDate) payload.from_date = fromDate;
+  if (toDate) payload.to_date = toDate;
+  if (restaurantIds?.length) payload.restaurant_ids = restaurantIds;
+  if (includeHierarchy) payload.include_hierarchy = true;
+  return client.post("/proxy/v2/report/daily-consumption-report", payload).then((resp) => {
+    const d = resp.data;
+    d.stock_summary = d.stock_summary || [];
+    d.stock_details = d.stock_details || [];
+    d.by_restaurant = d.by_restaurant || [];
+    d.hierarchy_scope = d.hierarchy_scope || [];
+    d.applied_restaurant_ids = d.applied_restaurant_ids || [];
+    d.date_range = d.date_range || [];
+    return resp;
+  });
+}
+
+const api = {
+  setToken,
+  invalidateAll,
+  login,
+  getHierarchySummary,
+  getHierarchyDetail,
+  getPendingQueues,
+  getTransferDetails,
+  getTransferHistory,
+  getStockLedger, // CR-037 — G-005 unified stock ledger
+  // CR-038 — G-006 stock returns
+  getReturnEligible,
+  initiateReturn,
+  addWastageReason,
+  // CR-040 — G-016 invoice duplicate check
+  checkInvoiceNumber,
+  // CR-043 — G-029 child catalogue policy
+  getCatalogPolicy,
+  updateCatalogPolicy,
+  // CR-039 — G-015 procurement excel import
+  getPOImportTemplate,
+  parsePOImport,
+  getSourceOptions,
+  getInventoryMaster,
+  getFranchiseList,
+  getFranchiseHistory,
+  // Request Stock 3-step flow
+  requestSources,
+  requestCatalog,
+  // Slice 4 write APIs
+  initiateTransfer,
+  requestStock,
+  approveTransfer,
+  approveTransferPartial,
+  cancelRemainder,
+  resolveDispute,
+  rejectTransfer,
+  // P17: Amend, Withdraw, Modification
+  amendRequest,
+  withdrawRequest,
+  requestModification,
+  dispatchTransfer,
+  receiveTransfer,
+  cancelTransfer,
+  // Slice 5 — Stock Adjustment + Wastage APIs
+  adjustStockDecrease,
+  adjustStockIncrease,
+  recordWastage,
+  getWastageReasons,
+  getWastageReport,
+  // P17-Settings / P18-Vendors / P19-Procurement
+  getOperationalSettings,
+  updateOperationalSettings,
+  getVendors,
+  addVendor,
+  updateVendor,
+  deleteVendor,
+  addStockPurchase,
+  // P20 Stock Inventory Summary
+  getStockInventory,
+  // P24 Stock Detail (FEFO Batch View)
+  getStockDetail,
+  // P21 Catalogue — Inventory
+  getStockItemCategories,
+  getStockItemCategoryById,
+  createStockItemCategory,
+  updateStockItemCategory,
+  deleteStockItemCategory,
+  addInventoryItem,
+  updateStockItem,
+  // P21 Catalogue — Product
+  getFoodsList,
+  getFoodCategories,
+  createFoodCategory,
+  updateFoodCategory,
+  deleteFoodCategory,
+  addFood,
+  updateFood,
+  deleteFood,
+  getAddonList,
+  createAddon,
+  updateAddon,
+  deleteAddon,
+  // P21 Catalogue — Recipes
+  getRecipeList,
+  getRecipeDetail,
+  createRecipe,
+  updateRecipe,
+  deleteRecipe,
+  // P21 Catalogue — Sub-recipes
+  getSubRecipeList,
+  createSubRecipe,
+  updateSubRecipe,
+  deleteSubRecipe,
+  // P21 Catalogue — Addon-recipes
+  getAddonRecipes,
+  getAddonRecipeById,
+  getAddonsWithoutRecipe,
+  createAddonRecipe,
+  updateAddonRecipe,
+  deleteAddonRecipe,
+  // P28 Production
+  runProduction,
+  getProductionRunDetail,
+  getProductionRunHistory,
+  // P22 Daily Consumption Report
+  getDailyConsumptionReport,
+  // P23 Hierarchy Management
+  getHierarchyList,
+  getCreateMetadata,
+  createHierarchyChild,
+  getPushForm,
+  pushBundle,
+  getHierarchyHistory,
+  // CR-045 — Reverse push (master pulls catalogue upward from a legacy outlet)
+  getReversePushFromChild,
+  reversePushFromChild,
+  REVERSE_PUSH_MODULES,
+  // CR-030: Vendor Purchase Intelligence
+  getVendorItemList,
+  // CR-030: Purchase Order Module (10 endpoints)
+  createPO,
+  listPOs,
+  getPODetail,
+  updatePO,
+  deletePO,
+  approvePO,
+  sendPO,
+  receivePO,
+  cancelPO,
+  closePO,
+};
+
+export default api;
