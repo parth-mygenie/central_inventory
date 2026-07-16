@@ -324,7 +324,17 @@ function RecipeDetail({ recipe, foods, inventoryMaster, subRecipeMap, stockMap, 
           </div>
           <div className="grid grid-cols-2 gap-3 mb-2">
             <div><Label className="text-[10px] text-muted-foreground">Linked Food</Label>
-              <p className="h-8 text-xs flex items-center font-medium" data-testid="recipe-food-name">{name || "—"}</p>
+              {/* BUG-046 — add food selection dropdown in add mode */}
+              {isAddMode ? (
+                <Select value={foodId} onValueChange={(v) => { setFoodId(v); const f = foods.find(f => String(f.id) === v); setName(f?.name || f?.food_name || ""); }} data-testid="recipe-food-select">
+                  <SelectTrigger className="h-8 text-xs" data-testid="recipe-food-trigger"><SelectValue placeholder="Select food..." /></SelectTrigger>
+                  <SelectContent className="max-h-60">
+                    {foods.map(f => <SelectItem key={f.id} value={String(f.id)}>{f.name || f.food_name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <p className="h-8 text-xs flex items-center font-medium" data-testid="recipe-food-name">{name || "—"}</p>
+              )}
             </div>
             <div className="grid grid-cols-3 gap-2">
               <div><Label className="text-[10px] text-muted-foreground">Prep Time</Label><Input type="number" value={prepTime} onChange={e => setPrepTime(e.target.value)} className="h-8 text-xs" /></div>

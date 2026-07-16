@@ -60,3 +60,18 @@ OPEN → IN_PROGRESS → RESOLVED → CLOSED
    }
    ```
 2. Run `node control/gen_dashboard_data.js`.
+
+---
+
+## BUG-046 — Recipe Create: Linked Food Dropdown Missing in Add Mode
+
+| Field | Value |
+|-------|-------|
+| **ID** | BUG-046 |
+| **Severity** | HIGH (P1 — core feature broken) |
+| **Status** | RESOLVED |
+| **File** | `frontend/src/components/central-inventory/RecipeCatalogue.jsx` |
+| **Root Cause** | "Linked Food" field was a static `<p>` tag in all modes. In add mode, `foodId` and `name` stayed empty with no UI to set them. |
+| **Fix** | Added conditional `<Select>` dropdown when `isAddMode=true`, populated from `foods` prop. Sets both `foodId` and `name` on selection. |
+| **Registered** | 2026-07-16 |
+| **Found By** | INVESTIGATION role (owner-reported) |

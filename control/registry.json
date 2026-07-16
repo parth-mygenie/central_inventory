@@ -5866,6 +5866,63 @@
           "path": null
         }
       ]
+    },
+    {
+      "type": "BUG",
+      "id": "BUG-046",
+      "title": "Recipe Create \u2014 Linked Food dropdown missing in add mode",
+      "status": "RESOLVED",
+      "severity": "HIGH",
+      "sprint_key": null,
+      "phase": "Investigation \u2192 BUG FIX",
+      "files": [
+        "frontend/src/components/central-inventory/RecipeCatalogue.jsx"
+      ],
+      "notes": "Linked Food field was a read-only <p> tag in add mode. Users could not select a food, making recipe creation impossible. Fixed by adding <Select> dropdown conditioned on isAddMode.",
+      "artifact_refs": [
+        {
+          "artifact": 0,
+          "label": "Session-Start",
+          "status": "WAIVED",
+          "path": null
+        },
+        {
+          "artifact": 1,
+          "label": "Intake",
+          "status": "DONE",
+          "path": "memory/INVESTIGATION_RECIPE_FOOD_DROPDOWN_20260716.md"
+        },
+        {
+          "artifact": 2,
+          "label": "Impact-Analysis",
+          "status": "WAIVED",
+          "path": null
+        },
+        {
+          "artifact": 3,
+          "label": "Impl-Plan",
+          "status": "WAIVED",
+          "path": null
+        },
+        {
+          "artifact": 4,
+          "label": "Code-Gate",
+          "status": "WAIVED",
+          "path": null
+        },
+        {
+          "artifact": 5,
+          "label": "QA-Report",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 6,
+          "label": "Owner-Signoff",
+          "status": "MISSING",
+          "path": null
+        }
+      ]
     }
   ]
 }

@@ -168,3 +168,5 @@
 | Transfer write forms | `useWriteAction.js` |
 | Approval inbox | `FulfillmentVerdict.jsx`, `StoreHealthStrip.jsx`, `useRestaurantMap.js` |
 | Stock Inventory segments | `useStockInventory.js` background load (~6s, include_segments only) |
+
+| `frontend/src/components/central-inventory/RecipeCatalogue.jsx` | BUG-046 | 2026-07-16 | Lines 326-338: food Select dropdown in add mode |
