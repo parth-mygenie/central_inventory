@@ -63,7 +63,8 @@ function KPICards({ summary, byRestaurant, appliedIds, dateRange, scope }) {
     ? byRestaurant.reduce((sum, r) => sum + (r.total_consumed_raw || 0), 0)
     : null;
 
-  const periodLabel = dateRange.length === 2
+  // BUG-FIX — guard dateRange elements against null/empty before format()
+  const periodLabel = dateRange.length === 2 && dateRange[0] && dateRange[1]
     ? `${format(new Date(dateRange[0] + "T00:00:00"), "d MMM")} - ${format(new Date(dateRange[1] + "T00:00:00"), "d MMM yyyy")}`
     : "—";
 
@@ -141,10 +142,12 @@ function IngredientSummaryTable({ summary, scope, isMultiStore, onDrillDown, sto
   );
 
   // B9: Compute date range days for avg daily calculation
+  // BUG-FIX — guard dateRange elements against null/empty before Date parse
   const dateRangeDays = useMemo(() => {
-    if (dateRange && dateRange.length === 2) {
+    if (dateRange && dateRange.length === 2 && dateRange[0] && dateRange[1]) {
       const d0 = new Date(dateRange[0] + "T00:00:00");
       const d1 = new Date(dateRange[1] + "T00:00:00");
+      if (isNaN(d0.getTime()) || isNaN(d1.getTime())) return 7;
       const diff = Math.max(1, Math.round((d1 - d0) / (1000 * 60 * 60 * 24)) + 1);
       return diff;
     }
