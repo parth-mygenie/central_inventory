@@ -422,7 +422,8 @@ export default function PurchaseOrderDetail() {
                 {receiveLines.map((rl, idx) => {
                   const variance = rl.actual_rate && rl.expected_rate ? ((Number(rl.actual_rate) - rl.expected_rate) / rl.expected_rate * 100) : null;
                   const flagged = variance !== null && Math.abs(variance) > 10;
-                  const invoiceTotal = Number(rl.received_qty || 0) * Number(rl.actual_rate || rl.expected_rate || 0);
+                  // BUG-FIX — commented out invoice total calculation (owner: show rate as-is, no multiplication)
+                  // const invoiceTotal = Number(rl.received_qty || 0) * Number(rl.actual_rate || rl.expected_rate || 0);
                   const poLineTotal = rl.ordered_qty * rl.expected_rate;
                   const stock = stockMap[rl.stock_title] || stockMap[rl.inventory_master_id];
                   const currentQty = stock ? Number(stock.cal_quantity) || 0 : null;
@@ -475,10 +476,10 @@ export default function PurchaseOrderDetail() {
                             <Input type="date" value={rl.expiry_date} onChange={(e) => updateReceiveLine(idx, "expiry_date", e.target.value)} className="h-7 text-xs" data-testid={`receive-expiry-${idx}`} />
                           </div>
                         </div>
-                        {/* Invoice total */}
-                        {rl.received_qty && (
+                        {/* BUG-FIX — commented out invoice total display (owner: show rate as-is, no multiplication) */}
+                        {/* {rl.received_qty && (
                           <p className="text-[10px] text-muted-foreground mb-2">Invoice Total: <span className="font-mono font-medium">{formatCurrency(invoiceTotal)}</span> (PO: {formatCurrency(poLineTotal)})</p>
-                        )}
+                        )} */}
                         {/* Intelligence strip: Variance | Stock Impact */}
                         <div className="grid grid-cols-2 gap-2">
                           <div className="bg-slate-50 rounded p-2 border border-slate-200">
@@ -506,7 +507,8 @@ export default function PurchaseOrderDetail() {
               {(() => {
                 const active = receiveLines.filter((l) => !l.skip && Number(l.received_qty) > 0);
                 const skipped = receiveLines.filter((l) => l.skip);
-                const invoiceTotal = active.reduce((s, l) => s + Number(l.received_qty || 0) * Number(l.actual_rate || l.expected_rate || 0), 0);
+                // BUG-FIX — commented out invoice total calculation (owner: show rate as-is, no multiplication)
+                // const invoiceTotal = active.reduce((s, l) => s + Number(l.received_qty || 0) * Number(l.actual_rate || l.expected_rate || 0), 0);
                 const flagCount = active.filter((l) => {
                   const v = l.actual_rate && l.expected_rate ? Math.abs((Number(l.actual_rate) - l.expected_rate) / l.expected_rate * 100) : 0;
                   return v > 10;
@@ -516,7 +518,7 @@ export default function PurchaseOrderDetail() {
                     <div className="flex gap-4">
                       <span>{active.length} matched</span>
                       <span>{skipped.length} skipped</span>
-                      <span className="font-mono font-medium">{formatCurrency(invoiceTotal)} invoice total</span>
+                      {/* BUG-FIX — invoice total display removed */}
                       {flagCount > 0 && <span className="text-red-600 font-semibold">{flagCount} variance flag{flagCount > 1 ? "s" : ""}</span>}
                     </div>
                     <p className="text-[10px] text-muted-foreground mt-1">FEFO: New batches enter after existing segments in expiry queue</p>
