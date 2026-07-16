@@ -946,13 +946,22 @@ function createHierarchyChild({ name, email, phone, password, address, childType
   return client.post("/proxy/v2/franchise/create", payload);
 }
 
-function getPushForm(childId) {
-  return client.get(`/proxy/v2/franchise/push-form/${childId}`);
+// CR-047 — optional category_ids for category-scoped preview
+function getPushForm(childId, { categoryIds } = {}) {
+  const params = {};
+  if (Array.isArray(categoryIds) && categoryIds.length > 0) {
+    params.category_ids = categoryIds.join(",");
+  }
+  return client.get(`/proxy/v2/franchise/push-form/${childId}`, { params });
 }
 
-// G-031 — push endpoints take ~33-50s; raised to 100s for safety margin
-function pushBundle(childId) {
-  return client.post(`/proxy/v2/franchise/push/${childId}`, { push_food_bundle: true }, { timeout: 100000 });
+// CR-047 — category_ids mandatory for category-scoped push; G-031 timeout kept
+function pushBundle(childId, { categoryIds } = {}) {
+  const body = { push_food_bundle: true };
+  if (Array.isArray(categoryIds) && categoryIds.length > 0) {
+    body.category_ids = categoryIds;
+  }
+  return client.post(`/proxy/v2/franchise/push/${childId}`, body, { timeout: 100000 });
 }
 
 // CR-045 — Reverse push (master pulls catalogue upward from a legacy outlet).

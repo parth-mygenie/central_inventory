@@ -104,12 +104,12 @@ export default function useHierarchyManagement() {
     }
   }, []);
 
-  // G-031 BUG-FIX — handle 409 PUSH_IN_PROGRESS with specific message
-  const executePush = useCallback(async (childId) => {
+  // CR-047 — category-scoped push; G-031 409 handling kept
+  const executePush = useCallback(async (childId, { categoryIds } = {}) => {
     setPushLoading(true);
     setPushError(null);
     try {
-      const resp = await api.pushBundle(childId);
+      const resp = await api.pushBundle(childId, { categoryIds });
       const d = resp.data?.data || resp.data;
       setPushResults(d.results || d);
       return d;

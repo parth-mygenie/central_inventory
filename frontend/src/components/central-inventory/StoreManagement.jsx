@@ -13,10 +13,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { LoadingState, ErrorState, EmptyState } from "@/components/common/StateDisplays";
 import { mapRestaurantType } from "@/lib/terminology";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   GitBranch, Search, Plus, ChevronDown, ChevronRight, RefreshCw, Loader2,
   Upload, Mail, Phone, MapPin, Calendar, Check, ArrowRight, ArrowLeft, Shield, Save,
-  ArrowDownToLine,
+  ArrowDownToLine, Package, CheckSquare, Square, Eye,
 } from "lucide-react";
 import { friendlyCatalogError } from "@/lib/apiErrors"; // CR-043 — G-029
 import ReversePushWizardDialog from "./ReversePushWizardDialog"; // CR-045
@@ -45,6 +48,8 @@ export default function StoreManagement() {
   const [pushing, setPushing] = useState(null);
   const [pushElapsed, setPushElapsed] = useState(0); // G-031 — elapsed timer for push loading UI
   const [reversePullTarget, setReversePullTarget] = useState(null); // CR-045
+  const [pushDialogTarget, setPushDialogTarget] = useState(null); // CR-047 — category push dialog
+  const [pushDialogCategoryData, setPushDialogCategoryData] = useState(null); // CR-047 — cached push-form for category badges
 
   // G-031 — track elapsed time during forward push
   useEffect(() => {
@@ -66,17 +71,27 @@ export default function StoreManagement() {
 
   useEffect(() => { fetchList(); }, [fetchList]);
 
-  // Fetch push status for each child
+  // Fetch push status + category data for each child
+  // CR-047 — also capture child_existing.category_names for category badges
   useEffect(() => {
     if (children.length === 0) return;
     Promise.allSettled(
       children.slice(0, 15).map(c => api.getPushForm(c.id))
     ).then(results => {
       const map = {};
+      const catData = {};
       children.slice(0, 15).forEach((child, idx) => {
         if (results[idx].status === "fulfilled") {
           const data = results[idx].value?.data?.data || results[idx].value?.data;
           const summary = data?.push_summary;
+          const childExisting = data?.child_existing || {};
+          const sourceCategories = data?.source_entities?.categories || [];
+          // CR-047 — store category info for badges
+          catData[child.id] = {
+            pushedCategoryNames: childExisting.category_names || [],
+            totalSourceCategories: sourceCategories.length,
+            sourceCategories,
+          };
           if (summary) {
             map[child.id] = { behind: summary.total_behind, status: summary.status === "synced" ? "synced" : "stale" };
           } else {
@@ -91,6 +106,7 @@ export default function StoreManagement() {
         }
       });
       setPushStatusMap(prev => ({ ...prev, ...map }));
+      setPushDialogCategoryData(prev => ({ ...prev, ...catData }));
     });
   }, [children]);
 
@@ -145,19 +161,21 @@ export default function StoreManagement() {
       });
       const newChildId = result?.data?.id || result?.id;
       if (newChildId) {
-        setCreateProgress("pushing");
-        try {
-          await api.pushBundle(newChildId);
-          toast({ title: "Store created and catalog pushed" });
-        } catch {
-          toast({ title: "Store created but push failed. Use Push button to retry.", variant: "destructive" });
-        }
+        // CR-047 — after create, open category push dialog instead of direct push
+        toast({ title: "Store created. Select categories to push." });
+        setShowAddForm(false); setCreateStep(1);
+        setFormName(""); setFormEmail(""); setFormPhone(""); setFormPassword(""); setFormAddress("");
+        fetchList();
+        // Small delay for list refresh, then open push dialog
+        setTimeout(() => {
+          setPushDialogTarget({ id: newChildId, name: formName || `Store #${newChildId}` });
+        }, 500);
       } else {
         toast({ title: "Store created" });
+        setShowAddForm(false); setCreateStep(1);
+        setFormName(""); setFormEmail(""); setFormPhone(""); setFormPassword(""); setFormAddress("");
+        fetchList();
       }
-      setShowAddForm(false); setCreateStep(1);
-      setFormName(""); setFormEmail(""); setFormPhone(""); setFormPassword(""); setFormAddress("");
-      fetchList();
     } catch (e) {
       toast({ title: e?.response?.data?.message || "Failed to create store", variant: "destructive" });
     } finally { setCreating(false); setCreateProgress(""); }
@@ -171,30 +189,35 @@ export default function StoreManagement() {
     setCreateStep(2);
   };
 
-  const handlePush = async (childId) => {
-    setPushing(childId);
+  // CR-047 — open category push dialog instead of direct push
+  const handlePush = (childId) => {
+    const child = children.find(c => c.id === childId);
+    setPushDialogTarget(child || { id: childId, name: `Store #${childId}` });
+  };
+
+  // CR-047 — called after successful push from CategoryPushDialog
+  const handlePushComplete = async (childId) => {
+    setPushDialogTarget(null);
+    fetchList();
     try {
-      await api.pushBundle(childId);
-      toast({ title: "Push complete" });
-      fetchList();
-      // Refresh push status
       const resp = await api.getPushForm(childId);
       const data = resp?.data?.data || resp?.data;
       const summary = data?.push_summary;
+      const childExisting = data?.child_existing || {};
+      const sourceCategories = data?.source_entities?.categories || [];
+      // refresh category badge data
+      setPushDialogCategoryData(prev => ({
+        ...prev,
+        [childId]: {
+          pushedCategoryNames: childExisting.category_names || [],
+          totalSourceCategories: sourceCategories.length,
+          sourceCategories,
+        },
+      }));
       if (summary) {
         setPushStatusMap(prev => ({ ...prev, [childId]: { behind: summary.total_behind, status: summary.status === "synced" ? "synced" : "stale" } }));
-      } else {
-        const src = data?.source_entities || {};
-        const existing = data?.child_existing || {};
-        let totalSrc = 0, totalChild = 0;
-        Object.values(src).forEach(items => { totalSrc += Array.isArray(items) ? items.length : 0; });
-        Object.values(existing).forEach(items => { totalChild += Array.isArray(items) ? items.length : 0; });
-        const behind = Math.max(0, totalSrc - totalChild);
-        setPushStatusMap(prev => ({ ...prev, [childId]: { behind, status: behind > 0 ? "stale" : "synced" } }));
       }
-    } catch (e) {
-      toast({ title: e?.response?.data?.message || "Push failed", variant: "destructive" });
-    } finally { setPushing(null); }
+    } catch {}
   };
 
   return (
@@ -411,6 +434,20 @@ export default function StoreManagement() {
                             <span className="text-[10px] text-emerald-600" data-testid={`push-status-${child.id}`}>Synced</span>
                           )
                         ) : <span className="text-[10px] text-muted-foreground">—</span>}
+                        {/* CR-047 — category push badge */}
+                        {pushDialogCategoryData?.[child.id] && (
+                          <div className="mt-0.5" data-testid={`cat-badge-${child.id}`}>
+                            <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${
+                              pushDialogCategoryData[child.id].pushedCategoryNames.length === 0
+                                ? "bg-slate-100 text-slate-500"
+                                : pushDialogCategoryData[child.id].pushedCategoryNames.length === pushDialogCategoryData[child.id].totalSourceCategories
+                                  ? "bg-emerald-50 text-emerald-600 border border-emerald-200"
+                                  : "bg-blue-50 text-blue-600 border border-blue-200"
+                            }`}>
+                              {pushDialogCategoryData[child.id].pushedCategoryNames.length}/{pushDialogCategoryData[child.id].totalSourceCategories} categories
+                            </span>
+                          </div>
+                        )}
                       </TableCell>
                       <TableCell className="py-2.5 text-center">
                         <span className={`text-xs tabular-nums ${health?.oos > 0 ? "text-red-600 font-semibold" : "text-muted-foreground"}`}>{health?.oos ?? "—"}</span>
@@ -429,10 +466,9 @@ export default function StoreManagement() {
                               size="sm"
                               className="h-6 text-[10px] px-2 gap-1"
                               onClick={(e) => { e.stopPropagation(); handlePush(child.id); }}
-                              disabled={pushing === child.id}
                               data-testid={`push-btn-${child.id}`}
                             >
-                              {pushing === child.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                              <Upload className="h-3 w-3" />
                               Push
                             </Button>
                           )}
@@ -454,7 +490,7 @@ export default function StoreManagement() {
                     </TableRow>
                     {isExpanded && (
                       <TableRow><TableCell colSpan={9} className="p-0">
-                        <ExpandedStoreDetail child={child} pushStatus={ps} health={health} onPush={() => handlePush(child.id)} pushing={pushing === child.id} />
+                        <ExpandedStoreDetail child={child} pushStatus={ps} health={health} onPush={() => handlePush(child.id)} pushing={false} />
                       </TableCell></TableRow>
                     )}
                   </React.Fragment>
@@ -470,6 +506,15 @@ export default function StoreManagement() {
         open={!!reversePullTarget}
         onClose={() => setReversePullTarget(null)}
         target={reversePullTarget}
+      />
+
+      {/* CR-047 — Category Push Dialog */}
+      <CategoryPushDialog
+        open={!!pushDialogTarget}
+        onClose={() => setPushDialogTarget(null)}
+        childId={pushDialogTarget?.id}
+        childName={pushDialogTarget?.name}
+        onPushComplete={handlePushComplete}
       />
 
       {/* G-031 — Forward push loading overlay */}
@@ -592,6 +637,339 @@ function ExpandedStoreDetail({ child, pushStatus, health, onPush, pushing }) {
       {/* CR-043 — G-029 Catalogue Policy panel (master-only editing gated by policy_editable) */}
       <CatalogPolicyCard childId={child.id} childName={child.name} />
     </div>
+  );
+}
+
+// CR-047 — Category Push Dialog: forces category selection before push
+function CategoryPushDialog({ open, onClose, childId, childName, onPushComplete }) {
+  const [loading, setLoading] = useState(false);
+  const [categories, setCategories] = useState([]); // master categories [{id, name}]
+  const [childCatNames, setChildCatNames] = useState([]); // previously pushed names
+  const [selected, setSelected] = useState(new Set());
+  const [preview, setPreview] = useState(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [pushing, setPushing] = useState(false);
+  const [pushElapsed, setPushElapsed] = useState(0);
+  const [pushResults, setPushResults] = useState(null);
+  const [error, setError] = useState(null);
+  const [catSearch, setCatSearch] = useState("");
+
+  // Load push-form on open
+  useEffect(() => {
+    if (!open || !childId) return;
+    setLoading(true);
+    setError(null);
+    setPushResults(null);
+    setPreview(null);
+    setCatSearch("");
+    api.getPushForm(childId).then(resp => {
+      const data = resp.data?.data || resp.data;
+      const srcCats = data?.source_entities?.categories || [];
+      const existingNames = data?.child_existing?.category_names || [];
+      setCategories(srcCats);
+      setChildCatNames(existingNames);
+      // Pre-select categories that are already on the child
+      const existingLower = new Set(existingNames.map(n => (n || "").trim().toLowerCase()));
+      const preSelected = new Set();
+      srcCats.forEach(c => {
+        if (existingLower.has((c.name || "").trim().toLowerCase())) {
+          preSelected.add(c.id);
+        }
+      });
+      setSelected(preSelected);
+    }).catch(e => {
+      setError(e?.response?.data?.message || "Failed to load categories");
+    }).finally(() => setLoading(false));
+  }, [open, childId]);
+
+  // Auto-fetch preview when selection changes (debounced)
+  useEffect(() => {
+    if (!open || !childId || selected.size === 0) {
+      setPreview(null);
+      return;
+    }
+    const timer = setTimeout(() => {
+      setPreviewLoading(true);
+      const ids = Array.from(selected);
+      api.getPushForm(childId, { categoryIds: ids }).then(resp => {
+        const data = resp.data?.data || resp.data;
+        setPreview(data?.category_selection_preview || null);
+      }).catch(() => setPreview(null))
+        .finally(() => setPreviewLoading(false));
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [open, childId, selected]);
+
+  // Elapsed timer during push
+  useEffect(() => {
+    if (!pushing) { setPushElapsed(0); return; }
+    const t = setInterval(() => setPushElapsed(s => s + 1), 1000);
+    return () => clearInterval(t);
+  }, [pushing]);
+
+  const toggleCategory = (id) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+    setPushResults(null);
+  };
+
+  const selectAll = () => {
+    setSelected(new Set(categories.map(c => c.id)));
+    setPushResults(null);
+  };
+  const deselectAll = () => {
+    setSelected(new Set());
+    setPushResults(null);
+  };
+
+  const handlePush = async () => {
+    if (selected.size === 0) return;
+    setPushing(true);
+    setError(null);
+    try {
+      const resp = await api.pushBundle(childId, { categoryIds: Array.from(selected) });
+      const d = resp.data?.data || resp.data;
+      setPushResults(d.results || d);
+      toast({ title: `Push complete — ${selected.size} categories synced` });
+    } catch (e) {
+      const data = e?.response?.data;
+      if (data?.error_code === "PUSH_IN_PROGRESS") {
+        setError("A push is already running for this outlet. Try again shortly.");
+      } else {
+        setError(data?.message || "Push failed");
+      }
+    } finally {
+      setPushing(false);
+    }
+  };
+
+  const handleClose = () => {
+    if (pushResults) onPushComplete?.(childId);
+    else onClose?.();
+  };
+
+  const filteredCats = catSearch.trim()
+    ? categories.filter(c => (c.name || "").toLowerCase().includes(catSearch.toLowerCase()))
+    : categories;
+
+  // Partition: previously pushed vs new
+  const childCatLower = new Set(childCatNames.map(n => (n || "").trim().toLowerCase()));
+  const pushedCats = filteredCats.filter(c => childCatLower.has((c.name || "").trim().toLowerCase()));
+  const newCats = filteredCats.filter(c => !childCatLower.has((c.name || "").trim().toLowerCase()));
+
+  const MODULE_LABELS = [
+    { key: "categories", label: "Categories", icon: "grid" },
+    { key: "foods", label: "Products" },
+    { key: "addons", label: "Addons" },
+    { key: "recipes", label: "Recipes" },
+    { key: "sub_recipes", label: "Sub-Recipes" },
+    { key: "ingredients", label: "Ingredients" },
+    { key: "stock_item_categories", label: "Stock Categories" },
+    { key: "stock_items", label: "Stock Items" },
+  ];
+
+  return (
+    <Dialog open={open} onOpenChange={v => { if (!v && !pushing) handleClose(); }}>
+      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col" data-testid="category-push-dialog">
+        <DialogHeader>
+          <DialogTitle className="text-sm font-bold flex items-center gap-2">
+            <Package className="h-4 w-4" />
+            Push Catalogue to {childName || "outlet"}
+          </DialogTitle>
+        </DialogHeader>
+
+        {loading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        )}
+
+        {error && !loading && (
+          <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-xs text-red-700" data-testid="push-dialog-error">
+            {error}
+          </div>
+        )}
+
+        {!loading && !error && !pushResults && (
+          <>
+            {/* Category selection */}
+            <div className="flex items-center gap-2 mb-1">
+              <div className="relative flex-1">
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  placeholder="Search categories..."
+                  value={catSearch}
+                  onChange={e => setCatSearch(e.target.value)}
+                  className="pl-7 h-7 text-xs"
+                  data-testid="cat-search"
+                />
+              </div>
+              <Button variant="ghost" size="sm" className="h-7 text-[10px] gap-1" onClick={selectAll} data-testid="select-all-cats">
+                <CheckSquare className="h-3 w-3" /> All
+              </Button>
+              <Button variant="ghost" size="sm" className="h-7 text-[10px] gap-1" onClick={deselectAll} data-testid="deselect-all-cats">
+                <Square className="h-3 w-3" /> None
+              </Button>
+              <Badge variant="outline" className="text-[10px] px-2 py-0.5" data-testid="selected-count">
+                {selected.size} selected
+              </Badge>
+            </div>
+
+            <ScrollArea className="flex-1 max-h-[280px] border rounded-lg">
+              <div className="p-2 space-y-1">
+                {/* Previously pushed categories section */}
+                {pushedCats.length > 0 && (
+                  <>
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider px-1 pt-1">Previously Pushed</p>
+                    {pushedCats.map(cat => (
+                      <label
+                        key={cat.id}
+                        className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md cursor-pointer transition-colors text-xs
+                          ${selected.has(cat.id) ? "bg-blue-50 border border-blue-200" : "hover:bg-muted/40 border border-transparent"}`}
+                        data-testid={`cat-row-${cat.id}`}
+                      >
+                        <Checkbox
+                          checked={selected.has(cat.id)}
+                          onCheckedChange={() => toggleCategory(cat.id)}
+                          data-testid={`cat-check-${cat.id}`}
+                        />
+                        <span className="flex-1 font-medium">{cat.name}</span>
+                        <Badge variant="outline" className="text-[8px] px-1 py-0 bg-blue-50 text-blue-500 border-blue-200">synced</Badge>
+                      </label>
+                    ))}
+                  </>
+                )}
+                {/* New categories section */}
+                {newCats.length > 0 && (
+                  <>
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider px-1 pt-2">Not Yet Pushed</p>
+                    {newCats.map(cat => (
+                      <label
+                        key={cat.id}
+                        className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md cursor-pointer transition-colors text-xs
+                          ${selected.has(cat.id) ? "bg-emerald-50 border border-emerald-200" : "hover:bg-muted/40 border border-transparent"}`}
+                        data-testid={`cat-row-${cat.id}`}
+                      >
+                        <Checkbox
+                          checked={selected.has(cat.id)}
+                          onCheckedChange={() => toggleCategory(cat.id)}
+                          data-testid={`cat-check-${cat.id}`}
+                        />
+                        <span className="flex-1">{cat.name}</span>
+                        <Badge variant="outline" className="text-[8px] px-1 py-0 bg-slate-50 text-slate-400">new</Badge>
+                      </label>
+                    ))}
+                  </>
+                )}
+                {filteredCats.length === 0 && (
+                  <p className="text-xs text-muted-foreground text-center py-4">No categories found</p>
+                )}
+              </div>
+            </ScrollArea>
+
+            {/* Preview panel */}
+            {selected.size > 0 && (
+              <div className="rounded-lg border bg-muted/20 p-3 space-y-2" data-testid="push-preview">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                    <Eye className="h-3 w-3" /> Resolution Preview
+                  </p>
+                  {previewLoading && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+                </div>
+                {preview ? (
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {MODULE_LABELS.map(({ key, label }) => {
+                      const count = preview.resolved_counts?.[key] ?? 0;
+                      return (
+                        <div key={key} className={`text-center p-1.5 rounded border ${count > 0 ? "bg-background" : "bg-muted/30 opacity-50"}`} data-testid={`preview-${key}`}>
+                          <p className="text-sm font-bold tabular-nums">{count}</p>
+                          <p className="text-[9px] text-muted-foreground">{label}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : !previewLoading ? (
+                  <p className="text-[10px] text-muted-foreground">Select categories to see preview</p>
+                ) : null}
+              </div>
+            )}
+
+            {/* Push button */}
+            <div className="flex items-center justify-between pt-1">
+              <Button variant="outline" size="sm" className="text-xs" onClick={handleClose} disabled={pushing}>
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                className="text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-700"
+                disabled={selected.size === 0 || pushing}
+                onClick={handlePush}
+                data-testid="execute-push-btn"
+              >
+                {pushing ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    Pushing… {pushElapsed}s
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-3.5 w-3.5" />
+                    Push {selected.size} {selected.size === 1 ? "Category" : "Categories"}
+                  </>
+                )}
+              </Button>
+            </div>
+          </>
+        )}
+
+        {/* Push results */}
+        {pushResults && (
+          <div className="space-y-3" data-testid="push-results">
+            <div className="flex items-center gap-2 text-emerald-600">
+              <div className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center">
+                <Check className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold">Push Complete</p>
+                <p className="text-[10px] text-muted-foreground">{selected.size} categories synced to {childName}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-4 gap-1.5">
+              {MODULE_LABELS.map(({ key, label }) => {
+                const r = pushResults[key];
+                if (!r) return null;
+                const total = (r.inserted || 0) + (r.updated || 0);
+                return (
+                  <div key={key} className={`text-center p-2 rounded border ${total > 0 ? "bg-background" : "bg-muted/30 opacity-50"}`} data-testid={`result-${key}`}>
+                    <p className="text-sm font-bold tabular-nums">{total}</p>
+                    <p className="text-[9px] text-muted-foreground">{label}</p>
+                    {total > 0 && (
+                      <p className="text-[8px] text-muted-foreground mt-0.5">
+                        {r.inserted > 0 && <span className="text-emerald-600">+{r.inserted}</span>}
+                        {r.inserted > 0 && r.updated > 0 && " "}
+                        {r.updated > 0 && <span className="text-blue-600">{r.updated} upd</span>}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            {pushResults._selection && (
+              <p className="text-[10px] text-muted-foreground">
+                Mode: {pushResults._selection.mode} — {pushResults._selection.category_ids?.length} categories
+              </p>
+            )}
+            <Button size="sm" className="w-full text-xs" onClick={handleClose} data-testid="push-done-btn">
+              Done
+            </Button>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 
