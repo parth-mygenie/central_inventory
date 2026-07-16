@@ -138,6 +138,7 @@ export default function RecipeCatalogue({ embedded }) {
 function RecipeDetail({ recipe, foods, inventoryMaster, subRecipeMap, stockMap, onSaved, onDeleted, onCancel, isAddMode }) {
   const [name, setName] = useState("");
   const [foodId, setFoodId] = useState("");
+  const [foodSearch, setFoodSearch] = useState(""); // BUG-046 — searchable food dropdown
   const [prepTime, setPrepTime] = useState("0");
   const [serves, setServes] = useState("1");
   const [outputQty, setOutputQty] = useState("1");
@@ -324,12 +325,20 @@ function RecipeDetail({ recipe, foods, inventoryMaster, subRecipeMap, stockMap, 
           </div>
           <div className="grid grid-cols-2 gap-3 mb-2">
             <div><Label className="text-[10px] text-muted-foreground">Linked Food</Label>
-              {/* BUG-046 — add food selection dropdown in add mode */}
+              {/* BUG-046 — add food selection dropdown with search in add mode */}
               {isAddMode ? (
-                <Select value={foodId} onValueChange={(v) => { setFoodId(v); const f = foods.find(f => String(f.id) === v); setName(f?.name || f?.food_name || ""); }} data-testid="recipe-food-select">
+                <Select value={foodId} onValueChange={(v) => { setFoodId(v); const f = foods.find(f => String(f.id) === v); setName(f?.name || f?.food_name || ""); setFoodSearch(""); }} data-testid="recipe-food-select">
                   <SelectTrigger className="h-8 text-xs" data-testid="recipe-food-trigger"><SelectValue placeholder="Select food..." /></SelectTrigger>
-                  <SelectContent className="max-h-60">
-                    {foods.map(f => <SelectItem key={f.id} value={String(f.id)}>{f.name || f.food_name}</SelectItem>)}
+                  <SelectContent className="max-h-72" onCloseAutoFocus={(e) => e.preventDefault()}>
+                    <div className="px-2 pb-1.5 pt-1 sticky top-0 bg-popover z-10">
+                      <Input placeholder="Search foods..." value={foodSearch} onChange={(e) => setFoodSearch(e.target.value)} className="h-7 text-xs" data-testid="recipe-food-search" onKeyDown={(e) => e.stopPropagation()} />
+                    </div>
+                    {foods.filter(f => !foodSearch || (f.name || f.food_name || "").toLowerCase().includes(foodSearch.toLowerCase())).map(f => (
+                      <SelectItem key={f.id} value={String(f.id)}>{f.name || f.food_name}</SelectItem>
+                    ))}
+                    {foods.filter(f => !foodSearch || (f.name || f.food_name || "").toLowerCase().includes(foodSearch.toLowerCase())).length === 0 && (
+                      <p className="text-xs text-muted-foreground text-center py-2">No foods match "{foodSearch}"</p>
+                    )}
                   </SelectContent>
                 </Select>
               ) : (
