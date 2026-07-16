@@ -1,26 +1,32 @@
 # Central Inventory - PRD
 
 ## Original Problem Statement
-User requested to wipe current /app, pull https://github.com/parth-mygenie/central_inventory.git (branch 16-7-26), and get it running. No testing needed, just pull and run.
+1. Pull https://github.com/parth-mygenie/central_inventory.git (branch 16-7-26) and run
+2. QA role: test reverse pull, PO by vendor/item, direct dispatch, request stock, quantity tracking
 
 ## Architecture
 - **Frontend**: React 19 + Craco + Tailwind CSS + Radix UI + Recharts + React Router v7
-- **Backend**: FastAPI + Motor (async MongoDB) + httpx (proxy to preprod.mygenie.online)
-- **Database**: MongoDB (local)
-- **Auth**: Proxied to MyGenie preprod API
+- **Backend**: FastAPI proxy → preprod.mygenie.online (zero business logic)
+- **Database**: MongoDB (local, for session tokens only)
+- **Auth**: Proxied to MyGenie POS V1 API
 
 ## What's Been Implemented
-- [2025-07-16] Cloned repo from GitHub (branch 16-7-26) into /app
-- [2025-07-16] Set up .env files with platform-specific URLs (MONGO_URL, REACT_APP_BACKEND_URL)
-- [2025-07-16] Installed backend Python dependencies (requirements.txt)
-- [2025-07-16] Installed frontend Node.js dependencies (yarn install)
-- [2025-07-16] Both services running via supervisor - backend on :8001, frontend on :3000
-- [2025-07-16] Verified: Backend API responds, Frontend compiles and renders login page
+- [2026-07-16] Cloned repo, installed deps, deployed to preview environment
+- [2026-07-16] QA Testing completed — 8/8 test cases PASS
 
-## Key Components
-- Backend acts as API proxy to MyGenie preprod servers
-- Frontend is a Central Inventory management system with ~40+ components
-- Login authenticates via MyGenie vendor account
+## QA Report Summary (2026-07-16)
+- ✅ Reverse Pull from Outlet (493 items pulled)
+- ✅ PO by Vendor (PO-811-2026-0001, ₹1100)
+- ✅ PO by Item Need (PO-811-2026-0002, ₹2460)
+- ✅ PO Lifecycle (approve → send → receive)
+- ✅ Direct Dispatch master→franchise (TRF-811-2026-0001)
+- ✅ Request Stock franchise←master (TRF-811-2026-0002)
+- ✅ Full receive cycle on both transfers
+- ✅ Quantity tracking verified (all deltas match)
+
+## Accounts Tested
+- manager@testmalai.com (master, RID 811)
+- manager@kunafamahal.com (franchise, RID 689)
 
 ## Next Action Items
-- User can now use the app and request feature additions or bug fixes
+- Awaiting owner direction for further testing or feature work
