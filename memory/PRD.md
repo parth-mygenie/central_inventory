@@ -1,31 +1,40 @@
 # Central Inventory - PRD
 
 ## Original Problem Statement
-Wipe current /app, pull https://github.com/parth-mygenie/central_inventory.git (branch 16-7-25-1), and run it. No testing or feature work needed.
+Central Inventory — multi-store hierarchy stock management module for MyGenie POS.
+Current session: Investigation of Category-Scoped Forward Push API.
 
 ## Architecture
 - **Frontend**: React 19 + Craco + TailwindCSS + Radix UI + Recharts
-- **Backend**: FastAPI (Python) — proxy layer to MyGenie POS preprod API
-- **Database**: MongoDB (via Motor async driver)
-- **Auth**: Proxied to MyGenie POS API (`preprod.mygenie.online`)
+- **Backend**: FastAPI (Python) — proxy-only layer to `preprod.mygenie.online/api/v2/vendoremployee`
+- **Database**: MongoDB (via Motor async driver) — local session/cache only
+- **Auth**: Proxied to MyGenie POS API
 
 ## What's Been Implemented (July 16, 2026)
-- Cloned repo from GitHub (branch `16-7-25-1`)
-- Created platform-specific `.env` files (MONGO_URL, REACT_APP_BACKEND_URL)
-- Installed all backend (pip) and frontend (yarn) dependencies
-- Both services running via supervisor — backend on 8001, frontend on 3000
-- App fully operational: login page renders, API proxy responds
+- Repo cloned from GitHub (branch `16-7-25-1`), deployed and running
+- **Investigation completed**: Category-scoped forward push API
+  - All 6 curl scenarios verified against live POS API
+  - Test data seeded on Palm hierarchy (813→814,815): 4 stock item cats, 15 ingredients, 3 sub-recipes, 4 recipes
+  - Pre-selection mechanism identified (frontend-only, no backend changes)
+  - Full report: `control/sessions/INVESTIGATION_CATEGORY_SCOPED_PUSH_20260716.md`
 
-## Core Features (from repo)
-- Login via MyGenie vendor account
-- Operations Hub dashboard
-- Inventory management (stock, purchases, dispatches)
-- Production runs & sub-recipe master
-- Vendor & store management
-- Purchase orders (list, create, detail)
-- Wastage tracking & reports
-- Daily consumption reports
-- Hierarchy/store detail views
+## Prioritized Backlog
+### P0/P1 — Next
+- CR-046 (proposed): Category-Scoped Push Frontend Adoption
+  - Category multi-select in push dialog
+  - Preview integration with `category_selection_preview`
+  - Pre-selection from `child_existing.category_names`
 
-## Next Action Items
-- User to provide any specific feature requests or bug fixes
+### P1 — Gap Adoption Pipeline (from L1)
+- CR-037 → CR-044 (8 items planned, awaiting Gate 4 GO)
+
+### P2 — Awaiting QA
+- CR-045: Reverse Push Frontend Adoption
+- BUG-029 through BUG-035
+
+## Test Accounts (Palm Hierarchy)
+| Email | Password | Role | RID |
+|-------|----------|------|:---:|
+| owner@palmcentral.com | Qplazm@10 | master | 813 |
+| owner@palmbharat.com | Qplazm@10 | franchise | 815 |
+| owner@palmruby.com | Qplazm@10 | franchise | 814 |
