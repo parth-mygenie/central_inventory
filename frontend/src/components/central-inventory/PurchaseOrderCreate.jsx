@@ -545,7 +545,7 @@ export default function PurchaseOrderCreate() {
                   const realIdx = vendorLines.indexOf(l);
                   const t = Number(l.ordered_qty || 0) * Number(l.expected_rate || 0);
                   return (
-                    <TableRow key={l.inventory_master_id} data-testid={`po-vline-${l.inventory_master_id}`} className={l.checked ? "bg-primary/5" : ""}>
+                    <TableRow key={`${l.inventory_master_id}-${idx}`} data-testid={`po-vline-${l.inventory_master_id}`} className={l.checked ? "bg-primary/5" : ""}>{/* BUG-FIX — unique composite key for duplicate inventory_master_ids */}
                       <TableCell className="py-1.5"><Checkbox checked={l.checked} onCheckedChange={() => toggleVendorLine(realIdx)} /></TableCell>
                       <TableCell className="py-1.5 text-xs">
                         <span className="font-medium">{l.stock_title}</span>
@@ -681,9 +681,11 @@ export default function PurchaseOrderCreate() {
                 <TableHead className="text-[10px] text-right">Qty</TableHead>
               </TableRow></TableHeader>
               <TableBody>
-                {needLines.filter((l) => !needSearch.trim() || l.stock_title.toLowerCase().includes(needSearch.toLowerCase())).map((l, idx) => (
-                  <TableRow key={l.inventory_master_id} data-testid={`po-need-${l.inventory_master_id}`} className={l.checked ? "bg-primary/5" : ""}>
-                    <TableCell className="py-1.5"><Checkbox checked={l.checked} onCheckedChange={() => toggleNeedLine(idx)} /></TableCell>
+                {needLines.filter((l) => !needSearch.trim() || l.stock_title.toLowerCase().includes(needSearch.toLowerCase())).map((l, idx) => {
+                  const realIdx = needLines.indexOf(l); // BUG-FIX — use original array index for toggle
+                  return (
+                  <TableRow key={`${l.inventory_master_id}-${idx}`} data-testid={`po-need-${l.inventory_master_id}`} className={l.checked ? "bg-primary/5" : ""}>{/* BUG-FIX — unique composite key */}
+                    <TableCell className="py-1.5"><Checkbox checked={l.checked} onCheckedChange={() => toggleNeedLine(realIdx)} /></TableCell>
                     <TableCell className="py-1.5 text-xs">
                       <span className="font-medium">{l.stock_title}</span>
                       {l.isEmpty && <><br/><span className="text-[9px] text-red-600 font-semibold">OUT OF STOCK</span></>}
@@ -699,7 +701,7 @@ export default function PurchaseOrderCreate() {
                     </TableCell>
                     {/* BUG-039: Merged vendor dropdown — history vendors (with rate) + remaining vendors */}
                     <TableCell className="py-1.5">
-                      <Select value={l.selectedVendorId} onValueChange={(v) => updateNeedLine(idx, "selectedVendorId", v)}>
+                      <Select value={l.selectedVendorId} onValueChange={(v) => updateNeedLine(realIdx, "selectedVendorId", v)}>
                         <SelectTrigger className="h-7 text-[10px] w-40"><SelectValue placeholder="Select vendor" /></SelectTrigger>
                         <SelectContent>
                           {l.vendorOptions.map((vo) => (
@@ -718,9 +720,10 @@ export default function PurchaseOrderCreate() {
                       ))}
                       {(!l.otherVendors || l.otherVendors.length === 0) && "\u2014"}
                     </TableCell>
-                    <TableCell className="py-1.5"><Input type="number" min="0" value={l.ordered_qty} onChange={(e) => updateNeedLine(idx, "ordered_qty", e.target.value)} className="h-7 text-[10px] w-16 ml-auto text-right" disabled={!l.checked} /></TableCell>{/* BUG-043 */}
+                    <TableCell className="py-1.5"><Input type="number" min="0" value={l.ordered_qty} onChange={(e) => updateNeedLine(realIdx, "ordered_qty", e.target.value)} className="h-7 text-[10px] w-16 ml-auto text-right" disabled={!l.checked} /></TableCell>{/* BUG-043 */}
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           </CardContent></Card>

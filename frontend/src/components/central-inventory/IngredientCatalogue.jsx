@@ -589,10 +589,10 @@ function IngredientsTab() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((item) => {
+              {filtered.map((item, idx) => {
                 const isExpanded = expandedId === item.id;
                 return (
-                  <React.Fragment key={item.id}>
+                  <React.Fragment key={`${item.id}-${idx}`}>{/* BUG-FIX — unique composite key for duplicate IDs */}
                     <TableRow data-testid={`ing-row-${item.id}`} className={`cursor-pointer ${item.is_low_stock ? "bg-red-50/40" : ""} ${isExpanded ? "bg-muted/30" : "hover:bg-muted/20"}`} onClick={() => toggleExpand(item.id)}>
                       <TableCell className="py-2 pl-3 pr-0">
                         {isExpanded ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}

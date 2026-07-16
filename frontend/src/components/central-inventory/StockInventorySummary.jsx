@@ -392,7 +392,7 @@ export default function StockInventorySummary() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((item) => {
+              {filtered.map((item, idx) => {
                 // Estimate days of cover: simple heuristic based on qty vs min threshold
                 const rawDoc = item.min_qty_alert > 0 && item.display_qty > 0
                   ? Math.round((item.display_qty / item.min_qty_alert) * 7)
@@ -400,7 +400,7 @@ export default function StockInventorySummary() {
                 const daysOfCover = rawDoc !== null ? Math.max(0, rawDoc) : null;
                 const isExpanded = expandedItemId === item.id;
                 return (
-                <React.Fragment key={item.id}>
+                <React.Fragment key={`${item.id}-${idx}`}>{/* BUG-FIX — unique composite key for duplicate IDs */}
                 <TableRow
                   data-testid={`inventory-row-${item.id}`}
                   className={`cursor-pointer transition-colors hover:bg-accent/50 ${item.is_low_stock ? "bg-red-50/40" : ""} ${isExpanded ? "bg-accent/30" : ""}`}
