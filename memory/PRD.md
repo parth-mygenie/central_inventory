@@ -2,7 +2,6 @@
 
 ## Original Problem Statement
 Central Inventory — multi-store hierarchy stock management module for MyGenie POS.
-Current session: Investigation of Category-Scoped Forward Push API.
 
 ## Architecture
 - **Frontend**: React 19 + Craco + TailwindCSS + Radix UI + Recharts
@@ -10,27 +9,36 @@ Current session: Investigation of Category-Scoped Forward Push API.
 - **Database**: MongoDB (via Motor async driver) — local session/cache only
 - **Auth**: Proxied to MyGenie POS API
 
-## What's Been Implemented (July 16, 2026)
+## What's Been Done (July 16, 2026)
+
+### Session 1: Deployment
 - Repo cloned from GitHub (branch `16-7-25-1`), deployed and running
-- **Investigation completed**: Category-scoped forward push API
-  - All 6 curl scenarios verified against live POS API
-  - Test data seeded on Palm hierarchy (813→814,815): 4 stock item cats, 15 ingredients, 3 sub-recipes, 4 recipes
-  - Pre-selection mechanism identified (frontend-only, no backend changes)
-  - Full report: `control/sessions/INVESTIGATION_CATEGORY_SCOPED_PUSH_20260716.md`
+
+### Session 2: Investigation — Category-Scoped Forward Push
+- All 6 curl scenarios verified against live POS API
+- Test data seeded on Palm hierarchy (813→814,815): 4 stock item cats, 15 ingredients, 3 sub-recipes, 4 recipes
+- Pre-selection mechanism identified (frontend-only)
+- Report: `control/sessions/INVESTIGATION_CATEGORY_SCOPED_PUSH_20260716.md`
+
+### Session 3: Planning — CR-047
+- Impact Analysis + Implementation Plan written
+- 3 files scoped: api.js, useHierarchyManagement.js, StoreManagement.jsx
+- Plan: `control/sessions/CR047_ARTIFACT_2_3_IMPACT_AND_PLAN.md`
 
 ## Prioritized Backlog
-### P0/P1 — Next
-- CR-046 (proposed): Category-Scoped Push Frontend Adoption
-  - Category multi-select in push dialog
-  - Preview integration with `category_selection_preview`
-  - Pre-selection from `child_existing.category_names`
+### P1 — Next (Awaiting Gate 4 GO)
+- **CR-047**: Category-Scoped Forward Push Frontend Adoption
+  - CategoryPushDialog with category multi-select
+  - Pre-selection from child_existing.category_names
+  - Mandatory ≥1 category selection to push
+  - Preview via category_selection_preview
 
-### P1 — Gap Adoption Pipeline (from L1)
-- CR-037 → CR-044 (8 items planned, awaiting Gate 4 GO)
+### P1 — Gap Adoption Pipeline
+- CR-037 → CR-044 (8 items planned)
 
 ### P2 — Awaiting QA
 - CR-045: Reverse Push Frontend Adoption
-- BUG-029 through BUG-035
+- BUG-029 through BUG-036
 
 ## Test Accounts (Palm Hierarchy)
 | Email | Password | Role | RID |
