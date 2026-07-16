@@ -224,6 +224,10 @@ export default function DirectDispatchForm() {
     }
   }, [preselectedItemId, allItems, dispatchRows.length, manualRows.length, dispatchNeeds]);
 
+  // CR-046 — Select All / Unselect All for dispatch items
+  const selectAllDispatchRows = () => setDispatchRows(p => p.map(r => ({ ...r, included: true })));
+  const unselectAllDispatchRows = () => setDispatchRows(p => p.map(r => ({ ...r, included: false })));
+
   const updateDispatchRow = (idx, field, value) => {
     setDispatchRows(prev => {
       const next = [...prev];
@@ -441,6 +445,12 @@ export default function DirectDispatchForm() {
               </span>
             </div>
           </CardHeader>
+          {/* CR-046 — Select All / Unselect All */}
+          <div className="flex items-center gap-2 px-4 pb-2">
+            <Button variant="outline" size="sm" className="h-7 text-[10px] px-2.5" onClick={selectAllDispatchRows} data-testid="dispatch-select-all">Select All</Button>
+            <Button variant="outline" size="sm" className="h-7 text-[10px] px-2.5" onClick={unselectAllDispatchRows} data-testid="dispatch-unselect-all">Unselect All</Button>
+            <span className="text-[10px] text-muted-foreground ml-1">{dispatchRows.filter(r => r.included).length}/{dispatchRows.length} selected</span>
+          </div>
           <CardContent className="py-0 px-0">
             <div className="overflow-x-auto">
               <Table>
