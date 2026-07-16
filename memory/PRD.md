@@ -16,25 +16,31 @@ Central Inventory — multi-store hierarchy stock management module for MyGenie 
 
 ### Session 2: Investigation — Category-Scoped Forward Push
 - All 6 curl scenarios verified against live POS API
-- Test data seeded on Palm hierarchy (813→814,815): 4 stock item cats, 15 ingredients, 3 sub-recipes, 4 recipes
-- Pre-selection mechanism identified (frontend-only)
+- Test data seeded on Palm hierarchy (813→814,815)
 - Report: `control/sessions/INVESTIGATION_CATEGORY_SCOPED_PUSH_20260716.md`
 
 ### Session 3: Planning — CR-047
 - Impact Analysis + Implementation Plan written
-- 3 files scoped: api.js, useHierarchyManagement.js, StoreManagement.jsx
 - Plan: `control/sessions/CR047_ARTIFACT_2_3_IMPACT_AND_PLAN.md`
 
-## Prioritized Backlog
-### P1 — Next (Awaiting Gate 4 GO)
-- **CR-047**: Category-Scoped Forward Push Frontend Adoption
-  - CategoryPushDialog with category multi-select
-  - Pre-selection from child_existing.category_names
-  - Mandatory ≥1 category selection to push
-  - Preview via category_selection_preview
+### Session 4: Implementation — CR-047 (DONE, QA PASS 12/12)
+- **3 files modified:**
+  - `api.js` — `getPushForm` + `pushBundle` now accept optional `categoryIds`
+  - `useHierarchyManagement.js` — `executePush` passes `categoryIds` through
+  - `StoreManagement.jsx` — New `CategoryPushDialog` component
+- **Features delivered:**
+  - Mandatory category selection before push (no direct full-bundle push)
+  - Pre-selection of previously-pushed categories
+  - Auto-fetch resolution preview on toggle (debounced 400ms)
+  - Category search, Select All, Deselect All
+  - Push results with per-module inserted/updated counts
+  - Category push history badges per store row (N/M categories)
+  - Create-and-push flow also routes through category selection
+- **Testing:** 12/12 frontend tests PASS (iteration_60.json)
 
+## Prioritized Backlog
 ### P1 — Gap Adoption Pipeline
-- CR-037 → CR-044 (8 items planned)
+- CR-037 → CR-044 (8 items planned, awaiting Gate 4 GO)
 
 ### P2 — Awaiting QA
 - CR-045: Reverse Push Frontend Adoption
