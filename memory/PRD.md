@@ -1,20 +1,26 @@
 # Central Inventory - PRD
 
 ## Original Problem Statement
-Clone repo, fix G-031, raise timeout to 100s, add loading UI, add Select All/Unselect All, remove invoice total, fix consumption report date crash, fix duplicate React key search bug.
+User requested to wipe current /app, pull https://github.com/parth-mygenie/central_inventory.git (branch 16-7-26), and get it running. No testing needed, just pull and run.
 
 ## Architecture
-- **Backend**: FastAPI proxy → preprod.mygenie.online POS API
-- **Frontend**: React 19 + CRACO + Tailwind CSS + Radix UI + React Router
+- **Frontend**: React 19 + Craco + Tailwind CSS + Radix UI + Recharts + React Router v7
+- **Backend**: FastAPI + Motor (async MongoDB) + httpx (proxy to preprod.mygenie.online)
+- **Database**: MongoDB (local)
+- **Auth**: Proxied to MyGenie preprod API
 
 ## What's Been Implemented
-- [2026-07-15] Repo clone + env setup
-- [2026-07-15] G-031: Timeout 30→100s, 409 handling, not_seeded, loading UI
-- [2026-07-15] CR-046: Select All / Unselect All in PO Create + Direct Dispatch
-- [2026-07-15] BUG-FIX: Commented out Invoice Total display on Receive Goods
-- [2026-07-15] BUG-FIX: Guarded dateRange null/empty in Consumption Report
-- [2026-07-15] BUG-FIX: Duplicate React key → ghost rows on search. Fixed 4 locations with composite keys + realIdx toggle fix
+- [2025-07-16] Cloned repo from GitHub (branch 16-7-26) into /app
+- [2025-07-16] Set up .env files with platform-specific URLs (MONGO_URL, REACT_APP_BACKEND_URL)
+- [2025-07-16] Installed backend Python dependencies (requirements.txt)
+- [2025-07-16] Installed frontend Node.js dependencies (yarn install)
+- [2025-07-16] Both services running via supervisor - backend on :8001, frontend on :3000
+- [2025-07-16] Verified: Backend API responds, Frontend compiles and renders login page
 
-## Test Credentials
-- Master (RID 809): owner@bholechature.com / Qplazm@10
-- Franchise (RID 689): owner@kunafamahal.com / Qplazm@10
+## Key Components
+- Backend acts as API proxy to MyGenie preprod servers
+- Frontend is a Central Inventory management system with ~40+ components
+- Login authenticates via MyGenie vendor account
+
+## Next Action Items
+- User can now use the app and request feature additions or bug fixes
