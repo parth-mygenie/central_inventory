@@ -819,7 +819,8 @@ function CategoryPushDialog({ open, onClose, childId, childName, onPushComplete 
               </Badge>
             </div>
 
-            <ScrollArea className="flex-1 max-h-[280px] border rounded-lg">
+            {/* BUG-047 — plain div with native scrollbar for visible scroll indicator */}
+            <div className="flex-1 max-h-[280px] border rounded-lg overflow-y-auto">
               <div className="p-2 space-y-1">
                 {/* Previously pushed categories section */}
                 {pushedCats.length > 0 && (
@@ -869,7 +870,7 @@ function CategoryPushDialog({ open, onClose, childId, childName, onPushComplete 
                   <p className="text-xs text-muted-foreground text-center py-4">No categories found</p>
                 )}
               </div>
-            </ScrollArea>
+            </div>
 
             {/* Preview panel */}
             {selected.size > 0 && (
