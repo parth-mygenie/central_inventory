@@ -3226,7 +3226,7 @@
     "type": "BUG",
     "id": "BUG-047",
     "title": "Addon Recipe CRUD Broken — Create/Save/Delete All Fail (missing fields + wrong ingredient format + no delete reason)",
-    "status": "OPEN",
+    "status": "PLANNED",
     "severity": "HIGH",
     "sprint_key": null,
     "phase": "Investigation → INTAKE",
@@ -3251,14 +3251,14 @@
       {
         "artifact": 2,
         "label": "Impact-Analysis",
-        "status": "MISSING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/BUG-047_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
       },
       {
         "artifact": 3,
         "label": "Impl-Plan",
-        "status": "MISSING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/BUG-047_ARTIFACT_2_3_IMPACT_AND_PLAN.md"
       },
       {
         "artifact": 4,
@@ -3280,15 +3280,13 @@
       }
     ],
     "completeness": {
-      "done": 2,
+      "done": 4,
       "total": 7,
-      "pct": 29
+      "pct": 57
     },
     "doc_count": 0,
     "is_debt": true,
     "debt_reasons": [
-      "Impact-Analysis: MISSING",
-      "Impl-Plan: MISSING",
       "Code-Gate: MISSING",
       "QA-Report: MISSING",
       "Owner-Signoff: MISSING"
