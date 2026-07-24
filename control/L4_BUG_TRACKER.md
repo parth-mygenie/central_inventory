@@ -100,7 +100,7 @@ OPEN → IN_PROGRESS → RESOLVED → CLOSED
 |-------|-------|
 | **ID** | BUG-048 |
 | **Severity** | HIGH (P1 — transfers stuck, stock in limbo) |
-| **Status** | DEFERRED (backend dependency) |
+| **Status** | RESOLVED (backend fix deployed + verified) |
 | **Files** | None — POS backend issue |
 | **Root Cause** | `destination_inventory_master_id` is NULL on transfer lines. `franchise/list` returns 0 children for RID 813. Catalog push linkage missing between 813↔815. |
 | **Registered** | 2026-07-24 |

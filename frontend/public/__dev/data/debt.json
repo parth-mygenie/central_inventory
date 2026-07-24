@@ -830,7 +830,7 @@
     "type": "BUG",
     "id": "BUG-048",
     "title": "Receive Transfer Fails — INVALID_STOCK_DATA (destination_inventory_master_id NULL, hierarchy not linked)",
-    "status": "DEFERRED",
+    "status": "RESOLVED",
     "severity": "HIGH",
     "sprint_key": null,
     "sprint_name": "Unassigned",
