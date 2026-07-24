@@ -161,10 +161,12 @@ function AddonRecipeDetail({ recipe, addons, inventoryMaster, onSaved, onDeleted
   const handleSave = async () => {
     setSaving(true);
     try {
+      // BUG-047 — Added preparation_time/serves_people/serve_time + fixed ingredient keys (id/qty/unit)
       const payload = {
         name, addon_name: name, addon_id: addonId ? Number(addonId) : undefined,
+        preparation_time: 0, serves_people: 1, serve_time: 0,
         ingredients: ingredients.filter(i => i.ingredient_id && Number(i.ingredient_qty) > 0).map(i => ({
-          ingredient_id: Number(i.ingredient_id), ingredient_qty: Number(i.ingredient_qty), ingredient_unit: i.ingredient_unit,
+          id: Number(i.ingredient_id), qty: Number(i.ingredient_qty), unit: i.ingredient_unit,
         })),
       };
       if (recipe) await api.updateAddonRecipe(recipe.id || recipe.recipe_id, payload);
@@ -197,7 +199,7 @@ function AddonRecipeDetail({ recipe, addons, inventoryMaster, onSaved, onDeleted
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div><Label className="text-[10px] text-muted-foreground">Linked Addon</Label>
-              <Select value={addonId} onValueChange={setAddonId}>
+              <Select value={addonId} onValueChange={(v) => { setAddonId(v); const a = addons.find(a => String(a.id) === v); if (a) setName(a.name || ""); }}>{/* BUG-047 — auto-fill name from addon */}
                 <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select addon..." /></SelectTrigger>
                 <SelectContent className="max-h-48">{addons.map(a => <SelectItem key={a.id} value={String(a.id)}>{a.name}</SelectItem>)}</SelectContent>
               </Select>

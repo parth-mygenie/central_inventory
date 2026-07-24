@@ -170,3 +170,9 @@
 | Stock Inventory segments | `useStockInventory.js` background load (~6s, include_segments only) |
 
 | `frontend/src/components/central-inventory/RecipeCatalogue.jsx` | BUG-046 | 2026-07-16 | Lines 326-338: food Select dropdown in add mode |
+
+### BUG-047: Addon Recipe CRUD Fix (session 2026-07-24)
+| File | Change | Item |
+|------|--------|------|
+| `frontend/src/components/central-inventory/AddonRecipeCatalogue.jsx` | MODIFIED — payload fix (preparation_time/serves_people/serve_time + ingredient keys id/qty/unit) + addon select auto-fills name | BUG-047 |
+| `frontend/src/services/api.js` | MODIFIED — deleteAddonRecipe sends reason body | BUG-047 |

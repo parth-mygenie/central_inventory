@@ -917,7 +917,12 @@ function getAddonsWithoutRecipe() {
 }
 function createAddonRecipe(payload) { return client.post("/proxy/v2/product/store-addon-recipe", payload); }
 function updateAddonRecipe(id, payload) { return client.put(`/proxy/v2/product/update-addon-recipe/${id}`, payload); }
-function deleteAddonRecipe(id) { return client.delete(`/proxy/v2/product/delete-addon-recipe/${id}`); }
+// BUG-047 — Add reason body to delete (POS API requires it)
+function deleteAddonRecipe(id) {
+  return client.delete(`/proxy/v2/product/delete-addon-recipe/${id}`, {
+    data: { reason: "Deleted from Central Inventory" }
+  });
+}
 
 // ── P23 Hierarchy Management ──────────────────────────────────────
 

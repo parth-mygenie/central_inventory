@@ -5928,7 +5928,7 @@
       "type": "BUG",
       "id": "BUG-047",
       "title": "Addon Recipe CRUD Broken — Create/Save/Delete All Fail (missing fields + wrong ingredient format + no delete reason)",
-      "status": "PLANNED",
+      "status": "RESOLVED",
       "severity": "HIGH",
       "sprint_key": null,
       "phase": "Investigation → INTAKE",
