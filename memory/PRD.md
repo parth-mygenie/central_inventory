@@ -1,21 +1,38 @@
-# Central Inventory PRD
+# Central Inventory - PRD
 
-## Problem Statement
-Central Inventory — multi-store hierarchy stock management module for MyGenie POS.
+## Original Problem Statement
+Clone the `central_inventory` repo from GitHub (branch `25-7-26`), wipe the current `/app` directory, and get it running.
 
-## Tech Stack
-- **Frontend**: React 19, Tailwind CSS 3, Radix UI (shadcn), Recharts, React Router DOM, CRACO, Lucide React
-- **Backend**: FastAPI (Python) — proxy-only to preprod.mygenie.online, Motor (async MongoDB driver), Uvicorn
-- **Database**: MongoDB (local)
-- **Auth**: MyGenie vendor account (external POS auth)
+## Architecture
+- **Frontend:** React (JSX) + Tailwind CSS + Craco (webpack config) + Shadcn UI
+- **Backend:** Python FastAPI — acts as API proxy to MyGenie POS preprod API
+- **Database:** MongoDB (local, for session/status tracking)
+- **Auth:** Proxied through MyGenie vendor auth API
 
-## What's Been Implemented (July 24, 2026)
-- Cloned repo from branch `18-7-26`
-- **BUG-047 RESOLVED**: Addon Recipe CRUD fixed (4 sub-issues, 9/9 tests pass)
-- **BUG-048 RESOLVED**: Receive Transfer INVALID_STOCK_DATA — backend fix verified
-- **CR-046 IMPLEMENTED**: Settings UI Completion — 13→26 settings (7 groups: Hierarchy Policy, Transfer Behavior, Alerts, Transfer Pricing, Production, Purchase Orders, System)
+## What's Been Implemented (Jul 25, 2026)
+- Cloned repo from `https://github.com/parth-mygenie/central_inventory.git` branch `25-7-26`
+- Created `.env` files for backend (MONGO_URL, DB_NAME, CORS_ORIGINS) and frontend (REACT_APP_BACKEND_URL)
+- Installed Python backend dependencies via pip
+- Installed frontend Node dependencies via yarn
+- Both services running via supervisor (backend:8001, frontend:3000)
+- Backend API responding at `/api/` endpoint
+- Frontend login page rendering correctly
 
-## Backlog
-- CR-037→044: Gap Adoption Pipeline (awaiting Gate 4 GO)
+## Core Features (from repo)
+- Login via MyGenie vendor account (proxy auth)
+- Operations Hub dashboard
+- Hierarchy management (stores/franchises)
+- Stock inventory management
+- Transfer workflows (dispatch, request, approve, receive)
+- Wastage tracking & reporting
+- Vendor management
+- Purchase order management
+- Production runs & recipes
+- Ingredient & product catalogues
+- Daily consumption reports
+- Operational settings
 
-## Status: ✅ Running
+## Prioritized Backlog
+- P0: App is running ✅
+- P1: Verify login flow works with real credentials
+- P2: Test full navigation and feature workflows
