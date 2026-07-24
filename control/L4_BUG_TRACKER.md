@@ -90,3 +90,18 @@ OPEN → IN_PROGRESS → RESOLVED → CLOSED
 | **Fix** | Added conditional `<Select>` dropdown when `isAddMode=true`, populated from `foods` prop. Sets both `foodId` and `name` on selection. |
 | **Registered** | 2026-07-16 |
 | **Found By** | INVESTIGATION role (owner-reported) |
+
+
+---
+
+## BUG-048 — Receive Transfer Fails: INVALID_STOCK_DATA
+
+| Field | Value |
+|-------|-------|
+| **ID** | BUG-048 |
+| **Severity** | HIGH (P1 — transfers stuck, stock in limbo) |
+| **Status** | DEFERRED (backend dependency) |
+| **Files** | None — POS backend issue |
+| **Root Cause** | `destination_inventory_master_id` is NULL on transfer lines. `franchise/list` returns 0 children for RID 813. Catalog push linkage missing between 813↔815. |
+| **Registered** | 2026-07-24 |
+| **Found By** | INVESTIGATION role (owner-reported, confirmed via full e2e dispatch+receive curl test) |
