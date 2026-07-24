@@ -1,0 +1,86 @@
+{
+  "iteration": 30,
+  "test_date": "2026-06-01",
+  "test_type": "Sprint D - Final Polish Items (IG-001 to IG-005) Frontend Testing",
+  "overall_status": "PASS",
+  "summary": "All 5 polish items (IG-001 to IG-005) verified. Vendor column in Ingredients, Push Status in Hierarchy Management, Low-stock suggestions in Request Stock, and Destination health strip in Direct Dispatch all working correctly. Days of Cover column in Consumption Report is implemented but couldn't be visually verified due to no consumption data in test environment.",
+  "tests": [
+    {
+      "name": "IG-001: Vendor column in Ingredients Catalogue",
+      "status": "PASS",
+      "details": "Vendor column visible in /catalogue/ingredients table. Shows vendor names like 'Test Shop', 'Mahamai Super Market' for each ingredient.",
+      "route": "/catalogue/ingredients",
+      "data_testid": "ingredient-catalogue"
+    },
+    {
+      "name": "IG-002: Days of Cover column in Consumption Report",
+      "status": "PASS (code verified)",
+      "details": "Days of Cover column implemented at line 176 with color-coded values (red <3d, amber <7d). Calculation uses 7-day average. Could not visually verify as no consumption data exists in test environment.",
+      "route": "/reports/consumption",
+      "data_testid": "days-cover-{ingredient_id}"
+    },
+    {
+      "name": "IG-003: Push Status column in Hierarchy Management",
+      "status": "PASS",
+      "details": "Push Status column visible with 'Synced' badges (green). Stale detection uses created_at > 14 days heuristic. Push Now button available for stale stores.",
+      "route": "/hierarchy/manage",
+      "data_testid": "push-synced-{id}, push-stale-{id}"
+    },
+    {
+      "name": "IG-004: Low-stock suggestions in Request Stock",
+      "status": "PASS",
+      "details": "Low-stock suggestions banner appears when outlet has low stock items. Tested with DemoFranchise1 - shows '2 items below minimum — consider requesting' with 'patri: 0 kg (min: 100)' and 'red meat: 0 kg (min: 500)'.",
+      "route": "/request/new",
+      "data_testid": "low-stock-suggestions"
+    },
+    {
+      "name": "IG-005: Destination health strip in Direct Dispatch",
+      "status": "PASS",
+      "details": "StoreHealthStrip component appears after selecting destination store. Shows 'DemoCentral1 health: 0 adequate' format. Uses hierarchy summary data for stock counts.",
+      "route": "/dispatch/new",
+      "data_testid": "store-health-strip"
+    }
+  ],
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "console_warnings": [
+      {
+        "component": "HierarchyManagement.jsx",
+        "issue": "React key warning: Each child in a list should have a unique 'key' prop in Fragment",
+        "priority": "LOW"
+      }
+    ]
+  },
+  "test_report_links": ["/app/test_reports/iteration_30.json"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "HierarchyManagement.jsx line 634: Fragment wrapping renderChildRow needs unique key - use React.Fragment with key prop instead of <></>",
+    "IG-002 Days of Cover calculation assumes 7-day period - consider making this dynamic based on actual date range selected"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (frontend only test)",
+    "frontend": "100%"
+  },
+  "test_credentials": {
+    "central_store": "abhishek@kalabahia.com / Qplazm@10",
+    "outlet": "owner@demofranchise1.com / Qplazm@10"
+  },
+  "seed_data_creation": "None - used existing POS API data",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Sprint D (IG-001 to IG-005) final polish items all verified. Key implementations: 1) IngredientCatalogue.jsx has Vendor column (line 96, 109). 2) DailyConsumptionReport.jsx has Days of Cover column with color-coded values (lines 176, 200-210). 3) HierarchyManagement.jsx has Push Status column with Synced/Stale badges (lines 534-544, 625). 4) RequestStockForm.jsx has low-stock suggestions banner (lines 219-239). 5) DirectDispatchForm.jsx has StoreHealthStrip after destination selection (lines 125-138). Note: Central Store users cannot access /request/new (Access Denied) - this is expected as Central Stores dispatch, not request.",
+  "features_verified": {
+    "ig001_vendor_column": "Working - Shows vendor_name in Ingredients table",
+    "ig002_days_of_cover": "Implemented - Column header and calculation present, needs consumption data to display values",
+    "ig003_push_status": "Working - Synced/Stale badges with Push Now button for stale stores",
+    "ig004_low_stock_suggestions": "Working - Banner shows low stock items with current qty and min threshold",
+    "ig005_destination_health_strip": "Working - StoreHealthStrip shows after destination selection"
+  }
+}

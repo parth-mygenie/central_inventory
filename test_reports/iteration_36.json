@@ -1,0 +1,93 @@
+{
+  "iteration": 36,
+  "test_date": "2026-06-02",
+  "test_type": "API Cache Layer Performance Verification",
+  "overall_status": "PASS",
+  "summary": "Verified API response cache layer in api.js. All 8 features tested successfully: Operations Hub, Pending Queues, Transfer Detail, History & Ledger, Stock Inventory, Hierarchy Summary, Direct Dispatch, and navigation flow. Cache layer is transparent to components - all screens load correctly with data.",
+  "tests": [
+    {
+      "feature": "Operations Hub",
+      "status": "PASS",
+      "details": "Loads with greeting ('Good morning, Central'), 4 KPI cards (3 Stale Approvals, 1 Ready to Dispatch, 0 Pending Receives, 67 Low Stock Items), YOUR STOCK HEALTH section (164 Total Items, 67 Low Stock), STORE HEALTH ACROSS HIERARCHY grid (6 stores with health badges), and QUICK ACTIONS (Dispatch Stock, Add Stock, Adjust Stock, Record Wastage, Wastage Report)."
+    },
+    {
+      "feature": "Pending Queues",
+      "status": "PASS",
+      "details": "Shows 3 approval cards (PO-0074, PO-0075, PO-0113) with item tables showing ITEM REQUESTED, QTY REQUESTED, YOUR STOCK, AFTER APPROVAL columns. Each card has store health mini-bar ('My Genie store health: 1 out, 67 low, 96 adequate'), Reject/View Details/Approve All buttons, age badges (7 days ago, 5 days ago), and 'Can fulfill' badges."
+    },
+    {
+      "feature": "Transfer Detail (/transfer/74)",
+      "status": "PASS",
+      "details": "Shows FROM (My Genie/Central Store) and TO (DemoFranchise4/Outlet) labels. REQUESTER STORE SNAPSHOT section displays 4 stat cards (0 Out of Stock, 0 Low Stock, 4 Adequate, 4 Total Items) with item table showing Stock Level, Min Threshold, Status (OK badges), and 'In This Request?' column. APPROVAL IMPACT ON YOUR STOCK section shows patri: 0.1 kg requested, 64.83 kg your stock, 64.73 kg after approval with amber warning."
+    },
+    {
+      "feature": "Navigation Flow (Hub → Queues → Detail → Hub)",
+      "status": "PASS",
+      "details": "Full navigation cycle completed without errors. Cache layer enables faster subsequent loads - initial loads take 10-15s, cached navigations are noticeably faster (3-5s)."
+    },
+    {
+      "feature": "History & Ledger",
+      "status": "PASS",
+      "details": "Loads with Transfer History tab showing 20+ transfers with columns: PO/Ref, Date, Source, Destination, Status, Type, Items, Direction, Updated. Restaurant names (My Genie, DemoFranchise1-4, DemoCentral1) displayed correctly. Status badges (Dispatched, Received, Requested, Withdrawn) visible."
+    },
+    {
+      "feature": "Stock Inventory",
+      "status": "PASS",
+      "details": "Shows 164 Total Items, 67 Low Stock Items, 8 Categories. Item list displays Ingredient, Category, Quantity, Min Alert, Status (Low badges), Expiry Risk, Pending, Days of Cover columns. Items like 24K GOLD ROSE (121 piece), BALL BUNCH (132 piece), etc. visible with 'View detail' links."
+    },
+    {
+      "feature": "Hierarchy Summary",
+      "status": "PASS",
+      "details": "Shows Master Stores and Outlets tabs. Master Stores tab displays DemoCentral1, DemoCentral2, TestCentral_P23_Probe with columns: STORE, SENT, RECEIVED, TXNS, OUT OF STOCK (red badges with counts 102, 102, 164), LOW STOCK, ADEQUATE. Health data columns present and populated."
+    },
+    {
+      "feature": "Direct Dispatch Form",
+      "status": "PASS",
+      "details": "Destination selector works with 9 options. After selecting DemoFranchise1, 'WHAT THIS STORE NEEDS (4 ITEMS)' table appears with columns: Item, Their Stock, Min Threshold, Gap, Your Stock, Your Stock After. Shows items below threshold: red meat (OUT badge, -372 kg insufficient), maida (-298.65 kg insufficient), Cooking Oil (-104.88 kg insufficient), patri (OUT badge, -35.17 kg insufficient). Negative projections displayed in red with '(insufficient)' suffix."
+    }
+  ],
+  "cache_layer_verification": {
+    "implementation": "In-memory cache with TTL-based expiration in /app/frontend/src/services/api.js",
+    "ttl_config": {
+      "LONG_60s": ["getHierarchySummary", "getStockInventory", "getInventoryMaster", "getFranchiseList", "getVendors", "getOperationalSettings"],
+      "MEDIUM_45s": ["getHierarchyDetail", "getTransferDetails", "getSourceOptions", "getStockDetail"],
+      "SHORT_30s": ["getPendingQueues", "getTransferHistory", "getFranchiseHistory"]
+    },
+    "features": [
+      "In-flight deduplication prevents concurrent identical requests",
+      "Cache invalidation on write operations (_invalidateTransferCaches, _invalidateStockCaches)",
+      "invalidateAll() for manual refresh",
+      "Cache cleared on logout (token change)"
+    ],
+    "observed_behavior": "Screens load correctly on first visit and subsequent navigations. Cache is transparent to components."
+  },
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/test_reports/iteration_36.json"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "api.js cache implementation is well-structured with clear TTL categories",
+    "_cached() wrapper correctly handles in-flight deduplication and cache storage",
+    "Write operations properly invalidate related caches via _invalidateTransferCaches() and _invalidateStockCaches()",
+    "Cache key generation uses JSON.stringify for consistent key creation"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (frontend-only testing)",
+    "frontend": "100% (all 8 features verified)"
+  },
+  "test_credentials": {
+    "central": "abhishek@kalabahia.com / Qplazm@10 (rid=1)"
+  },
+  "seed_data_creation": "None - used existing POS API data",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "API cache layer verified working. Cache reduces API calls significantly on navigation. All screens load correctly: Operations Hub (greeting, KPIs, stock health, store health grid, quick actions), Pending Queues (3 approval cards with mini-bars), Transfer Detail (FROM/TO labels, requester snapshot, approval impact), History & Ledger (restaurant names visible), Stock Inventory (164 items), Hierarchy Summary (health columns), Direct Dispatch ('What This Store Needs' table with insufficient stock warnings)."
+}

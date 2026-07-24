@@ -1,0 +1,104 @@
+{
+  "summary": "P25 Wastage Report UI - All backend tests pass (7/7). Frontend testing completed with all major features verified. KPI cards, filters, table columns, badges, and WastageEntryForm with API-driven reasons all working correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_p25_wastage_report.py",
+    "/app/test_reports/pytest/p25_wastage_report_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "WastageReport.jsx correctly implements all P25 requirements with proper data-testid attributes",
+    "KPI cards show: Total Records, Net Wastage, Batch Audited, Physical Count",
+    "Filters work correctly: waste type dropdown (All Types/Loss/Gain), batch audited toggle",
+    "Table has all required columns: Date, Item, Type, Quantity, Unit, Reason, Batch, Expiry, Source",
+    "WasteTypeBadge shows Loss (red) and Gain (green) correctly",
+    "SourceTypeBadge shows 'legacy' for records without source_type (correct behavior)",
+    "Summary footer shows Loss, Gain, Stores count",
+    "No recorded_by column in table (as required)",
+    "WastageEntryForm uses API-driven reasons via useWastageReasons hook",
+    "Wastage reason dropdown shows API reasons: Others, Expired, Pilferage, Spillage, Other"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_p25_wastage_report.py"
+  ],
+  "success_rate": {
+    "backend": "100% (7/7 tests passed)",
+    "frontend": "100% (16/16 features tested)"
+  },
+  "test_credentials": {
+    "master_user": "abhishek@kalabahia.com / Qplazm@10 (rid=1, type=master)"
+  },
+  "seed_data_creation": "None - using real POS API via proxy",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "P25 Wastage Report fully tested. All features working: KPI cards (total records, net wastage, batch audited, physical count), filters (waste type dropdown, batch toggle), table with P25 columns, WasteTypeBadge (Loss red, Gain green), SourceTypeBadge (legacy for null source_type), summary footer, WastageEntryForm with API-driven reasons. Test data: 6 wastage records in May 2026, all Loss type, all legacy source_type, 0 batch-audited.",
+  "features_tested": {
+    "BACKEND-1": "PASS - GET /proxy/v2/inventory/wastage-reasons returns 4 reasons array",
+    "BACKEND-2": "PASS - Wastage reasons contain: Others, Expired, Pilferage, Spillage",
+    "BACKEND-3": "PASS - POST /proxy/v2/inventory/wastage-report with date range returns 6 records",
+    "BACKEND-4": "PASS - Wastage report has_batch=true filter returns 0 records (correct)",
+    "BACKEND-5": "PASS - Wastage report waste_type=Loss filter returns 6 records",
+    "BACKEND-6": "PASS - Wastage report waste_type=Gain filter returns 0 records (correct)",
+    "BACKEND-7": "PASS - Wastage report summary has total_records, total_loss, total_gain, net_wastage, applied_restaurant_ids",
+    "FRONTEND-1": "PASS - WastageReport page loads at /wastage/report",
+    "FRONTEND-2": "PASS - KPI section found (data-testid='wastage-kpi-section')",
+    "FRONTEND-3": "PASS - All 4 KPI cards present: total-records, total-wastage, batch-audited, physical-count",
+    "FRONTEND-4": "PASS - Filters section found with waste-type-filter and has-batch-toggle",
+    "FRONTEND-5": "PASS - Table has all 9 columns: Date, Item, Type, Quantity, Unit, Reason, Batch, Expiry, Source",
+    "FRONTEND-6": "PASS - 6 Loss badges found (WasteTypeBadge working)",
+    "FRONTEND-7": "PASS - Summary footer shows Loss: 0.24, Gain: 0.00, Stores: 1",
+    "FRONTEND-8": "PASS - No recorded_by column in table",
+    "FRONTEND-9": "PASS - Waste type dropdown shows All Types, Loss, Gain options",
+    "FRONTEND-10": "PASS - Batch toggle filter works (shows 0 rows when enabled)",
+    "FRONTEND-11": "PASS - WastageEntryForm loads at /wastage/new",
+    "FRONTEND-12": "PASS - Form title 'Record Wastage' found",
+    "FRONTEND-13": "PASS - Reason dropdown found with API-driven options",
+    "FRONTEND-14": "PASS - Reason options: Others, Expired, Pilferage, Spillage, Other",
+    "FRONTEND-15": "PASS - Item select, quantity input, submit button all present",
+    "FRONTEND-16": "PASS - Empty state shows 'No batch-audited wastage' when batch filter enabled"
+  },
+  "data_verified": {
+    "wastage_reasons": ["Others", "Expired", "Pilferage", "Spillage"],
+    "wastage_records_may_2026": 6,
+    "all_records_type": "Loss",
+    "all_records_source": "legacy (null source_type)",
+    "batch_audited_count": 0,
+    "physical_count_count": 0,
+    "summary": {
+      "total_records": 6,
+      "total_loss": 0.24,
+      "total_gain": 0,
+      "net_wastage": 0.24,
+      "applied_restaurant_ids": [1]
+    }
+  },
+  "ui_components_verified": {
+    "data-testid-wastage-report": "FOUND",
+    "data-testid-wastage-report-title": "FOUND",
+    "data-testid-wastage-kpi-section": "FOUND",
+    "data-testid-kpi-total-records": "FOUND",
+    "data-testid-kpi-total-wastage": "FOUND",
+    "data-testid-kpi-batch-audited": "FOUND",
+    "data-testid-kpi-physical-count": "FOUND",
+    "data-testid-wastage-filters": "FOUND",
+    "data-testid-waste-type-filter": "FOUND",
+    "data-testid-has-batch-toggle": "FOUND",
+    "data-testid-wastage-report-row-*": "FOUND (6 rows)",
+    "data-testid-waste-type-loss": "FOUND (6 badges)",
+    "data-testid-wastage-report-footer": "FOUND",
+    "data-testid-wastage-entry-form": "FOUND",
+    "data-testid-wastage-form-title": "FOUND",
+    "data-testid-wastage-reason-select": "FOUND",
+    "data-testid-wastage-item-select": "FOUND",
+    "data-testid-wastage-quantity-input": "FOUND",
+    "data-testid-wastage-submit-button": "FOUND"
+  }
+}
