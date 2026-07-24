@@ -5991,7 +5991,7 @@
       "sprint_key": null,
       "phase": "Investigation → INTAKE (backend dependency)",
       "files": [],
-      "notes": "POS receive endpoint returns 400 INVALID_STOCK_DATA because destination_inventory_master_id is null on transfer lines. Root cause: franchise/list returns 0 children for RID 813→815, no catalog push linkage. Items exist independently on both stores. No frontend fix — POS backend must resolve hierarchy linkage or auto-map destination IDs.",
+      "notes": "POS receive endpoint returns 400 INVALID_STOCK_DATA because assertValidStockData() rejects negative cal_quantity on destination. Ooty Tea Powder (18528) has cal_qty=-12 on child (815). Controlled test: Mangalore Coffee (cal_qty=0) received OK on same hierarchy, same mechanism. Fix: allow negative destination cal_qty in assert — the math is self-correcting (-12 + received). Stuck transfers: 307, 309.",
       "artifact_refs": [
         { "artifact": 0, "label": "Session-Start", "status": "WAIVED", "path": null },
         { "artifact": 1, "label": "Intake", "status": "DONE", "path": "control/sessions/BUG-048_ARTIFACT_1_INTAKE.md" },
