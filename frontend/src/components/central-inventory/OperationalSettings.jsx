@@ -34,6 +34,7 @@ const SETTING_GROUPS = [
       { key: "allow_over_receive", label: "Allow Over-Receive", description: "Receiver can accept more qty than dispatched." },
       { key: "allow_negative_stock", label: "Allow Negative Stock", description: "Allow aggregate stock quantity below zero." },
       { key: "allow_master_direct_franchise", label: "Master Direct to Franchise", description: "Master can push stock directly to franchise stores." },
+      { key: "fefo_consumption_enabled", label: "FEFO Consumption Tracking", description: "Consume stock in First-Expiry-First-Out order." },
     ],
   },
   {
