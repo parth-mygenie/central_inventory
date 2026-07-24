@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { LoadingState, ErrorState } from "@/components/common/StateDisplays";
 import ConfirmActionDialog from "./ConfirmActionDialog";
-import { Settings, Shield, ArrowRightLeft, Bell, Cpu, Lock, Info, RefreshCw, Loader2 } from "lucide-react";
+// CR-046 — Added DollarSign, Factory, ClipboardCheck for new settings groups
+import { Settings, Shield, ArrowRightLeft, Bell, Cpu, Lock, Info, RefreshCw, Loader2, DollarSign, Factory, ClipboardCheck } from "lucide-react";
 
 const SETTING_GROUPS = [
   {
@@ -21,6 +22,7 @@ const SETTING_GROUPS = [
       { key: "allow_child_direct_vendor_purchase", label: "Allow Direct Vendor Purchase", description: "Central and franchise stores can create vendors and record stock purchases independently.", danger: true },
       { key: "allow_lateral_central_transfer", label: "Allow Lateral Central Transfers", description: "Central stores can transfer stock to sibling central stores." },
       { key: "allow_cross_central_franchise_dispatch", label: "Allow Cross-Branch Dispatch", description: "Central stores can dispatch to franchises under sibling central stores." },
+      { key: "allow_lateral_franchise_transfer", label: "Allow Lateral Franchise Transfers", description: "Franchise stores can transfer stock to sibling franchise stores." },
     ],
   },
   {
@@ -43,6 +45,41 @@ const SETTING_GROUPS = [
       { key: "stale_transfer_hours_tier1", label: "Stale Transfer Tier 1 (hours)", type: "number", description: "First warning threshold for idle transfers." },
       { key: "stale_transfer_hours_tier2", label: "Stale Transfer Tier 2 (hours)", type: "number", description: "Critical threshold for idle transfers." },
       { key: "reconciliation_tolerance", label: "Reconciliation Tolerance", type: "number", step: "0.01", description: "Drift tolerance for segment vs master reconciliation." },
+    ],
+  },
+  // CR-046 — New groups: Pricing, Production, Purchase Orders
+  {
+    id: "pricing",
+    label: "Transfer Pricing",
+    icon: DollarSign,
+    masterOnly: true,
+    description: "Control how transfer pricing works across the hierarchy",
+    keys: [
+      { key: "allow_master_set_transfer_selling_price", label: "Master Sets Selling Price", description: "Master store can set selling prices on transfers." },
+      { key: "allow_central_set_transfer_selling_price", label: "Central Sets Selling Price", description: "Central stores can set selling prices on transfers." },
+      { key: "transfer_selling_price_required", label: "Selling Price Required", description: "Require selling price on all transfers.", danger: true },
+      { key: "transfer_shipping_fee_allowed", label: "Allow Shipping Fee", description: "Allow shipping fee to be added on transfers." },
+      { key: "central_resell_markup_percent", label: "Central Resell Markup (%)", type: "number", step: "0.1", description: "Default markup percentage for central store reselling." },
+      { key: "central_resell_allow_override", label: "Allow Markup Override", description: "Central stores can override the default markup percentage." },
+    ],
+  },
+  {
+    id: "production",
+    label: "Production",
+    icon: Factory,
+    keys: [
+      { key: "production_enabled", label: "Enable Production Module", description: "Allow production runs and sub-recipe manufacturing.", danger: true },
+    ],
+  },
+  {
+    id: "purchase_orders",
+    label: "Purchase Orders",
+    icon: ClipboardCheck,
+    keys: [
+      { key: "require_po_for_purchase", label: "Require PO for Purchase", description: "Disable direct stock intake — all purchases must go through a Purchase Order.", danger: true },
+      { key: "require_po_approval", label: "Require PO Approval", description: "Purchase orders need approval before they can be sent to vendors." },
+      { key: "po_auto_close_on_full_receive", label: "Auto-Close on Full Receive", description: "Automatically close PO when all lines are fully received." },
+      { key: "po_variance_alert_pct", label: "Variance Alert (%)", type: "number", step: "1", description: "Alert when received qty deviates from ordered by this percentage." },
     ],
   },
   {

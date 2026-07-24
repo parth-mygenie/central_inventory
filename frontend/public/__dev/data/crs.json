@@ -3622,7 +3622,7 @@
     "type": "CR",
     "id": "CR-046",
     "title": "Settings UI Completion — Add 13 Missing Backend Settings (Pricing, Production, PO, Lateral Franchise, FEFO)",
-    "status": "PLANNED",
+    "status": "IMPLEMENTED",
     "severity": null,
     "sprint_key": null,
     "phase": "Investigation → PLANNING",
