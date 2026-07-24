@@ -63,6 +63,21 @@ OPEN → IN_PROGRESS → RESOLVED → CLOSED
 
 ---
 
+## BUG-047 — Addon Recipe CRUD Broken (Create/Save/Delete All Fail)
+
+| Field | Value |
+|-------|-------|
+| **ID** | BUG-047 |
+| **Severity** | HIGH (P1 — core CRUD feature 100% non-functional) |
+| **Status** | OPEN |
+| **Files** | `AddonRecipeCatalogue.jsx`, `api.js` |
+| **Root Causes** | (1) Name auto-fill missing on addon select, (2) Payload missing `preparation_time`/`serves_people`, (3) Ingredient keys wrong (`ingredient_id` → should be `id`), (4) Delete missing `reason` body |
+| **Related** | BUG-046 (same pattern for regular recipes, already fixed) |
+| **Registered** | 2026-07-24 |
+| **Found By** | INVESTIGATION role (owner-reported) |
+
+---
+
 ## BUG-046 — Recipe Create: Linked Food Dropdown Missing in Add Mode
 
 | Field | Value |
