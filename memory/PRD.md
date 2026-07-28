@@ -1,38 +1,20 @@
-# Central Inventory - PRD
+# Central Inventory — PRD
 
 ## Original Problem Statement
-Clone the `central_inventory` repo from GitHub (branch `25-7-26`), wipe the current `/app` directory, and get it running.
+Clone the `central_inventory` repository (branch `28-7-26`) from GitHub into `/app`, install dependencies, and run both backend and frontend. No modifications, no testing.
 
 ## Architecture
-- **Frontend:** React (JSX) + Tailwind CSS + Craco (webpack config) + Shadcn UI
-- **Backend:** Python FastAPI — acts as API proxy to MyGenie POS preprod API
-- **Database:** MongoDB (local, for session/status tracking)
-- **Auth:** Proxied through MyGenie vendor auth API
+- **Frontend:** React 19 + CRACO + Tailwind CSS 3 + Radix UI + React Router DOM 7 + Recharts + Axios
+- **Backend:** FastAPI + Motor (async MongoDB) + httpx (proxy to preprod POS API) + Pydantic v2 + Uvicorn
+- **Database:** MongoDB (local)
+- **External API:** preprod.mygenie.online (POS API proxy)
 
-## What's Been Implemented (Jul 25, 2026)
-- Cloned repo from `https://github.com/parth-mygenie/central_inventory.git` branch `25-7-26`
-- Created `.env` files for backend (MONGO_URL, DB_NAME, CORS_ORIGINS) and frontend (REACT_APP_BACKEND_URL)
-- Installed Python backend dependencies via pip
-- Installed frontend Node dependencies via yarn
+## What's Been Implemented (2026-07-28)
+- Cloned repo from `https://github.com/parth-mygenie/central_inventory.git` branch `28-7-26`
+- Backend dependencies installed, `.env` configured with platform MONGO_URL/DB_NAME
+- Frontend dependencies installed, `.env` configured with platform REACT_APP_BACKEND_URL
 - Both services running via supervisor (backend:8001, frontend:3000)
-- Backend API responding at `/api/` endpoint
-- Frontend login page rendering correctly
-
-## Core Features (from repo)
-- Login via MyGenie vendor account (proxy auth)
-- Operations Hub dashboard
-- Hierarchy management (stores/franchises)
-- Stock inventory management
-- Transfer workflows (dispatch, request, approve, receive)
-- Wastage tracking & reporting
-- Vendor management
-- Purchase order management
-- Production runs & recipes
-- Ingredient & product catalogues
-- Daily consumption reports
-- Operational settings
+- Verified: Backend API responds, Frontend login page renders
 
 ## Prioritized Backlog
-- P0: App is running ✅
-- P1: Verify login flow works with real credentials
-- P2: Test full navigation and feature workflows
+- No modifications requested — app running as-is from repo
