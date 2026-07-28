@@ -65,8 +65,8 @@ export default function PurchaseOrderCreate() {
   const [error, setError] = useState(null);
   const [blocked, setBlocked] = useState(false);
 
-  // Mode: vendor | item
-  const [mode, setMode] = useState(searchParams.get("mode") || "vendor");
+  // Mode: vendor only (simplified — single mode)
+  const [mode] = useState("vendor");
 
   // By Vendor state
   const [selectedVendorId, setSelectedVendorId] = useState("");
@@ -423,25 +423,7 @@ export default function PurchaseOrderCreate() {
         </div>
       </div>
 
-      {/* Mode Tabs (always visible on select step) */}
-      {step === "select" && (
-        <div className="flex gap-2 mb-4" data-testid="po-mode-tabs">
-          <button
-            className={`px-4 py-2 rounded-lg text-xs font-medium border transition-colors ${mode === "vendor" ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border hover:bg-muted"}`}
-            onClick={() => { setMode("vendor"); setStep("select"); }}
-            data-testid="po-mode-vendor"
-          >
-            By Vendor
-          </button>
-          <button
-            className={`px-4 py-2 rounded-lg text-xs font-medium border transition-colors ${mode === "item" ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border hover:bg-muted"}`}
-            onClick={() => { setMode("item"); setStep("select"); initNeedLines(); }}
-            data-testid="po-mode-item"
-          >
-            By Item Need
-          </button>
-        </div>
-      )}
+      {/* Mode tabs removed — single vendor-based flow */}
 
       {/* ═══════════════ BY VENDOR MODE ═══════════════ */}
       {mode === "vendor" && step === "select" && (
@@ -629,155 +611,7 @@ export default function PurchaseOrderCreate() {
         </div>
       )}
 
-      {/* ═══════════════ BY ITEM NEED MODE ═══════════════ */}
-      {mode === "item" && step === "select" && (
-        <div className="space-y-4" data-testid="po-item-need">
-          {/* KPI cards */}
-          <div className="grid grid-cols-4 gap-3">
-            <Card className="bg-red-50 border-red-200"><CardContent className="py-3 px-3">
-              <p className="text-[10px] text-red-600 uppercase">Out of Stock</p><p className="text-lg font-bold text-red-700" data-testid="kpi-oos">{needKPIs.oos}</p>
-            </CardContent></Card>
-            <Card className="bg-amber-50 border-amber-200"><CardContent className="py-3 px-3">
-              <p className="text-[10px] text-amber-600 uppercase">Low Stock</p><p className="text-lg font-bold text-amber-700" data-testid="kpi-low">{needKPIs.low}</p>
-            </CardContent></Card>
-            <Card className="bg-blue-50 border-blue-200"><CardContent className="py-3 px-3">
-              <p className="text-[10px] text-blue-600 uppercase">Below 14d Cover</p><p className="text-lg font-bold text-blue-700" data-testid="kpi-below-reorder">{needLines.filter((l) => l.daysOfCover !== null && l.daysOfCover < 14 && !l.isEmpty && !l.isLow).length}</p>
-            </CardContent></Card>
-            <Card><CardContent className="py-3 px-3">
-              <p className="text-[10px] text-muted-foreground uppercase">Total Items</p><p className="text-lg font-bold" data-testid="kpi-total">{needKPIs.total}</p>
-            </CardContent></Card>
-          </div>
-
-          <p className="text-xs font-medium text-muted-foreground">Items sorted by urgency (lowest cover first). Select items to purchase.</p>
-
-          {/* BUG-030: Search for item-need mode */}
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input data-testid="po-need-search" placeholder="Search items..." value={needSearch} onChange={(e) => setNeedSearch(e.target.value)} className="pl-8 h-8 text-xs" />
-          </div>
-
-          {/* CR-046 — Select All / Unselect All */}
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="h-7 text-[10px] px-2.5" onClick={selectAllNeedLines} data-testid="po-need-select-all">Select All</Button>
-            <Button variant="outline" size="sm" className="h-7 text-[10px] px-2.5" onClick={unselectAllNeedLines} data-testid="po-need-unselect-all">Unselect All</Button>
-            <span className="text-[10px] text-muted-foreground ml-1">{needLines.filter(l => l.checked).length}/{needLines.length} selected</span>
-          </div>
-
-          <Card><CardContent className="py-0 px-0">
-            <Table>
-              <TableHeader><TableRow>
-                <TableHead className="text-[10px] w-8"></TableHead>
-                <TableHead className="text-[10px]">Item</TableHead>
-                <TableHead className="text-[10px] text-right">Stock</TableHead>
-                <TableHead className="text-[10px] text-right">Daily Consumption</TableHead>
-                <TableHead className="text-[10px] text-right">
-                  <TooltipProvider><Tooltip><TooltipTrigger asChild>
-                    <span className="flex items-center justify-end gap-0.5">Days Will Last <Info className="h-2.5 w-2.5 text-muted-foreground" /></span>
-                  </TooltipTrigger><TooltipContent className="max-w-xs"><p className="text-xs">Current Stock ÷ Avg Daily Consumption (estimated from purchase history over the last year)</p></TooltipContent></Tooltip></TooltipProvider>
-                </TableHead>
-                <TableHead className="text-[10px]">Best Vendor</TableHead>
-                <TableHead className="text-[10px] text-right">Expected Rate</TableHead>
-                <TableHead className="text-[10px]">Other Vendors</TableHead>
-                <TableHead className="text-[10px] text-right">Qty</TableHead>
-              </TableRow></TableHeader>
-              <TableBody>
-                {needLines.filter((l) => !needSearch.trim() || l.stock_title.toLowerCase().includes(needSearch.toLowerCase())).map((l, idx) => {
-                  const realIdx = needLines.indexOf(l); // BUG-FIX — use original array index for toggle
-                  return (
-                  <TableRow key={`${l.inventory_master_id}-${idx}`} data-testid={`po-need-${l.inventory_master_id}`} className={l.checked ? "bg-primary/5" : ""}>{/* BUG-FIX — unique composite key */}
-                    <TableCell className="py-1.5"><Checkbox checked={l.checked} onCheckedChange={() => toggleNeedLine(realIdx)} /></TableCell>
-                    <TableCell className="py-1.5 text-xs">
-                      <span className="font-medium">{l.stock_title}</span>
-                      {l.isEmpty && <><br/><span className="text-[9px] text-red-600 font-semibold">OUT OF STOCK</span></>}
-                      {l.isLow && !l.isEmpty && <><br/><span className="text-[9px] text-amber-600">LOW {l.daysOfCover !== null ? `\u2014 ${l.daysOfCover}d` : ""}</span></>}
-                      {!l.isLow && !l.isEmpty && l.daysOfCover !== null && l.daysOfCover < 14 && <><br/><span className="text-[9px] text-blue-600">{l.daysOfCover}d left</span></>}
-                    </TableCell>
-                    <TableCell className="py-1.5 text-xs text-right tabular-nums">{l.current_qty} {l.unit}</TableCell>
-                    <TableCell className="py-1.5 text-xs text-right tabular-nums text-muted-foreground">{l.daily > 0 ? (smartConsumptionDisplay(l.dailyRaw, l.dailyUnit, l.unit)?.text || `${l.daily.toFixed(3)} ${l.unit}/d`) : "\u2014"}</TableCell>
-                    <TableCell className="py-1.5 text-xs text-right">
-                      <span className={`tabular-nums ${l.daysOfCover !== null && l.daysOfCover < 7 ? "text-red-600 font-semibold" : l.daysOfCover !== null && l.daysOfCover < 14 ? "text-amber-600" : "text-muted-foreground"}`}>
-                        {l.daysOfCover !== null ? `${l.daysOfCover}d` : "\u2014"}
-                      </span>
-                    </TableCell>
-                    {/* BUG-039: Merged vendor dropdown — history vendors (with rate) + remaining vendors */}
-                    <TableCell className="py-1.5">
-                      <Select value={l.selectedVendorId} onValueChange={(v) => updateNeedLine(realIdx, "selectedVendorId", v)}>
-                        <SelectTrigger className="h-7 text-[10px] w-40"><SelectValue placeholder="Select vendor" /></SelectTrigger>
-                        <SelectContent>
-                          {l.vendorOptions.map((vo) => (
-                            <SelectItem key={vo.vendorId} value={String(vo.vendorId)}>{vo.vendorName} {formatCurrency(vo.rate)}</SelectItem>
-                          ))}
-                          {vendors.filter(v => !l.vendorOptions.some(vo => String(vo.vendorId) === String(v.id))).map(v => (
-                            <SelectItem key={v.id} value={String(v.id)}>{v.vendor_name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell className="py-1.5 text-xs text-right font-mono text-muted-foreground">{l.expected_rate ? formatCurrency(Number(l.expected_rate)) : "\u20B90"}</TableCell>
-                    <TableCell className="py-1.5 text-[10px] text-muted-foreground">
-                      {(l.otherVendors || []).map((ov, i) => (
-                        <span key={i}>{ov.vendorName} {formatCurrency(ov.rate)}{i < (l.otherVendors || []).length - 1 ? ", " : ""}</span>
-                      ))}
-                      {(!l.otherVendors || l.otherVendors.length === 0) && "\u2014"}
-                    </TableCell>
-                    <TableCell className="py-1.5"><Input type="number" min="0" value={l.ordered_qty} onChange={(e) => updateNeedLine(realIdx, "ordered_qty", e.target.value)} className="h-7 text-[10px] w-16 ml-auto text-right" disabled={!l.checked} /></TableCell>{/* BUG-043 */}
-                  </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </CardContent></Card>
-
-          {/* Auto-group preview */}
-          {poGroups.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-muted-foreground uppercase">Auto-grouped by vendor ({checkedNeedLines.length} items \u2192 {poGroups.length} PO{poGroups.length > 1 ? "s" : ""})</p>
-              <div className="grid grid-cols-2 gap-3">
-                {poGroups.map((g, gi) => (
-                  <Card key={g.vendorId} data-testid={`po-group-${gi}`} className="border-primary/20">
-                    <CardContent className="p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-semibold flex items-center gap-1"><Package className="h-3 w-3" />PO #{gi + 1} \u2014 {g.vendorName}</span>
-                        <span className="text-xs font-mono font-medium">{formatCurrency(g.total)}</span>
-                      </div>
-                      {g.items.map((item) => (
-                        <div key={item.inventory_master_id} className="flex justify-between text-[10px] text-muted-foreground">
-                          <span>{item.stock_title}</span>
-                          <span className="tabular-nums">{item.ordered_qty} {item.unit} @ {formatCurrency(Number(item.expected_rate))}</span>
-                        </div>
-                      ))}
-                      {g.altTotal > g.total && (
-                        <div className="mt-2 pt-1.5 border-t text-[10px] text-emerald-700 font-medium" data-testid={`po-group-savings-${gi}`}>
-                          Savings: {formatCurrency(g.altTotal - g.total)} ({Math.round((1 - g.total / g.altTotal) * 100)}%) vs most expensive option
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* BUG-044: Payment removed from By Item Need order details */}
-          <Card><CardContent className="p-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div><Label className="text-xs">Expected Delivery</Label><Input type="date" value={expectedDate} onChange={(e) => setExpectedDate(e.target.value)} className="h-8 text-xs" data-testid="po-need-date" /></div>
-              <div><Label className="text-xs">Notes</Label><Input value={notes} onChange={(e) => setNotes(e.target.value)} className="h-8 text-xs" placeholder="Optional" /></div>
-            </div>
-          </CardContent></Card>
-
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-muted-foreground">{checkedNeedLines.length} items &#8594; {poGroups.length} PO{poGroups.length > 1 ? "s" : ""}</p>
-            <div className="flex items-center gap-3">
-              {/* BUG-044: Total removed from pre-receive view */}
-              <Button size="sm" className="h-8 text-xs gap-1" onClick={handleSubmitNeed} disabled={submitting || poGroups.length === 0} data-testid="po-need-submit">
-                {submitting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
-                Create {poGroups.length} PO{poGroups.length > 1 ? "s" : ""}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* By Item Need mode removed — single vendor-based flow */}
     </div>
   );
 }

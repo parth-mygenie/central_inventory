@@ -114,8 +114,10 @@ export default function AddStockPurchaseForm() {
   const addLine = () => setLines((prev) => [...prev, createEmptyLine()]);
   const removeLine = (idx) => setLines((prev) => prev.filter((_, i) => i !== idx));
 
-  const validLines = lines.filter((l) => l.itemId && Number(l.quantity) > 0);
+  const validLines = lines.filter((l) => l.itemId && Number(l.quantity) > 0 && l.batch.trim() && l.expiryDate);
   const isValid = validLines.length > 0 && vendorId;
+  // Check if any line has item+qty but missing batch/expiry
+  const hasIncompleteLines = lines.some((l) => l.itemId && Number(l.quantity) > 0 && (!l.batch.trim() || !l.expiryDate));
 
   const selectedVendor = vendors.find((v) => String(v.id) === String(vendorId));
 
@@ -138,9 +140,9 @@ export default function AddStockPurchaseForm() {
         quantity: Number(line.quantity),
         unit: line.unit,
         vendor_id: Number(vendorId),
+        batch: line.batch.trim(),
+        expiry_date: line.expiryDate,
       };
-      if (line.batch.trim()) payload.batch = line.batch.trim();
-      if (line.expiryDate) payload.expiry_date = line.expiryDate;
       if (purchaseDate) payload.purchase_date = purchaseDate;
       if (paymentType) payload.payment_type = paymentType;
       if (line.price) payload.price = Number(line.price);
@@ -472,12 +474,14 @@ export default function AddStockPurchaseForm() {
 
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <Label className="text-[10px]">Batch Label</Label>
-                        <Input data-testid={`batch-input-${idx}`} value={line.batch} onChange={(e) => updateLine(idx, "batch", e.target.value)} placeholder="e.g. MAIDA-MAY-01" className="h-7 text-xs" />
+                        <Label className="text-[10px]">Batch Label *</Label>
+                        <Input data-testid={`batch-input-${idx}`} value={line.batch} onChange={(e) => updateLine(idx, "batch", e.target.value)} placeholder="e.g. MAIDA-MAY-01" className={`h-7 text-xs ${line.itemId && Number(line.quantity) > 0 && !line.batch.trim() ? "border-red-400 focus-visible:ring-red-400" : ""}`} />
+                        {line.itemId && Number(line.quantity) > 0 && !line.batch.trim() && <p className="text-[9px] text-red-500 mt-0.5">Batch label is required</p>}
                       </div>
                       <div>
-                        <Label className="text-[10px]">Expiry Date</Label>
-                        <Input data-testid={`expiry-input-${idx}`} type="date" value={line.expiryDate} onChange={(e) => updateLine(idx, "expiryDate", e.target.value)} className="h-7 text-xs" min={new Date(Date.now() + 86400000).toISOString().split("T")[0]} />
+                        <Label className="text-[10px]">Expiry Date *</Label>
+                        <Input data-testid={`expiry-input-${idx}`} type="date" value={line.expiryDate} onChange={(e) => updateLine(idx, "expiryDate", e.target.value)} className={`h-7 text-xs ${line.itemId && Number(line.quantity) > 0 && !line.expiryDate ? "border-red-400 focus-visible:ring-red-400" : ""}`} min={new Date(Date.now() + 86400000).toISOString().split("T")[0]} />
+                        {line.itemId && Number(line.quantity) > 0 && !line.expiryDate && <p className="text-[9px] text-red-500 mt-0.5">Expiry date is required</p>}
                       </div>
                     </div>
                     {showCommercial && (
@@ -521,11 +525,14 @@ export default function AddStockPurchaseForm() {
           </div>
 
           {/* Submit */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
             <Button variant="outline" onClick={resetForm} disabled={submitting}>Reset</Button>
             <Button data-testid="review-purchase-btn" onClick={() => setConfirmMode(true)} disabled={!isValid || submitting}>
               Review & Confirm ({validLines.length} item{validLines.length !== 1 ? "s" : ""})
             </Button>
+            {hasIncompleteLines && (
+              <span className="text-[10px] text-red-500">Fill batch & expiry for all items</span>
+            )}
           </div>
         </TabsContent>
       </Tabs>
