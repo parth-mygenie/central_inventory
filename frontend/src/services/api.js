@@ -750,7 +750,7 @@ function updateOperationalSettings(restaurantId, settings) {
   return client.post("/proxy/v2/inventory-transfer/operational-settings/update", {
     restaurant_id: restaurantId,
     settings,
-  });
+  }).then(r => { _invalidateCache(["getOperationalSettings:"]); return r; });
 }
 
 // ── P18 Vendor Management ────────────────────────────────────────
