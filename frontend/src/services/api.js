@@ -746,11 +746,18 @@ function _getOperationalSettings(restaurantId) {
 }
 const getOperationalSettings = _cached("getOperationalSettings", TTL.LONG, _getOperationalSettings);
 
-function updateOperationalSettings(restaurantId, settings) {
-  return client.post("/proxy/v2/inventory-transfer/operational-settings/update", {
+// POS API does full-replace on stored_settings (not merge).
+// Read current stored, merge the changed key(s), send the complete object.
+async function updateOperationalSettings(restaurantId, settings) {
+  const current = await _getOperationalSettings(restaurantId);
+  const currentStored = current.data?.data?.stored_settings || current.data?.stored_settings || {};
+  const merged = { ...currentStored, ...settings };
+  const resp = await client.post("/proxy/v2/inventory-transfer/operational-settings/update", {
     restaurant_id: restaurantId,
-    settings,
-  }).then(r => { _invalidateCache(["getOperationalSettings:"]); return r; });
+    settings: merged,
+  });
+  _invalidateCache(["getOperationalSettings:"]);
+  return resp;
 }
 
 // ── P18 Vendor Management ────────────────────────────────────────
