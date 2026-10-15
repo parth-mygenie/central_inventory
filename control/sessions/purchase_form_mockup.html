@@ -3,426 +3,594 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Purchase Form UX Mockup — CR-047</title>
+  <title>Procurement — Add Stock (Storekeeper UX Mockup v2)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8f9fa; }
-    .badge { display: inline-flex; align-items: center; border-radius: 9999px; padding: 1px 8px; font-size: 10px; font-weight: 600; }
-    .badge-new { background: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe; }
-    .badge-existing { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
-    .annotation { position: absolute; right: -180px; top: 50%; transform: translateY(-50%); width: 170px; font-size: 10px; color: #6366f1; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 6px; padding: 4px 8px; line-height: 1.4; }
-    .annotation::before { content: ''; position: absolute; left: -7px; top: 50%; transform: translateY(-50%); border: 4px solid transparent; border-right-color: #c7d2fe; }
-    .relative-wrap { position: relative; }
-    select, input[type=text], input[type=date], input[type=number] {
-      width: 100%; border: 1px solid #e2e8f0; border-radius: 6px; padding: 5px 10px;
-      font-size: 12px; background: white; outline: none; height: 32px;
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f1f5f9; min-height: 100vh; }
+
+    /* ── Table shell ── */
+    .purchase-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .purchase-table thead th {
+      background: #f8fafc; padding: 8px 10px; text-align: left;
+      font-size: 10px; font-weight: 600; color: #94a3b8; text-transform: uppercase;
+      letter-spacing: 0.07em; border-bottom: 2px solid #e2e8f0; white-space: nowrap;
     }
-    select:focus, input:focus { border-color: #818cf8; box-shadow: 0 0 0 2px rgba(129,140,248,0.2); }
-    .card { background: white; border: 1px solid #e2e8f0; border-radius: 10px; }
-    .section-label { font-size: 10px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; }
-    .item-row { border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; background: #fafafa; }
-    .item-row.complete { background: #f0fdf4; border-color: #86efac; }
-    .btn { display: inline-flex; align-items: center; gap: 4px; border-radius: 6px; padding: 5px 14px; font-size: 12px; font-weight: 500; cursor: pointer; border: none; }
-    .btn-primary { background: #1e293b; color: white; }
-    .btn-outline { background: white; color: #334155; border: 1px solid #e2e8f0; }
-    .btn-ghost { background: transparent; color: #64748b; border: 1px solid transparent; }
-    .btn-ghost:hover { background: #f1f5f9; }
-    .search-combo { position: relative; }
-    .search-combo input { padding-right: 28px; }
-    .search-combo .icon { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 11px; }
-    .dropdown-list { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #e2e8f0; border-radius: 6px; z-index: 50; box-shadow: 0 4px 16px rgba(0,0,0,0.08); max-height: 160px; overflow-y: auto; }
-    .dropdown-item { padding: 6px 10px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: between; }
-    .dropdown-item:hover { background: #f8fafc; }
-    .dropdown-item.add-new { color: #6366f1; font-weight: 500; border-top: 1px solid #f1f5f9; }
-    .auto-tag { font-size: 9px; background: #fef3c7; color: #92400e; border: 1px solid #fde68a; border-radius: 4px; padding: 1px 5px; margin-left: 4px; }
-    .confirm-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f1f5f9; }
-    .confirm-row:last-child { border-bottom: none; }
-    .total-row { display: flex; justify-content: space-between; padding: 10px 0 0; border-top: 2px solid #e2e8f0; margin-top: 4px; font-weight: 600; font-size: 13px; }
-    .tab { padding: 5px 14px; font-size: 12px; border-radius: 6px; cursor: pointer; color: #64748b; background: transparent; border: none; }
-    .tab.active { background: white; color: #1e293b; font-weight: 600; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
-    .payment-split-row { display: flex; gap: 8px; align-items: center; }
-    .vendor-chip { display: inline-flex; align-items: center; gap: 4px; background: #ede9fe; color: #6d28d9; border-radius: 20px; padding: 2px 8px; font-size: 10px; font-weight: 500; }
+    .purchase-table thead th.required::after { content: ' *'; color: #f87171; }
+
+    /* ── Row states ── */
+    .row-input td { border-bottom: 1px solid #f1f5f9; background: white; }
+    .row-input.active td { background: #fafffe; }
+    .row-input.complete td { background: #f0fdf4; }
+    .row-input.complete td:first-child { border-left: 3px solid #4ade80; }
+    .row-input.new-auto td { background: #fafafe; }
+    .row-input.new-auto td:first-child { border-left: 3px solid #a5b4fc; }
+
+    /* ── Inline cell inputs ── */
+    td.cell { padding: 6px 8px; vertical-align: middle; }
+    .cell-input {
+      width: 100%; border: 1px solid transparent; border-radius: 5px;
+      padding: 5px 8px; font-size: 12px; background: transparent; outline: none;
+      height: 32px; color: #1e293b;
+    }
+    .cell-input:focus {
+      border-color: #818cf8; background: white;
+      box-shadow: 0 0 0 2px rgba(129,140,248,0.15);
+    }
+    .cell-input.auto-filled { color: #64748b; font-style: normal; background: transparent; }
+    .cell-input.computed { color: #15803d; font-weight: 600; background: transparent; cursor: default; }
+    .cell-input.error { border-color: #fca5a5 !important; background: #fff5f5; }
+    .cell-input::placeholder { color: #cbd5e1; }
+
+    /* Item search cell */
+    .item-search-wrap { position: relative; }
+    .item-search-wrap .cell-input { padding-right: 24px; }
+    .search-arrow { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 10px; pointer-events: none; }
+
+    /* Dropdown */
+    .item-dropdown {
+      position: absolute; top: calc(100% + 2px); left: 0; right: 0;
+      background: white; border: 1px solid #e2e8f0; border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1); z-index: 100;
+      max-height: 200px; overflow-y: auto;
+    }
+    .item-dropdown-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 12px; font-size: 12px; cursor: pointer; transition: background 0.1s;
+    }
+    .item-dropdown-item:hover, .item-dropdown-item.selected { background: #f8fafc; }
+    .item-dropdown-item .stock-hint { font-size: 10px; color: #94a3b8; }
+    .item-dropdown-item.add-new { color: #6366f1; font-weight: 500; border-top: 1px solid #f1f5f9; font-size: 11px; }
+    .item-dropdown-empty { padding: 12px; font-size: 12px; color: #94a3b8; text-align: center; }
+
+    /* Unit badge (auto, read-only cell) */
+    .unit-badge {
+      display: inline-flex; align-items: center; background: #f1f5f9;
+      border-radius: 4px; padding: 3px 8px; font-size: 11px; color: #64748b;
+      font-weight: 500; width: 100%; justify-content: center;
+    }
+
+    /* Total cell */
+    .total-cell { font-size: 13px; font-weight: 700; color: #15803d; text-align: right; padding-right: 12px; }
+    .total-cell .computing { color: #94a3b8; font-weight: 400; font-size: 11px; }
+
+    /* Row action */
+    .row-delete { opacity: 0; color: #cbd5e1; cursor: pointer; padding: 0 4px; font-size: 14px; transition: all 0.15s; }
+    .row-input:hover .row-delete { opacity: 1; }
+    .row-delete:hover { color: #f87171; }
+
+    /* Grand total strip */
+    .grand-total-strip { background: #1e293b; color: white; border-radius: 0 0 10px 10px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
+
+    /* Top shared header */
+    .shared-header { background: white; border: 1px solid #e2e8f0; border-radius: 10px 10px 0 0; padding: 14px 16px; display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; border-bottom: none; }
+    select.header-select, input.header-input {
+      border: 1px solid #e2e8f0; border-radius: 6px; padding: 5px 10px;
+      font-size: 12px; height: 34px; background: white; color: #1e293b; outline: none;
+    }
+    select.header-select:focus, input.header-input:focus { border-color: #818cf8; box-shadow: 0 0 0 2px rgba(129,140,248,0.12); }
+
+    /* Confirm view */
+    .confirm-line { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 12px; }
+    .confirm-line:last-child { border-bottom: none; }
+
+    /* View toggle */
     [data-view] { display: none; }
     [data-view].active { display: block; }
-    @media print { .annotation { display: none; } }
+
+    /* Keyboard hint */
+    .kbd { display: inline-block; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 3px; padding: 1px 5px; font-size: 10px; font-family: monospace; color: #475569; }
+
+    /* New row pulse */
+    @keyframes rowSlide {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .row-new-anim { animation: rowSlide 0.18s ease-out; }
+
+    .badge-new { display:inline-flex;align-items:center;background:#dbeafe;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:9999px;padding:1px 7px;font-size:9px;font-weight:600;vertical-align:middle;margin-left:4px; }
   </style>
 </head>
-<body class="p-6">
+<body class="p-4 md:p-8">
+<div class="max-w-5xl mx-auto">
 
-  <!-- Header -->
-  <div class="max-w-2xl mx-auto">
-    <div class="flex items-center gap-3 mb-5">
-      <div class="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center">
-        <span class="text-white text-sm">&#9776;</span>
-      </div>
-      <div>
-        <h1 class="text-base font-bold text-slate-800">Procurement — Add Stock</h1>
-        <p class="text-xs text-slate-400">UX Mockup · CR-047 · Investigation 2026-10-15</p>
-      </div>
-      <div class="ml-auto flex gap-2">
-        <button class="btn btn-outline" onclick="showView('form')">Form View</button>
-        <button class="btn btn-primary" onclick="showView('confirm')">Confirm View</button>
-      </div>
+  <!-- Page title -->
+  <div class="flex items-center gap-3 mb-5">
+    <div style="width:34px;height:34px;background:#1e293b;border-radius:8px;display:flex;align-items:center;justify-content:center;">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
     </div>
-
-    <!-- Legend -->
-    <div class="flex gap-2 mb-4 flex-wrap">
-      <span class="badge badge-new">&#9679; NEW / CHANGED</span>
-      <span class="badge badge-existing">&#9679; EXISTING</span>
-      <span style="font-size:10px;color:#6366f1;font-weight:500;">&#9679; Purple annotations = issue reference</span>
+    <div>
+      <h1 style="font-size:16px;font-weight:700;color:#1e293b;">Procurement — Add Stock</h1>
+      <p style="font-size:11px;color:#94a3b8;">UX Mockup v2 · CR-047 Investigation · Storekeeper Flow</p>
     </div>
-
-    <!-- ───────── FORM VIEW ───────── -->
-    <div data-view="form" class="active">
-
-      <!-- Tabs (existing) -->
-      <div class="bg-slate-100 rounded-lg p-1 inline-flex mb-4">
-        <button class="tab active">Manual Entry</button>
-        <button class="tab">Upload Invoice</button>
-      </div>
-
-      <!-- ── ITEMS CARD ── -->
-      <div class="card p-4 mb-3">
-        <p class="section-label mb-3">Items</p>
-
-        <!-- Item Row 1 — complete (triggers auto-open) -->
-        <div class="item-row complete mb-3" id="row1">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-xs font-medium text-slate-500">Item 1</span>
-            <span class="badge badge-existing">existing row</span>
-          </div>
-
-          <!-- Issue 5: Searchable Combobox -->
-          <div class="mb-2">
-            <label class="block text-xs text-slate-500 mb-1">
-              Item * 
-              <span class="badge badge-new ml-1">Issue 5: Search + Add</span>
-            </label>
-            <div class="relative-wrap" style="position:relative">
-              <div class="search-combo">
-                <input type="text" value="Maida (kg)" placeholder="Search items..." />
-                <span class="icon">&#9660;</span>
-              </div>
-              <!-- dropdown hint (closed state) -->
-              <div style="font-size:10px;color:#15803d;margin-top:3px;">
-                ✓ Matched: <strong>Maida</strong> · Current stock: 24 kg
-              </div>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-3 gap-2 mb-2">
-            <div class="col-span-2">
-              <!-- Issue 1: Per-line vendor -->
-              <label class="block text-xs text-slate-500 mb-1">
-                Vendor *
-                <span class="badge badge-new ml-1">Issue 1: Per-line</span>
-              </label>
-              <div style="position:relative">
-                <select>
-                  <option value="">Select vendor</option>
-                  <option selected>Fresh Farms Pvt Ltd</option>
-                  <option>City Traders</option>
-                  <option>Metro Wholesale</option>
-                </select>
-                <div class="annotation">Issue 1: Vendor moved from top-level to each item row. API already supports per-line vendor_id.</div>
-              </div>
-            </div>
-            <div>
-              <label class="block text-xs text-slate-500 mb-1">Qty *</label>
-              <input type="number" value="50" placeholder="0" />
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-2 mb-2">
-            <div style="position:relative">
-              <label class="block text-xs text-slate-500 mb-1">
-                Batch Label *
-                <span class="badge badge-new ml-1">Issue 4: Auto-fill</span>
-                <span class="auto-tag">AUTO</span>
-              </label>
-              <input type="text" value="MAIDA-OCT-15" />
-              <div class="annotation">Issue 4: Auto-generated from item name + purchase date. Still editable.</div>
-            </div>
-            <div>
-              <label class="block text-xs text-slate-500 mb-1">Expiry Date *</label>
-              <input type="date" value="2027-04-15" />
-            </div>
-          </div>
-
-          <!-- Issue 2: Auto-calculated amount -->
-          <div class="grid grid-cols-3 gap-2 mb-1">
-            <div>
-              <label class="block text-xs text-slate-500 mb-1">Unit Price</label>
-              <input type="number" value="42.00" placeholder="0.00" />
-            </div>
-            <div style="position:relative">
-              <label class="block text-xs text-slate-500 mb-1">
-                Total Amount
-                <span class="badge badge-new ml-1">Issue 2: Auto-calc</span>
-              </label>
-              <input type="number" value="2100.00" style="background:#f0fdf4;border-color:#86efac;" readonly />
-              <div class="annotation">Issue 2: total = unit_price × qty (42 × 50 = 2100). Read-only unless user overrides.</div>
-            </div>
-            <div class="flex items-end pb-1">
-              <span style="font-size:10px;color:#15803d;">= 42 × 50</span>
-            </div>
-          </div>
-
-          <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:4px 8px;font-size:10px;color:#15803d;margin-top:4px;">
-            ✓ All fields complete
-            <span class="badge badge-new ml-2">Issue 6: triggers auto-open of Item 2</span>
-          </div>
-        </div>
-
-        <!-- Item Row 2 — auto-opened -->
-        <div class="item-row mb-3" id="row2" style="border-style:dashed;border-color:#818cf8;background:#fafafe;">
-          <div class="flex items-center justify-between mb-2">
-            <div class="flex items-center gap-2">
-              <span class="text-xs font-medium text-slate-500">Item 2</span>
-              <span class="badge badge-new">Issue 6: Auto-opened</span>
-            </div>
-            <button class="btn btn-ghost" style="font-size:10px;padding:2px 6px;">✕</button>
-          </div>
-
-          <!-- Combobox open state -->
-          <div class="mb-2" style="position:relative;">
-            <label class="block text-xs text-slate-500 mb-1">Item * <span style="font-size:10px;color:#6366f1;">(type to search)</span></label>
-            <div class="search-combo">
-              <input type="text" value="onio" placeholder="Search items..." style="border-color:#818cf8;" />
-              <span class="icon">&#9660;</span>
-            </div>
-            <!-- Dropdown open -->
-            <div class="dropdown-list" style="display:block;">
-              <div class="dropdown-item">Onion (kg) <span style="color:#94a3b8;font-size:10px;margin-left:auto">12.4 kg in stock</span></div>
-              <div class="dropdown-item" style="background:#f8fafc;">Onion Powder (g) <span style="color:#94a3b8;font-size:10px;margin-left:auto">0 g in stock</span></div>
-              <div class="dropdown-item add-new">+ Add "onio" to Catalogue</div>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-3 gap-2 mb-2" style="margin-top:8px;">
-            <div class="col-span-2">
-              <label class="block text-xs text-slate-500 mb-1">Vendor *</label>
-              <select><option>Select vendor</option><option>Fresh Farms Pvt Ltd</option><option>City Traders</option></select>
-            </div>
-            <div>
-              <label class="block text-xs text-slate-500 mb-1">Qty *</label>
-              <input type="number" placeholder="0" />
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-2 mb-2">
-            <div>
-              <label class="block text-xs text-slate-500 mb-1">Batch Label * <span class="auto-tag">AUTO</span></label>
-              <input type="text" placeholder="e.g. ONION-OCT-15" style="color:#94a3b8;" />
-            </div>
-            <div>
-              <label class="block text-xs text-slate-500 mb-1">Expiry Date *</label>
-              <input type="date" />
-            </div>
-          </div>
-          <div class="grid grid-cols-3 gap-2">
-            <div><label class="block text-xs text-slate-500 mb-1">Unit Price</label><input type="number" placeholder="0.00" /></div>
-            <div><label class="block text-xs text-slate-500 mb-1">Total Amount</label><input type="number" placeholder="0.00" style="background:#f8fafc;" readonly /></div>
-          </div>
-        </div>
-
-        <button class="btn btn-ghost w-full" style="border:1px dashed #e2e8f0;justify-content:center;">
-          + Add Another Item
-        </button>
-      </div>
-
-      <!-- ── PURCHASE DATE ── -->
-      <div class="card p-4 mb-3">
-        <p class="section-label mb-2">Purchase Info</p>
-        <div>
-          <label class="block text-xs text-slate-500 mb-1">Purchase Date</label>
-          <input type="date" value="2026-10-15" style="max-width:200px;" />
-        </div>
-        <p style="font-size:10px;color:#94a3b8;margin-top:4px;">Used for auto-batch label generation.</p>
-      </div>
-
-      <!-- ── PAYMENT (Issue 3) ── -->
-      <div class="card p-4 mb-4">
-        <div class="flex items-center justify-between mb-2">
-          <p class="section-label">Payment</p>
-          <span class="badge badge-new">Issue 3: Partial payment</span>
-        </div>
-
-        <!-- Split payment rows -->
-        <div id="paymentRows">
-          <div class="payment-split-row mb-2">
-            <select style="width:120px;flex-shrink:0;">
-              <option>Cash</option><option>Credit</option><option>Online</option><option>Tab</option>
-            </select>
-            <input type="number" value="1500.00" placeholder="Amount" style="flex:1;" />
-            <button class="btn btn-ghost" style="padding:4px 8px;color:#ef4444;">✕</button>
-          </div>
-          <div class="payment-split-row mb-2">
-            <select style="width:120px;flex-shrink:0;">
-              <option>Cash</option><option selected>Tab</option><option>Credit</option><option>Online</option>
-            </select>
-            <input type="number" value="600.00" placeholder="Amount" style="flex:1;" />
-            <button class="btn btn-ghost" style="padding:4px 8px;color:#ef4444;">✕</button>
-          </div>
-        </div>
-
-        <div class="flex items-center justify-between mt-1">
-          <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;" onclick="addPaymentRow()">+ Add payment type</button>
-          <div style="font-size:11px;color:#475569;">
-            Total entered: <strong style="color:#15803d;">₹2,100.00</strong>
-            &nbsp;·&nbsp; Item total: <strong>₹2,100.00</strong>
-            &nbsp;<span style="color:#15803d;">✓ balanced</span>
-          </div>
-        </div>
-        <p style="font-size:9px;color:#94a3b8;margin-top:4px;">* Dominant type sent to API. Full split stored as notes (G-035 tracks backend split support).</p>
-      </div>
-
-      <!-- Submit -->
-      <div class="flex gap-2 items-center">
-        <button class="btn btn-outline">Reset</button>
-        <button class="btn btn-primary" onclick="showView('confirm')">
-          Review &amp; Confirm (1 item)
-        </button>
-      </div>
+    <div style="margin-left:auto;display:flex;gap:8px;">
+      <button onclick="showView('form')" style="padding:5px 14px;border-radius:6px;font-size:12px;font-weight:500;border:1px solid #e2e8f0;background:white;cursor:pointer;">Form View</button>
+      <button onclick="showView('confirm')" style="padding:5px 14px;border-radius:6px;font-size:12px;font-weight:600;background:#1e293b;color:white;border:none;cursor:pointer;">Confirm View →</button>
     </div>
-
-    <!-- ───────── CONFIRM VIEW ───────── -->
-    <div data-view="confirm">
-      <h1 class="text-base font-bold mb-4 flex items-center gap-2">
-        <span>&#9989;</span> Confirm Stock Purchase
-        <span class="badge badge-new ml-1">Issue 7: prices shown</span>
-      </h1>
-
-      <div class="card p-4 mb-4">
-        <!-- Header: date only (no vendor — moved to per-line) -->
-        <div class="flex items-center gap-6 mb-3 pb-3 border-b border-slate-100">
-          <div>
-            <p class="text-xs text-slate-400">Purchase Date</p>
-            <p class="text-xs font-medium">2026-10-15</p>
-          </div>
-          <div>
-            <p class="text-xs text-slate-400">Items</p>
-            <p class="text-xs font-medium">1 line</p>
-          </div>
-          <div>
-            <p class="text-xs text-slate-400">Payment</p>
-            <p class="text-xs font-medium">Cash ₹1,500 + Tab ₹600</p>
-          </div>
-        </div>
-
-        <!-- Line items with prices (Issue 7) -->
-        <div class="confirm-row" style="flex-direction:column;align-items:flex-start;gap:6px;padding-bottom:12px;">
-          <div class="flex w-full items-start justify-between">
-            <div>
-              <p class="text-xs font-semibold">Maida</p>
-              <div class="flex items-center gap-2 mt-1 flex-wrap">
-                <span class="vendor-chip">Fresh Farms Pvt Ltd</span>
-                <span style="font-size:10px;color:#64748b;">Batch: MAIDA-OCT-15</span>
-                <span style="font-size:10px;color:#64748b;">Exp: 2027-04-15</span>
-              </div>
-            </div>
-            <div class="text-right">
-              <p class="text-xs font-mono font-semibold">50 kg</p>
-              <p style="font-size:10px;color:#64748b;">(24 → 74 kg after)</p>
-            </div>
-          </div>
-
-          <!-- Price row (NEW — Issue 7) -->
-          <div class="flex w-full justify-between items-center" style="background:#f8fafc;border-radius:6px;padding:6px 8px;">
-            <div class="flex gap-4">
-              <span style="font-size:10px;color:#64748b;">Unit price: <strong class="text-slate-700">₹42.00/kg</strong></span>
-              <span style="font-size:10px;color:#64748b;">× 50 kg</span>
-            </div>
-            <div>
-              <span style="font-size:12px;font-weight:600;color:#1e293b;">₹2,100.00</span>
-              <span class="badge badge-new ml-1">Issue 7</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Grand Total (NEW — Issue 7) -->
-        <div class="total-row">
-          <span class="text-slate-600">Grand Total</span>
-          <div class="flex items-center gap-2">
-            <span style="font-size:11px;color:#64748b;">1 item · 50 kg</span>
-            <span style="font-size:16px;font-weight:700;color:#1e293b;">₹2,100.00</span>
-            <span class="badge badge-new">Issue 7</span>
-          </div>
-        </div>
-
-        <!-- Payment breakdown on confirm -->
-        <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:8px;margin-top:12px;font-size:10px;color:#15803d;">
-          ✓ Payment: Cash ₹1,500 + Tab ₹600 = ₹2,100 (balanced)
-        </div>
-
-        <p style="font-size:10px;color:#94a3b8;margin-top:8px;">
-          This will increase stock at your store. Vendor purchase — not a transfer receive.
-        </p>
-      </div>
-
-      <div class="flex gap-2">
-        <button class="btn btn-outline" onclick="showView('form')">← Back to Edit</button>
-        <button class="btn btn-primary">
-          &#10003; Confirm &amp; Add Stock
-        </button>
-      </div>
-    </div>
-
-    <!-- Annotations legend -->
-    <div class="card p-4 mt-6" style="border-color:#c7d2fe;background:#fafaff;">
-      <p class="section-label mb-3">Issue Reference Map</p>
-      <div class="grid grid-cols-2 gap-2">
-        <div style="font-size:11px;padding:6px 8px;background:white;border:1px solid #e2e8f0;border-radius:6px;">
-          <strong>Issue 1</strong> — Vendor per item row<br>
-          <span style="color:#64748b;">Move vendor picker from shared to each line</span>
-        </div>
-        <div style="font-size:11px;padding:6px 8px;background:white;border:1px solid #e2e8f0;border-radius:6px;">
-          <strong>Issue 2</strong> — Auto-calc total amount<br>
-          <span style="color:#64748b;">total = unit_price × qty (read-only, overridable)</span>
-        </div>
-        <div style="font-size:11px;padding:6px 8px;background:white;border:1px solid #e2e8f0;border-radius:6px;">
-          <strong>Issue 3</strong> — Partial payment rows<br>
-          <span style="color:#64748b;">Add multiple type+amount pairs. Frontend only until G-035.</span>
-        </div>
-        <div style="font-size:11px;padding:6px 8px;background:white;border:1px solid #e2e8f0;border-radius:6px;">
-          <strong>Issue 4</strong> — Auto batch label<br>
-          <span style="color:#64748b;">{ITEM}-{MON}-{DD} from item + date. Still editable.</span>
-        </div>
-        <div style="font-size:11px;padding:6px 8px;background:white;border:1px solid #e2e8f0;border-radius:6px;">
-          <strong>Issue 5</strong> — Item searchable combobox<br>
-          <span style="color:#64748b;">Type to filter + "+ Add to Catalogue" option</span>
-        </div>
-        <div style="font-size:11px;padding:6px 8px;background:white;border:1px solid #e2e8f0;border-radius:6px;">
-          <strong>Issue 6</strong> — Auto-open next row<br>
-          <span style="color:#64748b;">When last row fills all 4 fields → new row appears + scrolls</span>
-        </div>
-        <div style="font-size:11px;padding:6px 8px;background:white;border:1px solid #e2e8f0;border-radius:6px;grid-column:span 2;">
-          <strong>Issue 7</strong> — Prices on confirm page<br>
-          <span style="color:#64748b;">Per-line: unit price + total. Grand total row at bottom. Payment summary.</span>
-        </div>
-      </div>
-    </div>
-
   </div>
 
-  <script>
-    function showView(v) {
-      document.querySelectorAll('[data-view]').forEach(el => el.classList.remove('active'));
-      document.querySelector(`[data-view="${v}"]`).classList.add('active');
-    }
+  <!-- ════════════════════════════════════════════════
+       FORM VIEW
+  ════════════════════════════════════════════════ -->
+  <div data-view="form" class="active">
 
-    function addPaymentRow() {
-      const container = document.getElementById('paymentRows');
-      const row = document.createElement('div');
-      row.className = 'payment-split-row mb-2';
-      row.innerHTML = `
-        <select style="width:120px;flex-shrink:0;">
-          <option>Cash</option><option>Credit</option><option>Online</option><option>Tab</option>
+    <!-- ── Shared header (vendor + date + payment) ── -->
+    <div class="shared-header">
+      <div>
+        <label style="display:block;font-size:10px;font-weight:600;color:#94a3b8;margin-bottom:4px;">VENDOR *</label>
+        <select class="header-select" style="min-width:200px;" id="vendorSelect">
+          <option value="">Select vendor…</option>
+          <option value="1" selected>Fresh Farms Pvt Ltd</option>
+          <option value="2">City Traders</option>
+          <option value="3">Metro Wholesale</option>
         </select>
-        <input type="number" placeholder="Amount" style="flex:1;border:1px solid #e2e8f0;border-radius:6px;padding:5px 10px;font-size:12px;height:32px;" />
-        <button class="btn btn-ghost" style="padding:4px 8px;color:#ef4444;" onclick="this.parentElement.remove()">✕</button>
-      `;
-      container.appendChild(row);
+      </div>
+      <div>
+        <label style="display:block;font-size:10px;font-weight:600;color:#94a3b8;margin-bottom:4px;">PURCHASE DATE</label>
+        <input type="date" class="header-input" value="2026-10-15" id="purchaseDate" oninput="refreshAllBatches()" />
+      </div>
+      <div>
+        <label style="display:block;font-size:10px;font-weight:600;color:#94a3b8;margin-bottom:4px;">PAYMENT TYPE</label>
+        <select class="header-select" id="paymentType">
+          <option value="Cash" selected>Cash</option>
+          <option value="Credit">Credit</option>
+          <option value="Online">Online</option>
+          <option value="Tab">Tab</option>
+        </select>
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:flex-end;gap:8px;font-size:11px;color:#94a3b8;">
+        <span class="kbd">Tab</span> next field &nbsp;
+        <span class="kbd">Enter</span> next row &nbsp;
+        <span class="kbd">↑↓</span> navigate rows
+      </div>
+    </div>
+
+    <!-- ── Item table ── -->
+    <div style="background:white;border:1px solid #e2e8f0;overflow:hidden;margin-bottom:0;">
+      <table class="purchase-table" id="purchaseTable">
+        <colgroup>
+          <col style="width:28%">  <!-- Item -->
+          <col style="width:8%">   <!-- Qty -->
+          <col style="width:6%">   <!-- Unit -->
+          <col style="width:14%">  <!-- Batch -->
+          <col style="width:11%">  <!-- Expiry -->
+          <col style="width:10%">  <!-- Unit Price -->
+          <col style="width:11%">  <!-- Total -->
+          <col style="width:4%">   <!-- × -->
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="required">Item</th>
+            <th class="required">Qty</th>
+            <th>Unit</th>
+            <th>Batch <span style="font-weight:400;color:#c7d2fe;">auto</span></th>
+            <th class="required">Expiry</th>
+            <th>Unit Price</th>
+            <th style="text-align:right;padding-right:12px;">Total</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <!-- Row 1 — complete example -->
+          <tr class="row-input complete" data-row="1">
+            <td class="cell">
+              <div class="item-search-wrap">
+                <input class="cell-input" type="text" value="Maida (kg)" tabindex="1" readonly />
+                <span class="search-arrow">▾</span>
+              </div>
+            </td>
+            <td class="cell"><input class="cell-input" type="number" value="50" tabindex="2" style="text-align:right;" /></td>
+            <td class="cell" style="padding:6px 4px;"><div class="unit-badge">kg</div></td>
+            <td class="cell"><input class="cell-input auto-filled" type="text" value="MAIDA-OCT-15" tabindex="-1" /></td>
+            <td class="cell"><input class="cell-input" type="date" value="2027-04-15" tabindex="3" /></td>
+            <td class="cell"><input class="cell-input" type="number" value="42.00" step="0.01" tabindex="4" style="text-align:right;" /></td>
+            <td class="cell total-cell">₹2,100</td>
+            <td class="cell" style="text-align:center;"><span class="row-delete" title="Remove">✕</span></td>
+          </tr>
+
+          <!-- Row 2 — active (cursor here) -->
+          <tr class="row-input active row-new-anim" data-row="2" id="activeRow">
+            <td class="cell">
+              <div class="item-search-wrap" id="searchWrap2" style="position:relative;">
+                <input
+                  class="cell-input"
+                  type="text"
+                  id="itemSearch2"
+                  placeholder="Type item name…"
+                  autocomplete="off"
+                  tabindex="5"
+                  oninput="filterItems(this)"
+                  onfocus="openDropdown(this)"
+                  onblur="closeDropdown(this)"
+                  onkeydown="handleSearchKey(event, this)"
+                />
+                <span class="search-arrow">▾</span>
+                <!-- Dropdown -->
+                <div class="item-dropdown" id="dropdown2" style="display:none;">
+                  <div class="item-dropdown-item selected" data-id="17" data-title="Onion" data-unit="kg" onmousedown="selectItem(this, 2)">
+                    <span>Onion <span style="color:#94a3b8;">(kg)</span></span>
+                    <span class="stock-hint">12.4 kg in stock</span>
+                  </div>
+                  <div class="item-dropdown-item" data-id="18" data-title="Onion Powder" data-unit="g" onmousedown="selectItem(this, 2)">
+                    <span>Onion Powder <span style="color:#94a3b8;">(g)</span></span>
+                    <span class="stock-hint">0 g in stock</span>
+                  </div>
+                  <div class="item-dropdown-item" data-id="19" data-title="Oil" data-unit="ltr" onmousedown="selectItem(this, 2)">
+                    <span>Oil <span style="color:#94a3b8;">(ltr)</span></span>
+                    <span class="stock-hint">5.6 ltr in stock</span>
+                  </div>
+                  <div class="item-dropdown-item add-new" onmousedown="addNewItem()">
+                    + Add new item to catalogue
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="cell"><input class="cell-input" type="number" id="qty2" placeholder="0" tabindex="6" style="text-align:right;" oninput="computeTotal(2)" onkeydown="handleRowKey(event,2,'qty')" /></td>
+            <td class="cell" style="padding:6px 4px;"><div class="unit-badge" id="unit2">—</div></td>
+            <td class="cell"><input class="cell-input auto-filled" type="text" id="batch2" placeholder="auto" tabindex="-1" readonly /></td>
+            <td class="cell"><input class="cell-input" type="date" id="expiry2" tabindex="7" onkeydown="handleRowKey(event,2,'expiry')" /></td>
+            <td class="cell"><input class="cell-input" type="number" id="price2" placeholder="0.00" step="0.01" tabindex="8" style="text-align:right;" oninput="computeTotal(2)" onkeydown="handleRowKey(event,2,'price')" /></td>
+            <td class="cell total-cell" id="total2"><span class="computing">—</span></td>
+            <td class="cell" style="text-align:center;"><span class="row-delete" title="Remove">✕</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Grand total strip -->
+      <div class="grand-total-strip">
+        <div style="display:flex;align-items:center;gap:16px;">
+          <span style="font-size:12px;color:#94a3b8;" id="rowCount">2 rows</span>
+          <button onclick="addRow()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:white;border-radius:6px;padding:4px 12px;font-size:11px;cursor:pointer;">+ Add row</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:20px;">
+          <div style="text-align:right;">
+            <span style="font-size:10px;color:#94a3b8;display:block;">GRAND TOTAL</span>
+            <span style="font-size:20px;font-weight:700;" id="grandTotal">₹2,100</span>
+          </div>
+          <button onclick="showView('confirm')" id="reviewBtn" style="background:#4ade80;color:#14532d;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;">
+            Review &amp; Confirm →
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Keyboard hint bar -->
+    <div style="margin-top:8px;font-size:10px;color:#94a3b8;display:flex;gap:16px;padding:0 4px;">
+      <span><span class="kbd">Tab</span> advance field</span>
+      <span><span class="kbd">Enter</span> / <span class="kbd">Tab</span> after price → new row</span>
+      <span><span class="kbd">↑ ↓</span> move rows</span>
+      <span><span class="kbd">Esc</span> close search</span>
+    </div>
+
+  </div><!-- /form view -->
+
+  <!-- ════════════════════════════════════════════════
+       CONFIRM VIEW
+  ════════════════════════════════════════════════ -->
+  <div data-view="confirm">
+
+    <div style="background:white;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin-bottom:16px;">
+      <!-- Confirm header -->
+      <div style="padding:16px;border-bottom:1px solid #f1f5f9;display:flex;gap:24px;flex-wrap:wrap;">
+        <div>
+          <p style="font-size:10px;color:#94a3b8;">VENDOR</p>
+          <p style="font-size:13px;font-weight:600;color:#1e293b;">Fresh Farms Pvt Ltd</p>
+        </div>
+        <div>
+          <p style="font-size:10px;color:#94a3b8;">DATE</p>
+          <p style="font-size:13px;font-weight:600;color:#1e293b;">15 Oct 2026</p>
+        </div>
+        <div>
+          <p style="font-size:10px;color:#94a3b8;">PAYMENT</p>
+          <p style="font-size:13px;font-weight:600;color:#1e293b;">Cash</p>
+        </div>
+        <div>
+          <p style="font-size:10px;color:#94a3b8;">ITEMS</p>
+          <p style="font-size:13px;font-weight:600;color:#1e293b;">2 lines</p>
+        </div>
+      </div>
+
+      <!-- Confirm table -->
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead>
+          <tr style="background:#f8fafc;">
+            <th style="padding:8px 16px;text-align:left;font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;border-bottom:1px solid #f1f5f9;">Item</th>
+            <th style="padding:8px;text-align:center;font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;border-bottom:1px solid #f1f5f9;">Qty</th>
+            <th style="padding:8px;text-align:left;font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;border-bottom:1px solid #f1f5f9;">Batch</th>
+            <th style="padding:8px;text-align:left;font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;border-bottom:1px solid #f1f5f9;">Expiry</th>
+            <th style="padding:8px;text-align:right;font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;border-bottom:1px solid #f1f5f9;">Unit Price</th>
+            <th style="padding:8px 16px;text-align:right;font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;border-bottom:1px solid #f1f5f9;">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #f8fafc;">
+            <td style="padding:12px 16px;">
+              <p style="font-weight:600;color:#1e293b;">Maida</p>
+              <p style="font-size:10px;color:#94a3b8;">Current stock: 24 kg → 74 kg after</p>
+            </td>
+            <td style="padding:12px 8px;text-align:center;font-weight:600;">50 kg</td>
+            <td style="padding:12px 8px;color:#64748b;">MAIDA-OCT-15</td>
+            <td style="padding:12px 8px;color:#64748b;">Apr 2027</td>
+            <td style="padding:12px 8px;text-align:right;">₹42.00</td>
+            <td style="padding:12px 16px;text-align:right;font-weight:700;color:#1e293b;">₹2,100.00</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f8fafc;">
+            <td style="padding:12px 16px;">
+              <p style="font-weight:600;color:#1e293b;">Onion</p>
+              <p style="font-size:10px;color:#94a3b8;">Current stock: 12.4 kg → 32.4 kg after</p>
+            </td>
+            <td style="padding:12px 8px;text-align:center;font-weight:600;">20 kg</td>
+            <td style="padding:12px 8px;color:#64748b;">ONION-OCT-15</td>
+            <td style="padding:12px 8px;color:#64748b;">Dec 2026</td>
+            <td style="padding:12px 8px;text-align:right;">₹18.00</td>
+            <td style="padding:12px 16px;text-align:right;font-weight:700;color:#1e293b;">₹360.00</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr style="background:#f8fafc;">
+            <td colspan="5" style="padding:12px 16px;font-size:12px;color:#64748b;font-style:italic;">
+              Stock will increase immediately on confirmation.
+            </td>
+            <td style="padding:12px 16px;text-align:right;">
+              <p style="font-size:10px;color:#94a3b8;margin-bottom:2px;">GRAND TOTAL</p>
+              <p style="font-size:20px;font-weight:800;color:#1e293b;">₹2,460.00</p>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div style="display:flex;gap:10px;align-items:center;">
+      <button onclick="showView('form')" style="padding:9px 18px;border-radius:7px;font-size:12px;border:1px solid #e2e8f0;background:white;cursor:pointer;">← Back to Edit</button>
+      <button style="padding:9px 22px;border-radius:7px;font-size:13px;font-weight:700;background:#1e293b;color:white;border:none;cursor:pointer;">
+        ✓ Confirm &amp; Add Stock
+      </button>
+    </div>
+  </div><!-- /confirm view -->
+
+</div><!-- /max-w -->
+
+<script>
+  // ── Sample item catalogue ──
+  const ITEMS = [
+    { id: 1, title: "Maida", unit: "kg", stock: "24 kg" },
+    { id: 2, title: "Wheat Flour", unit: "kg", stock: "10 kg" },
+    { id: 3, title: "Rice", unit: "kg", stock: "80 kg" },
+    { id: 4, title: "Sugar", unit: "kg", stock: "15 kg" },
+    { id: 5, title: "Salt", unit: "kg", stock: "5 kg" },
+    { id: 6, title: "Onion", unit: "kg", stock: "12.4 kg" },
+    { id: 7, title: "Onion Powder", unit: "g", stock: "0 g" },
+    { id: 8, title: "Oil", unit: "ltr", stock: "5.6 ltr" },
+    { id: 9, title: "Butter", unit: "kg", stock: "2 kg" },
+    { id: 10, title: "Tomato", unit: "kg", stock: "8 kg" },
+    { id: 11, title: "Garam Masala", unit: "g", stock: "300 g" },
+    { id: 12, title: "Cumin", unit: "g", stock: "120 g" },
+  ];
+
+  let rowCount = 2;
+
+  function getDateStr() {
+    return document.getElementById('purchaseDate').value || new Date().toISOString().split('T')[0];
+  }
+
+  function autoBatch(title, dateStr) {
+    if (!title || !dateStr) return '';
+    const slug = title.split(' ')[0].toUpperCase().substring(0, 8);
+    const d = new Date(dateStr + 'T00:00:00');
+    const mon = d.toLocaleString('en', { month: 'short' }).toUpperCase();
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${slug}-${mon}-${day}`;
+  }
+
+  function filterItems(input) {
+    const rowId = input.id.replace('itemSearch', '');
+    const dropdown = document.getElementById('dropdown' + rowId);
+    const q = input.value.toLowerCase().trim();
+    if (!q) { dropdown.style.display = 'none'; return; }
+    dropdown.style.display = 'block';
+
+    const matches = ITEMS.filter(i => i.title.toLowerCase().includes(q));
+    let html = matches.map(i => `
+      <div class="item-dropdown-item" data-id="${i.id}" data-title="${i.title}" data-unit="${i.unit}"
+           onmousedown="selectItemData(${i.id},'${i.title}','${i.unit}',${rowId})">
+        <span>${i.title} <span style="color:#94a3b8;">(${i.unit})</span></span>
+        <span class="stock-hint">${i.stock}</span>
+      </div>`).join('');
+    if (matches.length === 0) html = `<div class="item-dropdown-empty">No match — <span style="color:#6366f1;cursor:pointer;" onmousedown="addNewItem()">add to catalogue</span></div>`;
+    else html += `<div class="item-dropdown-item add-new" onmousedown="addNewItem()">+ Add new item to catalogue</div>`;
+    dropdown.innerHTML = html;
+  }
+
+  function openDropdown(input) {
+    const rowId = input.id.replace('itemSearch', '');
+    const dropdown = document.getElementById('dropdown' + rowId);
+    if (input.value.trim()) { filterItems(input); }
+    else {
+      dropdown.innerHTML = ITEMS.slice(0, 8).map(i => `
+        <div class="item-dropdown-item" data-id="${i.id}" data-title="${i.title}" data-unit="${i.unit}"
+             onmousedown="selectItemData(${i.id},'${i.title}','${i.unit}',${rowId})">
+          <span>${i.title} <span style="color:#94a3b8;">(${i.unit})</span></span>
+          <span class="stock-hint">${i.stock}</span>
+        </div>`).join('') +
+        `<div class="item-dropdown-item add-new" onmousedown="addNewItem()">+ Add new item to catalogue</div>`;
+      dropdown.style.display = 'block';
     }
-  </script>
+  }
+
+  function closeDropdown(input) {
+    setTimeout(() => {
+      const rowId = input.id.replace('itemSearch', '');
+      const d = document.getElementById('dropdown' + rowId);
+      if (d) d.style.display = 'none';
+    }, 200);
+  }
+
+  function selectItemData(id, title, unit, rowId) {
+    const input = document.getElementById('itemSearch' + rowId);
+    if (input) input.value = `${title} (${unit})`;
+    const u = document.getElementById('unit' + rowId);
+    if (u) u.textContent = unit;
+    const b = document.getElementById('batch' + rowId);
+    if (b) b.value = autoBatch(title, getDateStr());
+    const d = document.getElementById('dropdown' + rowId);
+    if (d) d.style.display = 'none';
+    // Move focus to Qty
+    const qty = document.getElementById('qty' + rowId);
+    if (qty) { qty.focus(); qty.select(); }
+  }
+
+  function selectItem(el, rowId) {
+    const title = el.dataset.title, unit = el.dataset.unit;
+    selectItemData(el.dataset.id, title, unit, rowId);
+  }
+
+  function handleSearchKey(e, input) {
+    const rowId = input.id.replace('itemSearch', '');
+    const dropdown = document.getElementById('dropdown' + rowId);
+    const items = dropdown.querySelectorAll('.item-dropdown-item:not(.add-new)');
+    if (e.key === 'ArrowDown' && items.length) { items[0].focus(); e.preventDefault(); }
+    if (e.key === 'Escape') { dropdown.style.display = 'none'; }
+    if (e.key === 'Enter' && items.length === 1) { items[0].dispatchEvent(new MouseEvent('mousedown')); }
+  }
+
+  function computeTotal(rowId) {
+    const qty = parseFloat(document.getElementById('qty' + rowId)?.value) || 0;
+    const price = parseFloat(document.getElementById('price' + rowId)?.value) || 0;
+    const totalCell = document.getElementById('total' + rowId);
+    if (!totalCell) return;
+    if (qty > 0 && price > 0) {
+      const t = qty * price;
+      totalCell.innerHTML = `<span style="color:#15803d;font-weight:700;">₹${t.toLocaleString('en-IN', {minimumFractionDigits:0, maximumFractionDigits:0})}</span>`;
+    } else {
+      totalCell.innerHTML = `<span class="computing">—</span>`;
+    }
+    updateGrandTotal();
+  }
+
+  function updateGrandTotal() {
+    // For demo: row 1 = 2100, compute others
+    let total = 2100; // row 1 static
+    for (let r = 2; r <= rowCount; r++) {
+      const qty = parseFloat(document.getElementById('qty' + r)?.value) || 0;
+      const price = parseFloat(document.getElementById('price' + r)?.value) || 0;
+      total += qty * price;
+    }
+    document.getElementById('grandTotal').textContent = `₹${total.toLocaleString('en-IN', {minimumFractionDigits:0})}`;
+  }
+
+  function handleRowKey(e, rowId, field) {
+    if (field === 'price' && (e.key === 'Tab' || e.key === 'Enter')) {
+      const qty = parseFloat(document.getElementById('qty' + rowId)?.value) || 0;
+      const price = parseFloat(document.getElementById('price' + rowId)?.value) || 0;
+      const hasItem = document.getElementById('itemSearch' + rowId)?.value.trim();
+      const hasExpiry = document.getElementById('expiry' + rowId)?.value;
+      if (hasItem && qty > 0 && hasExpiry && price > 0) {
+        e.preventDefault();
+        computeTotal(rowId);
+        // Highlight row as complete
+        const row = document.querySelector(`[data-row="${rowId}"]`);
+        if (row) { row.classList.remove('active','new-auto'); row.classList.add('complete'); }
+        setTimeout(() => addRow(), 100);
+      }
+    }
+    if (e.key === 'Enter' && field !== 'price') {
+      e.preventDefault();
+      // Move to next field
+      const order = ['qty', 'expiry', 'price'];
+      const idx = order.indexOf(field);
+      if (idx < order.length - 1) {
+        const next = document.getElementById(order[idx + 1] + rowId);
+        if (next) next.focus();
+      }
+    }
+  }
+
+  let nextTab = 9;
+  function addRow() {
+    rowCount++;
+    const id = rowCount;
+    const tbody = document.getElementById('tableBody');
+    const tr = document.createElement('tr');
+    tr.className = 'row-input new-auto row-new-anim';
+    tr.dataset.row = id;
+    tr.id = 'row' + id;
+    tr.innerHTML = `
+      <td class="cell">
+        <div class="item-search-wrap" id="searchWrap${id}" style="position:relative;">
+          <input class="cell-input" type="text" id="itemSearch${id}"
+            placeholder="Type item name…" autocomplete="off"
+            tabindex="${nextTab++}"
+            oninput="filterItems(this)"
+            onfocus="openDropdown(this)"
+            onblur="closeDropdown(this)"
+            onkeydown="handleSearchKey(event,this)"
+          />
+          <span class="search-arrow">▾</span>
+          <div class="item-dropdown" id="dropdown${id}" style="display:none;"></div>
+        </div>
+      </td>
+      <td class="cell"><input class="cell-input" type="number" id="qty${id}" placeholder="0" tabindex="${nextTab++}" style="text-align:right;" oninput="computeTotal(${id})" onkeydown="handleRowKey(event,${id},'qty')" /></td>
+      <td class="cell" style="padding:6px 4px;"><div class="unit-badge" id="unit${id}">—</div></td>
+      <td class="cell"><input class="cell-input auto-filled" type="text" id="batch${id}" placeholder="auto" tabindex="-1" readonly /></td>
+      <td class="cell"><input class="cell-input" type="date" id="expiry${id}" tabindex="${nextTab++}" onkeydown="handleRowKey(event,${id},'expiry')" /></td>
+      <td class="cell"><input class="cell-input" type="number" id="price${id}" placeholder="0.00" step="0.01" tabindex="${nextTab++}" style="text-align:right;" oninput="computeTotal(${id})" onkeydown="handleRowKey(event,${id},'price')" /></td>
+      <td class="cell total-cell" id="total${id}"><span class="computing">—</span></td>
+      <td class="cell" style="text-align:center;"><span class="row-delete" onclick="this.closest('tr').remove();rowCount--;updateGrandTotal();" title="Remove">✕</span></td>
+    `;
+    tbody.appendChild(tr);
+    document.getElementById('rowCount').textContent = `${rowCount} rows`;
+    // Focus item search of new row
+    setTimeout(() => {
+      const s = document.getElementById('itemSearch' + id);
+      if (s) { s.focus(); tr.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+    }, 80);
+  }
+
+  function refreshAllBatches() {
+    // Regenerate auto-batches when date changes (only if batch matches auto-pattern)
+    for (let r = 2; r <= rowCount; r++) {
+      const search = document.getElementById('itemSearch' + r);
+      const batch = document.getElementById('batch' + r);
+      if (!search || !batch) continue;
+      const title = search.value.split(' (')[0];
+      if (title && batch.value) batch.value = autoBatch(title, getDateStr());
+    }
+  }
+
+  function addNewItem() {
+    alert('Navigate to: Catalogue → Add New Item\n(In real app: opens catalogue modal or navigates to /catalogue/new)');
+  }
+
+  function showView(v) {
+    document.querySelectorAll('[data-view]').forEach(el => el.classList.remove('active'));
+    document.querySelector(`[data-view="${v}"]`).classList.add('active');
+  }
+
+  // Initial focus
+  window.onload = () => {
+    const s = document.getElementById('itemSearch2');
+    if (s) s.focus();
+  };
+</script>
 </body>
 </html>
