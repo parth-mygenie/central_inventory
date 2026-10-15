@@ -1,0 +1,96 @@
+{
+  "summary": "CR-047 Category-Scoped Forward Push - All features verified and working correctly. Store Management page loads with two outlets showing category badges (palmbharat 2/36, palmruby 36/36). Push button opens CategoryPushDialog (NOT direct push). Dialog shows Previously Pushed section with pre-selected categories and synced badges, Not Yet Pushed section with new badges. Resolution Preview auto-updates on category selection. Push button shows 'Push N Categories' and is disabled when 0 selected. Select All/None buttons work. Category search filters list. Push execution shows results with inserted/updated counts per module. Done button closes dialog and refreshes store list.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_results": {
+    "store_management_page_loads": {
+      "status": "PASS",
+      "evidence": "Page loads with data-testid='store-management', shows 2 stores in hierarchy"
+    },
+    "category_badges_display": {
+      "status": "PASS",
+      "evidence": "palmbharat (815) shows '2/36 categories' badge, palmruby (814) shows '36/36 categories' badge via data-testid='cat-badge-{childId}'"
+    },
+    "push_button_opens_dialog": {
+      "status": "PASS",
+      "evidence": "Clicking Push button on store row opens CategoryPushDialog with data-testid='category-push-dialog' (NOT a direct push)"
+    },
+    "previously_pushed_section": {
+      "status": "PASS",
+      "evidence": "Dialog shows 'Previously Pushed' section with COFFEE and Cake Cabinet pre-selected with 'synced' badges for palmbharat"
+    },
+    "not_yet_pushed_section": {
+      "status": "PASS",
+      "evidence": "Dialog shows 'Not Yet Pushed' section with unchecked categories with 'new' badges (34 new categories for palmbharat)"
+    },
+    "resolution_preview_auto_updates": {
+      "status": "PASS",
+      "evidence": "Resolution Preview panel with data-testid='push-preview' shows resolved_counts (Categories, Products, Addons, Recipes, Sub-Recipes, Ingredients, Stock Categories, Stock Items) and updates when categories are toggled"
+    },
+    "push_button_disabled_when_none_selected": {
+      "status": "PASS",
+      "evidence": "After clicking 'None' button, push button shows 'Push 0 Categories' and is disabled (is_disabled: True)"
+    },
+    "select_all_none_buttons": {
+      "status": "PASS",
+      "evidence": "Select All (data-testid='select-all-cats') selects all 36 categories, None (data-testid='deselect-all-cats') deselects all"
+    },
+    "category_search": {
+      "status": "PASS",
+      "evidence": "Search input (data-testid='cat-search') filters category list - searching 'COFFEE' shows only 1 row"
+    },
+    "push_execution_shows_results": {
+      "status": "PASS",
+      "evidence": "Push with 2 categories completed successfully. Results panel (data-testid='push-results') shows: Categories 2 upd, Products 63 upd, Addons 7 upd, Recipes 4 upd, Ingredients 8 upd, Stock Categories 3 upd"
+    },
+    "done_button_closes_dialog": {
+      "status": "PASS",
+      "evidence": "Done button (data-testid='push-done-btn') closes dialog and refreshes store list. Toast shows 'Push complete — 2 categories synced'"
+    },
+    "fully_synced_store_dialog": {
+      "status": "PASS",
+      "evidence": "palmruby (814) with 36/36 categories: dialog shows all 36 pre-selected, only 'Previously Pushed' section visible, 37 synced badges, 0 new badges"
+    }
+  },
+  "test_report_links": [
+    "/app/.screenshots/cr047_01_initial_load.png",
+    "/app/.screenshots/cr047_02_after_login.png",
+    "/app/.screenshots/cr047_03_store_management.png",
+    "/app/.screenshots/cr047_04_store_list.png",
+    "/app/.screenshots/cr047_05_push_dialog.png",
+    "/app/.screenshots/cr047_06_dialog_content.png",
+    "/app/.screenshots/cr047_07_deselect_all.png",
+    "/app/.screenshots/cr047_08_select_all.png",
+    "/app/.screenshots/cr047_09_search.png",
+    "/app/.screenshots/cr047_10_before_push.png",
+    "/app/.screenshots/cr047_11_push_loading.png",
+    "/app/.screenshots/cr047_12_push_results.png",
+    "/app/.screenshots/cr047_13_after_done.png",
+    "/app/.screenshots/cr047_14_palmruby_dialog.png"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (frontend only testing)",
+    "frontend": "100% (12/12 test cases passed)"
+  },
+  "test_credentials": {
+    "master": "owner@palmcentral.com / Qplazm@10 (RID 813)",
+    "child_outlets": [
+      "palmbharat (RID 815, franchise) - 2/36 categories pushed",
+      "palmruby (RID 814, franchise) - 36/36 categories pushed (fully synced)"
+    ]
+  },
+  "seed_data_creation": "None. Used existing test data.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "CR-047 Category-Scoped Forward Push is fully implemented and working. All 10 features from the review request have been verified: (1) Store Management page with category badges, (2) Push button opens CategoryPushDialog, (3) Previously Pushed section with pre-selected categories and synced badges, (4) Not Yet Pushed section with new badges, (5) Resolution Preview auto-updates, (6) Push button disabled when no categories selected, (7) Select All/None buttons, (8) Category search, (9) Push results with inserted/updated counts, (10) Done button closes dialog and refreshes list. The push operation takes ~30s to complete. Backend proxy to preprod.mygenie.online is working correctly."
+}
