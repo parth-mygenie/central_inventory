@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Purchase Form UX Mockup — CR-047</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8f9fa; }
+    .badge { display: inline-flex; align-items: center; border-radius: 9999px; padding: 1px 8px; font-size: 10px; font-weight: 600; }
+    .badge-new { background: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .badge-existing { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+    .annotation { position: absolute; right: -180px; top: 50%; transform: translateY(-50%); width: 170px; font-size: 10px; color: #6366f1; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 6px; padding: 4px 8px; line-height: 1.4; }
+    .annotation::before { content: ''; position: absolute; left: -7px; top: 50%; transform: translateY(-50%); border: 4px solid transparent; border-right-color: #c7d2fe; }
+    .relative-wrap { position: relative; }
+    select, input[type=text], input[type=date], input[type=number] {
+      width: 100%; border: 1px solid #e2e8f0; border-radius: 6px; padding: 5px 10px;
+      font-size: 12px; background: white; outline: none; height: 32px;
+    }
+    select:focus, input:focus { border-color: #818cf8; box-shadow: 0 0 0 2px rgba(129,140,248,0.2); }
+    .card { background: white; border: 1px solid #e2e8f0; border-radius: 10px; }
+    .section-label { font-size: 10px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; }
+    .item-row { border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; background: #fafafa; }
+    .item-row.complete { background: #f0fdf4; border-color: #86efac; }
+    .btn { display: inline-flex; align-items: center; gap: 4px; border-radius: 6px; padding: 5px 14px; font-size: 12px; font-weight: 500; cursor: pointer; border: none; }
+    .btn-primary { background: #1e293b; color: white; }
+    .btn-outline { background: white; color: #334155; border: 1px solid #e2e8f0; }
+    .btn-ghost { background: transparent; color: #64748b; border: 1px solid transparent; }
+    .btn-ghost:hover { background: #f1f5f9; }
+    .search-combo { position: relative; }
+    .search-combo input { padding-right: 28px; }
+    .search-combo .icon { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 11px; }
+    .dropdown-list { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #e2e8f0; border-radius: 6px; z-index: 50; box-shadow: 0 4px 16px rgba(0,0,0,0.08); max-height: 160px; overflow-y: auto; }
+    .dropdown-item { padding: 6px 10px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: between; }
+    .dropdown-item:hover { background: #f8fafc; }
+    .dropdown-item.add-new { color: #6366f1; font-weight: 500; border-top: 1px solid #f1f5f9; }
+    .auto-tag { font-size: 9px; background: #fef3c7; color: #92400e; border: 1px solid #fde68a; border-radius: 4px; padding: 1px 5px; margin-left: 4px; }
+    .confirm-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f1f5f9; }
+    .confirm-row:last-child { border-bottom: none; }
+    .total-row { display: flex; justify-content: space-between; padding: 10px 0 0; border-top: 2px solid #e2e8f0; margin-top: 4px; font-weight: 600; font-size: 13px; }
+    .tab { padding: 5px 14px; font-size: 12px; border-radius: 6px; cursor: pointer; color: #64748b; background: transparent; border: none; }
+    .tab.active { background: white; color: #1e293b; font-weight: 600; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+    .payment-split-row { display: flex; gap: 8px; align-items: center; }
+    .vendor-chip { display: inline-flex; align-items: center; gap: 4px; background: #ede9fe; color: #6d28d9; border-radius: 20px; padding: 2px 8px; font-size: 10px; font-weight: 500; }
+    [data-view] { display: none; }
+    [data-view].active { display: block; }
+    @media print { .annotation { display: none; } }
+  </style>
+</head>
+<body class="p-6">
+
+  <!-- Header -->
+  <div class="max-w-2xl mx-auto">
+    <div class="flex items-center gap-3 mb-5">
+      <div class="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center">
+        <span class="text-white text-sm">&#9776;</span>
+      </div>
+      <div>
+        <h1 class="text-base font-bold text-slate-800">Procurement — Add Stock</h1>
+        <p class="text-xs text-slate-400">UX Mockup · CR-047 · Investigation 2026-10-15</p>
+      </div>
+      <div class="ml-auto flex gap-2">
+        <button class="btn btn-outline" onclick="showView('form')">Form View</button>
+        <button class="btn btn-primary" onclick="showView('confirm')">Confirm View</button>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="flex gap-2 mb-4 flex-wrap">
+      <span class="badge badge-new">&#9679; NEW / CHANGED</span>
+      <span class="badge badge-existing">&#9679; EXISTING</span>
+      <span style="font-size:10px;color:#6366f1;font-weight:500;">&#9679; Purple annotations = issue reference</span>
+    </div>
+
+    <!-- ───────── FORM VIEW ───────── -->
+    <div data-view="form" class="active">
+
+      <!-- Tabs (existing) -->
+      <div class="bg-slate-100 rounded-lg p-1 inline-flex mb-4">
+        <button class="tab active">Manual Entry</button>
+        <button class="tab">Upload Invoice</button>
+      </div>
+
+      <!-- ── ITEMS CARD ── -->
+      <div class="card p-4 mb-3">
+        <p class="section-label mb-3">Items</p>
+
+        <!-- Item Row 1 — complete (triggers auto-open) -->
+        <div class="item-row complete mb-3" id="row1">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-medium text-slate-500">Item 1</span>
+            <span class="badge badge-existing">existing row</span>
+          </div>
+
+          <!-- Issue 5: Searchable Combobox -->
+          <div class="mb-2">
+            <label class="block text-xs text-slate-500 mb-1">
+              Item * 
+              <span class="badge badge-new ml-1">Issue 5: Search + Add</span>
+            </label>
+            <div class="relative-wrap" style="position:relative">
+              <div class="search-combo">
+                <input type="text" value="Maida (kg)" placeholder="Search items..." />
+                <span class="icon">&#9660;</span>
+              </div>
+              <!-- dropdown hint (closed state) -->
+              <div style="font-size:10px;color:#15803d;margin-top:3px;">
+                ✓ Matched: <strong>Maida</strong> · Current stock: 24 kg
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 mb-2">
+            <div class="col-span-2">
+              <!-- Issue 1: Per-line vendor -->
+              <label class="block text-xs text-slate-500 mb-1">
+                Vendor *
+                <span class="badge badge-new ml-1">Issue 1: Per-line</span>
+              </label>
+              <div style="position:relative">
+                <select>
+                  <option value="">Select vendor</option>
+                  <option selected>Fresh Farms Pvt Ltd</option>
+                  <option>City Traders</option>
+                  <option>Metro Wholesale</option>
+                </select>
+                <div class="annotation">Issue 1: Vendor moved from top-level to each item row. API already supports per-line vendor_id.</div>
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs text-slate-500 mb-1">Qty *</label>
+              <input type="number" value="50" placeholder="0" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 mb-2">
+            <div style="position:relative">
+              <label class="block text-xs text-slate-500 mb-1">
+                Batch Label *
+                <span class="badge badge-new ml-1">Issue 4: Auto-fill</span>
+                <span class="auto-tag">AUTO</span>
+              </label>
+              <input type="text" value="MAIDA-OCT-15" />
+              <div class="annotation">Issue 4: Auto-generated from item name + purchase date. Still editable.</div>
+            </div>
+            <div>
+              <label class="block text-xs text-slate-500 mb-1">Expiry Date *</label>
+              <input type="date" value="2027-04-15" />
+            </div>
+          </div>
+
+          <!-- Issue 2: Auto-calculated amount -->
+          <div class="grid grid-cols-3 gap-2 mb-1">
+            <div>
+              <label class="block text-xs text-slate-500 mb-1">Unit Price</label>
+              <input type="number" value="42.00" placeholder="0.00" />
+            </div>
+            <div style="position:relative">
+              <label class="block text-xs text-slate-500 mb-1">
+                Total Amount
+                <span class="badge badge-new ml-1">Issue 2: Auto-calc</span>
+              </label>
+              <input type="number" value="2100.00" style="background:#f0fdf4;border-color:#86efac;" readonly />
+              <div class="annotation">Issue 2: total = unit_price × qty (42 × 50 = 2100). Read-only unless user overrides.</div>
+            </div>
+            <div class="flex items-end pb-1">
+              <span style="font-size:10px;color:#15803d;">= 42 × 50</span>
+            </div>
+          </div>
+
+          <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:4px 8px;font-size:10px;color:#15803d;margin-top:4px;">
+            ✓ All fields complete
+            <span class="badge badge-new ml-2">Issue 6: triggers auto-open of Item 2</span>
+          </div>
+        </div>
+
+        <!-- Item Row 2 — auto-opened -->
+        <div class="item-row mb-3" id="row2" style="border-style:dashed;border-color:#818cf8;background:#fafafe;">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-medium text-slate-500">Item 2</span>
+              <span class="badge badge-new">Issue 6: Auto-opened</span>
+            </div>
+            <button class="btn btn-ghost" style="font-size:10px;padding:2px 6px;">✕</button>
+          </div>
+
+          <!-- Combobox open state -->
+          <div class="mb-2" style="position:relative;">
+            <label class="block text-xs text-slate-500 mb-1">Item * <span style="font-size:10px;color:#6366f1;">(type to search)</span></label>
+            <div class="search-combo">
+              <input type="text" value="onio" placeholder="Search items..." style="border-color:#818cf8;" />
+              <span class="icon">&#9660;</span>
+            </div>
+            <!-- Dropdown open -->
+            <div class="dropdown-list" style="display:block;">
+              <div class="dropdown-item">Onion (kg) <span style="color:#94a3b8;font-size:10px;margin-left:auto">12.4 kg in stock</span></div>
+              <div class="dropdown-item" style="background:#f8fafc;">Onion Powder (g) <span style="color:#94a3b8;font-size:10px;margin-left:auto">0 g in stock</span></div>
+              <div class="dropdown-item add-new">+ Add "onio" to Catalogue</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 mb-2" style="margin-top:8px;">
+            <div class="col-span-2">
+              <label class="block text-xs text-slate-500 mb-1">Vendor *</label>
+              <select><option>Select vendor</option><option>Fresh Farms Pvt Ltd</option><option>City Traders</option></select>
+            </div>
+            <div>
+              <label class="block text-xs text-slate-500 mb-1">Qty *</label>
+              <input type="number" placeholder="0" />
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2 mb-2">
+            <div>
+              <label class="block text-xs text-slate-500 mb-1">Batch Label * <span class="auto-tag">AUTO</span></label>
+              <input type="text" placeholder="e.g. ONION-OCT-15" style="color:#94a3b8;" />
+            </div>
+            <div>
+              <label class="block text-xs text-slate-500 mb-1">Expiry Date *</label>
+              <input type="date" />
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-2">
+            <div><label class="block text-xs text-slate-500 mb-1">Unit Price</label><input type="number" placeholder="0.00" /></div>
+            <div><label class="block text-xs text-slate-500 mb-1">Total Amount</label><input type="number" placeholder="0.00" style="background:#f8fafc;" readonly /></div>
+          </div>
+        </div>
+
+        <button class="btn btn-ghost w-full" style="border:1px dashed #e2e8f0;justify-content:center;">
+          + Add Another Item
+        </button>
+      </div>
+
+      <!-- ── PURCHASE DATE ── -->
+      <div class="card p-4 mb-3">
+        <p class="section-label mb-2">Purchase Info</p>
+        <div>
+          <label class="block text-xs text-slate-500 mb-1">Purchase Date</label>
+          <input type="date" value="2026-10-15" style="max-width:200px;" />
+        </div>
+        <p style="font-size:10px;color:#94a3b8;margin-top:4px;">Used for auto-batch label generation.</p>
+      </div>
+
+      <!-- ── PAYMENT (Issue 3) ── -->
+      <div class="card p-4 mb-4">
+        <div class="flex items-center justify-between mb-2">
+          <p class="section-label">Payment</p>
+          <span class="badge badge-new">Issue 3: Partial payment</span>
+        </div>
+
+        <!-- Split payment rows -->
+        <div id="paymentRows">
+          <div class="payment-split-row mb-2">
+            <select style="width:120px;flex-shrink:0;">
+              <option>Cash</option><option>Credit</option><option>Online</option><option>Tab</option>
+            </select>
+            <input type="number" value="1500.00" placeholder="Amount" style="flex:1;" />
+            <button class="btn btn-ghost" style="padding:4px 8px;color:#ef4444;">✕</button>
+          </div>
+          <div class="payment-split-row mb-2">
+            <select style="width:120px;flex-shrink:0;">
+              <option>Cash</option><option selected>Tab</option><option>Credit</option><option>Online</option>
+            </select>
+            <input type="number" value="600.00" placeholder="Amount" style="flex:1;" />
+            <button class="btn btn-ghost" style="padding:4px 8px;color:#ef4444;">✕</button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between mt-1">
+          <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;" onclick="addPaymentRow()">+ Add payment type</button>
+          <div style="font-size:11px;color:#475569;">
+            Total entered: <strong style="color:#15803d;">₹2,100.00</strong>
+            &nbsp;·&nbsp; Item total: <strong>₹2,100.00</strong>
+            &nbsp;<span style="color:#15803d;">✓ balanced</span>
+          </div>
+        </div>
+        <p style="font-size:9px;color:#94a3b8;margin-top:4px;">* Dominant type sent to API. Full split stored as notes (G-035 tracks backend split support).</p>
+      </div>
+
+      <!-- Submit -->
+      <div class="flex gap-2 items-center">
+        <button class="btn btn-outline">Reset</button>
+        <button class="btn btn-primary" onclick="showView('confirm')">
+          Review &amp; Confirm (1 item)
+        </button>
+      </div>
+    </div>
+
+    <!-- ───────── CONFIRM VIEW ───────── -->
+    <div data-view="confirm">
+      <h1 class="text-base font-bold mb-4 flex items-center gap-2">
+        <span>&#9989;</span> Confirm Stock Purchase
+        <span class="badge badge-new ml-1">Issue 7: prices shown</span>
+      </h1>
+
+      <div class="card p-4 mb-4">
+        <!-- Header: date only (no vendor — moved to per-line) -->
+        <div class="flex items-center gap-6 mb-3 pb-3 border-b border-slate-100">
+          <div>
+            <p class="text-xs text-slate-400">Purchase Date</p>
+            <p class="text-xs font-medium">2026-10-15</p>
+          </div>
+          <div>
+            <p class="text-xs text-slate-400">Items</p>
+            <p class="text-xs font-medium">1 line</p>
+          </div>
+          <div>
+            <p class="text-xs text-slate-400">Payment</p>
+            <p class="text-xs font-medium">Cash ₹1,500 + Tab ₹600</p>
+          </div>
+        </div>
+
+        <!-- Line items with prices (Issue 7) -->
+        <div class="confirm-row" style="flex-direction:column;align-items:flex-start;gap:6px;padding-bottom:12px;">
+          <div class="flex w-full items-start justify-between">
+            <div>
+              <p class="text-xs font-semibold">Maida</p>
+              <div class="flex items-center gap-2 mt-1 flex-wrap">
+                <span class="vendor-chip">Fresh Farms Pvt Ltd</span>
+                <span style="font-size:10px;color:#64748b;">Batch: MAIDA-OCT-15</span>
+                <span style="font-size:10px;color:#64748b;">Exp: 2027-04-15</span>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="text-xs font-mono font-semibold">50 kg</p>
+              <p style="font-size:10px;color:#64748b;">(24 → 74 kg after)</p>
+            </div>
+          </div>
+
+          <!-- Price row (NEW — Issue 7) -->
+          <div class="flex w-full justify-between items-center" style="background:#f8fafc;border-radius:6px;padding:6px 8px;">
+            <div class="flex gap-4">
+              <span style="font-size:10px;color:#64748b;">Unit price: <strong class="text-slate-700">₹42.00/kg</strong></span>
+              <span style="font-size:10px;color:#64748b;">× 50 kg</span>
+            </div>
+            <div>
+              <span style="font-size:12px;font-weight:600;color:#1e293b;">₹2,100.00</span>
+              <span class="badge badge-new ml-1">Issue 7</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grand Total (NEW — Issue 7) -->
+        <div class="total-row">
+          <span class="text-slate-600">Grand Total</span>
+          <div class="flex items-center gap-2">
+            <span style="font-size:11px;color:#64748b;">1 item · 50 kg</span>
+            <span style="font-size:16px;font-weight:700;color:#1e293b;">₹2,100.00</span>
+            <span class="badge badge-new">Issue 7</span>
+          </div>
+        </div>
+
+        <!-- Payment breakdown on confirm -->
+        <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:8px;margin-top:12px;font-size:10px;color:#15803d;">
+          ✓ Payment: Cash ₹1,500 + Tab ₹600 = ₹2,100 (balanced)
+        </div>
+
+        <p style="font-size:10px;color:#94a3b8;margin-top:8px;">
+          This will increase stock at your store. Vendor purchase — not a transfer receive.
+        </p>
+      </div>
+
+      <div class="flex gap-2">
+        <button class="btn btn-outline" onclick="showView('form')">← Back to Edit</button>
+        <button class="btn btn-primary">
+          &#10003; Confirm &amp; Add Stock
+        </button>
+      </div>
+    </div>
+
+    <!-- Annotations legend -->
+    <div class="card p-4 mt-6" style="border-color:#c7d2fe;background:#fafaff;">
+      <p class="section-label mb-3">Issue Reference Map</p>
+      <div class="grid grid-cols-2 gap-2">
+        <div style="font-size:11px;padding:6px 8px;background:white;border:1px solid #e2e8f0;border-radius:6px;">
+          <strong>Issue 1</strong> — Vendor per item row<br>
+          <span style="color:#64748b;">Move vendor picker from shared to each line</span>
+        </div>
+        <div style="font-size:11px;padding:6px 8px;background:white;border:1px solid #e2e8f0;border-radius:6px;">
+          <strong>Issue 2</strong> — Auto-calc total amount<br>
+          <span style="color:#64748b;">total = unit_price × qty (read-only, overridable)</span>
+        </div>
+        <div style="font-size:11px;padding:6px 8px;background:white;border:1px solid #e2e8f0;border-radius:6px;">
+          <strong>Issue 3</strong> — Partial payment rows<br>
+          <span style="color:#64748b;">Add multiple type+amount pairs. Frontend only until G-035.</span>
+        </div>
+        <div style="font-size:11px;padding:6px 8px;background:white;border:1px solid #e2e8f0;border-radius:6px;">
+          <strong>Issue 4</strong> — Auto batch label<br>
+          <span style="color:#64748b;">{ITEM}-{MON}-{DD} from item + date. Still editable.</span>
+        </div>
+        <div style="font-size:11px;padding:6px 8px;background:white;border:1px solid #e2e8f0;border-radius:6px;">
+          <strong>Issue 5</strong> — Item searchable combobox<br>
+          <span style="color:#64748b;">Type to filter + "+ Add to Catalogue" option</span>
+        </div>
+        <div style="font-size:11px;padding:6px 8px;background:white;border:1px solid #e2e8f0;border-radius:6px;">
+          <strong>Issue 6</strong> — Auto-open next row<br>
+          <span style="color:#64748b;">When last row fills all 4 fields → new row appears + scrolls</span>
+        </div>
+        <div style="font-size:11px;padding:6px 8px;background:white;border:1px solid #e2e8f0;border-radius:6px;grid-column:span 2;">
+          <strong>Issue 7</strong> — Prices on confirm page<br>
+          <span style="color:#64748b;">Per-line: unit price + total. Grand total row at bottom. Payment summary.</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function showView(v) {
+      document.querySelectorAll('[data-view]').forEach(el => el.classList.remove('active'));
+      document.querySelector(`[data-view="${v}"]`).classList.add('active');
+    }
+
+    function addPaymentRow() {
+      const container = document.getElementById('paymentRows');
+      const row = document.createElement('div');
+      row.className = 'payment-split-row mb-2';
+      row.innerHTML = `
+        <select style="width:120px;flex-shrink:0;">
+          <option>Cash</option><option>Credit</option><option>Online</option><option>Tab</option>
+        </select>
+        <input type="number" placeholder="Amount" style="flex:1;border:1px solid #e2e8f0;border-radius:6px;padding:5px 10px;font-size:12px;height:32px;" />
+        <button class="btn btn-ghost" style="padding:4px 8px;color:#ef4444;" onclick="this.parentElement.remove()">✕</button>
+      `;
+      container.appendChild(row);
+    }
+  </script>
+</body>
+</html>
