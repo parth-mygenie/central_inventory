@@ -90,6 +90,10 @@
 
     /* Suggest row label */
     .sug-label { font-size: 9px; font-weight: 700; color: #ea580c; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 3px; padding: 1px 5px; margin-left: 4px; }
+
+    /* Coverage days pills */
+    .cover-pill { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1px solid #e2e8f0; background: white; color: #64748b; transition: all 0.12s; }
+    .cover-pill.active { background: #1e293b; color: white; border-color: #1e293b; }
   </style>
 </head>
 <body class="p-4 md:p-8">
@@ -174,7 +178,20 @@
     <div class="hdr-bar">
       <div><label style="display:block;font-size:10px;font-weight:600;color:#94a3b8;margin-bottom:3px;">EXPECTED DELIVERY</label><input type="date" class="hs" value="2026-10-20" /></div>
       <div style="flex:1;"><label style="display:block;font-size:10px;font-weight:600;color:#94a3b8;margin-bottom:3px;">NOTES</label><input type="text" class="hs" style="width:100%;" placeholder="Optional" /></div>
-      <div style="font-size:10px;color:#ea580c;background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;padding:6px 10px;"><strong>3 suggested</strong> (OOS or low stock)</div>
+
+      <!-- Coverage Days Selector — THE MISSING PIECE -->
+      <div>
+        <label style="display:block;font-size:10px;font-weight:600;color:#94a3b8;margin-bottom:3px;">ORDER COVER</label>
+        <div style="display:flex;gap:3px;" id="coverPills">
+          <button class="cover-pill" data-days="3" onclick="setCover(3)">3d</button>
+          <button class="cover-pill active" data-days="7" onclick="setCover(7)">7d</button>
+          <button class="cover-pill" data-days="10" onclick="setCover(10)">10d</button>
+          <button class="cover-pill" data-days="30" onclick="setCover(30)">30d</button>
+        </div>
+        <div style="font-size:9px;color:#94a3b8;margin-top:3px;" id="coverHint">Ordering for <strong>7-day</strong> cover</div>
+      </div>
+
+      <div style="font-size:10px;color:#ea580c;background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;padding:6px 10px;"><strong id="sugCount">3 suggested</strong> (OOS or low stock)</div>
     </div>
 
     <!-- Items table -->
@@ -195,14 +212,14 @@
                 <span class="bv oos">OOS</span>
                 <span class="sug-label">SUGGESTED</span>
               </div>
-              <div style="font-size:10px;color:#94a3b8;">0 kg in stock · daily: 4.2 kg · suggest 126 kg</div>
+              <div style="font-size:10px;color:#94a3b8;" id="maida-hint">0 kg stock · 4.2 kg/day · ordering <strong id="maida-qty-hint">29.4 kg</strong> for <span class="cover-ref">7</span> days</div>
             </td>
-            <td><input class="ci" type="number" value="126" style="text-align:right;" /></td>
+            <td><input class="ci sug-qty" id="maida-qty" type="number" value="29" style="text-align:right;" data-daily="4.2" data-stock="0" /></td>
             <td><div class="unit-b">kg</div></td>
             <td><input class="ci auto" value="MAIDA-OCT-15" readonly /></td>
             <td><input class="ci" type="date" value="2027-04-15" /></td>
-            <td><input class="ci" type="number" value="42.00" style="text-align:right;" /></td>
-            <td style="text-align:right;padding-right:10px;font-size:13px;font-weight:700;color:#15803d;">₹5,292</td>
+            <td><input class="ci" type="number" value="42.00" style="text-align:right;" id="maida-rate" /></td>
+            <td style="text-align:right;padding-right:10px;font-size:13px;font-weight:700;color:#15803d;" id="maida-total">₹1,218</td>
             <td style="text-align:center;color:#94a3b8;cursor:pointer;font-size:14px;">✕</td>
           </tr>
           <!-- Suggested row 2 (Low) -->
@@ -213,17 +230,17 @@
                 <span class="bv low">3d left</span>
                 <span class="sug-label">SUGGESTED</span>
               </div>
-              <div style="font-size:10px;color:#94a3b8;">12.4 kg in stock · daily: 4.1 kg · suggest 111 kg</div>
+              <div style="font-size:10px;color:#94a3b8;">12.4 kg stock · 4.1 kg/day · ordering <strong id="onion-qty-hint">16.3 kg</strong> for <span class="cover-ref">7</span> days</div>
             </td>
-            <td><input class="ci" type="number" value="111" style="text-align:right;" /></td>
+            <td><input class="ci sug-qty" id="onion-qty" type="number" value="17" style="text-align:right;" data-daily="4.1" data-stock="12.4" /></td>
             <td><div class="unit-b">kg</div></td>
             <td><input class="ci auto" value="ONION-OCT-15" readonly /></td>
             <td><input class="ci" type="date" value="2026-12-15" /></td>
-            <td><input class="ci" type="number" value="18.00" style="text-align:right;" /></td>
-            <td style="text-align:right;padding-right:10px;font-size:13px;font-weight:700;color:#15803d;">₹1,998</td>
+            <td><input class="ci" type="number" value="18.00" style="text-align:right;" id="onion-rate" /></td>
+            <td style="text-align:right;padding-right:10px;font-size:13px;font-weight:700;color:#15803d;" id="onion-total">₹306</td>
             <td style="text-align:center;color:#94a3b8;cursor:pointer;font-size:14px;">✕</td>
           </tr>
-          <!-- Suggested row 3 (Low) -->
+          <!-- Suggested row 3 — threshold-based (no consumption) -->
           <tr class="sk-row suggested">
             <td>
               <div style="display:flex;align-items:center;gap:6px;">
@@ -231,14 +248,14 @@
                 <span class="bv low">5d left</span>
                 <span class="sug-label">SUGGESTED</span>
               </div>
-              <div style="font-size:10px;color:#94a3b8;">5.6 ltr in stock · daily: 1.1 ltr · suggest 27 ltr</div>
+              <div style="font-size:10px;color:#94a3b8;" id="oil-hint">2 ltr stock · min threshold 5 ltr · <strong>gap: 3 ltr</strong> · <span style="color:#818cf8;">no consumption data — threshold-based</span></div>
             </td>
-            <td><input class="ci" type="number" value="27" style="text-align:right;" /></td>
+            <td><input class="ci" id="oil-qty" type="number" value="3" style="text-align:right;" /></td>
             <td><div class="unit-b">ltr</div></td>
             <td><input class="ci auto" value="OIL-OCT-15" readonly /></td>
             <td><input class="ci" type="date" value="2027-06-15" /></td>
-            <td><input class="ci" type="number" value="" placeholder="0.00" style="text-align:right;" /></td>
-            <td style="text-align:right;padding-right:10px;font-size:12px;color:#94a3b8;">—</td>
+            <td><input class="ci" type="number" value="" placeholder="0.00" style="text-align:right;" id="oil-rate" /></td>
+            <td style="text-align:right;padding-right:10px;font-size:12px;color:#94a3b8;" id="oil-total">—</td>
             <td style="text-align:center;color:#94a3b8;cursor:pointer;font-size:14px;">✕</td>
           </tr>
           <tr><td colspan="8" style="background:#f8fafc;padding:0;border-bottom:2px dashed #e2e8f0;"></td></tr>
@@ -275,7 +292,7 @@
         <div style="display:flex;align-items:center;gap:16px;">
           <div style="text-align:right;">
             <span style="font-size:10px;color:#94a3b8;display:block;">ESTIMATED TOTAL</span>
-            <span style="font-size:18px;font-weight:700;">₹7,290</span>
+            <span style="font-size:18px;font-weight:700;" id="grandTotal3">₹—</span>
           </div>
           <button class="btn" style="background:#4ade80;color:#14532d;font-weight:700;padding:9px 18px;">Review PO →</button>
         </div>
@@ -550,6 +567,75 @@
       btn.classList.toggle('active', map[id] === i);
     });
   }
+
+  // ── Coverage Days Logic ──
+  let currentCover = 7;
+
+  function setCover(days) {
+    currentCover = days;
+    // Update pills
+    document.querySelectorAll('.cover-pill').forEach(p => {
+      p.classList.toggle('active', Number(p.dataset.days) === days);
+    });
+    // Update hint
+    document.getElementById('coverHint').innerHTML = `Ordering for <strong>${days}-day</strong> cover`;
+    // Update all cover-ref spans
+    document.querySelectorAll('.cover-ref').forEach(el => el.textContent = days);
+    // Recalculate suggested quantities
+    recalcSuggested();
+  }
+
+  function recalcSuggested() {
+    const d = currentCover;
+    // Maida: 4.2 kg/day, 0 in stock
+    const maidaQty = Math.max(0, Math.ceil(4.2 * d - 0));
+    document.getElementById('maida-qty').value = maidaQty;
+    document.getElementById('maida-qty-hint').textContent = `${maidaQty} kg`;
+    const maidaRate = parseFloat(document.getElementById('maida-rate').value) || 0;
+    document.getElementById('maida-total').textContent = maidaRate > 0 ? `₹${(maidaQty * maidaRate).toLocaleString('en-IN')}` : '—';
+
+    // Onion: 4.1 kg/day, 12.4 in stock
+    const onionQty = Math.max(0, Math.ceil(4.1 * d - 12.4));
+    document.getElementById('onion-qty').value = onionQty;
+    document.getElementById('onion-qty-hint').textContent = `${(4.1 * d - 12.4).toFixed(1)} kg`;
+    const onionRate = parseFloat(document.getElementById('onion-rate').value) || 0;
+    document.getElementById('onion-total').textContent = onionRate > 0 ? `₹${(onionQty * onionRate).toLocaleString('en-IN')}` : '—';
+
+    // Oil: threshold-based — qty unchanged (3 ltr gap)
+    // Show note about threshold not changing with days
+    const oilHint = document.getElementById('oil-hint');
+    if (oilHint) oilHint.innerHTML = `2 ltr stock · min threshold 5 ltr · <strong>gap: 3 ltr</strong> · <span style="color:#818cf8;">no consumption data — threshold-based · unaffected by cover days</span>`;
+
+    // Update grand total
+    updateGrandTotal3();
+  }
+
+  function updateGrandTotal3() {
+    const maidaQ = parseFloat(document.getElementById('maida-qty')?.value) || 0;
+    const maidaR = parseFloat(document.getElementById('maida-rate')?.value) || 0;
+    const onionQ = parseFloat(document.getElementById('onion-qty')?.value) || 0;
+    const onionR = parseFloat(document.getElementById('onion-rate')?.value) || 0;
+    const total = maidaQ * maidaR + onionQ * onionR;
+    const gt = document.getElementById('grandTotal3');
+    if (gt) gt.textContent = total > 0 ? `₹${total.toLocaleString('en-IN')}` : '₹—';
+  }
+
+  // Trigger rates to update totals on change
+  document.addEventListener('input', function(e) {
+    if (e.target.id === 'maida-rate') {
+      const q = parseFloat(document.getElementById('maida-qty').value) || 0;
+      const r = parseFloat(e.target.value) || 0;
+      document.getElementById('maida-total').textContent = r > 0 ? `₹${(q * r).toLocaleString('en-IN')}` : '—';
+      updateGrandTotal3();
+    }
+    if (e.target.id === 'onion-rate') {
+      const q = parseFloat(document.getElementById('onion-qty').value) || 0;
+      const r = parseFloat(e.target.value) || 0;
+      document.getElementById('onion-total').textContent = r > 0 ? `₹${(q * r).toLocaleString('en-IN')}` : '—';
+      updateGrandTotal3();
+    }
+  });
+
 </script>
 </body>
 </html>
