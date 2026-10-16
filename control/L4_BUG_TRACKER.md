@@ -63,6 +63,21 @@ OPEN → IN_PROGRESS → RESOLVED → CLOSED
 
 ---
 
+## BUG-049 — PO Create: Suggestion Fallback Returns "10" Instead of min_qty_alert Gap
+
+| Field | Value |
+|-------|-------|
+| **ID** | BUG-049 |
+| **Severity** | MEDIUM (P2) |
+| **Status** | OPEN |
+| **Files** | `frontend/src/components/central-inventory/PurchaseOrderCreate.jsx` |
+| **Root Cause** | Lines 227 + 285: `suggestedQty || "10"` — arbitrary fallback ignoring `min_qty_alert`. Correct logic: `min_qty_alert - currentStock` (gap to threshold) |
+| **Related** | CR-048 (same file — fix will be merged inline) |
+| **Registered** | 2026-10-16 |
+| **Found By** | INVESTIGATION role (agent-discovered during coverage days probe) |
+
+---
+
 ## BUG-047 — Addon Recipe CRUD Broken (Create/Save/Delete All Fail)
 
 | Field | Value |

@@ -855,5 +855,19 @@
     ],
     "missing_count": 3,
     "pending_count": 0
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-049",
+    "title": "PO Create — Suggestion fallback returns '10' instead of min_qty_alert gap",
+    "status": "OPEN",
+    "severity": "MEDIUM",
+    "sprint_key": null,
+    "sprint_name": "Unassigned",
+    "debt_reasons": [
+      "QA-Report: MISSING"
+    ],
+    "missing_count": 1,
+    "pending_count": 0
   }
 ]

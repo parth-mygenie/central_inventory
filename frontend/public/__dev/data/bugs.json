@@ -3358,5 +3358,73 @@
       "Owner-Signoff: MISSING"
     ],
     "sprint_name": "Unassigned"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-049",
+    "title": "PO Create — Suggestion fallback returns '10' instead of min_qty_alert gap",
+    "status": "OPEN",
+    "severity": "MEDIUM",
+    "sprint_key": null,
+    "phase": "S4 — Purchase UX Overhaul",
+    "files": [
+      "frontend/src/components/central-inventory/PurchaseOrderCreate.jsx"
+    ],
+    "notes": "Lines 227 and 285: fallback uses '10' when dailyConsumption=0. Should use min_qty_alert gap (same as RequestStockForm.jsx lines 188-192). Fix will be merged into CR-048 implementation plan. Related: CR-048.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/BUG-049_ARTIFACT_1_INTAKE.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "MISSING",
+        "path": null
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "WAIVED",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 6,
+      "total": 7,
+      "pct": 86
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "QA-Report: MISSING"
+    ],
+    "sprint_name": "Unassigned"
   }
 ]

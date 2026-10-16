@@ -48,6 +48,18 @@ PROPOSED → PLANNED → IN_PROGRESS → QA → OWNER_REVIEW → CLOSED
 2. Run `node control/gen_dashboard_data.js` to regenerate dashboard data.
 3. Verify with `node control/gen_dashboard_data.js --check`.
 
+## S4 — Purchase UX Overhaul (Registered 2026-10-16)
+
+| ID | Title | Status | Severity | Files |
+|----|-------|:------:|:--------:|-------|
+| **CR-047** | Add Stock — Storekeeper Spreadsheet UX + add-purchase API + Split Payment | PROPOSED | P1 | `AddStockPurchaseForm.jsx`, `api.js` |
+| **CR-048** | PO Create — Storekeeper Spreadsheet UX + Coverage Days Selector | PROPOSED | P1 | `PurchaseOrderCreate.jsx`, `api.js` |
+| **CR-049** | PO Receive Goods — Storekeeper Spreadsheet UX | PROPOSED | P1 | `PurchaseOrderDetail.jsx` |
+
+Gate 1 intake artifacts: `control/sessions/CR-047_ARTIFACT_1_INTAKE.md` / `CR-048` / `CR-049`
+Mockups: `purchase_form_mockup.html` + `po_flow_mockup.html` (interactive)
+Master investigation: `INVESTIGATION_MASTER_PURCHASE_UX_OVERHAUL.md`
+
 ## Artifact Statuses
 
 | Status | Meaning |
