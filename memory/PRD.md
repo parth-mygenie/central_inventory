@@ -39,5 +39,26 @@ Deploy the existing React frontend repo directly into `/app` and run it as-is, w
 | `memory/` | Fully from repo (has investigation reports, PRD, QA reports) |
 | `test_reports/` | Fully from repo (65+ test report iterations) |
 
+## Investigation Session — 2026-10-15/16 (Storekeeper Purchase UX Overhaul)
+
+**Role:** INVESTIGATION → prepared for INTAKE
+**Master doc:** `control/sessions/INVESTIGATION_MASTER_PURCHASE_UX_OVERHAUL.md`
+**Mockups:** `purchase_form_mockup.html` (Add Stock) + `po_flow_mockup.html` (PO flow, 6 screens)
+
+### Key Findings
+- `AddStockPurchaseForm.jsx`: 7 UX gaps — card layout → spreadsheet row, auto-batch, auto-total, search combobox, auto-open row, prices on confirm
+- `PurchaseOrderCreate.jsx`: 5 gaps — 266 pre-selected items, TARGET_DAYS=30 hardcoded (should be selector 3/7/10/30d), wrong fallback "10" vs min_qty_alert, 9-column table overload, no vendor search
+- `PurchaseOrderDetail.jsx` receive form: 5 gaps — card-per-item, no auto-batch, no live total, no grand total bar
+- Owner confirmed: suggested quantities are editable, vendor is shared (not per-line), payment is single-type
+
+### Proposed Registrations (for INTAKE)
+| ID | Type | Title | Severity |
+|----|------|-------|:--------:|
+| CR-047 | CR | Add Stock — Storekeeper Spreadsheet UX | P1 |
+| CR-048 | CR | PO Create — Storekeeper Spreadsheet UX + Coverage Days Selector | P1 |
+| CR-049 | CR | PO Receive Goods — Storekeeper Spreadsheet UX | P1 |
+| BUG-049 | BUG | PO Create — Wrong fallback qty ("10" instead of min_qty_alert) | P2 |
+
 ## Prioritized Backlog
 - Supply real env variable values when ready (PREPROD_API_BASE_V1, PREPROD_API_BASE_V2 have defaults)
+- Proceed with INTAKE → PLANNING → Gate 4 for CR-047, CR-048, CR-049, BUG-049
