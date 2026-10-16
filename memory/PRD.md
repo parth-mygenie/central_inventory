@@ -61,4 +61,8 @@ Deploy the existing React frontend repo directly into `/app` and run it as-is, w
 
 ## Prioritized Backlog
 - Supply real env variable values when ready (PREPROD_API_BASE_V1, PREPROD_API_BASE_V2 have defaults)
-- Proceed with INTAKE → PLANNING → Gate 4 for CR-047, CR-048, CR-049, BUG-049
+- G-035 (split payment backend gap) → **CLOSED** — new `add-purchase` endpoint supports `partial_payments[]`
+- New investigation: `INVESTIGATION_20261016_ADD_PURCHASE_API.md` — add-purchase API confirmed, split payment confirmed, proxy works as-is
+- 9 open questions pending owner answers before INTAKE can proceed
+- **Q2 still open** — owner asked for clarification on coverage preference persistence (A=session only / B=localStorage / C=cloud). Recommended: B (localStorage, zero backend cost)
+- All other 8 questions answered — INTAKE can proceed with CR-047, CR-048, CR-049, BUG-049

@@ -132,7 +132,7 @@ export default function PurchaseOrderCreate() {
     }).filter((l) => l.id);
     if (mapped.length > 0) {
       setVendorLines(mapped);
-      setMode("vendor");
+      // mode is always "vendor" — no setter needed
       setStep("items");
       toast({ title: `${mapped.length} items imported from Excel` });
     }

@@ -183,6 +183,58 @@ Header: [Invoice Date] [Invoice #] [Payment ▼]  ← shared
 
 ---
 
+## SECTION 3B — New API: add-purchase (Replaces add-stock) — CONFIRMED LIVE
+
+> Full detail: `INVESTIGATION_20261016_ADD_PURCHASE_API.md`
+
+### New Endpoint
+```
+POST /inventory/add-purchase  (through proxy: /proxy/v2/inventory/add-purchase)
+```
+
+### Key Differences from Old add-stock
+
+| Aspect | Old `add-stock/{id}` | New `add-purchase` |
+|--------|---------------------|---------------------|
+| Items per call | 1 (loop required) | ALL items in one call |
+| Item ID | URL path param | `purchase_items[].Ingredient` (capital I) |
+| Unit price | `price` | `purchase_items[].rate` |
+| Line total | `tot_amount` | `purchase_items[].Amount` (capital A) |
+| Split payment | ❌ Not supported | ✅ `payment_type:"partial"` + `partial_payments[]` |
+| Payment modes | Cash/Credit/Online | Cash/Credit/Online/UPI/Tab |
+| Transaction ID | None | `PUR-{RID}-{DATE}-{ID}` in response |
+| Proxy change needed | — | ❌ None — catch-all already works |
+
+### Split Payment Contract (CONFIRMED WORKING)
+```json
+{
+  "payment_type": "partial",
+  "partial_payments": [
+    { "payment_mode": "Cash", "amount": 1500 },
+    { "payment_mode": "UPI",  "amount": 960, "transaction_id": "optional" }
+  ]
+}
+```
+⚠️ **Backend does NOT validate sum(amounts) == tot_amount. Frontend MUST enforce.**
+
+### G-035 Status: CLOSED
+G-035 was raised as a potential gap for split payment backend support.
+**It is now RESOLVED** — the new endpoint natively supports `partial_payments[]`.
+Remove G-035 from the open gaps register.
+
+### Additional Items Added to CR-047 Scope
+
+| # | New Finding | Change Required |
+|---|-------------|----------------|
+| F18 | New endpoint replaces old | Replace `addStockPurchase()` in `api.js` |
+| F19 | All items in one request | `handleSubmit` loop → single-call |
+| F20 | New required fields | Add `item_total`, `tot_fair:0`, `tot_tax:0` |
+| F21 | Split payment now backend-supported | Add split payment UI to CR-047 |
+| F22 | Transaction ID in response | Show `PUR-807-...` on success screen |
+| F23 | Frontend must balance-check splits | Validate `sum(splits) === tot_amount` |
+
+---
+
 ## SECTION 4 — Confirmed Behaviour (Not a Bug)
 
 | Item | Finding |
@@ -207,15 +259,37 @@ All three screens share the same row pattern. PLANNING should design these as sh
 
 ---
 
-## SECTION 6 — Open Questions for Owner (INTAKE must resolve)
+## SECTION 6 — Open Questions — ALL ANSWERED
 
-| # | Question | Impacts |
-|---|----------|---------|
-| Q1 | Default coverage days for PO Create: **7d** (like RequestStockForm) or different? | CR-048 formula default |
-| Q2 | Should the coverage days preference be saved per-user or per-session only? | CR-048 — if saved: needs API change |
-| Q3 | Partial payment split (Cash + Tab): store in notes field for now, or block until G-035 backend? | CR-047 scope |
-| Q4 | "Add to catalogue" from item search: open catalogue page, or inline modal? | CR-047, CR-048 |
-| Q5 | PO Review page (Screen 4): show estimated prices from last-known rate or leave blank? | CR-048 |
+| # | Question | **Owner Answer** | Impact on CR |
+|---|----------|-----------------|-------------|
+| Q1 | Default coverage days | **3 days + custom number input** | CR-048: default=3, add free-text field alongside pills |
+| Q2 | Coverage days persistence | **Pending clarification — see Q2 detail below** | CR-048: scope TBD |
+| Q3 | "Add to catalogue" trigger | **Inline modal (b)** | CR-047, CR-048: no navigation away |
+| Q4 | PO Review rates | **Leave blank (b)** | CR-048: no rates on review screen |
+| Q5 | Split payment on PO Receive | **Backlog — additive fields later** | CR-049 scope unchanged for now |
+| Q6 | UPI transaction reference | **Optional (a)** | CR-047: no required field |
+| Q7 | Payment modes | **Cash, Card, UPI, Bank Transfer, Others** | CR-047: 5 modes (not Cash/Credit/Online) |
+| Q8 | Tax / Fare fields | **Hide tax. Fare exposed, default 0** | CR-047: `tot_tax`=0 hidden; `tot_fair` optional visible |
+| Q9 | Transaction ID on success | **Yes — show on success screen (a)** | CR-047: display `PUR-807-...` |
+
+---
+
+### Q2 Detail — Coverage Days Preference: Clarification for Owner
+
+**What it means in plain terms:**
+When the storekeeper picks "7 days" on the PO Create screen today, and then comes back tomorrow — does the screen remember "7 days" or reset to "3 days"?
+
+**Three options:**
+
+| Option | Behaviour | Cost |
+|--------|-----------|------|
+| **A — Always reset** | Opens on 3d every time. Storekeeper re-selects each session. | Zero — just React state |
+| **B — Remember in browser** | Browser stores last used value (localStorage). Same device/browser only. | ~3 lines frontend code. No backend change. |
+| **C — Remember per user (cloud)** | Saved to their account. Works on any device. | New backend API endpoint needed. |
+
+**Recommendation:** Option B (localStorage) — storekeeper convenience at near-zero cost.
+**Awaiting owner choice: A, B, or C?**
 
 ---
 
