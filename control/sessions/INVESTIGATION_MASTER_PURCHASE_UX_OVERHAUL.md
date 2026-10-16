@@ -264,7 +264,7 @@ All three screens share the same row pattern. PLANNING should design these as sh
 | # | Question | **Owner Answer** | Impact on CR |
 |---|----------|-----------------|-------------|
 | Q1 | Default coverage days | **3 days + custom number input** | CR-048: default=3, add free-text field alongside pills |
-| Q2 | Coverage days persistence | **Pending clarification — see Q2 detail below** | CR-048: scope TBD |
+| Q2 | Coverage days persistence | **B — stored via `operational-settings` API.** Key `po_coverage_days` pending from BE. Frontend falls back to `3` until key is live. Register **G-036**. | CR-048 + G-036 |
 | Q3 | "Add to catalogue" trigger | **Inline modal (b)** | CR-047, CR-048: no navigation away |
 | Q4 | PO Review rates | **Leave blank (b)** | CR-048: no rates on review screen |
 | Q5 | Split payment on PO Receive | **Backlog — additive fields later** | CR-049 scope unchanged for now |
@@ -275,34 +275,74 @@ All three screens share the same row pattern. PLANNING should design these as sh
 
 ---
 
-### Q2 Detail — Coverage Days Preference: Clarification for Owner
+### Q2 Detail — Coverage Days Preference: ANSWERED + Backend Gap Identified
 
-**What it means in plain terms:**
-When the storekeeper picks "7 days" on the PO Create screen today, and then comes back tomorrow — does the screen remember "7 days" or reset to "3 days"?
+**Owner answer:** B — Remember last choice, stored via `v2/inventory-transfer/operational-settings/get` — **mark pending from BE**
 
-**Three options:**
+**What this means technically:**
 
-| Option | Behaviour | Cost |
-|--------|-----------|------|
-| **A — Always reset** | Opens on 3d every time. Storekeeper re-selects each session. | Zero — just React state |
-| **B — Remember in browser** | Browser stores last used value (localStorage). Same device/browser only. | ~3 lines frontend code. No backend change. |
-| **C — Remember per user (cloud)** | Saved to their account. Works on any device. | New backend API endpoint needed. |
+#### Current state of operational-settings API (probed 2026-10-16)
+```
+POST /inventory-transfer/operational-settings/get → { stored_settings: { ... } }
 
-**Recommendation:** Option B (localStorage) — storekeeper convenience at near-zero cost.
-**Awaiting owner choice: A, B, or C?**
+Current keys in stored_settings (RID 807):
+  allow_negative_stock, allow_over_receive, reserve_on_approve,
+  near_expiry_alert_days, po_variance_alert_pct, require_po_for_purchase,
+  po_auto_close_on_full_receive, fefo_consumption_enabled ...
+  
+  ❌ po_coverage_days — NOT PRESENT (backend needs to add it)
+```
+
+#### How updateOperationalSettings works in api.js (lines 751-759)
+```javascript
+// IMPORTANT: API does full-replace, not merge
+// api.js already handles read-merge-write correctly:
+async function updateOperationalSettings(restaurantId, settings) {
+  const current = await _getOperationalSettings(restaurantId);
+  const currentStored = current.data?.data?.stored_settings || {};
+  const merged = { ...currentStored, ...settings };   // merge
+  await client.post("/proxy/v2/inventory-transfer/operational-settings/update", {
+    restaurant_id: restaurantId,
+    settings: merged,  // full object sent back
+  });
+}
+```
+
+#### What frontend needs to do (CR-048 implementation)
+```javascript
+// On PO Create load:
+const settings = await api.getOperationalSettings(restaurantId);
+const savedDays = settings.data?.data?.stored_settings?.po_coverage_days;
+const coverageDays = savedDays ?? 3;  // fallback to 3 if key missing (BE not deployed yet)
+
+// On user changes coverage days:
+await api.updateOperationalSettings(restaurantId, { po_coverage_days: newValue });
+```
+
+#### Backend gap to register alongside CR-048
+New key `po_coverage_days` (integer, default 3) must be added to the operational-settings schema on the backend. Until BE deploys this key, the frontend silently falls back to 3.
+
+**New backend gap:** `G-036 — po_coverage_days key missing from operational-settings schema`
+- Frontend: ready (CR-048 will wire the read + write)
+- Backend: key needs to be whitelisted and persisted in the settings store
+- CR-048 frontend implementation is NOT blocked — falls back to 3 gracefully until BE ships
 
 ---
 
-## SECTION 7 — Proposed CRs and BUGs for INTAKE
+---
+
+## SECTION 7 — Proposed CRs, BUGs, and Gaps for INTAKE
 
 ### Summary
 
 | ID | Type | Title | File(s) | Severity | Est. Scope |
 |----|------|-------|---------|:--------:|:----------:|
-| **CR-047** | CR | Add Stock — Storekeeper Spreadsheet UX | `AddStockPurchaseForm.jsx` | P1 | MEDIUM |
+| **CR-047** | CR | Add Stock — Storekeeper Spreadsheet UX + new `add-purchase` API + split payment | `AddStockPurchaseForm.jsx`, `api.js` | P1 | MEDIUM |
 | **CR-048** | CR | PO Create — Storekeeper Spreadsheet UX + Coverage Days Selector | `PurchaseOrderCreate.jsx` | P1 | MEDIUM |
 | **CR-049** | CR | PO Receive Goods — Storekeeper Spreadsheet UX | `PurchaseOrderDetail.jsx` | P1 | SMALL |
 | **BUG-049** | BUG | PO Create — Wrong Suggestion Fallback (`"10"` instead of `min_qty_alert`) | `PurchaseOrderCreate.jsx` | P2 | SMALL |
+| **G-035** | Gap | Split payment backend support | — | — | **CLOSED** — `add-purchase` API supports `partial_payments[]` |
+| **G-036** | Gap | `po_coverage_days` key missing from operational-settings schema | Backend only | P2 | SMALL (BE) |
 
 ### Rationale for Splitting into 3 CRs
 
@@ -323,44 +363,48 @@ The `"10"` fallback (finding F10) is a **calculation error** — it returns wron
 
 ### CR-047 Brief — Add Stock: Storekeeper Spreadsheet UX
 
-**Problem:** `AddStockPurchaseForm.jsx` uses a stacked card-per-item layout that requires mouse-click navigation. Storekeepers entering 20+ items daily cannot use keyboard-only flow. Fields scattered across lines make entry slow and error-prone.
+**Problem:** `AddStockPurchaseForm.jsx` uses stacked card-per-item layout, no keyboard flow, and calls the deprecated `add-stock` endpoint one item at a time. No split payment. No auto-batch.
 
-**Proposed Solution:** Redesign as a single-page spreadsheet table. All 7 item fields (Item search, Qty, Unit, Batch, Expiry, Unit Price, Total) on one horizontal row. Tab/Enter drives forward. Completing the last field opens a new row automatically.
+**Proposed Solution — ALL OWNER ANSWERS CONFIRMED:**
+1. Spreadsheet table: Item search | Qty | Unit | Batch (auto) | Expiry | Unit Price | Total (computed)
+2. Tab/Enter keyboard flow. Last field complete → new row auto-opens.
+3. **Replace `add-stock` endpoint with new `add-purchase`** (all items in one call) (F18–F19)
+4. Payment header: single-select **Cash / Card / UPI / Bank Transfer / Others** (Q7 ✅)
+5. "+ Add payment" → split mode: `partial_payments[]` per row, optional UPI ref field (Q6 ✅)
+6. Frontend validates `sum(partials) === tot_amount` (backend skips this check)
+7. Fare field (`tot_fair`) exposed as optional, default 0. Tax (`tot_tax`) hidden, always 0. (Q8 ✅)
+8. Success screen shows transaction ID `PUR-807-20261016-7996` (Q9 ✅)
+9. "Add to catalogue" → **inline modal** (stays on form) (Q3 ✅)
+10. Show unit price + total + grand total on confirm page (F7)
 
-**Key Changes:**
-1. Replace `<Select>` item picker with searchable `Command` combobox
-2. Auto-generate batch: `{ITEM_SLUG}-{MON}-{DD}`
-3. Auto-compute total: `unit_price × qty` (read-only, overridable)
-4. Auto-open next row when last field of current row is filled
-5. Show unit price + total + grand total on confirm/review page
-6. Payment type stays single select at top (no split for now)
-
-**Files WILL change:** `AddStockPurchaseForm.jsx`
-**Files will NOT touch:** `api.js`, `server.py`, `terminology.js`, `screenVisibility.js`
+**Files WILL change:** `AddStockPurchaseForm.jsx`, `api.js` (new `addPurchase()` function replacing `addStockPurchase()`)
+**Files will NOT touch:** `server.py`, `terminology.js`, `screenVisibility.js`
 **Mockup:** `control/sessions/purchase_form_mockup.html`
-**Owner questions:** Q3, Q4
+**All owner questions resolved — ready for INTAKE Gate 1**
 
 ---
 
 ### CR-048 Brief — PO Create: Storekeeper Spreadsheet UX + Coverage Days
 
-**Problem:** `PurchaseOrderCreate.jsx` loads all 266 inventory items pre-selected with qty=10, forcing storekeepers to uncheck 250+ items. Suggestion formula uses `TARGET_DAYS = 30` hardcoded — no way to order for 7-day or 10-day cover. Vendor selection is a card grid with no search.
+**Problem:** `PurchaseOrderCreate.jsx` loads all 266 inventory items pre-selected with qty=10, forcing storekeepers to uncheck 250+ items. Suggestion formula uses `TARGET_DAYS = 30` hardcoded — no way to order for different cover periods. Vendor selection is a card grid with no search.
 
-**Proposed Solution:**
+**Proposed Solution — CONFIRMED ANSWERS:**
 1. Start with empty table. Pre-populate SUGGESTED rows (orange) for OOS and low-stock items only.
-2. Add `[3d] [7d] [10d] [30d]` coverage pills in header (default 7d). Pills drive live recalculation of all suggested quantities.
-3. Formula: `orderQty = max(0, ceil(avgDaily × coverageDays − currentStock))` — ported from `RequestStockForm.jsx`
-4. Fallback when no consumption: use `min_qty_alert` gap (ported from `RequestStockForm.jsx`)
-5. Exclude items with no need entirely (same as `RequestStockForm`)
-6. Replace vendor card grid with type-to-search (same `Command` combobox)
-7. Same spreadsheet table row layout as CR-047
+2. Add coverage input in header: **quick-select pills `[3d] [7d] [10d] [30d]` + free-text number input** — default **3 days** (Q1 ✅)
+3. Coverage days persisted via `operational-settings` API key `po_coverage_days` — **pending from BE (G-036)**. Frontend falls back to `3` until key is live. (Q2 ✅)
+4. Formula: `orderQty = max(0, ceil(avgDaily × coverageDays − currentStock))` — ported from `RequestStockForm.jsx`
+5. Fallback when no consumption: use `min_qty_alert` gap (ported from `RequestStockForm.jsx`) — (fixes BUG-049)
+6. Exclude items with no need entirely (same as `RequestStockForm`)
+7. Replace vendor card grid with type-to-search `Command` combobox
+8. Same spreadsheet table row layout as CR-047
+9. PO Review screen: show item name + qty only, **no rates** (Q4 ✅)
 
-**Files WILL change:** `PurchaseOrderCreate.jsx`
-**Files will NOT touch:** `api.js`, `RequestStockForm.jsx`, `server.py`
+**Files WILL change:** `PurchaseOrderCreate.jsx`, `api.js` (add `po_coverage_days` read/write via `updateOperationalSettings`)
+**Files will NOT touch:** `RequestStockForm.jsx`, `server.py`
 **Reuse from CR-047:** `ItemSearchCombobox`, `autoBatch()`, `computeTotal()`, `KeyboardRowHandler`
 **Mockup:** `control/sessions/po_flow_mockup.html` → Screen 3
-**Owner questions:** Q1, Q2, Q4, Q5
-**Dependency:** Can be implemented after CR-047 ships (reuse components)
+**Blocked by:** G-036 (BE must add `po_coverage_days` to settings schema — non-blocking, graceful fallback)
+**Dependency:** Implement after CR-047 ships (reuse components)
 
 ---
 
@@ -409,34 +453,82 @@ ordered_qty: isLow ? (suggestedQty || "10") : suggestedQty
 
 ---
 
-## SECTION 9 — Blast Radius
+### G-036 Brief — Backend: `po_coverage_days` key missing from operational-settings
+
+**Problem:** Owner decided coverage days preference should persist via `v2/inventory-transfer/operational-settings/get`. The key `po_coverage_days` does not currently exist in `stored_settings` (verified by live probe 2026-10-16).
+
+**Current state (probed):**
+```
+POST /inventory-transfer/operational-settings/get
+stored_settings: { allow_negative_stock, po_variance_alert_pct, ... }
+❌ po_coverage_days — NOT PRESENT
+```
+
+**What backend needs to add:**
+```
+Key:     po_coverage_days
+Type:    integer
+Default: 3
+Scope:   per-restaurant (like all other stored_settings keys)
+```
+
+**What frontend will do (CR-048):**
+```javascript
+// Read on PO Create load:
+const days = settings?.stored_settings?.po_coverage_days ?? 3;
+
+// Write when user changes:
+api.updateOperationalSettings(rid, { po_coverage_days: newValue });
+```
+
+**Blocking CR-048?** NO — CR-048 frontend falls back to `3` gracefully until BE deploys this key. Implement CR-048 first; G-036 is a separate BE task.
+
+---
+
+## SECTION 9 — Blast Radius (UPDATED)
 
 | Item | Files affected | Risk | Shared files touched? |
 |------|:-------------:|:----:|:--------------------:|
-| CR-047 | 1 (`AddStockPurchaseForm.jsx`) | LOW | No |
-| CR-048 | 1 (`PurchaseOrderCreate.jsx`) | MEDIUM | No |
-| CR-049 | 1 (`PurchaseOrderDetail.jsx`) | LOW | No |
-| BUG-049 | 1 (`PurchaseOrderCreate.jsx`, same as CR-048) | LOW | No |
+| CR-047 | `AddStockPurchaseForm.jsx` + `api.js` | MEDIUM | `api.js` (new function) |
+| CR-048 | `PurchaseOrderCreate.jsx` + `api.js` | MEDIUM | `api.js` (coverage days read/write) |
+| CR-049 | `PurchaseOrderDetail.jsx` | LOW | No |
+| BUG-049 | `PurchaseOrderCreate.jsx` | LOW | No (same file as CR-048) |
+| G-036 | Backend only | LOW | No frontend changes |
 
-> **Note to INTAKE:** CR-048 and BUG-049 both touch `PurchaseOrderCreate.jsx`. Register them as related. BUG-049 should be applied within the CR-048 implementation plan as an inline fix — no separate implementation session needed.
+> **Note to INTAKE:** CR-048 and BUG-049 both touch `PurchaseOrderCreate.jsx`. Register as related. BUG-049 applied within CR-048 implementation plan as inline fix.
+> CR-047 and CR-048 both touch `api.js` — coordinate to avoid conflicts (implement CR-047 first, CR-048 adds to it).
 
 ---
 
-## SECTION 10 — Implementation Order (Recommendation)
+## SECTION 10 — Implementation Order (FINAL)
 
 ```
-Phase 1 (can start immediately):
-  BUG-049 ── quick fix in PurchaseOrderCreate.jsx (< 1 hour)
+Phase 1 (immediate — no dependencies):
+  BUG-049 ── quick fix, PurchaseOrderCreate.jsx (< 1 hour)
 
 Phase 2 (parallel):
-  CR-047 ── Add Stock redesign (3-4 days)
-  CR-049 ── Receive Goods redesign (2-3 days) — can run in parallel with CR-047
+  CR-047 ── Add Stock + new add-purchase API + split payment (3-4 days)
+  CR-049 ── PO Receive Goods layout redesign (2-3 days)
+  G-036  ── Backend: add po_coverage_days to operational-settings (BE team, 1 day)
 
-Phase 3 (after CR-047 ships):
-  CR-048 ── PO Create redesign, reusing shared components from CR-047 (3-4 days)
+Phase 3 (after CR-047 + G-036 ship):
+  CR-048 ── PO Create redesign, reusing CR-047 components + operational-settings wire (3-4 days)
 ```
 
 ---
 
-*Prepared by INVESTIGATION agent. Approved for INTAKE handoff.*
-*Mockups verified as screenshots: 2026-10-15/16.*
+## Document Status
+
+| Section | Status |
+|---------|--------|
+| All owner questions (Q1–Q9) | ✅ ANSWERED |
+| CR-047 brief | ✅ COMPLETE — ready for INTAKE Gate 1 |
+| CR-048 brief | ✅ COMPLETE — ready for INTAKE Gate 1 |
+| CR-049 brief | ✅ COMPLETE — ready for INTAKE Gate 1 |
+| BUG-049 brief | ✅ COMPLETE |
+| G-036 brief | ✅ COMPLETE — backend task |
+| G-035 | ✅ CLOSED (split payment confirmed working) |
+
+*Prepared by INVESTIGATION agent. All Q&A complete. Ready for INTAKE handoff.*
+*Mockups: `purchase_form_mockup.html` + `po_flow_mockup.html` (interactive)*
+*Investigation sources: 4 separate investigation docs consolidated here.*
