@@ -786,9 +786,16 @@ function deleteVendor(id) {
 }
 
 // ── P19 Add Stock (Procurement) ──────────────────────────────────
-
+// CR-047 — addStockPurchase DEPRECATED: replaced by addPurchase() for multi-item batch calls.
+// Kept until CR-047 ships and is verified. Do not call from new code.
 function addStockPurchase(inventoryMasterId, payload) {
   return client.post(`/proxy/v2/inventory/add-stock/${inventoryMasterId}`, payload).then(r => { _invalidateStockCaches(); return r; });
+}
+
+// CR-047 — single-call batch purchase (replaces per-item add-stock loop)
+function addPurchase(payload) {
+  return client.post("/proxy/v2/inventory/add-purchase", payload)
+    .then(r => { _invalidateStockCaches(); return r; });
 }
 
 // ── P21 Catalogue — Inventory Categories ─────────────────────────
@@ -1237,6 +1244,7 @@ const api = {
   updateVendor,
   deleteVendor,
   addStockPurchase,
+  addPurchase,           // CR-047
   // P20 Stock Inventory Summary
   getStockInventory,
   // P24 Stock Detail (FEFO Batch View)

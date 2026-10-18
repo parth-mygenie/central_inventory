@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-18T17:58:55.282Z",
+  "generated_at": "2026-10-18T18:08:28.751Z",
   "project": "Central Inventory",
   "repo": "parth-mygenie/central_inventory",
   "branch": "13-6-26",
@@ -7,14 +7,14 @@
     "items": 101,
     "crs": 52,
     "bugs": 49,
-    "debt": 61
+    "debt": 62
   },
   "crs_by_status": {
     "CLOSED": 22,
     "QA": 9,
-    "PROPOSED": 10,
+    "PROPOSED": 9,
     "QA_PASS": 9,
-    "IMPLEMENTED": 2
+    "IMPLEMENTED": 3
   },
   "bugs_by_status": {
     "ACCEPTED": 11,
@@ -33,7 +33,7 @@
     "CRITICAL": 1
   },
   "debt_by_type": {
-    "CR": 37,
+    "CR": 38,
     "BUG": 24
   },
   "sprints": [

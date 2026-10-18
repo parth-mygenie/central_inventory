@@ -6098,7 +6098,7 @@
       "type": "CR",
       "id": "CR-047",
       "title": "Add Stock \u2014 Storekeeper Spreadsheet UX + add-purchase API + Split Payment",
-      "status": "PROPOSED",
+      "status": "IMPLEMENTED",
       "severity": "P1",
       "sprint_key": null,
       "phase": "S4 \u2014 Purchase UX Overhaul",
@@ -6135,8 +6135,8 @@
         {
           "artifact": 4,
           "label": "Code-Gate",
-          "status": "MISSING",
-          "path": null
+          "status": "DONE",
+          "path": "control/sessions/CR-047_ARTIFACT_4_CODE_GATE.md"
         },
         {
           "artifact": 5,
