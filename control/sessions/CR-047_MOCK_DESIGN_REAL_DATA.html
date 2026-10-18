@@ -130,7 +130,7 @@
   .combobox-input-wrap { position: relative; }
   .combobox-input { width: 100%; height: 28px; padding: 0 8px; border: 1px solid #d1d5db; border-radius: 5px; font-size: 11.5px; outline: none; cursor: pointer; }
   .combobox-input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.1); }
-  .combobox-dropdown { position: absolute; top: calc(100% + 4px); left: 0; width: 280px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.12); z-index: 999; display: none; }
+  .combobox-dropdown { position: fixed; width: 280px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.12); z-index: 9999; display: none; }
   .combobox-dropdown.open { display: block; }
   .combobox-search { padding: 8px 10px; border-bottom: 1px solid #f3f4f6; }
   .combobox-search input { width: 100%; height: 28px; border: 1px solid #d1d5db; border-radius: 5px; padding: 0 8px; font-size: 12px; outline: none; }
@@ -478,9 +478,14 @@ function computeTotal(qty, rate) {
 }
 
 function grandTotal() {
-  const itemsTotal = rows.reduce((s,r) => s + computeTotal(r.qty, r.rate), 0);
+  // Items total only — label says "excl. fare", fare is shown separately
+  return rows.reduce((s,r) => s + computeTotal(r.qty, r.rate), 0);
+}
+
+function fullPayableTotal() {
+  // Items + fare — used for payment balance check and API tot_amount
   const fare = Number(document.getElementById('fareInput')?.value) || 0;
-  return itemsTotal + fare;
+  return grandTotal() + fare;
 }
 
 function renderRows() {
@@ -592,6 +597,24 @@ function openCombobox(idx) {
   // Close all others
   document.querySelectorAll('.combobox-dropdown').forEach(d => d.classList.remove('open'));
   const drop = document.getElementById(`comboDrop${idx}`);
+  const input = document.getElementById(`comboInput${idx}`);
+
+  // Position fixed relative to viewport — fixes overflow:hidden clipping
+  if (input) {
+    const rect = input.getBoundingClientRect();
+    drop.style.top  = (rect.bottom + 4) + 'px';
+    drop.style.left = rect.left + 'px';
+    drop.style.width = Math.max(280, rect.width) + 'px';
+    // Flip upward if not enough room below
+    const spaceBelow = window.innerHeight - rect.bottom;
+    if (spaceBelow < 260 && rect.top > 260) {
+      drop.style.top  = (rect.top - 4) + 'px';
+      drop.style.transform = 'translateY(-100%)';
+    } else {
+      drop.style.transform = '';
+    }
+  }
+
   drop.classList.add('open');
   activeComboboxIdx = idx;
   const searchInput = document.getElementById(`comboSearch${idx}`);
@@ -602,7 +625,7 @@ function openCombobox(idx) {
   setTimeout(() => {
     document.addEventListener('click', function closeDropdown(e) {
       const wrap = document.getElementById(`comboWrap${idx}`);
-      if (!wrap?.contains(e.target)) {
+      if (!wrap?.contains(e.target) && !drop.contains(e.target)) {
         drop.classList.remove('open');
         document.removeEventListener('click', closeDropdown);
       }
@@ -765,7 +788,7 @@ function updatePaymentBalance() {
     document.getElementById('paymentBalance').style.display = 'none';
     return;
   }
-  const total = grandTotal();
+  const total = fullPayableTotal();
   const entered = paymentRows.reduce((s,p) => s + (Number(p.amount)||0), 0);
   const el = document.getElementById('paymentBalance');
   el.style.display = '';
@@ -804,7 +827,7 @@ function showConfirm() {
   const vendor = document.getElementById('vendorSelect').value === '282' ? 'masala dairy' : '—';
   const date = document.getElementById('purchaseDateInput').value || '—';
   const payMode = paymentRows.length === 1 ? (paymentRows[0].mode||'—') : 'Split Payment';
-  const total = grandTotal();
+  const total = fullPayableTotal();
   const fare = Number(document.getElementById('fareInput')?.value)||0;
 
   document.getElementById('confirmMeta').innerHTML = `
