@@ -428,6 +428,8 @@ function renderCatRows(catRows, cat) {
   if (!tbody) return;
   catRows.forEach(row => {
     const tr = document.createElement('tr');
+    tr.setAttribute('onclick', `onRowClick(event, ${row.id})`);
+    tr.style.cursor = 'pointer';
     if (row.isOut) tr.className = 'row-out';
     else if (row.isLow) tr.className = 'row-low';
     if (!row.included) tr.classList.add('row-unchecked');
@@ -502,10 +504,18 @@ function buildSourceHtml(row) {
   return `<div class="source-select-wrap">${lines}${allocStatus}<button class="add-split-btn" onclick="addSplit(${row.id})">+ split across another batch</button></div>`;
 }
 
+function onRowClick(event, id) {
+  // Toggle checkbox unless clicking an interactive element
+  const tag = event.target.tagName;
+  if (['INPUT','SELECT','BUTTON','A','OPTION'].includes(tag)) return;
+  const r = rows.find(r => r.id === id);
+  if (r) { r.included = !r.included; render(); }
+}
+
 function onInclude(id, checked) {
   const r = rows.find(r=>r.id===id);
   if (r) r.included = checked;
-  updateCounts();
+  render(); // full re-render so row-unchecked class is removed/added
 }
 
 function onQty(id, val) {
