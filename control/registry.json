@@ -6559,6 +6559,177 @@
           "path": null
         }
       ]
+    },
+    {
+      "type": "BUG",
+      "id": "BUG-050",
+      "title": "Add Stock \u2014 Number Input Spinner Arrows Still Visible (WebKit)",
+      "status": "PROPOSED",
+      "severity": "P2",
+      "sprint_key": null,
+      "phase": "CR-047 Post-Implementation",
+      "files": [
+        "frontend/src/App.css"
+      ],
+      "notes": "CSS pseudo-element -webkit-inner-spin-button not in any stylesheet. Inline MozAppearance only fixes Firefox. Chrome/Safari show spinners. Fix: 3 lines in App.css. Related: CR-047.",
+      "artifact_refs": [
+        {
+          "artifact": 0,
+          "label": "Session-Start",
+          "status": "WAIVED",
+          "path": null
+        },
+        {
+          "artifact": 1,
+          "label": "Intake",
+          "status": "DONE",
+          "path": "control/sessions/BUG-050_ARTIFACT_1_INTAKE.md"
+        },
+        {
+          "artifact": 2,
+          "label": "Impact-Analysis",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 3,
+          "label": "Impl-Plan",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 4,
+          "label": "Code-Gate",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 5,
+          "label": "QA-Report",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 6,
+          "label": "Owner-Signoff",
+          "status": "MISSING",
+          "path": null
+        }
+      ]
+    },
+    {
+      "type": "BUG",
+      "id": "BUG-051",
+      "title": "Add Stock \u2014 Duplicate Item Rows Submittable (hasDuplicates Gate Missing)",
+      "status": "PROPOSED",
+      "severity": "P1",
+      "sprint_key": null,
+      "phase": "CR-047 Post-Implementation",
+      "files": [
+        "frontend/src/components/central-inventory/AddStockPurchaseForm.jsx"
+      ],
+      "notes": "validRows does not exclude duplicate itemId rows. isFormValid has no hasDuplicates check. User can select same item twice and submit \u2014 creates overlapping purchase records. Fix: add hasDuplicates derived from itemIdCount; gate isFormValid. Related: CR-047.",
+      "artifact_refs": [
+        {
+          "artifact": 0,
+          "label": "Session-Start",
+          "status": "WAIVED",
+          "path": null
+        },
+        {
+          "artifact": 1,
+          "label": "Intake",
+          "status": "DONE",
+          "path": "control/sessions/BUG-051_ARTIFACT_1_INTAKE.md"
+        },
+        {
+          "artifact": 2,
+          "label": "Impact-Analysis",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 3,
+          "label": "Impl-Plan",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 4,
+          "label": "Code-Gate",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 5,
+          "label": "QA-Report",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 6,
+          "label": "Owner-Signoff",
+          "status": "MISSING",
+          "path": null
+        }
+      ]
+    },
+    {
+      "type": "BUG",
+      "id": "BUG-052",
+      "title": "Add Stock \u2014 Single Payment Amount Not Auto-Filled From Grand Total",
+      "status": "PROPOSED",
+      "severity": "P2",
+      "sprint_key": null,
+      "phase": "CR-047 Post-Implementation",
+      "files": [
+        "frontend/src/components/central-inventory/AddStockPurchaseForm.jsx"
+      ],
+      "notes": "legs[0].amount never synced to fullPayableTotal. User can type any value (e.g. 1000, -9) for a 0.80 purchase. API always uses fullPayableTotal correctly but display is misleading. Fix: useEffect syncing legs[0].amount when fullPayableTotal changes, only when legs.length === 1. Related: CR-047.",
+      "artifact_refs": [
+        {
+          "artifact": 0,
+          "label": "Session-Start",
+          "status": "WAIVED",
+          "path": null
+        },
+        {
+          "artifact": 1,
+          "label": "Intake",
+          "status": "DONE",
+          "path": "control/sessions/BUG-052_ARTIFACT_1_INTAKE.md"
+        },
+        {
+          "artifact": 2,
+          "label": "Impact-Analysis",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 3,
+          "label": "Impl-Plan",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 4,
+          "label": "Code-Gate",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 5,
+          "label": "QA-Report",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 6,
+          "label": "Owner-Signoff",
+          "status": "MISSING",
+          "path": null
+        }
+      ]
     }
   ]
 }
