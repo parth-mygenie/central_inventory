@@ -3431,7 +3431,7 @@
     "type": "BUG",
     "id": "BUG-050",
     "title": "Add Stock — Number Input Spinner Arrows Still Visible (WebKit)",
-    "status": "PROPOSED",
+    "status": "IMPLEMENTED",
     "severity": "P2",
     "sprint_key": null,
     "phase": "CR-047 Post-Implementation",
@@ -3467,7 +3467,7 @@
       {
         "artifact": 4,
         "label": "Code-Gate",
-        "status": "MISSING",
+        "status": "WAIVED",
         "path": null
       },
       {
@@ -3484,16 +3484,15 @@
       }
     ],
     "completeness": {
-      "done": 2,
+      "done": 3,
       "total": 7,
-      "pct": 29
+      "pct": 43
     },
     "doc_count": 0,
-    "is_debt": false,
+    "is_debt": true,
     "debt_reasons": [
       "Impact-Analysis: MISSING",
       "Impl-Plan: MISSING",
-      "Code-Gate: MISSING",
       "QA-Report: MISSING",
       "Owner-Signoff: MISSING"
     ],
@@ -3575,7 +3574,7 @@
     "type": "BUG",
     "id": "BUG-052",
     "title": "Add Stock — Single Payment Amount Not Auto-Filled From Grand Total",
-    "status": "PROPOSED",
+    "status": "IMPLEMENTED",
     "severity": "P2",
     "sprint_key": null,
     "phase": "CR-047 Post-Implementation",
@@ -3611,7 +3610,7 @@
       {
         "artifact": 4,
         "label": "Code-Gate",
-        "status": "MISSING",
+        "status": "WAIVED",
         "path": null
       },
       {
@@ -3628,16 +3627,15 @@
       }
     ],
     "completeness": {
-      "done": 2,
+      "done": 3,
       "total": 7,
-      "pct": 29
+      "pct": 43
     },
     "doc_count": 0,
-    "is_debt": false,
+    "is_debt": true,
     "debt_reasons": [
       "Impact-Analysis: MISSING",
       "Impl-Plan: MISSING",
-      "Code-Gate: MISSING",
       "QA-Report: MISSING",
       "Owner-Signoff: MISSING"
     ],

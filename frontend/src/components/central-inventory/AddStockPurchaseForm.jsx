@@ -102,6 +102,11 @@ export default function AddStockPurchaseForm() {
     rows.forEach(r => { if (r.itemId) m[r.itemId] = (m[r.itemId] || 0) + 1; });
     return m;
   }, [rows]);
+  // BUG-051 — gate: true when any item appears in more than one row
+  const hasDuplicates = useMemo(
+    () => Object.values(itemIdCount).some(c => c > 1),
+    [itemIdCount]
+  );
 
   // fetchData — unchanged logic from original
   const fetchData = useCallback(async () => {
@@ -176,7 +181,16 @@ export default function AddStockPurchaseForm() {
   const isSplit = legs.length > 1;
 
   const selectedVendor = vendors.find(v => String(v.id) === String(vendorId));
-  const isFormValid = validRows.length > 0 && vendorId && (!isSplit || splitBalanced);
+  const isFormValid = validRows.length > 0 && vendorId && !hasDuplicates && (!isSplit || splitBalanced); // BUG-051
+
+  // BUG-052 — auto-fill single payment amount from fullPayableTotal.
+  // Fires when total changes (items/fare updated) or when switching single↔split.
+  // Only updates when exactly 1 leg is active; split balance is managed by the user.
+  useEffect(() => {
+    if (legs.length === 1 && fullPayableTotal > 0) {
+      setLegs(prev => [{ ...prev[0], amount: fullPayableTotal.toFixed(2) }]);
+    }
+  }, [fullPayableTotal, legs.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function resetForm() {
     setRows([emptyRow()]); setVendorId(""); setFare(0);
@@ -609,6 +623,12 @@ export default function AddStockPurchaseForm() {
               <span className="text-[10.5px] text-amber-600 flex items-center gap-1">
                 <TriangleAlert className="h-3 w-3" />
                 ₹{splitEntered.toFixed(2)} of ₹{fullPayableTotal.toFixed(2)} entered
+              </span>
+            )}
+            {hasDuplicates && ( // BUG-051
+              <span className="text-[10.5px] text-red-500 flex items-center gap-1" data-testid="duplicate-items-warning">
+                <TriangleAlert className="h-3 w-3" />
+                Remove duplicate items before confirming
               </span>
             )}
           </div>
