@@ -6304,8 +6304,8 @@
         {
           "artifact": 3,
           "label": "Impl-Plan",
-          "status": "MISSING",
-          "path": null
+          "status": "DONE",
+          "path": "control/sessions/CR-050_ARTIFACT_3_IMPLEMENTATION_PLAN.md"
         },
         {
           "artifact": 4,
