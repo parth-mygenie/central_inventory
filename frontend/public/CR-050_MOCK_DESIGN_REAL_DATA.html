@@ -285,6 +285,8 @@ function computeRows() {
     const { allocations, short } = fefoAutoSelect(item, capped);
     const isUnbatched = item.segments.length > 0 && item.segments.every(s => s.seg === null);
 
+    // Preserve existing included state across re-renders; default = false (unselected on first load)
+    const existing = rows.find(r => r.id === item.id);
     return {
       ...item,
       qtyToSend: capped,
@@ -296,7 +298,7 @@ function computeRows() {
       isLow,
       exceedsOwn,
       daysOfCover,
-      included: true,
+      included: existing ? existing.included : false,
       fefoAllocations: allocations,
       fefoShort: short,
       isUnbatched,
@@ -366,6 +368,12 @@ function render() {
 
   const area = document.getElementById('dispatchArea');
   area.innerHTML = '';
+
+  // Auto-expand categories that have matching items when search is active
+  const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
+  if (search) {
+    Object.entries(groups).forEach(([cat]) => { delete collapsedCats[cat]; });
+  }
 
   Object.entries(groups).forEach(([cat, catRows]) => {
     const collapsed = collapsedCats[cat] === true;
@@ -543,14 +551,8 @@ function setFilter(f) {
 function onDestChange() { render(); }
 
 function masterSelect(select) {
-  // Select/unselect ALL rows across ALL categories
+  // Select/unselect ALL rows across ALL categories — NO collapse side-effect
   rows.forEach(r => r.included = select);
-  if (!select) {
-    // Collapse all categories when unselecting everything
-    Object.keys(rows.reduce((g,r)=>{g[r.cat]=1;return g},{})).forEach(cat => collapsedCats[cat] = true);
-  } else {
-    collapsedCats = {};
-  }
   render();
 }
 
