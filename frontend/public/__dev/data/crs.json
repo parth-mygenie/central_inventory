@@ -3717,8 +3717,8 @@
       {
         "artifact": 2,
         "label": "Impact-Analysis",
-        "status": "MISSING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/CR-047_ARTIFACT_2_IMPACT_ANALYSIS.md"
       },
       {
         "artifact": 3,
@@ -3746,14 +3746,13 @@
       }
     ],
     "completeness": {
-      "done": 2,
+      "done": 3,
       "total": 7,
-      "pct": 29
+      "pct": 43
     },
     "doc_count": 0,
     "is_debt": false,
     "debt_reasons": [
-      "Impact-Analysis: MISSING",
       "Impl-Plan: MISSING",
       "Code-Gate: MISSING",
       "QA-Report: MISSING",

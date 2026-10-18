@@ -6123,8 +6123,8 @@
         {
           "artifact": 2,
           "label": "Impact-Analysis",
-          "status": "MISSING",
-          "path": null
+          "status": "DONE",
+          "path": "control/sessions/CR-047_ARTIFACT_2_IMPACT_ANALYSIS.md"
         },
         {
           "artifact": 3,
@@ -6281,7 +6281,7 @@
         "frontend/src/services/api.js",
         "frontend/src/components/central-inventory/RequestStockForm.jsx"
       ],
-      "notes": "5 problems fixed: (1) Category grouping with collapse/expand + per-category Select All/Unselect All + dual search. (2) FEFO auto-select on qty entry (200ms debounce) — sort by expiry ASC, auto-fill source select, expired segments skipped. (3) Multi-batch widget: split qty across multiple segments, FEFO auto-splits, storekeeper can add/remove lines. (4) source-options burst fix: pass includeSegments:true to existing getStockInventory call — segments_preview replaces 257 per-item source-options calls. (5) Ceiling fix: Math.ceil(value*100)/100 -> Math.ceil(value) in dispatch lines 162+170, also RequestStockForm lines 176+189. (6) Un-batched stock (segment_id:null): prompt to add batch info before dispatch (Option B, owner-confirmed). OQ-1: verify backend supports adding batch to un-batched segment. Related: CR-047 (shared components). RELATED: P21 (same file, different scope — intel sidebar).",
+      "notes": "5 problems fixed: (1) Category grouping with collapse/expand + per-category Select All/Unselect All + dual search. (2) FEFO auto-select on qty entry (200ms debounce) \u2014 sort by expiry ASC, auto-fill source select, expired segments skipped. (3) Multi-batch widget: split qty across multiple segments, FEFO auto-splits, storekeeper can add/remove lines. (4) source-options burst fix: pass includeSegments:true to existing getStockInventory call \u2014 segments_preview replaces 257 per-item source-options calls. (5) Ceiling fix: Math.ceil(value*100)/100 -> Math.ceil(value) in dispatch lines 162+170, also RequestStockForm lines 176+189. (6) Un-batched stock (segment_id:null): prompt to add batch info before dispatch (Option B, owner-confirmed). OQ-1: verify backend supports adding batch to un-batched segment. Related: CR-047 (shared components). RELATED: P21 (same file, different scope \u2014 intel sidebar).",
       "artifact_refs": [
         {
           "artifact": 0,
@@ -6398,15 +6398,50 @@
         "frontend/src/lib/screenVisibility.js",
         "frontend/src/App.js"
       ],
-      "notes": "New screen at /reports/purchase under Reports sidebar section. Data: GET /inventory/vendor-item-list?from_date=&to_date= (already wired as getVendorItemList in api.js line 1083 — needs enhancement: add filter params vendor_id/ingredient_id/payment_type + return full response including summary/by_restaurant/total_amount). Table cols: Purchase Date, Store (master only), Ingredient, Vendor, Qty, Unit Price, Amount, Payment Type, Transaction ID. Grand total bar. By-store accordion for master accounts. Date range picker (default 30d). Export button -> GET /inventory/export-inventory-master -> download_url. screenVisibility.js FROZEN: new item { id:'purchase-report', label:'Purchase Report', path:'/reports/purchase', icon:'ShoppingCart' } under reports section. Requires owner approval for screenVisibility edit. All roles see it. Investigation: INVESTIGATION_20261018_REPRO_UPDATE.md",
+      "notes": "New screen at /reports/purchase under Reports sidebar section. Data: GET /inventory/vendor-item-list?from_date=&to_date= (already wired as getVendorItemList in api.js line 1083 \u2014 needs enhancement: add filter params vendor_id/ingredient_id/payment_type + return full response including summary/by_restaurant/total_amount). Table cols: Purchase Date, Store (master only), Ingredient, Vendor, Qty, Unit Price, Amount, Payment Type, Transaction ID. Grand total bar. By-store accordion for master accounts. Date range picker (default 30d). Export button -> GET /inventory/export-inventory-master -> download_url. screenVisibility.js FROZEN: new item { id:'purchase-report', label:'Purchase Report', path:'/reports/purchase', icon:'ShoppingCart' } under reports section. Requires owner approval for screenVisibility edit. All roles see it. Investigation: INVESTIGATION_20261018_REPRO_UPDATE.md",
       "artifact_refs": [
-        { "artifact": 0, "label": "Session-Start", "status": "WAIVED", "path": null },
-        { "artifact": 1, "label": "Intake", "status": "DONE", "path": "control/sessions/CR-051_ARTIFACT_1_INTAKE.md" },
-        { "artifact": 2, "label": "Impact-Analysis", "status": "MISSING", "path": null },
-        { "artifact": 3, "label": "Impl-Plan", "status": "MISSING", "path": null },
-        { "artifact": 4, "label": "Code-Gate", "status": "MISSING", "path": null },
-        { "artifact": 5, "label": "QA-Report", "status": "MISSING", "path": null },
-        { "artifact": 6, "label": "Owner-Signoff", "status": "MISSING", "path": null }
+        {
+          "artifact": 0,
+          "label": "Session-Start",
+          "status": "WAIVED",
+          "path": null
+        },
+        {
+          "artifact": 1,
+          "label": "Intake",
+          "status": "DONE",
+          "path": "control/sessions/CR-051_ARTIFACT_1_INTAKE.md"
+        },
+        {
+          "artifact": 2,
+          "label": "Impact-Analysis",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 3,
+          "label": "Impl-Plan",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 4,
+          "label": "Code-Gate",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 5,
+          "label": "QA-Report",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 6,
+          "label": "Owner-Signoff",
+          "status": "MISSING",
+          "path": null
+        }
       ]
     },
     {
@@ -6421,21 +6456,56 @@
         "frontend/src/components/central-inventory/AddStockPurchaseForm.jsx",
         "frontend/src/services/api.js"
       ],
-      "notes": "Add 2 buttons to the Add Stock / Purchase screen (/purchase): (1) Download Template -> GET /inventory/export-stock -> opens download_url (pre-filled xlsx with all ingredients, columns: Ingredient_id, PurchaseDate, Title, CurrentStock, Unit, Quantity, Amount, Payment_Type, Batch, Brand, Expiry, Expiry Date, Converion Factor). (2) Upload Filled Template -> POST /inventory/upload-stock-excel (form: products_file=@file.xlsx) -> shows success/error. No partial_payments[] in Excel — single Payment_Type column only. Lists sheet has valid units + payment types as dropdown. All roles. Investigation: INVESTIGATION_20261018_MULTI_TOPIC.md",
+      "notes": "Add 2 buttons to the Add Stock / Purchase screen (/purchase): (1) Download Template -> GET /inventory/export-stock -> opens download_url (pre-filled xlsx with all ingredients, columns: Ingredient_id, PurchaseDate, Title, CurrentStock, Unit, Quantity, Amount, Payment_Type, Batch, Brand, Expiry, Expiry Date, Converion Factor). (2) Upload Filled Template -> POST /inventory/upload-stock-excel (form: products_file=@file.xlsx) -> shows success/error. No partial_payments[] in Excel \u2014 single Payment_Type column only. Lists sheet has valid units + payment types as dropdown. All roles. Investigation: INVESTIGATION_20261018_MULTI_TOPIC.md",
       "artifact_refs": [
-        { "artifact": 0, "label": "Session-Start", "status": "WAIVED", "path": null },
-        { "artifact": 1, "label": "Intake", "status": "DONE", "path": "control/sessions/CR-052_ARTIFACT_1_INTAKE.md" },
-        { "artifact": 2, "label": "Impact-Analysis", "status": "MISSING", "path": null },
-        { "artifact": 3, "label": "Impl-Plan", "status": "MISSING", "path": null },
-        { "artifact": 4, "label": "Code-Gate", "status": "MISSING", "path": null },
-        { "artifact": 5, "label": "QA-Report", "status": "MISSING", "path": null },
-        { "artifact": 6, "label": "Owner-Signoff", "status": "MISSING", "path": null }
+        {
+          "artifact": 0,
+          "label": "Session-Start",
+          "status": "WAIVED",
+          "path": null
+        },
+        {
+          "artifact": 1,
+          "label": "Intake",
+          "status": "DONE",
+          "path": "control/sessions/CR-052_ARTIFACT_1_INTAKE.md"
+        },
+        {
+          "artifact": 2,
+          "label": "Impact-Analysis",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 3,
+          "label": "Impl-Plan",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 4,
+          "label": "Code-Gate",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 5,
+          "label": "QA-Report",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 6,
+          "label": "Owner-Signoff",
+          "status": "MISSING",
+          "path": null
+        }
       ]
     },
     {
       "type": "CR",
       "id": "CR-053",
-      "title": "Raw Materials Bulk Import\/Export \u2014 Ingredients Page",
+      "title": "Raw Materials Bulk Import/Export \u2014 Ingredients Page",
       "status": "PROPOSED",
       "severity": "P2",
       "sprint_key": null,
@@ -6444,15 +6514,50 @@
         "frontend/src/components/central-inventory/IngredientCatalogue.jsx",
         "frontend/src/services/api.js"
       ],
-      "notes": "Add 2 buttons to the Raw Materials / Ingredients page: (1) Export button -> GET /inventory/export-inventory-master -> download_url to xlsx (purchase history report — owner confirmed: just build the button, Excel content can change later). (2) Import button -> modal with Download Template (client-generated xlsx: positional format pos0=category, pos1=stock_title, pos2=unit, pos3=small_unit, pos4=min_unit_alert, with dummy header row required) + file upload to POST /inventory/import-inventory (form: file=@file.xlsx). Import limitation: converion_factor cannot be set via import (always None). Conversion-unit ingredients must be created via UI. No new nav item needed — buttons on existing ingredients page. screenVisibility.js NOT modified. Investigation: INVESTIGATION_20261018_CR053_IMPORT_FORMAT.md",
+      "notes": "Add 2 buttons to the Raw Materials / Ingredients page: (1) Export button -> GET /inventory/export-inventory-master -> download_url to xlsx (purchase history report \u2014 owner confirmed: just build the button, Excel content can change later). (2) Import button -> modal with Download Template (client-generated xlsx: positional format pos0=category, pos1=stock_title, pos2=unit, pos3=small_unit, pos4=min_unit_alert, with dummy header row required) + file upload to POST /inventory/import-inventory (form: file=@file.xlsx). Import limitation: converion_factor cannot be set via import (always None). Conversion-unit ingredients must be created via UI. No new nav item needed \u2014 buttons on existing ingredients page. screenVisibility.js NOT modified. Investigation: INVESTIGATION_20261018_CR053_IMPORT_FORMAT.md",
       "artifact_refs": [
-        { "artifact": 0, "label": "Session-Start", "status": "WAIVED", "path": null },
-        { "artifact": 1, "label": "Intake", "status": "DONE", "path": "control/sessions/CR-053_ARTIFACT_1_INTAKE.md" },
-        { "artifact": 2, "label": "Impact-Analysis", "status": "MISSING", "path": null },
-        { "artifact": 3, "label": "Impl-Plan", "status": "MISSING", "path": null },
-        { "artifact": 4, "label": "Code-Gate", "status": "MISSING", "path": null },
-        { "artifact": 5, "label": "QA-Report", "status": "MISSING", "path": null },
-        { "artifact": 6, "label": "Owner-Signoff", "status": "MISSING", "path": null }
+        {
+          "artifact": 0,
+          "label": "Session-Start",
+          "status": "WAIVED",
+          "path": null
+        },
+        {
+          "artifact": 1,
+          "label": "Intake",
+          "status": "DONE",
+          "path": "control/sessions/CR-053_ARTIFACT_1_INTAKE.md"
+        },
+        {
+          "artifact": 2,
+          "label": "Impact-Analysis",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 3,
+          "label": "Impl-Plan",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 4,
+          "label": "Code-Gate",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 5,
+          "label": "QA-Report",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 6,
+          "label": "Owner-Signoff",
+          "status": "MISSING",
+          "path": null
+        }
       ]
     }
   ]
