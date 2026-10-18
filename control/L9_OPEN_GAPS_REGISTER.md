@@ -38,7 +38,8 @@
 | G-019 | Segment `unit_cost` (detail follow-up) | Batch valuation on Stock Detail | P2 | **BACKEND CLOSED** — `unit_cost` on segments verified 2026-07-07. Frontend: CR-041 |
 | G-031 | Reverse push `stock_items` 500 + timeout | Default wizard flow + forward push | P1 | **BACKEND CLOSED** (rounds 1-4: skip→dedupe+sanitize, per-module commit, concurrency 409, N+1 speedup). **PROXY FIXED** — timeout 30→50s. Frontend: 409 handling + `not_seeded` status wired. |
 | **G-035** | **Split payment backend support** | **Add Stock / Receive Goods** | **P1** | **CLOSED 2026-10-16** — `POST /inventory/add-purchase` natively supports `payment_type:"partial"` + `partial_payments[]`. Frontend: CR-047. |
-| **G-036** | **`po_coverage_days` key missing from operational-settings schema** | **PO Create coverage days persistence** | **P2** | **OPEN** — Frontend CR-048 falls back to `3d` gracefully until BE adds this key. Backend must whitelist + persist `po_coverage_days` (integer, default 3) in stored_settings. |
+| **G-036** | **`po_coverage_days` key missing from operational-settings schema** | **PO Create coverage days persistence** | **P2** | **OPEN** — Frontend CR-048 falls back to `3d` gracefully until BE adds this key. Backend must whitelist + persist `po_coverage_days` (integer, default 3) in stored_settings. **CONFIRMED 2026-10-18** — `INVALID_SETTINGS_PAYLOAD` on update. |
+| **G-037** | **No API to add batch/expiry to existing un-batched inventory segment** | **CR-050 Option B (dispatch batch prompt)** | **P2** | **OPEN** — No endpoint exists to attach batch/expiry to a `segment_id:null` un-batched stock segment. 5 guessed endpoints all 404. CR-050 Option B scoped down to "warning + block dispatch" until resolved. Backend must provide a segment-update or segment-split API. Registered 2026-10-18. |
 
 ## Implementation Gaps — Status After CR-030
 
