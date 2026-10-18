@@ -213,14 +213,15 @@
           <div class="cat-combo-drop" id="catComboDrop">
             <div class="cat-combo-search-wrap">
               <input class="cat-combo-search" id="catComboSearch" placeholder="Search category…"
-                oninput="filterCatCombo()" onclick="event.stopPropagation()" />
+                oninput="filterCatCombo()" onclick="event.stopPropagation()"
+                onkeydown="onCatSearchKey(event)" />
             </div>
             <div class="cat-combo-list" id="catComboList"></div>
           </div>
         </div>
         <input class="search-input" id="searchInput" placeholder="Search item…" oninput="render()" />
-        <button class="action-btn btn-outline" onclick="masterSelect(true)" style="font-size:11px">Select All</button>
-        <button class="action-btn btn-outline" onclick="masterSelect(false)" style="font-size:11px">Unselect All</button>
+        <button class="action-btn btn-outline" onclick="masterSelect(true)" tabindex="-1" style="font-size:11px">Select All</button>
+        <button class="action-btn btn-outline" onclick="masterSelect(false)" tabindex="-1" style="font-size:11px">Unselect All</button>
         <div class="toolbar-spacer"></div>
         <button class="action-btn btn-outline" onclick="resetAll()">Reset</button>
         <button class="action-btn btn-primary" id="submitBtn" onclick="simulateDispatch()" disabled>
@@ -374,11 +375,55 @@ function buildCatList(search) {
   const filtered = CAT_OPTIONS.filter(o => !q || o.label.toLowerCase().includes(q));
   list.innerHTML = filtered.map(o => `
     <div class="cat-combo-item ${selectedCat===o.value?'selected':''}"
-      onclick="selectCatOption('${o.value}','${o.label.replace(/'/g,"\\'")}')">
+      tabindex="0" data-val="${o.value}" data-label="${o.label}">
       <span class="item-dot" style="background:${o.color}"></span>
       ${o.label}
     </div>
   `).join('') || '<div style="padding:6px 10px;font-size:11px;color:#9ca3af">No match</div>';
+
+  // Delegated click + keyboard on the list
+  list.onclick = e => {
+    const item = e.target.closest('.cat-combo-item');
+    if (item) selectCatOption(item.dataset.val, item.dataset.label);
+  };
+  list.onkeydown = e => {
+    const item = e.target.closest('.cat-combo-item');
+    if (!item) return;
+    if (e.key === 'Enter') { selectCatOption(item.dataset.val, item.dataset.label); }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); item.nextElementSibling?.focus(); }
+    else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      item.previousElementSibling ? item.previousElementSibling.focus() : document.getElementById('catComboSearch')?.focus();
+    } else if (e.key === 'Escape') { document.getElementById('catComboDrop').classList.remove('open'); }
+  };
+}
+
+function onCatSearchKey(event) {
+  if (event.key === 'Enter') {
+    const first = document.querySelector('#catComboList .cat-combo-item');
+    if (first) first.click();
+  } else if (event.key === 'ArrowDown') {
+    event.preventDefault();
+    document.querySelector('#catComboList .cat-combo-item')?.focus();
+  } else if (event.key === 'Escape') {
+    document.getElementById('catComboDrop').classList.remove('open');
+  }
+}
+
+function onCatItemKey(event, value, label) {
+  if (event.key === 'Enter') {
+    selectCatOption(value, label);
+  } else if (event.key === 'ArrowDown') {
+    event.preventDefault();
+    event.target.nextElementSibling?.focus();
+  } else if (event.key === 'ArrowUp') {
+    event.preventDefault();
+    const prev = event.target.previousElementSibling;
+    prev ? prev.focus() : document.getElementById('catComboSearch')?.focus();
+  } else if (event.key === 'Escape') {
+    document.getElementById('catComboDrop').classList.remove('open');
+    document.getElementById('catComboBtn')?.focus();
+  }
 }
 
 function toggleCatCombo(event) {
@@ -454,15 +499,15 @@ function render() {
     section.className = 'cat-section';
 
     section.innerHTML = `
-      <div class="cat-header" onclick="toggleCat('${cat.replace(/'/g,"\\'")}')">
+      <div class="cat-header" onclick="toggleCat('${cat.replace(/'/g,"\\'")}');" tabindex="-1">
         <span class="cat-chevron ${collapsed?'':'open'}">▶</span>
         <span class="cat-name">${cat}</span>
         <span class="cat-count">${catRows.length} items</span>
         ${outN>0?`<span class="cat-badge out">${outN} OUT</span>`:''}
         ${lowN>0?`<span class="cat-badge low">${lowN} LOW</span>`:''}
         <div class="cat-actions" onclick="event.stopPropagation()">
-          <button class="cat-btn" onclick="selectAll('${cat.replace(/'/g,"\\'")}', true)">Select All</button>
-          <button class="cat-btn" onclick="selectAll('${cat.replace(/'/g,"\\'")}', false)">Unselect All</button>
+          <button class="cat-btn" tabindex="-1" onclick="selectAll('${cat.replace(/'/g,"\\'")}', true)">Select All</button>
+          <button class="cat-btn" tabindex="-1" onclick="selectAll('${cat.replace(/'/g,"\\'")}', false)">Unselect All</button>
         </div>
       </div>
     `;
@@ -571,7 +616,7 @@ function buildSourceHtml(row) {
     : allocTotal < need
       ? `<div class="alloc-status alloc-short">⚠ Short ${(need-allocTotal).toFixed(1)} ${row.unit}</div>`
       : '';
-  return `<div class="source-select-wrap">${lines}${allocStatus}<button class="add-split-btn" onclick="addSplit(${row.id})">+ split across another batch</button></div>`;
+  return `<div class="source-select-wrap">${lines}${allocStatus}<button class="add-split-btn" tabindex="-1" onclick="addSplit(${row.id})">+ split across another batch</button></div>`;
 }
 
 function onRowClick(event, id) {
