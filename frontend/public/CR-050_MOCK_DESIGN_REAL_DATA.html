@@ -202,6 +202,8 @@
           <option value="desi dairy">desi dairy</option>
         </select>
         <input class="search-input" id="searchInput" placeholder="Search item…" oninput="render()" />
+        <button class="action-btn btn-outline" onclick="masterSelect(true)" style="font-size:11px">Select All</button>
+        <button class="action-btn btn-outline" onclick="masterSelect(false)" style="font-size:11px">Unselect All</button>
         <div class="toolbar-spacer"></div>
         <button class="action-btn btn-outline" onclick="resetAll()">Reset</button>
         <button class="action-btn btn-primary" id="submitBtn" onclick="simulateDispatch()" disabled>
@@ -539,6 +541,18 @@ function setFilter(f) {
 }
 
 function onDestChange() { render(); }
+
+function masterSelect(select) {
+  // Select/unselect ALL rows across ALL categories
+  rows.forEach(r => r.included = select);
+  if (!select) {
+    // Collapse all categories when unselecting everything
+    Object.keys(rows.reduce((g,r)=>{g[r.cat]=1;return g},{})).forEach(cat => collapsedCats[cat] = true);
+  } else {
+    collapsedCats = {};
+  }
+  render();
+}
 
 function resetAll() {
   rows.forEach(r => r.included = true);
