@@ -391,7 +391,7 @@ const ITEMS = [
   {
     id: 'wheat', name: 'Wheat Flour', cat: 'DryGoods', catLabel: 'Dry Goods',
     unit: 'kg', status: 'low',
-    destStock: 2, gap: 26.7, ownStock: 33, suggestedQty: 26.7,
+    destStock: 2, gap: 27, ownStock: 33, suggestedQty: 27,  // Math.ceil(26.7) = 27
     segments: [
       { id:'s1', batch:'WHEAT-OCT-10', avail: 30, expiry:'2026-11-10', daysLeft: 23 },
     ]
@@ -407,7 +407,7 @@ const ITEMS = [
   {
     id: 'cream', name: 'Base Cream', cat: 'Dairy', catLabel: 'Dairy',
     unit: 'kg', status: 'low',
-    destStock: 1.2, gap: 27.5, ownStock: 35, suggestedQty: 27.5,
+    destStock: 1.2, gap: 28, ownStock: 35, suggestedQty: 28,  // Math.ceil(27.5) = 28
     // qty 27.5 spans two batches
     segments: [
       { id:'s1', batch:'BCREAM-OCT-07', avail: 5,  expiry:'2026-10-07', daysLeft: -3 }, // EXPIRED
@@ -489,7 +489,7 @@ function render() {
       <td colspan="8">
         <div style="display:flex;align-items:center;justify-content:space-between;">
           <div class="cat-name" onclick="toggleCat('${catId}')">
-            <span style="font-size:10px;color:#94a3b8;" id="caret-${catId}">▶</span>
+            <span style="font-size:10px;color:#94a3b8;" id="caret-${catId}">▼</span>
             <span>${label}</span>
             ${outCount ? `<span class="cbadge-out">${outCount} OUT</span>` : ''}
             ${lowCount ? `<span class="cbadge-low">${lowCount} LOW</span>` : ''}
@@ -731,13 +731,26 @@ function toggleCat(catId) {
   const items = document.querySelectorAll(`tr.item-row[data-cat="${catId}"]`);
   const allHidden = [...items].every(r => r.classList.contains('hidden-cat'));
   items.forEach(r => r.classList.toggle('hidden-cat', !allHidden));
-  document.getElementById('caret-'+catId).textContent = allHidden ? '▶' : '▼';
+  document.getElementById('caret-'+catId).textContent = allHidden ? '▼' : '▶';
 }
 
 function catSel(catId, include) {
   ITEMS.filter(i => i.cat === catId).forEach(item => {
     rowState[item.id].excluded = !include;
   });
+  // When unselecting all in a category → auto-collapse that category
+  if (!include) {
+    const items = document.querySelectorAll(`tr.item-row[data-cat="${catId}"]`);
+    items.forEach(r => r.classList.add('hidden-cat'));
+    const caret = document.getElementById('caret-' + catId);
+    if (caret) caret.textContent = '▶';
+  } else {
+    // Re-selecting → re-expand
+    const items = document.querySelectorAll(`tr.item-row[data-cat="${catId}"]`);
+    items.forEach(r => r.classList.remove('hidden-cat'));
+    const caret = document.getElementById('caret-' + catId);
+    if (caret) caret.textContent = '▼';
+  }
   render();
 }
 
@@ -808,7 +821,7 @@ function setCover(d) {
   // Recalc wheat
   const wItem = ITEMS.find(i => i.id === 'wheat');
   if (wItem) {
-    const newQ = Math.max(0, Math.round((4.1 * d - 2) * 10) / 10);
+    const newQ = Math.ceil(Math.max(0, 4.1 * d - 2));  // Math.ceil to nearest kg
     wItem.gap = newQ;
     wItem.suggestedQty = newQ;
     rowState['wheat'].qty = newQ;
@@ -817,7 +830,7 @@ function setCover(d) {
   // Recalc cream
   const cItem = ITEMS.find(i => i.id === 'cream');
   if (cItem) {
-    const newQ = Math.max(0, Math.round((4.1 * d - 1.2) * 10) / 10);
+    const newQ = Math.ceil(Math.max(0, 4.1 * d - 1.2));  // Math.ceil to nearest kg
     cItem.gap = newQ;
     cItem.suggestedQty = newQ;
     rowState['cream'].qty = newQ;
