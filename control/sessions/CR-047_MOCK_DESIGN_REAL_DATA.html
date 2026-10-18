@@ -145,6 +145,7 @@
   .combobox-item:hover { background: #f5f3ff; color: #6366f1; }
   .combobox-item:focus { background: #eef2ff; color: #4338ca; outline: none; }
   .combobox-item.selected { background: #eef2ff; color: #4338ca; font-weight: 500; }
+  .combobox-item.used { color: #9ca3af; background: #fafafa; }
   .combobox-item-unit { font-size: 10.5px; color: #9ca3af; }
   .combobox-empty { padding: 16px 10px; text-align: center; color: #9ca3af; font-size: 11.5px; }
 
@@ -472,10 +473,14 @@ function autoBatch(title, idx) {
   if (!title) return '';
   const abbrev = title.slice(0,3).toUpperCase().replace(/\s/g,'');
   const now = new Date();
+  const dd  = String(now.getDate()).padStart(2,'0');
   const mon = now.toLocaleString('en',{month:'short'}).toUpperCase();
-  const dd = String(now.getDate()).padStart(2,'0');
-  const base = `${abbrev}-${mon}-${dd}`;
-  // Count earlier rows that share the same batch base — makes same-day duplicate items unique
+  const yy  = String(now.getFullYear()).slice(2);
+  const hh  = String(now.getHours()).padStart(2,'0');
+  const mm  = String(now.getMinutes()).padStart(2,'0');
+  // Format: AME-18OCT26-0924 → unique across days AND same-day purchases at different times
+  const base = `${abbrev}-${dd}${mon}${yy}-${hh}${mm}`;
+  // Same-minute counter for multiple items in one session
   const prevCount = rows.slice(0, idx).filter(r => r.batch && r.batch.startsWith(base)).length;
   return prevCount > 0 ? `${base}-${prevCount + 1}` : base;
 }
@@ -499,22 +504,30 @@ function fullPayableTotal() {
 function renderRows() {
   const tbody = document.getElementById('rowsBody');
   tbody.innerHTML = '';
+
+  // Build duplicate itemId map across all rows
+  const itemIdCount = {};
+  rows.forEach(r => { if (r.itemId) itemIdCount[r.itemId] = (itemIdCount[r.itemId]||0) + 1; });
+
   rows.forEach((row, idx) => {
     const tr = document.createElement('tr');
     tr.id = `row-${idx}`;
     const isComplete = row.itemId && Number(row.qty) > 0 && row.batch.trim();
     const missingBatch = row.itemId && Number(row.qty) > 0 && !row.batch.trim();
     const amount = computeTotal(row.qty, row.rate);
+    const isDuplicate = row.itemId && itemIdCount[row.itemId] > 1;
 
     tr.innerHTML = `
       <td class="row-num">${idx+1}</td>
       <td class="col-item">
-        <div class="combobox-wrap" id="comboWrap${idx}">
+        <div class="combobox-wrap" id="comboWrap${idx}" style="position:relative">
           <input class="combobox-input" id="comboInput${idx}" readonly
             value="${row.title || ''}"
             placeholder="Search item…"
+            style="${isDuplicate?'border-color:#fbbf24;background:#fffbeb;':''}"
             onclick="openCombobox(${idx})"
             onkeydown="onComboKeydown(event,${idx})" />
+          ${isDuplicate ? `<span style="position:absolute;right:5px;top:50%;transform:translateY(-50%);font-size:9px;font-weight:600;background:#fef3c7;color:#92400e;border-radius:3px;padding:1px 5px;pointer-events:none;white-space:nowrap">⚠ dup</span>` : ''}
           <div class="combobox-dropdown" id="comboDrop${idx}">
             <div class="combobox-search">
               <input type="text" id="comboSearch${idx}" placeholder="Search…" oninput="filterCombo(${idx})" onkeydown="onComboSearchKey(event,${idx})" />
@@ -571,6 +584,10 @@ function filterCombo(idx) {
   const list = document.getElementById(`comboList${idx}`);
   if (!list) return;
 
+  // Build map of itemId → row number (other rows only)
+  const usedInRow = {};
+  rows.forEach((r, i) => { if (r.itemId && i !== idx) usedInRow[r.itemId] = i + 1; });
+
   const groups = {};
   REAL_ITEMS.filter(i => !search || i.title.toLowerCase().includes(search)).forEach(i => {
     (groups[i.cat] = groups[i.cat]||[]).push(i);
@@ -583,15 +600,18 @@ function filterCombo(idx) {
 
   list.innerHTML = Object.entries(groups).map(([cat, items]) => `
     <div class="combobox-group-label">${cat}</div>
-    ${items.map(i => `
-      <div class="combobox-item ${rows[idx]?.itemId===String(i.id)?'selected':''}"
+    ${items.map(i => {
+      const alreadyInRow = usedInRow[String(i.id)];
+      const isSelected = rows[idx]?.itemId === String(i.id);
+      return `
+      <div class="combobox-item ${isSelected?'selected':''} ${alreadyInRow?'used':''}"
         tabindex="0"
         onclick="selectItem(${idx},${i.id},'${i.title.replace(/'/g,"\\'")}','${i.unit}')"
         onkeydown="onListItemKey(event,${idx},${i.id},'${i.title.replace(/'/g,"\\'")}','${i.unit}')">
-        <span>${highlightMatch(i.title, search)}</span>
+        <span>${highlightMatch(i.title, search)}${alreadyInRow ? ` <span style="font-size:9px;color:#f59e0b;font-weight:600">↑ row ${alreadyInRow}</span>` : ''}</span>
         <span class="combobox-item-unit">${i.unit}</span>
-      </div>
-    `).join('')}
+      </div>`;
+    }).join('')}
   `).join('');
 }
 
