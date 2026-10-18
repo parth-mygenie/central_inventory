@@ -51,6 +51,10 @@
     font-size: 12px; color: #111; background: #fff; outline: none; transition: border .12s;
     font-family: inherit;
   }
+  /* Remove spinner arrows on all number inputs */
+  input[type=number]::-webkit-outer-spin-button,
+  input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type=number] { -moz-appearance: textfield; }
   select:focus, input:focus { border-color: #6366f1; box-shadow: 0 0 0 2px rgba(99,102,241,.1); }
   .vendor-context { display: flex; align-items: center; gap: 5px; margin-top: 6px; padding: 5px 8px; background: #f8fafc; border-radius: 5px; font-size: 10.5px; color: #6b7280; }
   .vendor-context svg { width: 11px; height: 11px; flex-shrink: 0; }
@@ -660,20 +664,37 @@ function selectItem(idx, itemId, title, unit) {
 
 function onQtyChange(idx, val) {
   rows[idx].qty = val;
-  rows[idx].amount = computeTotal(val, rows[idx].rate).toFixed(2);
-  // Auto-batch
-  if (rows[idx].title && Number(val)>0 && !rows[idx].batch) {
+  const amt = computeTotal(val, rows[idx].rate);
+  rows[idx].amount = amt > 0 ? amt.toFixed(2) : '';
+
+  // Auto-batch: update DOM directly without re-render
+  if (rows[idx].title && Number(val) > 0 && !rows[idx].batch) {
     rows[idx].batch = autoBatch(rows[idx].title);
+    const batchEl = document.getElementById(`batch${idx}`);
+    if (batchEl) { batchEl.value = rows[idx].batch; batchEl.className = 'auto-filled'; }
   }
-  renderRows();
-  setTimeout(()=>document.getElementById(`qty${idx}`)?.focus(),0);
+
+  // Update amount cell in-place (readonly, safe to overwrite)
+  const amtEl = document.getElementById(`amount${idx}`);
+  if (amtEl) { amtEl.value = rows[idx].amount; amtEl.className = rows[idx].amount ? 'auto-filled' : ''; }
+
+  updateGrandTotal();
+  updateReviewBtn();
+  // No renderRows() — cursor stays in place
 }
 
 function onRateChange(idx, val) {
   rows[idx].rate = val;
-  rows[idx].amount = computeTotal(rows[idx].qty, val).toFixed(2);
-  renderRows();
-  setTimeout(()=>document.getElementById(`rate${idx}`)?.focus(),0);
+  const amt = computeTotal(rows[idx].qty, val);
+  rows[idx].amount = amt > 0 ? amt.toFixed(2) : '';
+
+  // Update amount cell in-place (readonly, safe to overwrite)
+  const amtEl = document.getElementById(`amount${idx}`);
+  if (amtEl) { amtEl.value = rows[idx].amount; amtEl.className = rows[idx].amount ? 'auto-filled' : ''; }
+
+  updateGrandTotal();
+  updateReviewBtn();
+  // No renderRows() — cursor stays in place
 }
 
 function onBatchChange(idx, val) {
