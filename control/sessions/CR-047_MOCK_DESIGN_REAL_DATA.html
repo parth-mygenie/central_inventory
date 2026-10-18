@@ -263,7 +263,7 @@
               <div style="display:flex;gap:10px;align-items:flex-start">
 
                 <!-- Vendor -->
-                <div style="flex:0.85;min-width:0">
+                <div style="flex:1.2;min-width:0">
                   <div class="field-label">Vendor <span class="req">*</span></div>
                   <select id="vendorSelect" onchange="onVendorChange()">
                     <option value="">Select vendor</option>
@@ -272,7 +272,7 @@
                 </div>
 
                 <!-- Purchase Date -->
-                <div style="flex:0.95;min-width:0">
+                <div style="flex:1.0;min-width:0">
                   <div class="field-label">Purchase Date</div>
                   <input type="date" id="purchaseDateInput" value="2026-10-18" />
                 </div>
@@ -287,7 +287,7 @@
                 <div style="width:1px;background:#e5e7eb;align-self:stretch;margin:0 2px;flex-shrink:0"></div>
 
                 <!-- Payment section (right side) -->
-                <div style="flex:2.8;min-width:0">
+                <div style="flex:1.8;min-width:0">
                   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
                     <div class="field-label" style="margin:0">Payment</div>
                     <button class="add-payment-btn" onclick="addPaymentRow()" id="addPayBtn" style="padding:2px 8px;font-size:10.5px;height:20px;border-radius:4px">
@@ -820,7 +820,7 @@ function renderPaymentRows() {
         </select>
         <input type="number" class="payment-amount-input" id="payAmt${i}"
           value="${p.amount}" placeholder="₹ amount" oninput="onPaymentChange()"
-          style="flex:1;min-width:0;height:28px;font-size:11.5px" />
+          style="width:130px!important;flex:0 0 130px;height:28px;font-size:11.5px" />
         ${paymentRows.length>1?`<button class="payment-remove-btn" onclick="removePayRow(${i})"
           style="flex-shrink:0;width:18px;height:18px">
           <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:10px;height:10px"><path d="M18 6L6 18M6 6l12 12"/></svg>
