@@ -22,8 +22,8 @@
   .nav-item svg { width: 15px; height: 15px; flex-shrink: 0; opacity: .65; }
   .nav-item.active svg { opacity: 1; }
 
-  .main { flex: 1; overflow: auto; background: #f9fafb; }
-  .page { max-width: 1100px; margin: 0 auto; padding: 20px 24px 60px; }
+  .main { flex: 1; overflow: auto; background: #f9fafb; min-width: 0; }
+  .page { padding: 18px 16px 40px 16px; }
 
   /* Page header */
   .page-header { display: flex; align-items: center; gap-10px; margin-bottom: 20px; }
@@ -40,7 +40,7 @@
   .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; margin-bottom: 14px; }
   .card-header { padding: 11px 16px 0; border-bottom: 1px solid #f3f4f6; }
   .card-header-title { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: #9ca3af; padding-bottom: 10px; }
-  .card-body { padding: 14px 16px; }
+  .card-body { padding: 12px 14px; }
 
   /* Vendor/date row */
   .header-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
@@ -56,26 +56,26 @@
   .vendor-context svg { width: 12px; height: 12px; flex-shrink: 0; }
 
   /* Spreadsheet table */
-  .spreadsheet-wrap { overflow-x: auto; }
-  .spreadsheet { width: 100%; border-collapse: collapse; }
+  /* spreadsheet-wrap defined below with full rules */
+  .spreadsheet { width: 100%; border-collapse: collapse; table-layout: fixed; }
   .spreadsheet thead tr { background: #f8fafc; }
-  .spreadsheet th { padding: 8px 10px; text-align: left; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #9ca3af; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
+  .spreadsheet th { padding: 7px 8px; text-align: left; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #9ca3af; border-bottom: 1px solid #e5e7eb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .spreadsheet th.required::after { content: " *"; color: #ef4444; }
-  .spreadsheet td { padding: 4px 6px; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+  .spreadsheet td { padding: 3px 4px; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
   .spreadsheet tr:last-child td { border-bottom: none; }
   .spreadsheet tr:hover td { background: #fafafa; }
-  .spreadsheet input, .spreadsheet select { height: 30px; font-size: 12px; border-radius: 5px; }
+  .spreadsheet input, .spreadsheet select { height: 28px; font-size: 11.5px; border-radius: 5px; }
   .spreadsheet input.auto-filled { background: #f0fdf4; border-color: #86efac; color: #15803d; }
   .spreadsheet input.error { border-color: #fca5a5; background: #fff1f1; }
-  .col-idx { width: 32px; }
-  .col-item { min-width: 200px; }
-  .col-qty { width: 80px; }
-  .col-unit { width: 60px; }
-  .col-rate { width: 90px; }
-  .col-amount { width: 90px; }
-  .col-batch { width: 130px; }
-  .col-expiry { width: 118px; }
-  .col-del { width: 32px; }
+  .col-idx { width: 28px; }
+  .col-item { min-width: 160px; width: 22%; }
+  .col-qty { width: 70px; }
+  .col-unit { width: 48px; }
+  .col-rate { width: 80px; }
+  .col-amount { width: 80px; }
+  .col-batch { width: 110px; }
+  .col-expiry { width: 108px; }
+  .col-del { width: 28px; }
   .row-num { font-size: 10px; color: #9ca3af; font-weight: 600; text-align: center; }
   .del-btn { width: 22px; height: 22px; border: none; background: none; cursor: pointer; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; color: #9ca3af; }
   .del-btn:hover { background: #fee2e2; color: #ef4444; }
@@ -126,9 +126,10 @@
   .incomplete-warn svg { width: 11px; height: 11px; }
 
   /* Item combobox dropdown */
-  .combobox-wrap { position: relative; }
+  .spreadsheet-wrap { overflow-x: auto; width: 100%; }
+  .spreadsheet input { width: 100%; min-width: 0; box-sizing: border-box; }
   .combobox-input-wrap { position: relative; }
-  .combobox-input { width: 100%; height: 30px; padding: 0 8px; border: 1px solid #d1d5db; border-radius: 5px; font-size: 12px; outline: none; cursor: pointer; }
+  .combobox-input { width: 100%; height: 28px; padding: 0 8px; border: 1px solid #d1d5db; border-radius: 5px; font-size: 11.5px; outline: none; cursor: pointer; }
   .combobox-input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.1); }
   .combobox-dropdown { position: absolute; top: calc(100% + 4px); left: 0; width: 280px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.12); z-index: 999; display: none; }
   .combobox-dropdown.open { display: block; }
