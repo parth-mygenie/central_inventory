@@ -48,6 +48,16 @@ PROPOSED → PLANNED → IN_PROGRESS → QA → OWNER_REVIEW → CLOSED
 2. Run `node control/gen_dashboard_data.js` to regenerate dashboard data.
 3. Verify with `node control/gen_dashboard_data.js --check`.
 
+## S5 — Dispatch UX Overhaul (Registered 2026-10-18)
+
+| ID | Title | Status | Severity | Files |
+|----|-------|:------:|:--------:|-------|
+| **CR-050** | Direct Dispatch — Spreadsheet UX + Category Grouping + FEFO Auto-Select + Burst Fix | PROPOSED | P1 | `DirectDispatchForm.jsx`, `SourceSelector.jsx`, `api.js`, `RequestStockForm.jsx` |
+
+Gate 1 intake artifact: `control/sessions/CR-050_ARTIFACT_1_INTAKE.md`
+Mockups: `dispatch_v2_mockup.html` (category UX) · `dispatch_fefo_mockup.html` (FEFO + multi-batch, latest)
+Open question before PLANNING: OQ-1 — does POS API support adding batch info to un-batched (`segment_id: null`) segments?
+
 ## S4 — Purchase UX Overhaul (Registered 2026-10-16)
 
 | ID | Title | Status | Severity | Files |

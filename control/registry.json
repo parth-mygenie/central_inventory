@@ -6268,6 +6268,66 @@
       ]
     },
     {
+      "type": "CR",
+      "id": "CR-050",
+      "title": "Direct Dispatch \u2014 Spreadsheet UX + Category Grouping + FEFO Source Auto-Select + Burst Fix",
+      "status": "PROPOSED",
+      "severity": "P1",
+      "sprint_key": null,
+      "phase": "S5 \u2014 Dispatch UX Overhaul",
+      "files": [
+        "frontend/src/components/central-inventory/DirectDispatchForm.jsx",
+        "frontend/src/components/central-inventory/SourceSelector.jsx",
+        "frontend/src/services/api.js",
+        "frontend/src/components/central-inventory/RequestStockForm.jsx"
+      ],
+      "notes": "5 problems fixed: (1) Category grouping with collapse/expand + per-category Select All/Unselect All + dual search. (2) FEFO auto-select on qty entry (200ms debounce) — sort by expiry ASC, auto-fill source select, expired segments skipped. (3) Multi-batch widget: split qty across multiple segments, FEFO auto-splits, storekeeper can add/remove lines. (4) source-options burst fix: pass includeSegments:true to existing getStockInventory call — segments_preview replaces 257 per-item source-options calls. (5) Ceiling fix: Math.ceil(value*100)/100 -> Math.ceil(value) in dispatch lines 162+170, also RequestStockForm lines 176+189. (6) Un-batched stock (segment_id:null): prompt to add batch info before dispatch (Option B, owner-confirmed). OQ-1: verify backend supports adding batch to un-batched segment. Related: CR-047 (shared components). RELATED: P21 (same file, different scope — intel sidebar).",
+      "artifact_refs": [
+        {
+          "artifact": 0,
+          "label": "Session-Start",
+          "status": "WAIVED",
+          "path": null
+        },
+        {
+          "artifact": 1,
+          "label": "Intake",
+          "status": "DONE",
+          "path": "control/sessions/CR-050_ARTIFACT_1_INTAKE.md"
+        },
+        {
+          "artifact": 2,
+          "label": "Impact-Analysis",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 3,
+          "label": "Impl-Plan",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 4,
+          "label": "Code-Gate",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 5,
+          "label": "QA-Report",
+          "status": "MISSING",
+          "path": null
+        },
+        {
+          "artifact": 6,
+          "label": "Owner-Signoff",
+          "status": "MISSING",
+          "path": null
+        }
+      ]
+    },
+    {
       "type": "BUG",
       "id": "BUG-049",
       "title": "PO Create \u2014 Suggestion fallback returns '10' instead of min_qty_alert gap",
