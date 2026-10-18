@@ -814,13 +814,13 @@ function renderPaymentRows() {
     html += `
       <div class="payment-row" id="payRow${i}" style="gap:4px;min-width:0">
         <select class="payment-mode-select" id="payMode${i}" onchange="onModeChange(${i})"
-          style="width:105px!important;flex:0 0 105px;font-size:11.5px;height:28px">
+          style="width:90px!important;flex:0 0 90px;font-size:11.5px;height:28px">
           <option value="">Mode</option>
           ${PAYMENT_MODES.map(m => `<option value="${m}" ${p.mode===m?'selected':''}>${m}</option>`).join('')}
         </select>
         <input type="number" class="payment-amount-input" id="payAmt${i}"
           value="${p.amount}" placeholder="₹ amount" oninput="onPaymentChange()"
-          style="width:130px!important;flex:0 0 130px;height:28px;font-size:11.5px" />
+          style="width:100px!important;flex:0 0 100px;height:28px;font-size:11.5px" />
         ${paymentRows.length>1?`<button class="payment-remove-btn" onclick="removePayRow(${i})"
           style="flex-shrink:0;width:18px;height:18px">
           <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:10px;height:10px"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -831,7 +831,7 @@ function renderPaymentRows() {
         <span style="color:#9ca3af;font-size:10px;flex-shrink:0">└</span>
         <input type="text" id="payRef${i}" value="${p.ref}"
           placeholder="Ref / Transaction ID (optional)"
-          style="flex:1;height:26px;font-size:11px;border:1px solid #d1d5db;border-radius:5px;padding:0 8px;background:#fff;outline:none;color:#111;width:100%"
+          style="flex:0 0 auto;max-width:220px;height:26px;font-size:11px;border:1px solid #d1d5db;border-radius:5px;padding:0 8px;background:#fff;outline:none;color:#111"
           oninput="onPaymentChange()" />
       </div>` : `<div style="display:none"><input type="text" id="payRef${i}" value="${p.ref}" style="display:none"/></div>`}
     `;
