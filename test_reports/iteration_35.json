@@ -1,0 +1,110 @@
+{
+  "iteration": 35,
+  "test_date": "2026-06-01",
+  "test_type": "P1 Preview Gaps Verification - Sprint B Intelligence Features",
+  "overall_status": "PASS",
+  "summary": "All 4 P1 preview gap features verified working correctly: (1) Pending Queues requester store health mini-bar, (2) Direct Dispatch YOUR STOCK AFTER projection + duplicate dispatch warning, (3) ReceiveDialog dispatched vs requested comparison, (4) ApproveWaveDialog FEFO auto-select with badges.",
+  "tests": [
+    {
+      "feature": "Pending Queues - Requester Store Health Mini-bar",
+      "status": "PASS",
+      "details": "3 approval cards (PO-0074, PO-0075, PO-0113) each show requester store health mini-bar below item table: 'My Genie store health: ●1 out ●67 low 96 adequate'. Mini-bar shows colored dots for out/low/adequate counts. Urgent requests (>=2 out) get red background highlight."
+    },
+    {
+      "feature": "Pending Queues - Approval Card Buttons",
+      "status": "PASS",
+      "details": "Each approval card has: Reject button (red), View Details button, Approve All button. Partial Approve button appears for multi-item requests. Age badges (6 days ago, 5 days ago) and 'Can fulfill' badges visible."
+    },
+    {
+      "feature": "Pending Queues - Item Table Columns",
+      "status": "PASS",
+      "details": "Item tables show columns: ITEM REQUESTED, QTY REQUESTED, YOUR STOCK, AFTER APPROVAL. After Approval column shows projected stock after fulfilling request."
+    },
+    {
+      "feature": "Direct Dispatch - What This Store Needs Table",
+      "status": "PASS",
+      "details": "After selecting DemoFranchise1 as destination, 'WHAT THIS STORE NEEDS (4 items)' section appears with columns: Item, Their Stock, Min Threshold, Gap, Your Stock, Your Stock After. Shows items below minimum threshold at destination."
+    },
+    {
+      "feature": "Direct Dispatch - YOUR STOCK AFTER Projection",
+      "status": "PASS",
+      "details": "Your Stock After column shows projected stock after dispatching gap quantity. Negative projections displayed in red with '(insufficient)' text: red meat -372 kg, maida -298.65 kg, Cooking Oil -104.88 kg, patri -35.17 kg."
+    },
+    {
+      "feature": "Direct Dispatch - Duplicate Dispatch Warning",
+      "status": "PASS",
+      "details": "Amber warning banner: 'You already dispatched to this store today (1 transfer)' appears when selecting a destination that received a dispatch today. Uses AlertTriangle icon."
+    },
+    {
+      "feature": "Direct Dispatch - OUT Badges",
+      "status": "PASS",
+      "details": "Items with zero stock at destination (red meat, patri) show red 'OUT' badge next to item name. Row has red background highlight."
+    },
+    {
+      "feature": "Transfer Detail - Requester Store Snapshot",
+      "status": "PASS",
+      "details": "/transfer/74 shows 'REQUESTER STORE SNAPSHOT — DEMOFRANCHISE4' section with 4 stat cards (0 Out of Stock, 0 Low Stock, 4 Adequate, 4 Total Items). Item table shows Stock Level, Min Threshold, Status (OK badges), and 'In This Request?' column (patri shows 'Yes — 0.1 kg')."
+    },
+    {
+      "feature": "Transfer Detail - Approval Impact",
+      "status": "PASS",
+      "details": "'APPROVAL IMPACT ON YOUR STOCK' section shows table with Item, Requested, Your Stock, After Approval columns. patri: 0.1 kg requested, 64.83 kg your stock, 64.73 kg after approval. Amber warning: 'Approving will reduce your stock as shown above'."
+    },
+    {
+      "feature": "ReceiveDialog - Dispatched vs Requested Comparison",
+      "status": "PASS",
+      "details": "PO-0134 ReceiveDialog shows each line item with 'Dispatched: X kg' and 'Requested: X kg' labels. Match badge (green) appears when quantities match. Mismatch badges show 'X less than requested' or 'X more than requested' when different."
+    },
+    {
+      "feature": "ReceiveDialog - After Receiving Summary",
+      "status": "PASS",
+      "details": "Green summary section shows 'After receiving:' with stock additions per item: '12 CVT BOX → +5 kg, 24 CVT BOX → +5 kg'. Partial Receive toggle available."
+    },
+    {
+      "feature": "ApproveWaveDialog - FEFO Auto-select",
+      "status": "PASS",
+      "details": "Partial Approve dialog for PO-0074 shows segment picker with FEFO-sorted options. First segment (nearest expiry) has 'FEFO Recommended' badge (blue). Segments show expiry badges: 'Exp 180d', 'Exp 313d'."
+    },
+    {
+      "feature": "ApproveWaveDialog - Segment Picker",
+      "status": "PASS",
+      "details": "Segment dropdown shows: BATCH-patri-A — 55 avail (FEFO Recommended, Exp 180d), PATRI-BATCH-01 — 7.8 avail (Exp 313d), FINAL-PATRI-01 — 1 avail (Exp 313d), Seg #37 — 1.03 avail. Remainder policy selector (Hold/Cancel) available."
+    }
+  ],
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "All screens",
+        "issues": ["API responses take 10-20 seconds due to external POS API calls - expected behavior"]
+      }
+    ]
+  },
+  "test_report_links": ["/app/test_reports/iteration_35.json"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "PendingQueues.jsx: Requester health mini-bar correctly fetches hierarchy-detail per unique requester and displays out/low/adequate counts with colored dots",
+    "DirectDispatchForm.jsx: YOUR STOCK AFTER projection correctly calculates ownQty - gap and displays negative values in red with '(insufficient)' suffix",
+    "DirectDispatchForm.jsx: Duplicate dispatch warning correctly checks transfer history for same-day dispatches to selected destination",
+    "ReceiveDialog.jsx: Dispatched vs Requested comparison uses dispatchedDisplayTotal from meta_json.dispatch and requestedDisplayQty for accurate comparison",
+    "ApproveWaveDialog.jsx: FEFO sorting correctly orders segments by expiry_date ascending, first segment gets 'FEFO Recommended' badge"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "100% (all API proxies working)",
+    "frontend": "100% (all 13 features verified)"
+  },
+  "test_credentials": {
+    "central": "abhishek@kalabahia.com / Qplazm@10 (rid=1)",
+    "franchise": "owner@demofranchise1.com / Qplazm@10 (rid=783)"
+  },
+  "seed_data_creation": "None - used existing POS API data",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All P1 preview gap features verified. Key test paths: (1) /queues for Pending Queues with requester health mini-bar below each approval card's item table. (2) /dispatch/new with DemoFranchise1 selected shows 'What This Store Needs' table with YOUR STOCK AFTER column and duplicate dispatch warning. (3) /transfer/74 for Transfer Detail with Requester Store Snapshot and Approval Impact sections. (4) Login as franchise user (owner@demofranchise1.com) to test ReceiveDialog with dispatched vs requested comparison. (5) ApproveWaveDialog shows FEFO-sorted segments with 'FEFO Recommended' badge on nearest-expiry segment."
+}

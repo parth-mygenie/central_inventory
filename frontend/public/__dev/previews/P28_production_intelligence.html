@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P28 Phase 3 — Production Intelligence UI Mock</title>
+<style>
+:root{--bg:#fff;--surface:#fff;--surface2:#f4f4f5;--surface3:#fafafa;--border:#e4e4e7;--border-light:#f4f4f5;--text:#09090b;--text-sec:#52525b;--text-muted:#a1a1aa;--primary:#18181b;--primary-fg:#fafafa;--amber:#b45309;--amber-light:#fffbeb;--amber-border:#fde68a;--red:#dc2626;--red-light:#fef2f2;--red-border:#fecaca;--green:#16a34a;--green-light:#f0fdf4;--green-border:#bbf7d0;--blue:#2563eb;--blue-light:#eff6ff;--blue-border:#bfdbfe;--font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;--mono:'SF Mono',Consolas,monospace;--sidebar-w:200px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--surface2);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5;}
+.shell{display:flex;min-height:100vh;}
+.sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);padding:16px 0;flex-shrink:0;position:sticky;top:0;height:100vh;}
+.sidebar .logo{padding:0 16px 16px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.sidebar .logo .icon{width:24px;height:24px;background:var(--primary);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--primary-fg);font-size:12px;}
+.sidebar nav a{display:flex;align-items:center;padding:8px 16px;font-size:13px;color:var(--text-sec);text-decoration:none;gap:8px;}
+.sidebar nav a:hover{background:var(--surface2);}
+.sidebar nav a.active{background:var(--surface2);color:var(--text);font-weight:600;border-right:2px solid var(--primary);}
+.sidebar nav .nav-icon{width:16px;height:16px;border-radius:3px;background:var(--surface2);border:1px solid var(--border);flex-shrink:0;}
+.sidebar nav a.active .nav-icon{background:var(--primary);border-color:var(--primary);}
+.topbar{height:48px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;background:var(--surface);justify-content:space-between;}
+.topbar .store-name{font-size:13px;font-weight:600;}
+.topbar .badge{font-size:10px;padding:2px 8px;border-radius:4px;background:var(--surface2);color:var(--text-sec);border:1px solid var(--border);font-weight:600;margin-left:8px;}
+.topbar .time{font-size:11px;color:var(--text-muted);}
+.main{flex:1;display:flex;flex-direction:column;}
+.content{flex:1;padding:20px 28px 40px;max-width:1200px;}
+.preview-bar{background:var(--amber-light);border:1px solid var(--amber-border);border-radius:6px;padding:8px 14px;margin-bottom:16px;font-size:11px;color:var(--amber);font-weight:600;}
+.screen-break{margin:48px 0 24px;padding:24px 0 12px;border-top:3px solid var(--primary);}
+.screen-label{font-size:22px;font-weight:800;color:var(--primary);margin-bottom:4px;}
+.screen-desc{font-size:13px;color:var(--text-muted);margin-bottom:20px;}
+h1{font-size:20px;font-weight:700;margin-bottom:2px;}
+.sub{font-size:13px;color:var(--text-muted);margin-bottom:16px;}
+.section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-muted);margin:20px 0 8px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:12px;overflow:hidden;}
+.card-head{padding:10px 16px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between;}
+.card-head h2{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:600;}
+.mono{font-family:var(--mono);}
+.btn{font-size:12px;font-weight:500;padding:6px 14px;border-radius:5px;border:1px solid var(--border);background:var(--surface);color:var(--text-sec);cursor:pointer;display:inline-flex;align-items:center;gap:4px;}
+.btn-primary{background:var(--primary);color:var(--primary-fg);border-color:var(--primary);}
+.btn-sm{font-size:10px;padding:4px 10px;}
+.badge-s{font-size:10px;font-weight:600;padding:2px 8px;border-radius:4px;display:inline-block;}
+.badge-ok{background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);}
+.badge-warn{background:var(--amber-light);color:var(--amber);border:1px solid var(--amber-border);}
+.badge-danger{background:var(--red-light);color:var(--red);border:1px solid var(--red-border);}
+.badge-active{background:var(--green-light);color:var(--green);border:1px solid var(--green-border);}
+.badge-info{background:var(--blue-light);color:var(--blue);border:1px solid var(--blue-border);}
+
+/* KPI cards */
+.priority-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px;}
+.p-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;cursor:pointer;transition:box-shadow .15s;}
+.p-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.p-card .v{font-size:26px;font-weight:700;font-family:var(--mono);}
+.p-card .l{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
+.p-card .detail{font-size:10px;color:var(--text-muted);margin-top:6px;border-top:1px solid var(--border-light);padding-top:6px;}
+.p-card.alert{border-left:3px solid var(--red);}
+.p-card.alert .v{color:var(--red);}
+.p-card.warn{border-left:3px solid var(--amber);}
+.p-card.warn .v{color:var(--amber);}
+.p-card.production{border-left:3px solid var(--blue);}
+.p-card.production .v{color:var(--blue);}
+
+/* NBA banners */
+.nba{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:12px;display:flex;align-items:center;gap:14px;}
+.nba.production-nba{border-left:3px solid var(--amber);background:var(--amber-light);}
+.nba .nba-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;}
+.nba.production-nba .nba-icon{background:rgba(180,83,9,.12);}
+.nba-content{flex:1;}
+.nba-title{font-size:13px;font-weight:600;}
+.nba-desc{font-size:11px;color:var(--text-muted);margin-top:1px;}
+.nba-action{flex-shrink:0;}
+
+/* Quick actions */
+.qa-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;}
+.qa-btn{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer;text-align:left;transition:box-shadow .15s;}
+.qa-btn:hover{box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.qa-btn .qa-label{font-size:12px;font-weight:600;}
+.qa-btn .qa-desc{font-size:10px;color:var(--text-muted);margin-top:2px;}
+
+/* Production form */
+.form-group{margin-bottom:16px;}
+.form-label{font-size:11px;font-weight:600;color:var(--text-sec);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:block;}
+.form-input{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--surface);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.form-display{padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--surface2);font-family:var(--mono);}
+
+/* Recipe selector with intelligence */
+.recipe-option{padding:10px 14px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all .15s;}
+.recipe-option:hover{border-color:var(--primary);background:var(--surface3);}
+.recipe-option.selected{border-color:var(--primary);background:var(--surface3);border-width:2px;}
+.recipe-option .ro-main{flex:1;}
+.recipe-option .ro-name{font-size:13px;font-weight:600;}
+.recipe-option .ro-meta{font-size:10px;color:var(--text-muted);margin-top:1px;}
+.recipe-option .ro-stock{text-align:right;}
+.recipe-option .ro-stock-val{font-size:14px;font-weight:700;font-family:var(--mono);}
+.recipe-option .ro-stock-label{font-size:9px;color:var(--text-muted);text-transform:uppercase;}
+
+/* Ingredient table with health strip */
+.ing-table{width:100%;border-collapse:collapse;font-size:12px;}
+.ing-table th{text-align:left;padding:8px 12px;font-size:10px;text-transform:uppercase;color:var(--text-muted);font-weight:600;border-bottom:1px solid var(--border);}
+.ing-table th:not(:first-child){text-align:right;}
+.ing-table td{padding:8px 12px;border-bottom:1px solid var(--border-light);}
+.ing-table td:not(:first-child){text-align:right;font-family:var(--mono);font-size:11px;}
+.ing-table tr.insufficient{background:var(--amber-light);}
+.health-bar{width:60px;height:6px;background:var(--surface2);border-radius:3px;display:inline-block;vertical-align:middle;margin-left:8px;overflow:hidden;}
+.health-bar .fill{height:100%;border-radius:3px;}
+.health-bar .fill.ok{background:var(--green);}
+.health-bar .fill.low{background:var(--amber);}
+.health-bar .fill.critical{background:var(--red);}
+
+/* Coverage estimate */
+.coverage-card{background:var(--blue-light);border:1px solid var(--blue-border);border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:12px;margin:12px 0;}
+.coverage-card .cv-icon{width:32px;height:32px;border-radius:6px;background:rgba(37,99,235,.12);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.coverage-card .cv-text{font-size:12px;font-weight:500;}
+.coverage-card .cv-sub{font-size:10px;color:var(--text-muted);margin-top:1px;}
+
+/* Post-production NBA */
+.post-nba{background:var(--green-light);border:1px solid var(--green-border);border-radius:8px;padding:14px 16px;margin-top:12px;display:flex;align-items:center;gap:14px;}
+.post-nba .pn-icon{width:32px;height:32px;border-radius:6px;background:rgba(22,163,74,.12);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.post-nba .pn-main{flex:1;}
+.post-nba .pn-title{font-size:12px;font-weight:600;color:var(--green);}
+.post-nba .pn-desc{font-size:10px;color:var(--text-muted);margin-top:1px;}
+
+/* Staleness */
+.stale-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--border-light);}
+.stale-row:last-child{border-bottom:none;}
+.stale-name{font-size:13px;font-weight:600;flex:1;}
+.stale-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:4px;}
+.stale-fresh{background:var(--green-light);color:var(--green);border:1px solid var(--green-border);}
+.stale-aging{background:var(--amber-light);color:var(--amber);border:1px solid var(--amber-border);}
+.stale-stale{background:var(--red-light);color:var(--red);border:1px solid var(--red-border);}
+
+/* Annotation overlays */
+.annotation{position:relative;}
+.annotation::before{content:attr(data-note);position:absolute;top:-8px;right:-4px;font-size:9px;font-weight:700;background:var(--primary);color:var(--primary-fg);padding:1px 6px;border-radius:3px;white-space:nowrap;z-index:1;}
+.new-badge{display:inline-block;font-size:9px;font-weight:700;background:var(--blue);color:#fff;padding:1px 6px;border-radius:3px;margin-left:6px;vertical-align:middle;}
+
+@media(max-width:900px){.sidebar{display:none;}.priority-row{grid-template-columns:repeat(2,1fr);}.qa-grid{grid-template-columns:repeat(2,1fr);}.content{padding:16px;}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SIDEBAR -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="logo"><div class="icon">CI</div>Central Inventory</div>
+  <nav>
+    <a href="#hub" class="active"><div class="nav-icon"></div>Operations Hub</a>
+    <a href="#"><div class="nav-icon"></div>Stock Inventory</a>
+    <a href="#production"><div class="nav-icon"></div>Production <span class="new-badge">NEW</span></a>
+    <a href="#production-history"><div class="nav-icon"></div>Production History <span class="new-badge">NEW</span></a>
+    <a href="#"><div class="nav-icon"></div>Hierarchy Summary</a>
+    <a href="#"><div class="nav-icon"></div>Pending Queues</a>
+    <a href="#"><div class="nav-icon"></div>History &amp; Ledger</a>
+    <a href="#"><div class="nav-icon"></div>Vendors</a>
+    <a href="#"><div class="nav-icon"></div>Settings</a>
+  </nav>
+</aside>
+
+<div class="main">
+<div class="topbar">
+  <div class="store-name">german fluid<span class="badge">Central Store</span></div>
+  <div class="time">13 Jun 2026, 2:30 PM</div>
+</div>
+<div class="content">
+
+<div class="preview-bar">MOCK &mdash; CR-026 Phase 3 — Production Intelligence UI &mdash; For owner review &amp; freeze before implementation</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SCREEN 1: OPERATIONS HUB — NEW PRODUCTION INTELLIGENCE        -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+
+<div class="screen-break" id="hub"></div>
+<div class="screen-label">Screen 1: Operations Hub — Production Intelligence</div>
+<div class="screen-desc">New elements added to existing Operations Hub for Central/Master store roles</div>
+
+<h1>Good afternoon, Central</h1>
+<div class="sub">Here's what needs your attention across the hierarchy</div>
+
+<!-- NEW: Production NBA banner -->
+<div class="nba production-nba annotation" data-note="NEW — Phase 3">
+  <div class="nba-icon">&#9881;</div>
+  <div class="nba-content">
+    <div class="nba-title">2 finished goods are low on stock at outlets — consider running production</div>
+    <div class="nba-desc">Whole wheat Elachi Cookies: 0 at Outlet Direct One &middot; Ragi Cookies: 12 pcs (1.5d cover)</div>
+  </div>
+  <div class="nba-action"><button class="btn btn-primary" style="font-size:11px;padding:6px 16px;">Run Production</button></div>
+</div>
+
+<!-- Existing NBAs -->
+<div class="nba" style="border-left:3px solid var(--red);background:var(--red-light);">
+  <div class="nba-icon" style="background:var(--red-light);">&#9888;</div>
+  <div class="nba-content">
+    <div class="nba-title">3 approval requests stale (&gt;24 hours)</div>
+    <div class="nba-desc">Outlet Direct One has 3 items out of stock and waiting on your approval</div>
+  </div>
+  <div class="nba-action"><button class="btn" style="font-size:11px;">Review Approvals</button></div>
+</div>
+
+<!-- KPI cards — with NEW production card -->
+<div class="section-title">Priority KPIs</div>
+<div class="priority-row">
+  <div class="p-card alert">
+    <div class="v">3</div>
+    <div class="l">Stale Approvals</div>
+    <div class="detail">Oldest: 2 days &middot; Outlet Direct One</div>
+  </div>
+  <div class="p-card warn">
+    <div class="v">2</div>
+    <div class="l">Ready to Dispatch</div>
+    <div class="detail">Stock committed, awaiting ship</div>
+  </div>
+  <div class="p-card">
+    <div class="v">1</div>
+    <div class="l">Pending Receives</div>
+    <div class="detail">1 incoming from vendor</div>
+  </div>
+  <div class="p-card alert">
+    <div class="v">3</div>
+    <div class="l">Low Stock Items</div>
+    <div class="detail">GSM: 0.9 kg (&lt;1 day cover)</div>
+  </div>
+  <div class="p-card production annotation" data-note="NEW KPI">
+    <div class="v">2</div>
+    <div class="l">FG Low Stock</div>
+    <div class="detail">Last produced: 5 days ago</div>
+  </div>
+</div>
+
+<!-- Quick Actions — with production card -->
+<div class="section-title">Quick Actions</div>
+<div class="qa-grid">
+  <div class="qa-btn">
+    <div class="qa-label">Dispatch Stock</div>
+    <div class="qa-desc">Send stock to stores</div>
+  </div>
+  <div class="qa-btn">
+    <div class="qa-label">Add Stock (Vendor)</div>
+    <div class="qa-desc">Procure from vendors</div>
+  </div>
+  <div class="qa-btn annotation" data-note="Exists (Phase 1)">
+    <div class="qa-label">Run Production</div>
+    <div class="qa-desc">Execute a production run</div>
+  </div>
+  <div class="qa-btn">
+    <div class="qa-label">Adjust Stock</div>
+    <div class="qa-desc">Correct quantities</div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SCREEN 2: PRODUCTION RUN FORM — INTELLIGENCE LAYERS           -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+
+<div class="screen-break" id="production"></div>
+<div class="screen-label">Screen 2: Production Run Form — Intelligence Layers</div>
+<div class="screen-desc">Smart sorting, health strips, coverage estimates on top of the base form (Phase 1)</div>
+
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+  <div style="width:36px;height:36px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;">&#9881;</div>
+  <div>
+    <h1 style="margin:0;">Run Production</h1>
+    <div style="font-size:12px;color:var(--text-muted);">Select a sub-recipe, specify batch details, and execute a production run.</div>
+  </div>
+</div>
+
+<!-- Sub-recipe selector — sorted by demand (lowest FG stock first) -->
+<div class="form-group">
+  <div class="form-label">Sub-Recipe <span class="new-badge">SORTED BY DEMAND</span></div>
+  <div class="annotation" data-note="Sorted: lowest FG stock first">
+    <div class="recipe-option selected">
+      <div class="ro-main">
+        <div class="ro-name">Whole wheat Elachi Cookies</div>
+        <div class="ro-meta">31 piece per batch &middot; 4 ingredients &middot; <span class="badge-s badge-danger">0 in stock at outlets</span></div>
+      </div>
+      <div class="ro-stock">
+        <div class="ro-stock-val" style="color:var(--red);">0</div>
+        <div class="ro-stock-label">FG Stock</div>
+      </div>
+    </div>
+    <div class="recipe-option">
+      <div class="ro-main">
+        <div class="ro-name">Ragi Cookies</div>
+        <div class="ro-meta">25 piece per batch &middot; 5 ingredients &middot; <span class="badge-s badge-warn">12 pcs (1.5d cover)</span></div>
+      </div>
+      <div class="ro-stock">
+        <div class="ro-stock-val" style="color:var(--amber);">12</div>
+        <div class="ro-stock-label">FG Stock</div>
+      </div>
+    </div>
+    <div class="recipe-option">
+      <div class="ro-main">
+        <div class="ro-name">Sesame Seed Crackers</div>
+        <div class="ro-meta">50 piece per batch &middot; 3 ingredients &middot; <span class="badge-s badge-active">200 pcs (8d cover)</span></div>
+      </div>
+      <div class="ro-stock">
+        <div class="ro-stock-val" style="color:var(--green);">200</div>
+        <div class="ro-stock-label">FG Stock</div>
+      </div>
+    </div>
+    <div class="recipe-option" style="opacity:0.6;">
+      <div class="ro-main">
+        <div class="ro-name">Chocolate Chip Muffin</div>
+        <div class="ro-meta">20 piece per batch &middot; 6 ingredients &middot; <span class="badge-s badge-active">450 pcs (15d cover)</span></div>
+      </div>
+      <div class="ro-stock">
+        <div class="ro-stock-val" style="color:var(--green);">450</div>
+        <div class="ro-stock-label">FG Stock</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quantity inputs -->
+<div class="form-row" style="margin-bottom:16px;">
+  <div class="form-group" style="margin:0;">
+    <div class="form-label">Batches (multiplier)</div>
+    <div class="form-input">30</div>
+  </div>
+  <div class="form-group" style="margin:0;">
+    <div class="form-label">Total Output</div>
+    <div class="form-display">930 piece</div>
+    <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">31 piece &times; 30 batches</div>
+  </div>
+</div>
+
+<!-- Coverage estimate — NEW Phase 3 -->
+<div class="coverage-card annotation" data-note="NEW — Coverage Estimate">
+  <div class="cv-icon">&#128202;</div>
+  <div>
+    <div class="cv-text">930 Elachi Cookies covers <strong>~7 days</strong> across 3 outlets</div>
+    <div class="cv-sub">Based on avg daily consumption of 132 pcs/day (last 7d). Current FG stock: 0 pcs.</div>
+  </div>
+</div>
+
+<!-- Batch & Expiry -->
+<div class="form-row" style="margin-bottom:16px;">
+  <div class="form-group" style="margin:0;">
+    <div class="form-label">Batch Label</div>
+    <div class="form-input">ELACHI-20260613-001</div>
+  </div>
+  <div class="form-group" style="margin:0;">
+    <div class="form-label">Expiry Date</div>
+    <div class="form-input">2026-10-20</div>
+  </div>
+</div>
+
+<!-- Ingredient table — with health strips (Phase 3 enhancement) -->
+<div class="section-title">Ingredient Requirements <span class="new-badge">+ HEALTH STRIPS</span></div>
+<div class="card" style="margin-bottom:0;">
+  <table class="ing-table">
+    <thead>
+      <tr>
+        <th>Ingredient</th>
+        <th>Health</th>
+        <th>Required</th>
+        <th>Available</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="font-weight:600;">Gram Flour (GSM)</td>
+        <td>
+          <div class="health-bar"><div class="fill ok" style="width:75%;"></div></div>
+          <span style="font-size:10px;color:var(--text-muted);margin-left:4px;">75%</span>
+        </td>
+        <td>3,000.0 gm</td>
+        <td>3,915.0 gm</td>
+        <td><span class="badge-s badge-active">&#10003;</span></td>
+      </tr>
+      <tr>
+        <td style="font-weight:600;">Sugar</td>
+        <td>
+          <div class="health-bar"><div class="fill ok" style="width:90%;"></div></div>
+          <span style="font-size:10px;color:var(--text-muted);margin-left:4px;">90%</span>
+        </td>
+        <td>1,500.0 gm</td>
+        <td>4,200.0 gm</td>
+        <td><span class="badge-s badge-active">&#10003;</span></td>
+      </tr>
+      <tr>
+        <td style="font-weight:600;">Cardamom Powder</td>
+        <td>
+          <div class="health-bar"><div class="fill low" style="width:35%;"></div></div>
+          <span style="font-size:10px;color:var(--amber);margin-left:4px;">35%</span>
+        </td>
+        <td>150.0 gm</td>
+        <td>180.0 gm</td>
+        <td><span class="badge-s badge-warn">Low</span></td>
+      </tr>
+      <tr class="insufficient">
+        <td style="font-weight:600;">Ghee (Clarified Butter)</td>
+        <td>
+          <div class="health-bar"><div class="fill critical" style="width:12%;"></div></div>
+          <span style="font-size:10px;color:var(--red);margin-left:4px;">12%</span>
+        </td>
+        <td>900.0 ml</td>
+        <td>450.0 ml</td>
+        <td><span class="badge-s badge-danger">&#10007; Insufficient</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<div style="font-size:10px;color:var(--amber);background:var(--amber-light);padding:8px 12px;border:1px solid var(--amber-border);border-top:none;border-radius:0 0 8px 8px;display:flex;align-items:center;gap:6px;">
+  &#9888; Warning: 1 ingredient has insufficient stock. Production will result in negative inventory.
+</div>
+
+<!-- Submit button -->
+<div style="margin-top:16px;">
+  <button class="btn btn-primary" style="width:100%;padding:12px;font-size:14px;justify-content:center;">
+    &#9881; Run Production — 930 piece
+  </button>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SCREEN 3: POST-PRODUCTION — NEXT BEST ACTION                  -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+
+<div class="screen-break"></div>
+<div class="screen-label">Screen 3: Post-Production Confirmation — Next Best Action</div>
+<div class="screen-desc">After a successful production run, suggest what to do next based on outlet stock + pending requests</div>
+
+<div style="max-width:520px;margin:0 auto;">
+  <div class="card" style="border-left:3px solid var(--green);">
+    <div style="padding:20px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div style="width:40px;height:40px;border-radius:50%;background:var(--green-light);border:1px solid var(--green-border);display:flex;align-items:center;justify-content:center;font-size:20px;">&#10003;</div>
+        <div>
+          <div style="font-size:14px;font-weight:600;">Production Run Complete</div>
+          <div style="font-size:12px;color:var(--text-muted);">PRD-2026-0011</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+        <div><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;">Quantity Produced</div><div class="mono" style="font-weight:600;">930 piece</div></div>
+        <div><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;">Unit Cost</div><div class="mono" style="font-weight:600;">&#8377;2.80</div></div>
+        <div><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;">Total Cost</div><div class="mono" style="font-weight:600;">&#8377;2,607.85</div></div>
+        <div><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;">Recipe</div><div style="font-weight:600;">Elachi Cookies</div></div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <button class="btn btn-sm">&#128065; View Audit</button>
+        <button class="btn btn-sm">&#128230; View in Stock</button>
+        <button class="btn btn-primary btn-sm">&#8635; Run Another</button>
+      </div>
+
+      <!-- NEW: Post-production next-best-action -->
+      <div class="post-nba annotation" data-note="NEW — Next Best Action">
+        <div class="pn-icon">&#128666;</div>
+        <div class="pn-main">
+          <div class="pn-title">Dispatch to Outlet Direct One</div>
+          <div class="pn-desc">0 in stock &middot; 3 pending requests for Elachi Cookies</div>
+        </div>
+        <button class="btn btn-sm" style="background:var(--green-light);border-color:var(--green-border);color:var(--green);">Dispatch Now &rarr;</button>
+      </div>
+      <div class="post-nba" style="margin-top:8px;background:var(--surface3);border-color:var(--border);">
+        <div class="pn-icon" style="background:var(--surface2);">&#128666;</div>
+        <div class="pn-main">
+          <div class="pn-title" style="color:var(--text);">Alpha Outlet One</div>
+          <div class="pn-desc">24 in stock &middot; 1 pending request</div>
+        </div>
+        <button class="btn btn-sm">Dispatch &rarr;</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SCREEN 4: PRODUCTION HISTORY — INTELLIGENCE LAYERS            -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+
+<div class="screen-break" id="production-history"></div>
+<div class="screen-label">Screen 4: Production History — Staleness &amp; Cost Intelligence</div>
+<div class="screen-desc">When G-018 delivers the history endpoint, these intelligence layers overlay the data</div>
+
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div style="width:36px;height:36px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;">&#9881;</div>
+    <div>
+      <h1 style="margin:0;">Production History</h1>
+      <div style="font-size:12px;color:var(--text-muted);">View past production runs and audit trails.</div>
+    </div>
+  </div>
+  <button class="btn btn-primary">&#9881; New Run</button>
+</div>
+
+<!-- Summary KPIs -->
+<div class="section-title">Summary KPIs <span class="new-badge">NEW</span></div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">
+  <div class="p-card annotation" data-note="NEW">
+    <div class="v">11</div>
+    <div class="l">Total Runs</div>
+    <div class="detail">Last 30 days</div>
+  </div>
+  <div class="p-card annotation" data-note="NEW">
+    <div class="v mono">4,830</div>
+    <div class="l">Total FG Produced</div>
+    <div class="detail">Across 4 sub-recipes</div>
+  </div>
+  <div class="p-card annotation" data-note="NEW">
+    <div class="v mono">&#8377;12.4K</div>
+    <div class="l">Total Material Cost</div>
+    <div class="detail">Avg &#8377;2.57/unit</div>
+  </div>
+</div>
+
+<!-- Staleness indicator per sub-recipe -->
+<div class="section-title">Sub-Recipe Staleness <span class="new-badge">NEW</span></div>
+<div class="card">
+  <div class="stale-row">
+    <div class="stale-name">Whole wheat Elachi Cookies</div>
+    <div style="font-size:10px;color:var(--text-muted);margin-right:8px;">Avg cost: <span class="mono">&#8377;2.80</span>/pc</div>
+    <div class="stale-badge stale-fresh">Produced 2 days ago</div>
+  </div>
+  <div class="stale-row">
+    <div class="stale-name">Ragi Cookies</div>
+    <div style="font-size:10px;color:var(--text-muted);margin-right:8px;">Avg cost: <span class="mono">&#8377;3.15</span>/pc</div>
+    <div class="stale-badge stale-aging">Produced 12 days ago</div>
+  </div>
+  <div class="stale-row">
+    <div class="stale-name">Sesame Seed Crackers</div>
+    <div style="font-size:10px;color:var(--text-muted);margin-right:8px;">Avg cost: <span class="mono">&#8377;1.90</span>/pc</div>
+    <div class="stale-badge stale-fresh">Produced 4 days ago</div>
+  </div>
+  <div class="stale-row">
+    <div class="stale-name">Chocolate Chip Muffin</div>
+    <div style="font-size:10px;color:var(--text-muted);margin-right:8px;">Avg cost: <span class="mono">—</span></div>
+    <div class="stale-badge stale-stale">Never produced</div>
+  </div>
+</div>
+
+<!-- Cost trend mock -->
+<div class="section-title">Cost Trend — Elachi Cookies <span class="new-badge">NEW</span></div>
+<div class="card" style="padding:16px;">
+  <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:12px;">
+    <div style="font-size:20px;font-weight:700;font-family:var(--mono);">&#8377;2.80</div>
+    <div style="font-size:11px;color:var(--text-muted);">avg unit cost (last 5 runs)</div>
+    <div class="badge-s badge-warn" style="font-size:10px;">&#8593; 3% vs previous</div>
+  </div>
+  <!-- Simple text-based trend chart -->
+  <div style="display:flex;align-items:flex-end;gap:4px;height:50px;">
+    <div style="flex:1;background:var(--surface2);border-radius:3px 3px 0 0;height:70%;position:relative;"><div style="position:absolute;bottom:-16px;font-size:9px;color:var(--text-muted);width:100%;text-align:center;">2.65</div></div>
+    <div style="flex:1;background:var(--surface2);border-radius:3px 3px 0 0;height:75%;position:relative;"><div style="position:absolute;bottom:-16px;font-size:9px;color:var(--text-muted);width:100%;text-align:center;">2.71</div></div>
+    <div style="flex:1;background:var(--surface2);border-radius:3px 3px 0 0;height:78%;position:relative;"><div style="position:absolute;bottom:-16px;font-size:9px;color:var(--text-muted);width:100%;text-align:center;">2.74</div></div>
+    <div style="flex:1;background:var(--surface2);border-radius:3px 3px 0 0;height:82%;position:relative;"><div style="position:absolute;bottom:-16px;font-size:9px;color:var(--text-muted);width:100%;text-align:center;">2.78</div></div>
+    <div style="flex:1;background:var(--amber-light);border:1px solid var(--amber-border);border-radius:3px 3px 0 0;height:88%;position:relative;"><div style="position:absolute;bottom:-16px;font-size:9px;color:var(--amber);width:100%;text-align:center;font-weight:600;">2.80</div></div>
+  </div>
+  <div style="font-size:10px;color:var(--text-muted);margin-top:22px;">Ingredient cost increased: Ghee +8%, Cardamom +5% in last 2 weeks</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- ELEMENT INDEX — What's NEW in Phase 3                         -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+
+<div class="screen-break"></div>
+<div class="screen-label">Phase 3 Element Index</div>
+<div class="screen-desc">Summary of all new intelligence elements for implementation freeze</div>
+
+<div class="card" style="padding:16px;">
+<table style="width:100%;font-size:12px;border-collapse:collapse;">
+  <thead>
+    <tr style="border-bottom:2px solid var(--border);">
+      <th style="text-align:left;padding:6px 8px;font-size:10px;text-transform:uppercase;color:var(--text-muted);">#</th>
+      <th style="text-align:left;padding:6px 8px;font-size:10px;text-transform:uppercase;color:var(--text-muted);">Element</th>
+      <th style="text-align:left;padding:6px 8px;font-size:10px;text-transform:uppercase;color:var(--text-muted);">Screen</th>
+      <th style="text-align:left;padding:6px 8px;font-size:10px;text-transform:uppercase;color:var(--text-muted);">Data Source</th>
+      <th style="text-align:left;padding:6px 8px;font-size:10px;text-transform:uppercase;color:var(--text-muted);">Blocked?</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr style="border-bottom:1px solid var(--border-light);">
+      <td style="padding:6px 8px;">P3-1</td>
+      <td style="padding:6px 8px;font-weight:600;">FG Low Stock NBA Banner</td>
+      <td style="padding:6px 8px;">OperationsHub</td>
+      <td style="padding:6px 8px;">getStockInventory (is_low_stock on FG items)</td>
+      <td style="padding:6px 8px;"><span class="badge-s badge-active">No</span></td>
+    </tr>
+    <tr style="border-bottom:1px solid var(--border-light);">
+      <td style="padding:6px 8px;">P3-2</td>
+      <td style="padding:6px 8px;font-weight:600;">Production KPI Card (FG Low Stock count)</td>
+      <td style="padding:6px 8px;">OperationsHub</td>
+      <td style="padding:6px 8px;">useStockIntelligence — FG detection</td>
+      <td style="padding:6px 8px;"><span class="badge-s badge-active">No</span></td>
+    </tr>
+    <tr style="border-bottom:1px solid var(--border-light);">
+      <td style="padding:6px 8px;">P3-3</td>
+      <td style="padding:6px 8px;font-weight:600;">Sub-recipe sort by demand (lowest FG stock first)</td>
+      <td style="padding:6px 8px;">ProductionRunForm</td>
+      <td style="padding:6px 8px;">getStockInventory + getSubRecipeList</td>
+      <td style="padding:6px 8px;"><span class="badge-s badge-active">No</span></td>
+    </tr>
+    <tr style="border-bottom:1px solid var(--border-light);">
+      <td style="padding:6px 8px;">P3-4</td>
+      <td style="padding:6px 8px;font-weight:600;">Ingredient health strip (stock bar per row)</td>
+      <td style="padding:6px 8px;">ProductionRunForm</td>
+      <td style="padding:6px 8px;">stockMap (cal_quantity vs min_qty_alert)</td>
+      <td style="padding:6px 8px;"><span class="badge-s badge-active">No</span></td>
+    </tr>
+    <tr style="border-bottom:1px solid var(--border-light);">
+      <td style="padding:6px 8px;">P3-5</td>
+      <td style="padding:6px 8px;font-weight:600;">Coverage estimate ("930 covers ~7d across 3 outlets")</td>
+      <td style="padding:6px 8px;">ProductionRunForm</td>
+      <td style="padding:6px 8px;">getDailyConsumptionReport</td>
+      <td style="padding:6px 8px;"><span class="badge-s badge-active">No</span></td>
+    </tr>
+    <tr style="border-bottom:1px solid var(--border-light);">
+      <td style="padding:6px 8px;">P3-6</td>
+      <td style="padding:6px 8px;font-weight:600;">Post-production next-best-action ("Dispatch to X")</td>
+      <td style="padding:6px 8px;">PostProductionConfirmation</td>
+      <td style="padding:6px 8px;">getHierarchyDetail + getPendingQueues</td>
+      <td style="padding:6px 8px;"><span class="badge-s badge-active">No</span></td>
+    </tr>
+    <tr style="border-bottom:1px solid var(--border-light);">
+      <td style="padding:6px 8px;">P3-7</td>
+      <td style="padding:6px 8px;font-weight:600;">Summary KPIs (runs, FG produced, total cost)</td>
+      <td style="padding:6px 8px;">ProductionHistory</td>
+      <td style="padding:6px 8px;">getProductionRunHistory (G-018)</td>
+      <td style="padding:6px 8px;"><span class="badge-s badge-warn">G-018</span></td>
+    </tr>
+    <tr style="border-bottom:1px solid var(--border-light);">
+      <td style="padding:6px 8px;">P3-8</td>
+      <td style="padding:6px 8px;font-weight:600;">Sub-recipe staleness indicator</td>
+      <td style="padding:6px 8px;">ProductionHistory</td>
+      <td style="padding:6px 8px;">getProductionRunHistory (G-018)</td>
+      <td style="padding:6px 8px;"><span class="badge-s badge-warn">G-018</span></td>
+    </tr>
+    <tr>
+      <td style="padding:6px 8px;">P3-9</td>
+      <td style="padding:6px 8px;font-weight:600;">Cost trend (avg unit cost over last N runs)</td>
+      <td style="padding:6px 8px;">ProductionHistory</td>
+      <td style="padding:6px 8px;">getProductionRunHistory (G-018)</td>
+      <td style="padding:6px 8px;"><span class="badge-s badge-warn">G-018</span></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div style="margin-top:16px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:12px;">
+  <strong>Implementation Note:</strong> P3-1 through P3-6 are <strong>unblocked</strong> — all data sources exist. P3-7 through P3-9 depend on G-018 (production history list API). These will render an empty/minimal state until the backend delivers the endpoint. 
+  <br><br>
+  <strong>Files touched:</strong> useStockIntelligence.js (FG detection), OperationsHub.jsx (KPI + NBA), ProductionRunForm.jsx (sort + health + coverage), ProductionHistory.jsx (KPIs + staleness + trend)
+</div>
+
+</div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /shell -->
+</body>
+</html>

@@ -1,0 +1,133 @@
+{
+  "iteration": 43,
+  "test_date": "2026-06-13",
+  "test_type": "Frontend QA Smoke Test - CR-027, CR-029, CR-026",
+  "overall_status": "PASS",
+  "summary": "QA smoke test for 3 CRs on Central Inventory app. All features verified: CR-027 Navigation Restructure (6 sections, 15 nav items, collapse/expand, routes, redirects), CR-029 Stock Inventory FG/Raw Split (3 tabs with counts, filtering works), CR-026 Production Unit Module (Run Production form, Production History, role-based visibility).",
+  "tests": [
+    {
+      "cr": "CR-027",
+      "feature": "Navigation Restructure - 6 Collapsible Sections",
+      "status": "PASS",
+      "details": "All 6 sections found: DASHBOARD, INWARD, PRODUCTION, OUTWARD, REPORTS, SETTINGS. Section collapse/expand working correctly."
+    },
+    {
+      "cr": "CR-027",
+      "feature": "Navigation Restructure - 15 Nav Items",
+      "status": "PASS",
+      "details": "All 15 nav items found: operations-hub, vendor-management, raw-material-master, purchase, sub-recipe-master, run-production, production-history, store-management, product-catalog, stock-inventory, pending-queues, history-ledger, consumption-report, wastage-report, settings."
+    },
+    {
+      "cr": "CR-027",
+      "feature": "Direct Navigation Routes",
+      "status": "PASS",
+      "details": "All 7 routes tested: /vendor-management, /raw-materials, /purchase, /sub-recipe-master, /store-management, /product-catalog, /inventory - all load correct pages."
+    },
+    {
+      "cr": "CR-027",
+      "feature": "Old Route Redirects",
+      "status": "PASS",
+      "details": "All 4 redirects working: /vendors → /vendor-management, /catalogue/ingredients → /raw-materials, /catalogue/products → /product-catalog, /procurement/new → /purchase."
+    },
+    {
+      "cr": "CR-027",
+      "feature": "StoreManagement Tabs",
+      "status": "PASS",
+      "details": "StoreManagement page has Summary and Manage Stores tabs (data-testid='store-tab-summary' and 'store-tab-manage')."
+    },
+    {
+      "cr": "CR-027",
+      "feature": "SubRecipeMaster Page",
+      "status": "PASS",
+      "details": "SubRecipeMaster page loads with sub-recipe list (4 recipes: Oats Cookies, Ragi Cookies, Sesame Cookies, Whole wheat Elachi Cookies). Search and Add Sub-Recipe button present."
+    },
+    {
+      "cr": "CR-029",
+      "feature": "Stock Inventory - 3 Tabs",
+      "status": "PASS",
+      "details": "3 tabs present: All (47), Finished Goods (4), Raw Materials (43). Tab counts shown correctly."
+    },
+    {
+      "cr": "CR-029",
+      "feature": "Stock Inventory - FG Tab Filtering",
+      "status": "PASS",
+      "details": "FG tab shows 4 rows (SubRecipe type items only): Oats Cookies, Ragi Cookies, Sesame Cookies, Whole wheat Elachi Cookies."
+    },
+    {
+      "cr": "CR-029",
+      "feature": "Stock Inventory - Raw Tab Filtering",
+      "status": "PASS",
+      "details": "Raw tab shows 43 rows (inventory type items only). FG + Raw = All (4 + 43 = 47)."
+    },
+    {
+      "cr": "CR-029",
+      "feature": "Stock Inventory - KPIs",
+      "status": "PASS",
+      "details": "KPI cards present: Total Items (47), Low Stock Items (1), Categories (4)."
+    },
+    {
+      "cr": "CR-026",
+      "feature": "Run Production Page",
+      "status": "PASS",
+      "details": "Run Production page loads with sub-recipe selector showing 4 recipes. Recipe selection shows pre-production preview with ingredient requirements, health bars, required/available quantities, and estimated costs."
+    },
+    {
+      "cr": "CR-026",
+      "feature": "Production History Page",
+      "status": "PASS",
+      "details": "Production History page loads with 10 production runs. KPIs shown: Total Runs (10), Total FG Produced (1,905), Total Material Cost (₹4.9K). Sub-recipe staleness and cost trend sections present."
+    },
+    {
+      "cr": "CR-026",
+      "feature": "Role-based Visibility - Outlet",
+      "status": "PASS",
+      "details": "Outlet user (manager@outletdirectone.com) does NOT see: Production section, Sub-Recipe Master, Run Production, Production History, Raw Material Master, Product Catalog. Only sees: Operations Hub, Stock Inventory, Pending Queues, History & Ledger, Consumption Report, Wastage Report."
+    },
+    {
+      "cr": "CR-026",
+      "feature": "Role-based Visibility - Master Store",
+      "status": "PASS",
+      "details": "Master Store user (manager@centralkitchenalpha.com) DOES see: Production section with Run Production and Production History. Also sees: Vendor Management, Purchase, Store Management, Stock Inventory, etc."
+    }
+  ],
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "POST /api/proxy/auth/login",
+        "issue": "Intermittent 500 error when logging in as Master Store user (manager@centralkitchenalpha.com). Retry succeeded.",
+        "priority": "LOW"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/test_reports/iteration_43.json"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "screenVisibility.js: NAV_SECTIONS correctly defines 6 sections with proper screen IDs for role-based filtering",
+    "Sidebar.jsx: Correctly uses visibleNavSections from useLoginContext for role-based nav rendering",
+    "App.js: All routes and redirects correctly configured per CR-027 spec",
+    "StockInventorySummary.jsx: FG/Raw tabs correctly filter by type='SubRecipe' vs type='inventory'",
+    "useStockInventory.js: stockType state and filtering logic correctly implemented",
+    "ProductionRunForm.jsx: Role gate correctly checks isTopLevel || isMiddleLevel",
+    "ProductionHistory.jsx: Role gate correctly checks isTopLevel || isMiddleLevel"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (frontend-only test)",
+    "frontend": "100% (14/14 features verified)"
+  },
+  "test_credentials": {
+    "central_store_806_master": "manager@germanfluid.com / Qplazm@10",
+    "master_store_807_central": "manager@centralkitchenalpha.com / Qplazm@10",
+    "outlet_809_franchise": "manager@outletdirectone.com / Qplazm@10"
+  },
+  "seed_data_creation": "None - used existing POS API data via proxy",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "CR-027, CR-029, CR-026 all verified. Navigation restructure complete with 6 collapsible sections. Stock Inventory has FG/Raw tabs working. Production module accessible to Central Store and Master Store, hidden from Outlet. All routes and redirects working. Note: Master Store login had intermittent 500 error but retry succeeded."
+}

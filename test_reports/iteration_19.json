@@ -1,0 +1,130 @@
+{
+  "summary": "P20 Stock Inventory Module Testing Complete. All 14 features tested and verified. Backend API (GET /api/proxy/v2/inventory/stock-inventory) returns 200 with current_stocks array for all 3 roles. Frontend components (OperationsHub KPI cards, /inventory page, sidebar nav) all working correctly with proper low-stock detection and visual indicators.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_p20_stock_inventory.py",
+    "/app/test_reports/pytest/p20_stock_inventory_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "api.js getStockInventory() correctly calls GET /proxy/v2/inventory/stock-inventory and normalizes response",
+    "api.js normalizeStockItem() correctly parses quantity strings to floats (cal_quantity, display_qty, quantity, min_qty_alert)",
+    "useStockInventory hook correctly computes lowStockItems using is_low_stock boolean from POS API",
+    "useStockInventory hook correctly computes categoryCounts for category filter dropdown",
+    "StockInventorySummary.jsx correctly renders 3 KPI cards (Total Items, Low Stock, Categories)",
+    "StockInventorySummary.jsx correctly renders table with 6 columns (Ingredient, Category, Quantity, Min Alert, Status, Vendor)",
+    "StockInventorySummary.jsx correctly shows 'Low' badge (destructive red) for is_low_stock=true items",
+    "StockInventorySummary.jsx correctly shows 'OK' badge (emerald green) for is_low_stock=false items",
+    "StockInventorySummary.jsx correctly applies bg-red-50/40 row highlight for low-stock items",
+    "StockInventorySummary.jsx search filter correctly filters by stock_title, category_name, vendor_name",
+    "StockInventorySummary.jsx category dropdown correctly shows categories with counts",
+    "StockInventorySummary.jsx sort selector correctly implements 5 sort modes (low_stock_first, name_asc, name_desc, qty_asc, qty_desc)",
+    "StockInventorySummary.jsx refresh button correctly triggers fetchInventory and updates lastFetched timestamp",
+    "OperationsHub.jsx correctly renders P20 KPI cards (Stock Items, Low Stock) with live data from useStockInventory",
+    "OperationsHub.jsx correctly applies red styling to Low Stock card when lowStockCount > 0",
+    "OperationsHub.jsx KPI cards correctly navigate to /inventory on click",
+    "screenVisibility.js correctly defines scr-stock-inventory as FULL for all 3 roles (master/central/franchise)",
+    "Sidebar.jsx correctly renders Stock Inventory nav item with Package icon for all roles"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_p20_stock_inventory.py"
+  ],
+  "success_rate": {
+    "backend": "100% (11/11 pytest tests passed)",
+    "frontend": "100% (14/14 features tested)"
+  },
+  "test_credentials": {
+    "master_user": "abhishek@kalabahia.com / Qplazm@10 (rid=1, type=master, 0 low stock items)",
+    "central_user": "owner@democentral2.com / Qplazm@10 (rid=782, type=central, 2 low stock: maida=0kg, patri=0kg)",
+    "franchise_user": "owner@demofranchise4.com / Qplazm@10 (rid=786, type=franchise, 0 low stock items)"
+  },
+  "seed_data_creation": "None - using real POS API via proxy",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "P20 Stock Inventory Module fully tested. All 3 roles verified: Master (4 items, 0 low stock), Central (4 items, 2 low stock: maida=0kg, patri=0kg), Franchise (4 items, 0 low stock). Key components: useStockInventory hook, StockInventorySummary.jsx (/inventory page), OperationsHub.jsx (KPI cards). Low-stock detection uses POS-computed is_low_stock boolean. All filters (search, category, sort) and refresh working correctly.",
+  "features_tested": {
+    "P20-1": "PASS - GET /api/proxy/v2/inventory/stock-inventory returns 200 with current_stocks array for all 3 roles",
+    "P20-2": "PASS - OperationsHub shows 'Stock Items' and 'Low Stock' KPI cards with correct counts from live API",
+    "P20-3": "PASS - 'Stock Inventory' nav item appears in sidebar for all roles (master/central/franchise)",
+    "P20-4": "PASS - /inventory page loads and shows KPI cards (Total Items, Low Stock, Categories)",
+    "P20-5": "PASS - /inventory table shows correct columns: Ingredient, Category, Quantity, Min Alert, Status, Vendor",
+    "P20-6": "PASS - Low-stock items show 'Low' badge (destructive red) and red row highlight; OK items show green 'OK' badge",
+    "P20-7": "PASS - Search filter works — typing ingredient name filters table rows",
+    "P20-8": "PASS - Category dropdown filter works — filtering by 'veggies' or 'non veg' shows correct items",
+    "P20-9": "PASS - Sort selector works — 'Low Stock First', 'Name A-Z', 'Qty Low-High' etc produce correct order",
+    "P20-10": "PASS - Refresh button fetches new data and updates 'last refreshed' timestamp",
+    "P20-11": "PASS - Central (C782) login shows LOW stock items (maida=0kg, patri=0kg) with red badges",
+    "P20-12": "PASS - Franchise (F786) login shows all items above threshold with green badges",
+    "P20-13": "PASS - KPI cards on OperationsHub link to /inventory when clicked",
+    "P20-14": "PASS - Back button on /inventory navigates to Operations Hub"
+  },
+  "ui_verification": {
+    "master_user": {
+      "operations_hub": {
+        "stock_items_card": "4 Stock Items",
+        "low_stock_card": "0 All Stocked (green checkmark)",
+        "sidebar_nav": "Stock Inventory visible"
+      },
+      "inventory_page": {
+        "kpi_total": "4 Total Items",
+        "kpi_low_stock": "0 All Stocked",
+        "kpi_categories": "2 Categories",
+        "table_rows": 4,
+        "low_badges": 0,
+        "ok_badges": 4,
+        "vendors_shown": "Test Shop, Mahamai Super Market"
+      }
+    },
+    "central_user": {
+      "operations_hub": {
+        "stock_items_card": "4 Stock Items",
+        "low_stock_card": "2 Low Stock (red warning, red border)",
+        "sidebar_nav": "Stock Inventory visible"
+      },
+      "inventory_page": {
+        "kpi_total": "4 Total Items",
+        "kpi_low_stock": "2 Low Stock Items (red styling)",
+        "kpi_categories": "2 Categories",
+        "table_rows": 4,
+        "low_badges": 2,
+        "ok_badges": 2,
+        "low_stock_items": ["maida (0 kg)", "patri (0 kg)"],
+        "ok_stock_items": ["Cooking Oil (0.2 ltr)", "red meat (0.8 kg)"],
+        "red_row_highlight": "2 rows with bg-red-50/40"
+      }
+    },
+    "franchise_user": {
+      "operations_hub": {
+        "stock_items_card": "4 Stock Items",
+        "low_stock_card": "0 All Stocked (green checkmark)",
+        "sidebar_nav": "Stock Inventory visible"
+      },
+      "inventory_page": {
+        "kpi_total": "4 Total Items",
+        "kpi_low_stock": "0 All Stocked",
+        "kpi_categories": "2 Categories",
+        "table_rows": 4,
+        "low_badges": 0,
+        "ok_badges": 4
+      }
+    },
+    "filters_and_sort": {
+      "search": "Typing 'maida' reduces rows from 4 to 1",
+      "category_options": ["All Categories", "non veg (2)", "veggies (2)"],
+      "sort_options": ["Low Stock First", "Name A-Z", "Name Z-A", "Qty Low-High", "Qty High-Low"]
+    },
+    "refresh_behavior": {
+      "button": "Refresh button with RefreshCw icon",
+      "spinner": "animate-spin class during refresh",
+      "timestamp": "Shows 'just now' after refresh"
+    }
+  }
+}

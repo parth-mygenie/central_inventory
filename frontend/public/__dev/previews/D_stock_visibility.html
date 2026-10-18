@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flow D — Stock Visibility (Intelligent UI Preview)</title>
+<style>
+:root{--bg:#fff;--surface:#fff;--surface2:#f4f4f5;--surface3:#fafafa;--border:#e4e4e7;--border-light:#f4f4f5;--text:#09090b;--text-sec:#52525b;--text-muted:#a1a1aa;--primary:#18181b;--primary-fg:#fafafa;--amber:#b45309;--amber-light:#fffbeb;--amber-border:#fde68a;--red:#dc2626;--red-light:#fef2f2;--red-border:#fecaca;--green:#16a34a;--green-light:#f0fdf4;--green-border:#bbf7d0;--font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;--mono:'SF Mono',Consolas,monospace;--sidebar-w:200px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--surface2);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5;}
+.shell{display:flex;min-height:100vh;}
+.sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);padding:16px 0;flex-shrink:0;position:sticky;top:0;height:100vh;}
+.sidebar .logo{padding:0 16px 16px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.sidebar .logo .icon{width:24px;height:24px;background:var(--primary);border-radius:6px;}
+.sidebar nav a{display:flex;align-items:center;padding:8px 16px;font-size:13px;color:var(--text-sec);text-decoration:none;}
+.sidebar nav a:hover{background:var(--surface2);}
+.sidebar nav a.active{background:var(--surface2);color:var(--text);font-weight:600;border-right:2px solid var(--primary);}
+.topbar{height:48px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;background:var(--surface);}
+.topbar .store-name{font-size:13px;font-weight:600;}
+.topbar .badge{font-size:10px;padding:2px 8px;border-radius:4px;background:var(--surface2);color:var(--text-sec);border:1px solid var(--border);font-weight:600;margin-left:8px;}
+.main{flex:1;display:flex;flex-direction:column;}
+.content{flex:1;padding:20px 28px 40px;max-width:1200px;}
+.preview-bar{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 12px;margin-bottom:16px;font-size:11px;color:var(--text-sec);}
+.back{font-size:12px;color:var(--text-muted);margin-bottom:10px;display:inline-block;cursor:pointer;}
+h1{font-size:20px;font-weight:700;margin-bottom:4px;}
+.sub{font-size:13px;color:var(--text-muted);margin-bottom:16px;}
+.section-div{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin:32px 0 12px;padding-top:24px;border-top:2px solid var(--border);}
+.section-div:first-of-type{border-top:none;margin-top:0;padding-top:0;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:12px;overflow:hidden;}
+.card-head{padding:10px 16px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between;}
+.card-head h2{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:600;}
+table{width:100%;border-collapse:collapse;}
+th{text-align:left;padding:8px 14px;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:600;border-bottom:1px solid var(--border);background:var(--surface3);}
+td{padding:10px 14px;border-bottom:1px solid var(--border-light);font-size:12px;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--surface3);cursor:pointer;}
+.mono{font-family:var(--mono);}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 16px;text-align:center;}
+.stat-card .v{font-size:24px;font-weight:700;font-family:var(--mono);}
+.stat-card .l{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
+.stat-card.red .v{color:var(--red);}
+.stat-card.amber .v{color:var(--amber);}
+.sv{display:flex;align-items:center;gap:4px;font-size:12px;}
+.sv .d{width:5px;height:5px;border-radius:50%;}
+.sv.out{color:var(--red);font-weight:600;} .sv.out .d{background:var(--red);}
+.sv.low{color:var(--amber);font-weight:600;} .sv.low .d{background:var(--amber);}
+.sv.ok{color:var(--text-sec);} .sv.ok .d{background:#d4d4d8;}
+.sl{font-size:10px;color:var(--text-muted);}
+.btn{font-size:12px;font-weight:500;padding:6px 14px;border-radius:5px;border:1px solid var(--border);background:var(--surface);color:var(--text-sec);cursor:pointer;}
+.search{width:260px;border:1px solid var(--border);border-radius:5px;padding:7px 10px;font-size:12px;color:var(--text);}
+.badge-s{font-size:10px;font-weight:600;padding:2px 8px;border-radius:4px;}
+.badge-exp{background:var(--red-light);color:var(--red);border:1px solid var(--red-border);}
+.badge-warn{background:var(--amber-light);color:var(--amber);border:1px solid var(--amber-border);}
+.badge-ok{background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);}
+/* Timeline */
+.tl{display:flex;gap:0;flex-wrap:wrap;margin-bottom:16px;}
+.tl-step{display:flex;align-items:center;gap:4px;font-size:11px;padding:4px 10px;border-radius:4px;}
+.tl-step.done{color:var(--text-sec);background:var(--surface2);}
+.tl-step.current{color:var(--primary);background:var(--amber-light);border:1px solid var(--amber-border);font-weight:600;}
+.tl-step.future{color:var(--text-muted);}
+.tl-arrow{margin:0 4px;color:var(--text-muted);font-size:10px;}
+.tl-time{font-size:9px;color:var(--text-muted);margin-left:2px;}
+/* Movement badge */
+.mv{font-size:10px;font-weight:600;padding:2px 8px;border-radius:4px;display:inline-flex;align-items:center;gap:3px;}
+.mv.in{background:var(--green-light);color:var(--green);border:1px solid var(--green-border);}
+.mv.out{background:var(--red-light);color:var(--red);border:1px solid var(--red-border);}
+.mv.adj{background:var(--surface2);color:var(--text-sec);border:1px solid var(--border);}
+.mv.waste{background:var(--amber-light);color:var(--amber);border:1px solid var(--amber-border);}
+@media(max-width:900px){.sidebar{display:none;}.stats-row{grid-template-columns:repeat(2,1fr);}.content{padding:16px;}}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside class="sidebar">
+  <div class="logo"><div class="icon"></div>Central Inventory</div>
+  <nav>
+    <a href="#">Operations Hub</a>
+    <a href="#" class="active">Stock Inventory</a>
+    <a href="#">Pending Queues</a>
+    <a href="#">History &amp; Ledger</a>
+  </nav>
+</aside>
+<div class="main">
+<div class="topbar"><div class="store-name">Kala Bahia Central<span class="badge">Central Store</span></div></div>
+<div class="content">
+<div class="preview-bar">PREVIEW &mdash; Flow D: Stock Visibility &mdash; D1 Inventory Summary + D2 Stock Detail + D3 History/Ledger + D4 Timeline</div>
+
+<!-- ═══════════ D1: STOCK INVENTORY SUMMARY ═══════════ -->
+<div class="section-div">D1 &mdash; Stock Inventory Summary</div>
+<h1>Stock Inventory</h1>
+<div class="sub">Central Store &mdash; All items with stock health, movement context, and quick actions</div>
+
+<div class="stats-row">
+  <div class="stat-card"><div class="v">4</div><div class="l">Total Items</div></div>
+  <div class="stat-card red"><div class="v">1</div><div class="l">Low Stock</div></div>
+  <div class="stat-card amber"><div class="v">1</div><div class="l">Expiring Soon</div></div>
+  <div class="stat-card"><div class="v">2</div><div class="l">Pending Incoming</div></div>
+</div>
+
+<div class="card">
+  <div class="card-head">
+    <div style="display:flex;gap:8px;align-items:center;">
+      <input class="search" placeholder="Search items..." />
+      <select class="btn" style="font-size:11px;padding:6px 10px;"><option>All Categories</option><option>Veggies</option><option>Non Veg</option></select>
+      <select class="btn" style="font-size:11px;padding:6px 10px;"><option>Low stock first</option><option>Name A-Z</option><option>Qty low-high</option></select>
+    </div>
+    <button class="btn">Refresh</button>
+    <button class="btn" style="font-size:10px;padding:5px 10px;">Export CSV</button>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Category</th>
+        <th>Stock</th>
+        <th>Min Threshold</th>
+        <th>Status</th>
+        <th>Expiry Risk</th>
+        <th>Pending In/Out</th>
+        <th>Days of Cover</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Low stock item -->
+      <tr style="background:var(--red-light);">
+        <td style="font-weight:600;">Maida <span style="color:var(--text-muted);font-size:11px">kg</span></td>
+        <td style="font-size:11px;color:var(--text-muted)">Veggies</td>
+        <td><div class="sv low"><span class="d"></span><strong>3.2 kg</strong></div></td>
+        <td class="mono" style="font-size:11px;color:var(--text-muted)">10 kg</td>
+        <td><span class="badge-s badge-exp">LOW STOCK</span></td>
+        <td><span class="badge-s badge-ok">No expiry</span></td>
+        <td style="font-size:11px"><span style="color:var(--green);">&darr; 20 kg incoming</span></td>
+        <td class="mono" style="font-size:11px;color:var(--red);">&lt; 1 day</td>
+        <td><button class="btn" style="font-size:10px;padding:3px 8px;">Procure</button></td>
+      </tr>
+      <!-- Expiring soon item -->
+      <tr>
+        <td style="font-weight:600;">Red Meat <span style="color:var(--text-muted);font-size:11px">gm</span></td>
+        <td style="font-size:11px;color:var(--text-muted)">Non Veg</td>
+        <td><div class="sv ok"><span class="d"></span>1,250 gm</div></td>
+        <td class="mono" style="font-size:11px;color:var(--text-muted)">500 gm</td>
+        <td><span class="badge-s badge-ok">In Stock</span></td>
+        <td><span class="badge-s badge-warn">15 days</span></td>
+        <td style="font-size:11px"><span style="color:var(--red);">&uarr; 500 gm outgoing</span></td>
+        <td class="mono" style="font-size:11px">7 days</td>
+        <td><button class="btn" style="font-size:10px;padding:3px 8px;">Detail</button></td>
+      </tr>
+      <!-- Healthy -->
+      <tr>
+        <td style="font-weight:600;">Cooking Oil <span style="color:var(--text-muted);font-size:11px">ltr</span></td>
+        <td style="font-size:11px;color:var(--text-muted)">Veggies</td>
+        <td><div class="sv ok"><span class="d"></span>24.82 ltr</div></td>
+        <td class="mono" style="font-size:11px;color:var(--text-muted)">200 ml</td>
+        <td><span class="badge-s badge-ok">In Stock</span></td>
+        <td><span class="badge-s badge-warn">31 days</span></td>
+        <td style="font-size:11px;color:var(--text-muted)">&mdash;</td>
+        <td class="mono" style="font-size:11px">45 days</td>
+        <td><button class="btn" style="font-size:10px;padding:3px 8px;">Detail</button></td>
+      </tr>
+      <tr>
+        <td style="font-weight:600;">Patri <span style="color:var(--text-muted);font-size:11px">gm</span></td>
+        <td style="font-size:11px;color:var(--text-muted)">Non Veg</td>
+        <td><div class="sv ok"><span class="d"></span>3,950 gm</div></td>
+        <td class="mono" style="font-size:11px;color:var(--text-muted)">800 gm</td>
+        <td><span class="badge-s badge-ok">In Stock</span></td>
+        <td><span class="badge-s badge-ok">No expiry</span></td>
+        <td style="font-size:11px"><span style="color:var(--red);">&uarr; 800 gm outgoing</span></td>
+        <td class="mono" style="font-size:11px">18 days</td>
+        <td><button class="btn" style="font-size:10px;padding:3px 8px;">Detail</button></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════ D2: STOCK DETAIL PANEL ═══════════ -->
+<div class="section-div">D2 &mdash; Stock Detail Panel (FEFO Batch View)</div>
+<a class="back">&larr; Back to Inventory</a>
+<h1>Red Meat <span style="font-weight:400;color:var(--text-muted);font-size:16px">(gm)</span></h1>
+<div class="sub">Batch-level FEFO view with segment health and consumption context</div>
+
+<!-- Summary strip -->
+<div class="stats-row" style="grid-template-columns:repeat(5,1fr);">
+  <div class="stat-card"><div class="v">1,250</div><div class="l">Current (gm)</div></div>
+  <div class="stat-card"><div class="v">500</div><div class="l">Min Threshold</div></div>
+  <div class="stat-card"><div class="v">3</div><div class="l">Batches</div></div>
+  <div class="stat-card amber"><div class="v">1</div><div class="l">Expiring &le;30d</div></div>
+  <div class="stat-card"><div class="v">~7d</div><div class="l">Days of Cover</div></div>
+</div>
+
+<!-- Batch table -->
+<div class="card">
+  <div class="card-head"><h2>Batch Inventory (FEFO Order)</h2><span style="font-size:10px;color:var(--text-muted)">Soonest expiry first</span></div>
+  <table>
+    <thead><tr><th>Batch</th><th>Available Qty</th><th>Expiry</th><th>Expiry Status</th><th>Source</th><th>% of Total</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr style="background:var(--amber-light);">
+        <td style="font-weight:600;">BRD-2026-05 <span style="font-size:10px;color:var(--text-muted)">#42</span></td>
+        <td class="mono">800 gm</td>
+        <td style="font-size:11px">15 Jun 2026</td>
+        <td><span class="badge-s badge-warn">15 days &mdash; dispatch first</span></td>
+        <td style="font-size:11px;color:var(--text-muted)">Self</td>
+        <td class="mono">64%</td>
+        <td><button class="btn" style="font-size:10px;padding:3px 8px;">Dispatch</button></td>
+      </tr>
+      <tr>
+        <td style="font-weight:600;">BRD-2026-04 <span style="font-size:10px;color:var(--text-muted)">#45</span></td>
+        <td class="mono">450 gm</td>
+        <td style="font-size:11px">20 Jul 2026</td>
+        <td><span class="badge-s badge-ok">50 days</span></td>
+        <td style="font-size:11px;color:var(--text-muted)">Vendor XYZ</td>
+        <td class="mono">36%</td>
+        <td></td>
+      </tr>
+      <tr style="background:var(--red-light);opacity:.6;">
+        <td style="font-weight:600;">BRD-2026-02 <span style="font-size:10px;color:var(--text-muted)">#38</span></td>
+        <td class="mono" style="text-decoration:line-through;">200 gm</td>
+        <td style="font-size:11px;color:var(--red)">20 May 2026</td>
+        <td><span class="badge-s badge-exp">EXPIRED &mdash; blocked</span></td>
+        <td style="font-size:11px;color:var(--text-muted)">Self</td>
+        <td class="mono">&mdash;</td>
+        <td><button class="btn" style="font-size:10px;padding:3px 8px;color:var(--red);border-color:var(--red-border)">Record Wastage</button></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Consumption context -->
+<div class="card">
+  <div class="card-head"><h2>Consumption (Last 7 Days)</h2></div>
+  <div style="padding:14px 16px;">
+    <div style="display:flex;gap:24px;font-size:12px;">
+      <div><span style="color:var(--text-muted);font-size:10px;display:block;">Avg Daily</span><span class="mono" style="font-weight:600;">180 gm</span></div>
+      <div><span style="color:var(--text-muted);font-size:10px;display:block;">Total 7d</span><span class="mono" style="font-weight:600;">1,260 gm</span></div>
+      <div><span style="color:var(--text-muted);font-size:10px;display:block;">Days of Cover</span><span class="mono" style="font-weight:600;color:var(--amber);">~7 days</span></div>
+      <div><span style="color:var(--text-muted);font-size:10px;display:block;">Reorder Suggestion</span><span class="mono" style="font-weight:600;">Request 1,260 gm (7-day cover)</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ D3: HISTORY & LEDGER ═══════════ -->
+<div class="section-div">D3 &mdash; History &amp; Ledger</div>
+<h1>Stock Movement History</h1>
+<div class="sub">All transfers, adjustments, and wastage with movement context</div>
+
+<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
+  <input class="search" placeholder="Search by item, store, PO..." />
+  <select class="btn" style="font-size:11px;padding:6px 10px;"><option>All Types</option><option>Transfer In</option><option>Transfer Out</option><option>Adjustment</option><option>Wastage</option></select>
+  <select class="btn" style="font-size:11px;padding:6px 10px;"><option>All Statuses</option><option>Received</option><option>Dispatched</option><option>Cancelled</option></select>
+  <div style="font-size:11px;color:var(--text-muted);margin-left:auto;display:flex;align-items:center;gap:6px;">Date: <input type="date" value="2026-05-25" style="font-size:11px;border:1px solid var(--border);border-radius:4px;padding:3px 6px;"/> to <input type="date" value="2026-05-31" style="font-size:11px;border:1px solid var(--border);border-radius:4px;padding:3px 6px;"/>
+    <button class="btn" style="font-size:10px;padding:4px 10px;">Export CSV</button>
+  </div>
+</div>
+
+<div class="card">
+  <table>
+    <thead><tr><th>Date</th><th>PO / Ref</th><th>Movement</th><th>Item</th><th>Qty</th><th>From / To</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr>
+        <td style="font-size:11px;color:var(--text-muted)">31 May, 5:24 PM</td>
+        <td class="mono" style="font-size:11px">PO-XXXX</td>
+        <td><span class="mv in">&darr; Transfer In</span></td>
+        <td style="font-weight:600;">Red Meat <span style="font-size:10px;color:var(--text-muted)">gm</span></td>
+        <td class="mono">+500 gm</td>
+        <td style="font-size:11px">From: DemoCentral1 <span style="color:var(--text-muted)">(Master)</span></td>
+        <td><span class="badge-s badge-ok">Received</span></td>
+      </tr>
+      <tr>
+        <td style="font-size:11px;color:var(--text-muted)">30 May, 5:23 PM</td>
+        <td class="mono" style="font-size:11px">PO-XXXX</td>
+        <td><span class="mv out">&uarr; Transfer Out</span></td>
+        <td style="font-weight:600;">Maida <span style="font-size:10px;color:var(--text-muted)">kg</span></td>
+        <td class="mono" style="color:var(--red)">-5 kg</td>
+        <td style="font-size:11px">To: DemoFranchise1 <span style="color:var(--text-muted)">(Outlet)</span></td>
+        <td><span class="badge-s badge-ok">Received</span></td>
+      </tr>
+      <tr>
+        <td style="font-size:11px;color:var(--text-muted)">29 May, 2:10 PM</td>
+        <td class="mono" style="font-size:11px;color:var(--text-muted)">&mdash;</td>
+        <td><span class="mv adj">Adjustment &darr;</span></td>
+        <td style="font-weight:600;">Cooking Oil <span style="font-size:10px;color:var(--text-muted)">ltr</span></td>
+        <td class="mono" style="color:var(--red)">-5 ltr</td>
+        <td style="font-size:11px;color:var(--text-muted)">Reason: Counting Error</td>
+        <td><span class="badge-s badge-ok">Applied</span></td>
+      </tr>
+      <tr>
+        <td style="font-size:11px;color:var(--text-muted)">28 May, 9:00 AM</td>
+        <td class="mono" style="font-size:11px;color:var(--text-muted)">&mdash;</td>
+        <td><span class="mv waste">Wastage</span></td>
+        <td style="font-weight:600;">Red Meat <span style="font-size:10px;color:var(--text-muted)">gm</span></td>
+        <td class="mono" style="color:var(--red)">-200 gm</td>
+        <td style="font-size:11px;color:var(--text-muted)">Reason: Expired</td>
+        <td><span class="badge-s badge-ok">Recorded</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════ D4: STATUS TIMELINE (enhanced) ═══════════ -->
+<div class="section-div">D4 &mdash; Status Timeline (Enhanced, embedded in Transfer Detail)</div>
+<div class="sub">Timeline with relative timestamps, duration between steps, and branch paths</div>
+
+<div class="card">
+  <div style="padding:16px 20px;">
+    <div style="font-size:13px;font-weight:600;margin-bottom:12px;">PO-XXXX &mdash; Request Flow (Received)</div>
+    <div class="tl">
+      <span class="tl-step done">Requested <span class="tl-time">5 days ago</span></span>
+      <span class="tl-arrow">&rarr;</span>
+      <span class="tl-step done">Approved <span class="tl-time">3 days ago</span></span>
+      <span class="tl-arrow"><span style="font-size:9px;color:var(--text-muted)">(2 days)</span> &rarr;</span>
+      <span class="tl-step done">Dispatched <span class="tl-time">2 days ago</span></span>
+      <span class="tl-arrow"><span style="font-size:9px;color:var(--text-muted)">(1 day)</span> &rarr;</span>
+      <span class="tl-step done" style="background:var(--green-light);color:var(--green);border:1px solid var(--green-border);">Received <span class="tl-time">1 day ago</span></span>
+    </div>
+    <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Total lifecycle: 4 days (Request to Receive)</div>
+  </div>
+</div>
+
+<div class="card">
+  <div style="padding:16px 20px;">
+    <div style="font-size:13px;font-weight:600;margin-bottom:12px;">PO-XXXX &mdash; Request Flow (Stale &mdash; stuck at approval)</div>
+    <div class="tl">
+      <span class="tl-step done">Requested <span class="tl-time">5 days ago</span></span>
+      <span class="tl-arrow">&rarr;</span>
+      <span class="tl-step current">Awaiting Approval <span class="tl-time" style="color:var(--red)">3 days</span></span>
+      <span class="tl-arrow">&rarr;</span>
+      <span class="tl-step future">Dispatch</span>
+      <span class="tl-arrow">&rarr;</span>
+      <span class="tl-step future">Receive</span>
+    </div>
+    <div style="font-size:11px;color:var(--red);margin-top:8px;">&#9888; Stuck at approval for 3 days &mdash; stale request</div>
+  </div>
+</div>
+
+<!-- Legend -->
+<div style="margin-top:20px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;">
+  <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;color:var(--text-sec);">Intelligence Elements &mdash; Flow D</div>
+  <div style="font-size:11px;color:var(--text-sec);line-height:2;">
+    <div><strong>D1:</strong> Expiry Risk column, Pending In/Out column (incoming transfers + outgoing dispatches), Days of Cover (consumption-based), quick-action buttons (Procure/Detail), category filter, stat card for "Expiring Soon" + "Pending Incoming"</div>
+    <div><strong>D2:</strong> FEFO-ordered batch table with "dispatch first" recommendation, expired batch blocked + "Record Wastage" action, % of Total per batch, consumption context (avg daily, 7d total, days of cover), reorder suggestion</div>
+    <div><strong>D3:</strong> Movement type badges (Transfer In/Out, Adjustment, Wastage), PO number reference, signed qty (+/-), From/To with store type, reason for adjustments/wastage, search + type/status/date filters</div>
+    <div><strong>D4:</strong> Relative timestamps per step, duration between steps ("2 days"), total lifecycle duration, stale detection ("stuck at approval for 3 days"), branch paths for rejected/withdrawn</div>
+  </div>
+</div>
+
+</div></div></div>
+</body>
+</html>

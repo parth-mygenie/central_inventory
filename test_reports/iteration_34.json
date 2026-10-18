@@ -1,0 +1,97 @@
+{
+  "iteration": 34,
+  "test_date": "2026-06-01",
+  "test_type": "Screen-by-screen audit - Sprint fixes verification",
+  "overall_status": "PASS",
+  "summary": "Comprehensive verification of Central Inventory app fixes. All 9 features tested and verified working correctly. Operations Hub progressive loading, Pending Queues with Reject/Approve buttons, Transfer Detail with FROM/TO labels and requester snapshot all functioning as expected.",
+  "tests": [
+    {
+      "feature": "Operations Hub Progressive Loading",
+      "status": "PASS",
+      "details": "Loads within 5s showing greeting ('Good afternoon, Central'), KPI cards (Stale Approvals=3, Ready to Dispatch=1, Pending Receives=0, Low Stock Items=67), 'Loading intelligence data...' indicator visible during load. After ~15s shows full data with Store Health Grid (6 stores: DemoFranchise1-4, TestFranchise_P23_Central, TestFranchise_P23_Probe) and Quick Actions (Dispatch Stock, Add Stock, Adjust Stock, Record Wastage, Wastage Report)."
+    },
+    {
+      "feature": "Pending Queues - Approval Cards",
+      "status": "PASS",
+      "details": "Shows 3 approval cards with PO numbers (PO-0074, PO-0075, PO-0113), store names (My Genie → DemoFranchise4, My Genie → DemoCentral1), item tables with YOUR STOCK / AFTER APPROVAL columns. All buttons present: Reject (red), View Details, Approve All. 'Can fulfill' badges and age badges (6 days ago, 5 days ago) visible."
+    },
+    {
+      "feature": "Transfer Detail - FROM/TO Labels",
+      "status": "PASS",
+      "details": "/transfer/74 shows PO-0074 with status timeline (Requested → Approved → Dispatched → Received). FROM card shows 'My Genie' [Central Store] with '(SOURCE — YOU)' label. TO card shows 'DemoFranchise4' [Outlet] with '(REQUESTER)' label."
+    },
+    {
+      "feature": "Transfer Detail - Requester Store Snapshot",
+      "status": "PASS",
+      "details": "REQUESTER STORE SNAPSHOT — DEMOFRANCHISE4 section visible with 4 stat cards (0 Out of Stock, 0 Low Stock, 4 Adequate, 4 Total Items). Item table shows Cooking Oil, maida, patri, red meat with Stock Level, Min Threshold, Status (OK badges), and 'In This Request?' column (patri shows 'Yes — 0.1 kg')."
+    },
+    {
+      "feature": "Transfer Detail - Approval Impact",
+      "status": "PASS",
+      "details": "APPROVAL IMPACT ON YOUR STOCK section shows table with columns: Item, Requested, Your Stock, After Approval. patri row: 0.1 kg requested, 64.83 kg your stock, 64.73 kg after approval. Amber warning: 'Approving will reduce your stock as shown above'."
+    },
+    {
+      "feature": "Hierarchy Summary",
+      "status": "PASS",
+      "details": "Master Stores tab shows 3 stores (DemoCentral1, DemoCentral2, TestCentral_P23_Probe) with columns: STORE, SENT, RECEIVED, TXNS, OUT OF STOCK, LOW STOCK, ADEQUATE. Health data visible (OUT OF STOCK: 182/182/164, LOW STOCK: 1/0/0, ADEQUATE: 1/2/0)."
+    },
+    {
+      "feature": "History & Ledger",
+      "status": "PASS",
+      "details": "Shows 20+ transfer history rows with restaurant names (My Genie, DemoFranchise1-4, DemoCentral1-2). Columns: PO/Ref, Date, Source, Destination, Status, Type, Items, Direction, Updated. Status badges (Dispatched, Received, Requested, Withdrawn) and type badges (Direct Dispatch, Request) visible."
+    },
+    {
+      "feature": "Stock Inventory",
+      "status": "PASS",
+      "details": "Shows 164 Total Items, 67 Low Stock Items, 8 Categories. Item list with columns: Ingredient, Category, Quantity, Min Alert, Status, Expiry Risk, Pending, Days of Cover. Low stock items highlighted with 'Low' badges."
+    },
+    {
+      "feature": "Ingredients Catalogue",
+      "status": "PASS",
+      "details": "Shows 164 ingredients with columns: Name, Category, Quantity, Min Alert, Status, Recipes, Vendor, Actions. OK/Low status badges visible. Search functionality and Add Item button present."
+    },
+    {
+      "feature": "Direct Dispatch Form",
+      "status": "PASS",
+      "details": "/dispatch/new loads with Destination Store selector, Items section with 'Select item' dropdown, Quantity and Unit fields, 'Add Item' button, and 'Create Dispatch' button."
+    },
+    {
+      "feature": "Sidebar Navigation",
+      "status": "PASS",
+      "details": "All 13 sidebar links work: Operations Hub, Stock Inventory, Hierarchy Summary, Store Management, Pending Queues, History & Ledger, Consumption Report, Vendors, Ingredients, Products, Recipes, Addon Recipes, Settings."
+    }
+  ],
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "All screens",
+        "issues": ["API responses take 10-15 seconds due to N+1 calls to external POS API - this is expected and documented"]
+      }
+    ]
+  },
+  "test_report_links": ["/app/test_reports/iteration_34.json"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "OperationsHub.jsx: Progressive loading working correctly - shows 'Loading intelligence data...' indicator while fetching, KPI cards render immediately with 0 values, Store Health Grid populates after batch API calls complete",
+    "PendingQueues.jsx: Approval cards correctly show Reject (red), View Details, Approve All buttons. YOUR STOCK / AFTER APPROVAL columns in item tables working. Insufficient stock warnings data-testid present but no warnings shown (all items can be fulfilled)",
+    "TransferDetail.jsx: FROM/TO labels correctly show '(Source — You)' and '(Requester)' based on current user context. Requester Store Snapshot section loads with stat cards and item table with OK/OUT/LOW badges. Approval Impact table shows stock reduction calculations"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "100% (all API proxies working)",
+    "frontend": "100% (all 9 features verified)"
+  },
+  "test_credentials": {
+    "central": "abhishek@kalabahia.com / Qplazm@10 (rid=1)"
+  },
+  "seed_data_creation": "None - used existing POS API data",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All Sprint fixes verified. Key test artifacts: (1) /transfer/74 for Transfer Detail with FROM/TO labels + requester snapshot + approval impact. (2) /queues for Pending Queues with 3 approval cards showing Reject/Approve All buttons. (3) Operations Hub shows progressive loading with 'Loading intelligence data...' indicator. (4) All 13 sidebar navigation links functional. Note: API responses are slow (10-15s) due to external POS API - use longer timeouts."
+}

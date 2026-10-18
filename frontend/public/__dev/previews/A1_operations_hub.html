@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A1 — Operations Hub (Intelligent Command Center)</title>
+<style>
+:root{--bg:#fff;--surface:#fff;--surface2:#f4f4f5;--surface3:#fafafa;--border:#e4e4e7;--border-light:#f4f4f5;--text:#09090b;--text-sec:#52525b;--text-muted:#a1a1aa;--primary:#18181b;--primary-fg:#fafafa;--amber:#b45309;--amber-light:#fffbeb;--amber-border:#fde68a;--red:#dc2626;--red-light:#fef2f2;--red-border:#fecaca;--green:#16a34a;--green-light:#f0fdf4;--green-border:#bbf7d0;--font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;--mono:'SF Mono',Consolas,monospace;--sidebar-w:200px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--surface2);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5;}
+.shell{display:flex;min-height:100vh;}
+.sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);padding:16px 0;flex-shrink:0;position:sticky;top:0;height:100vh;}
+.sidebar .logo{padding:0 16px 16px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.sidebar .logo .icon{width:24px;height:24px;background:var(--primary);border-radius:6px;}
+.sidebar nav a{display:flex;align-items:center;padding:8px 16px;font-size:13px;color:var(--text-sec);text-decoration:none;}
+.sidebar nav a:hover{background:var(--surface2);}
+.sidebar nav a.active{background:var(--surface2);color:var(--text);font-weight:600;border-right:2px solid var(--primary);}
+.topbar{height:48px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;background:var(--surface);justify-content:space-between;}
+.topbar .store-name{font-size:13px;font-weight:600;}
+.topbar .badge{font-size:10px;padding:2px 8px;border-radius:4px;background:var(--surface2);color:var(--text-sec);border:1px solid var(--border);font-weight:600;margin-left:8px;}
+.topbar .time{font-size:11px;color:var(--text-muted);}
+.main{flex:1;display:flex;flex-direction:column;}
+.content{flex:1;padding:20px 28px 40px;max-width:1200px;}
+.preview-bar{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 12px;margin-bottom:16px;font-size:11px;color:var(--text-sec);}
+h1{font-size:22px;font-weight:700;margin-bottom:2px;}
+.sub{font-size:13px;color:var(--text-muted);margin-bottom:16px;}
+.section-div{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin:32px 0 12px;padding-top:24px;border-top:2px solid var(--border);}
+.section-div:first-of-type{border-top:none;margin-top:0;padding-top:0;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:12px;overflow:hidden;}
+.card-head{padding:10px 16px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between;}
+.card-head h2{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:600;}
+.mono{font-family:var(--mono);}
+.btn{font-size:12px;font-weight:500;padding:6px 14px;border-radius:5px;border:1px solid var(--border);background:var(--surface);color:var(--text-sec);cursor:pointer;}
+.btn-primary{background:var(--primary);color:var(--primary-fg);border-color:var(--primary);}
+.badge-s{font-size:10px;font-weight:600;padding:2px 8px;border-radius:4px;}
+.badge-ok{background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);}
+.badge-warn{background:var(--amber-light);color:var(--amber);border:1px solid var(--amber-border);}
+.badge-danger{background:var(--red-light);color:var(--red);border:1px solid var(--red-border);}
+.badge-active{background:var(--green-light);color:var(--green);border:1px solid var(--green-border);}
+
+/* Priority cards row */
+.priority-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+.p-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;cursor:pointer;transition:box-shadow .15s;}
+.p-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.p-card .v{font-size:28px;font-weight:700;font-family:var(--mono);}
+.p-card .l{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
+.p-card .detail{font-size:10px;color:var(--text-muted);margin-top:6px;border-top:1px solid var(--border-light);padding-top:6px;}
+.p-card.alert{border-left:3px solid var(--red);}
+.p-card.alert .v{color:var(--red);}
+.p-card.warn{border-left:3px solid var(--amber);}
+.p-card.warn .v{color:var(--amber);}
+
+/* Next best action */
+.nba{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:14px;}
+.nba.urgent{border-left:3px solid var(--red);background:var(--red-light);}
+.nba.attention{border-left:3px solid var(--amber);background:var(--amber-light);}
+.nba .nba-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;}
+.nba.urgent .nba-icon{background:var(--red-light);}
+.nba.attention .nba-icon{background:var(--amber-light);}
+.nba-content{flex:1;}
+.nba-title{font-size:13px;font-weight:600;}
+.nba-desc{font-size:11px;color:var(--text-muted);margin-top:1px;}
+.nba-action{flex-shrink:0;}
+
+/* Store health grid */
+.store-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px;}
+.store-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer;transition:box-shadow .15s;}
+.store-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.store-card.problem{border-left:3px solid var(--red);}
+.store-card .sc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.store-card .sc-name{font-size:13px;font-weight:600;}
+.store-card .sc-type{font-size:10px;color:var(--text-muted);}
+.store-card .sc-stats{display:flex;gap:12px;font-size:11px;}
+.store-card .sc-stat{display:flex;align-items:center;gap:3px;}
+.sc-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+
+/* Quick actions grid */
+.qa-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+.qa-btn{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer;text-align:left;transition:box-shadow .15s;}
+.qa-btn:hover{box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.qa-btn .qa-label{font-size:12px;font-weight:600;}
+.qa-btn .qa-desc{font-size:10px;color:var(--text-muted);margin-top:2px;}
+
+/* Today's activity */
+.activity-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-light);font-size:12px;}
+.activity-row:last-child{border-bottom:none;}
+.activity-time{font-size:10px;color:var(--text-muted);width:60px;flex-shrink:0;}
+.activity-badge{font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;flex-shrink:0;}
+.ab-in{background:var(--green-light);color:var(--green);}
+.ab-out{background:var(--red-light);color:var(--red);}
+.ab-adj{background:var(--surface2);color:var(--text-sec);}
+
+@media(max-width:900px){.sidebar{display:none;}.priority-row{grid-template-columns:repeat(2,1fr);}.store-grid{grid-template-columns:1fr;}.qa-grid{grid-template-columns:repeat(2,1fr);}.content{padding:16px;}}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside class="sidebar">
+  <div class="logo"><div class="icon"></div>Central Inventory</div>
+  <nav>
+    <a href="#" class="active">Operations Hub</a>
+    <a href="#">Stock Inventory</a>
+    <a href="#">Pending Queues</a>
+    <a href="#">History &amp; Ledger</a>
+    <a href="#">Request Stock</a>
+    <a href="#">Vendors</a>
+    <a href="#">Settings</a>
+  </nav>
+</aside>
+<div class="main">
+<div class="topbar">
+  <div class="store-name">Kala Bahia Central<span class="badge">Central Store</span></div>
+  <div class="time">31 May 2026, 11:30 PM</div>
+</div>
+<div class="content">
+<div class="preview-bar">PREVIEW &mdash; A1 Operations Hub &mdash; Intelligent Command Center (Central Store View)</div>
+
+<h1>Good evening, Central</h1>
+<div class="sub">Here's what needs your attention across the hierarchy</div>
+
+<!-- Next Best Actions (role-aware) -->
+<div class="nba urgent">
+  <div class="nba-icon">&#9888;</div>
+  <div class="nba-content">
+    <div class="nba-title">3 approval requests stale (&gt;24 hours)</div>
+    <div class="nba-desc">DemoFranchise1 has 3 items out of stock and is waiting on your approval since 3 days ago</div>
+  </div>
+  <div class="nba-action"><button class="btn btn-primary" style="font-size:11px;padding:6px 16px;">Review Approvals</button></div>
+</div>
+
+<div class="nba attention">
+  <div class="nba-icon">&#128230;</div>
+  <div class="nba-content">
+    <div class="nba-title">2 transfers ready to dispatch</div>
+    <div class="nba-desc">Approved transfers awaiting your dispatch. Stock already committed.</div>
+  </div>
+  <div class="nba-action"><button class="btn" style="font-size:11px;padding:6px 16px;">Dispatch Now</button></div>
+</div>
+
+<!-- Priority KPI cards -->
+<div class="priority-row">
+  <div class="p-card alert" onclick="">
+    <div class="v">3</div>
+    <div class="l">Stale Approvals</div>
+    <div class="detail">Oldest: 3 days &middot; DemoFranchise1</div>
+  </div>
+  <div class="p-card warn" onclick="">
+    <div class="v">2</div>
+    <div class="l">Ready to Dispatch</div>
+    <div class="detail">Stock committed, awaiting ship</div>
+  </div>
+  <div class="p-card" onclick="">
+    <div class="v">0</div>
+    <div class="l">Pending Receives</div>
+    <div class="detail">No incoming shipments</div>
+  </div>
+  <div class="p-card alert" onclick="">
+    <div class="v">1</div>
+    <div class="l">Low Stock Items</div>
+    <div class="detail">Maida: 3.2 kg (&lt;1 day cover)</div>
+  </div>
+</div>
+
+<!-- Stock Health — your store -->
+<div class="card">
+  <div class="card-head"><h2>Your Stock Health</h2><button class="btn" style="font-size:10px;padding:3px 8px;">View Inventory</button></div>
+  <div style="padding:12px 16px;">
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;font-size:12px;text-align:center;">
+      <div><div class="mono" style="font-size:18px;font-weight:700;">4</div><div style="font-size:10px;color:var(--text-muted)">Total Items</div></div>
+      <div><div class="mono" style="font-size:18px;font-weight:700;color:var(--red);">1</div><div style="font-size:10px;color:var(--text-muted)">Low Stock</div></div>
+      <div><div class="mono" style="font-size:18px;font-weight:700;color:var(--amber);">1</div><div style="font-size:10px;color:var(--text-muted)">Expiring &le;30d</div></div>
+      <div><div class="mono" style="font-size:18px;font-weight:700;">1</div><div style="font-size:10px;color:var(--text-muted)">Expired (blocked)</div></div>
+      <div><div class="mono" style="font-size:18px;font-weight:700;">2</div><div style="font-size:10px;color:var(--text-muted)">Pending Out</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Hierarchy Store Health — what's happening across stores -->
+<div class="card">
+  <div class="card-head"><h2>Store Health Across Hierarchy</h2><button class="btn" style="font-size:10px;padding:3px 8px;">View Hierarchy</button></div>
+  <div style="padding:12px 16px;">
+    <div class="store-grid">
+      <div class="store-card problem">
+        <div class="sc-head">
+          <span class="sc-name">DemoFranchise1</span>
+          <span class="badge-s badge-danger">3 out of stock</span>
+        </div>
+        <div class="sc-stats">
+          <span class="sc-stat"><span class="sc-dot" style="background:var(--red)"></span>3 out</span>
+          <span class="sc-stat"><span class="sc-dot" style="background:var(--amber)"></span>1 low</span>
+          <span class="sc-stat" style="color:var(--text-muted)">0 adequate</span>
+        </div>
+        <div style="font-size:10px;color:var(--red);margin-top:6px;">Approval pending 3 days &mdash; this store is in trouble</div>
+      </div>
+      <div class="store-card">
+        <div class="sc-head">
+          <span class="sc-name">DemoFranchise2</span>
+          <span class="badge-s badge-ok">Healthy</span>
+        </div>
+        <div class="sc-stats">
+          <span class="sc-stat"><span class="sc-dot" style="background:var(--red)"></span>1 out</span>
+          <span class="sc-stat"><span class="sc-dot" style="background:var(--amber)"></span>1 low</span>
+          <span class="sc-stat" style="color:var(--text-muted)">2 adequate</span>
+        </div>
+      </div>
+      <div class="store-card">
+        <div class="sc-head">
+          <span class="sc-name">DemoCentral1</span>
+          <span class="badge-s badge-ok">Healthy</span>
+        </div>
+        <div class="sc-stats">
+          <span class="sc-stat"><span class="sc-dot" style="background:var(--red)"></span>0 out</span>
+          <span class="sc-stat"><span class="sc-dot" style="background:var(--amber)"></span>1 low</span>
+          <span class="sc-stat" style="color:var(--text-muted)">3 adequate</span>
+        </div>
+      </div>
+      <div class="store-card">
+        <div class="sc-head">
+          <span class="sc-name">DemoCentral2</span>
+          <span class="badge-s badge-active">All stocked</span>
+        </div>
+        <div class="sc-stats">
+          <span class="sc-stat" style="color:var(--text-muted)">0 out</span>
+          <span class="sc-stat" style="color:var(--text-muted)">0 low</span>
+          <span class="sc-stat" style="color:var(--text-muted)">4 adequate</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Actions (role-aware) -->
+<div class="card">
+  <div class="card-head"><h2>Quick Actions</h2></div>
+  <div style="padding:12px 16px;">
+    <div class="qa-grid">
+      <div class="qa-btn">
+        <div class="qa-label">Dispatch Stock</div>
+        <div class="qa-desc">Send stock to Master/Outlet stores</div>
+      </div>
+      <div class="qa-btn">
+        <div class="qa-label">Add Stock (Vendor)</div>
+        <div class="qa-desc">Procure from vendors &middot; Upload invoice</div>
+      </div>
+      <div class="qa-btn">
+        <div class="qa-label">Adjust Stock</div>
+        <div class="qa-desc">Correct quantities &middot; Central only</div>
+      </div>
+      <div class="qa-btn">
+        <div class="qa-label">Record Wastage</div>
+        <div class="qa-desc">Log spoiled/damaged stock</div>
+      </div>
+      <div class="qa-btn">
+        <div class="qa-label">Push Catalogue</div>
+        <div class="qa-desc">Sync items to child stores</div>
+      </div>
+      <div class="qa-btn">
+        <div class="qa-label">Wastage Report</div>
+        <div class="qa-desc">Analyze wastage trends</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Today's Activity Feed -->
+<div class="card">
+  <div class="card-head"><h2>Today's Activity</h2><span style="font-size:10px;color:var(--text-muted)">31 May 2026</span></div>
+  <div style="padding:10px 16px;">
+    <div class="activity-row">
+      <span class="activity-time">5:24 PM</span>
+      <span class="activity-badge ab-in">&darr; Received</span>
+      <span style="font-weight:600;">Red Meat</span> <span>+500 gm from DemoCentral1</span>
+      <span class="mono" style="margin-left:auto;font-size:11px;">PO-XXXX</span>
+    </div>
+    <div class="activity-row">
+      <span class="activity-time">5:23 PM</span>
+      <span class="activity-badge ab-out">&uarr; Dispatched</span>
+      <span style="font-weight:600;">Maida</span> <span>-5 kg to DemoFranchise1</span>
+      <span class="mono" style="margin-left:auto;font-size:11px;">PO-XXXX</span>
+    </div>
+    <div class="activity-row">
+      <span class="activity-time">2:10 PM</span>
+      <span class="activity-badge ab-adj">Adjustment</span>
+      <span style="font-weight:600;">Cooking Oil</span> <span>-5 ltr (Counting Error)</span>
+      <span class="mono" style="margin-left:auto;font-size:11px;">&mdash;</span>
+    </div>
+    <div style="text-align:center;padding:6px 0;"><a href="#" style="font-size:11px;color:var(--text-sec);text-decoration:underline;">View full history &rarr;</a></div>
+  </div>
+</div>
+
+<!-- GAP-QA-02: Post-submit success confirmation -->
+<div class="card" style="border-left:3px solid var(--green);margin-bottom:16px;">
+  <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;">
+    <div style="width:36px;height:36px;border-radius:8px;background:var(--green-light);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;color:var(--green);">&#10003;</div>
+    <div style="flex:1;">
+      <div style="font-size:14px;font-weight:600;">Request submitted successfully</div>
+      <div style="font-size:12px;color:var(--text-muted);">PO-XXXX &mdash; 3 items &middot; Red Meat 500 gm, Patri 800 gm, Maida 10 kg</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Sent to Kala Bahia Central for approval</div>
+    </div>
+    <button class="btn" style="font-size:11px;padding:5px 14px;">View Transfer &rarr;</button>
+  </div>
+</div>
+
+<!-- GAP-QA-01: Your Latest Request (for Outlet/Master Hub) -->
+<div class="section-div">A1 &mdash; Hub Intelligence: "Your Latest Request" (Outlet/Master view)</div>
+
+<div class="card" style="border-left:3px solid var(--amber);">
+  <div style="padding:12px 16px;display:flex;align-items:center;gap:12px;">
+    <div style="flex:1;">
+      <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">Your Latest Request</div>
+      <div style="font-size:13px;font-weight:600;margin-top:4px;">PO-XXXX &mdash; 3 items to Kala Bahia Central</div>
+      <div style="font-size:11px;color:var(--amber);margin-top:2px;">Awaiting Approval &middot; Submitted 3 days ago</div>
+    </div>
+    <button class="btn" style="font-size:11px;padding:5px 14px;">Track &rarr;</button>
+  </div>
+</div>
+
+<!-- MI-06: Cross-Item Expiry Scan -->
+<div class="section-div">D1 &mdash; Cross-Item Expiry Scan (new intelligence)</div>
+
+<div class="card" style="border-left:3px solid var(--amber);">
+  <div class="card-head"><h2>Expiring This Week (across all items)</h2><span style="font-size:10px;color:var(--text-muted)">Next 7 days</span></div>
+  <table>
+    <thead><tr><th>Item</th><th>Batch</th><th>Qty</th><th>Expires</th><th>Days Left</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr style="background:var(--red-light);">
+        <td style="font-weight:600;">Red Meat <span style="font-size:10px;color:var(--text-muted)">gm</span></td>
+        <td class="mono" style="font-size:11px">BRD-2026-02 (#38)</td>
+        <td class="mono">200 gm</td>
+        <td style="font-size:11px">20 May 2026</td>
+        <td><span class="badge-s badge-danger">EXPIRED</span></td>
+        <td><button class="btn" style="font-size:10px;padding:3px 8px;color:var(--red);border-color:var(--red-border)">Record Wastage</button></td>
+      </tr>
+      <tr style="background:var(--amber-light);">
+        <td style="font-weight:600;">Red Meat <span style="font-size:10px;color:var(--text-muted)">gm</span></td>
+        <td class="mono" style="font-size:11px">BRD-2026-05 (#42)</td>
+        <td class="mono">800 gm</td>
+        <td style="font-size:11px">15 Jun 2026</td>
+        <td><span class="badge-s badge-warn">15 days</span></td>
+        <td><button class="btn" style="font-size:10px;padding:3px 8px;">Dispatch First</button></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Legend -->
+<div style="margin-top:20px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;">
+  <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;color:var(--text-sec);">Intelligence Elements &mdash; Operations Hub</div>
+  <div style="font-size:11px;color:var(--text-sec);line-height:2;">
+    <div><strong>Greeting:</strong> Time-aware + role-aware ("Good evening, Central")</div>
+    <div><strong>Next Best Actions:</strong> Prioritized, actionable banners &mdash; stale approvals (urgent, red), ready-to-dispatch (attention, amber)</div>
+    <div><strong>Priority KPIs:</strong> Stale approvals with oldest age + requester, low stock with item + cover days, ready-to-dispatch count</div>
+    <div><strong>Your Stock Health:</strong> 5-metric strip &mdash; total, low, expiring, expired, pending outgoing</div>
+    <div><strong>Store Health Grid:</strong> Every child store's stock status at a glance &mdash; red border for troubled stores, "3 out of stock" badge, "approval pending 3 days" correlation</div>
+    <div><strong>Quick Actions:</strong> Role-gated &mdash; Central sees dispatch/procure/adjust. Master sees dispatch/request. Outlet sees request/wastage</div>
+    <div><strong>Today's Activity:</strong> Real-time feed of movements with PO numbers, signed quantities, counterparty</div>
+    <div style="margin-top:6px;color:var(--text-muted)"><em>Data: getPendingQueues() + getStockInventory() + getTransferHistory(today) + getHierarchyDetail(per child store)</em></div>
+  </div>
+</div>
+
+</div></div></div>
+</body>
+</html>

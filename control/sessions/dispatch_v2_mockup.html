@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Direct Dispatch — v2 Mockup (Category UX + Multi-Batch)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f1f5f9; }
+
+    /* ─── Table shell ─── */
+    .dt { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .dt thead th {
+      background: #f8fafc; padding: 6px 10px; text-align: left;
+      font-size: 10px; font-weight: 600; color: #94a3b8;
+      text-transform: uppercase; letter-spacing: .06em;
+      border-bottom: 2px solid #e2e8f0; white-space: nowrap;
+    }
+    .dt thead th.r { text-align: right; }
+
+    /* ─── Category header row ─── */
+    .cat-row td {
+      background: #f1f5f9;
+      border-top: 1px solid #e2e8f0;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 5px 10px;
+    }
+    .cat-name {
+      font-size: 11px; font-weight: 700; color: #334155;
+      display: flex; align-items: center; gap: 6px; cursor: pointer;
+    }
+    .cat-caret { font-size: 10px; color: #94a3b8; transition: transform .15s; }
+    .cat-caret.open { transform: rotate(90deg); }
+    .cat-count { font-size: 10px; color: #94a3b8; }
+    .cat-badge-out { background: #fee2e2; color: #dc2626; border-radius: 3px; padding: 1px 5px; font-size: 9px; font-weight: 700; }
+    .cat-badge-low { background: #fef3c7; color: #d97706; border-radius: 3px; padding: 1px 5px; font-size: 9px; font-weight: 700; }
+    .cat-actions { display: flex; gap: 4px; align-items: center; }
+    .cat-btn { padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 500;
+               border: 1px solid #e2e8f0; background: white; color: #475569; cursor: pointer; }
+    .cat-btn:hover { background: #f8fafc; }
+
+    /* ─── Item rows ─── */
+    .item-row td { border-bottom: 1px solid #f4f4f4; background: white; vertical-align: top; padding: 0; }
+    .item-row.out  td { background: #fff8f8; }
+    .item-row.out  td:first-child { border-left: 3px solid #ef4444; }
+    .item-row.low  td { background: #fffcf0; }
+    .item-row.low  td:first-child { border-left: 3px solid #f59e0b; }
+    .item-row.done td { background: #f0fdf4; }
+    .item-row.done td:first-child { border-left: 3px solid #4ade80; }
+    .item-row.excl td { opacity: .45; background: #fafafa; }
+    .item-row.excl td:first-child { border-left: 3px solid #e2e8f0; opacity: .45; }
+    .item-row.hidden { display: none; }
+
+    td.c { padding: 6px 8px; }
+
+    /* ─── Inline inputs ─── */
+    .ci { width: 100%; border: 1px solid transparent; border-radius: 4px;
+          padding: 3px 7px; font-size: 12px; background: transparent;
+          outline: none; height: 28px; color: #1e293b; }
+    .ci:focus { border-color: #818cf8; background: white; box-shadow: 0 0 0 2px rgba(129,140,248,.15); }
+    .ci::placeholder { color: #cbd5e1; }
+
+    /* Unit badge */
+    .ubadge { display: inline-flex; align-items: center; justify-content: center;
+              background: #f1f5f9; border-radius: 4px; padding: 2px 7px;
+              font-size: 11px; color: #64748b; font-weight: 500; width: 100%; }
+
+    /* Stock-after */
+    .sa-pos  { font-size: 12px; font-weight: 700; color: #16a34a; font-family: monospace; }
+    .sa-warn { font-size: 12px; font-weight: 700; color: #dc2626; font-family: monospace; }
+    .sa-dim  { font-size: 10px; color: #94a3b8; }
+
+    /* ─── SOURCE SEGMENT CELL ─── */
+    .src-cell { padding: 6px 8px !important; }
+
+    /* Single-source line */
+    .src-line {
+      display: flex; align-items: center; gap: 4px; margin-bottom: 3px;
+    }
+    .src-select {
+      flex: 1; border: 1px solid #e2e8f0; border-radius: 4px;
+      padding: 3px 6px; font-size: 11px; height: 26px; outline: none;
+      color: #1e293b; background: white; cursor: pointer;
+    }
+    .src-select:focus { border-color: #818cf8; }
+    .src-qty-in {
+      width: 52px; border: 1px solid #e2e8f0; border-radius: 4px;
+      padding: 3px 6px; font-size: 11px; height: 26px; text-align: right;
+      outline: none; color: #1e293b;
+    }
+    .src-qty-in:focus { border-color: #818cf8; }
+    .src-del { color: #cbd5e1; cursor: pointer; font-size: 12px; padding: 0 2px; }
+    .src-del:hover { color: #ef4444; }
+
+    /* Multi-batch summary */
+    .src-total { font-size: 10px; margin-top: 2px; }
+    .src-total.ok   { color: #16a34a; }
+    .src-total.warn { color: #ef4444; }
+    .src-total.part { color: #d97706; }
+
+    /* Add-batch button */
+    .src-add { font-size: 10px; color: #818cf8; cursor: pointer; margin-top: 3px;
+               display: inline-flex; align-items: center; gap: 2px; }
+    .src-add:hover { text-decoration: underline; }
+
+    /* ─── Coverage pills ─── */
+    .cpill { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
+             cursor: pointer; border: 1px solid #e2e8f0; background: white;
+             color: #64748b; transition: all .12s; }
+    .cpill.on { background: #1e293b; color: white; border-color: #1e293b; }
+
+    /* ─── Item badges ─── */
+    .bv { display: inline-flex; align-items: center; border-radius: 3px;
+          padding: 1px 5px; font-size: 9px; font-weight: 700; }
+    .bv.out { background: #fee2e2; color: #dc2626; }
+    .bv.low { background: #fef3c7; color: #d97706; }
+
+    /* ─── Grand bar ─── */
+    .gbar { background: #1e293b; color: white; border-radius: 0 0 10px 10px;
+            padding: 11px 16px; display: flex; justify-content: space-between; align-items: center; }
+
+    /* ─── Search / filter bar ─── */
+    .filter-bar { background: white; border: 1px solid #e2e8f0; border-radius: 10px;
+                  padding: 10px 14px; margin-bottom: 10px;
+                  display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .search-wrap { position: relative; flex: 1; min-width: 180px; }
+    .search-wrap input { width: 100%; border: 1px solid #e2e8f0; border-radius: 6px;
+                         padding: 5px 10px 5px 30px; font-size: 12px; height: 32px;
+                         outline: none; color: #1e293b; }
+    .search-wrap input:focus { border-color: #818cf8; box-shadow: 0 0 0 2px rgba(129,140,248,.12); }
+    .search-icon { position: absolute; left: 9px; top: 50%; transform: translateY(-50%);
+                   color: #94a3b8; font-size: 12px; pointer-events: none; }
+    .cat-filter { border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 10px;
+                  font-size: 12px; height: 32px; background: white; outline: none; color: #1e293b;
+                  cursor: pointer; min-width: 160px; }
+    .cat-filter:focus { border-color: #818cf8; }
+
+    /* ─── Header card ─── */
+    .hdr { background: white; border: 1px solid #e2e8f0; border-radius: 10px;
+           padding: 10px 14px; margin-bottom: 10px;
+           display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; }
+    select.hs, input.hs { border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 10px;
+                           font-size: 12px; height: 32px; background: white; outline: none; color: #1e293b; }
+    select.hs:focus, input.hs:focus { border-color: #818cf8; }
+
+    /* ─── Health strip ─── */
+    .hstrip { display: flex; gap: 8px; align-items: center; font-size: 10px;
+              background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;
+              padding: 5px 10px; margin-bottom: 10px; }
+
+    /* ─── Status badges (search-area filter pills) ─── */
+    .filter-pill { padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 600;
+                   cursor: pointer; border: 1px solid #e2e8f0; background: white;
+                   color: #64748b; transition: all .12s; }
+    .filter-pill.on { background: #1e293b; color: white; border-color: #1e293b; }
+    .filter-pill.red.on  { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
+    .filter-pill.amber.on{ background: #fef3c7; color: #d97706; border-color: #fcd34d; }
+
+    /* keyboard hint */
+    .kbd { display: inline-block; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 3px;
+           padding: 1px 5px; font-size: 10px; font-family: monospace; color: #475569; }
+
+    @keyframes rIn { from { opacity:0; transform:translateY(-3px); } to { opacity:1; transform:translateY(0); } }
+    .rin { animation: rIn .15s ease-out; }
+
+    /* Confirm screen */
+    .conf-card { background: white; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; margin-bottom: 12px; }
+
+    [data-view] { display: none; }
+    [data-view].on { display: block; }
+  </style>
+</head>
+<body class="p-4 md:p-8">
+<div class="max-w-5xl mx-auto">
+
+  <!-- Page title -->
+  <div class="flex items-center gap-3 mb-4">
+    <div style="width:30px;height:30px;background:#1e293b;border-radius:7px;display:flex;align-items:center;justify-content:center;">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2.2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </div>
+    <div>
+      <h1 style="font-size:14px;font-weight:700;color:#1e293b;">Direct Dispatch</h1>
+      <p style="font-size:11px;color:#94a3b8;">Send stock to a store in your hierarchy</p>
+    </div>
+  </div>
+
+  <!-- View toggle -->
+  <div style="display:flex;gap:6px;margin-bottom:12px;">
+    <button class="filter-pill on" id="vbtn-form"    onclick="setView('form')">Form</button>
+    <button class="filter-pill"   id="vbtn-confirm"  onclick="setView('confirm')">Confirm</button>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       FORM VIEW
+  ══════════════════════════════════════ -->
+  <div data-view="form" class="on">
+
+    <!-- ── Header: Destination + Coverage ── -->
+    <div class="hdr">
+      <div style="min-width:200px;">
+        <label style="display:block;font-size:10px;font-weight:600;color:#94a3b8;margin-bottom:3px;">DESTINATION STORE *</label>
+        <select class="hs" style="width:100%;">
+          <option>Sutraa (Outlet)</option>
+          <option>Kunafa Mahal (Outlet)</option>
+          <option>Central Kitchen Alpha (Master)</option>
+        </select>
+      </div>
+      <div>
+        <label style="display:block;font-size:10px;font-weight:600;color:#94a3b8;margin-bottom:3px;">DISPATCH FOR</label>
+        <div style="display:flex;gap:3px;" id="coverPills">
+          <button class="cpill" data-d="3"  onclick="setCover(3)">3d</button>
+          <button class="cpill on" data-d="7" onclick="setCover(7)">7d</button>
+          <button class="cpill" data-d="10" onclick="setCover(10)">10d</button>
+          <button class="cpill" data-d="30" onclick="setCover(30)">30d</button>
+          <input id="customD" type="number" class="hs" placeholder="—" style="width:52px;font-size:11px;" oninput="setCover(parseInt(this.value)||7)" />
+        </div>
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:flex-end;gap:5px;font-size:10px;color:#94a3b8;">
+        <span class="kbd">Tab</span> Qty→Source &nbsp;
+        <span class="kbd">Enter</span> next row
+      </div>
+    </div>
+
+    <!-- ── Health strip (compact, no big tiles) ── -->
+    <div class="hstrip">
+      <span style="font-weight:600;color:#1e293b;">Sutraa</span>
+      <span style="background:#fee2e2;color:#dc2626;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;">5 OUT</span>
+      <span style="background:#fef3c7;color:#d97706;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;">18 LOW</span>
+      <span style="background:#dcfce7;color:#16a34a;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;">234 OK</span>
+      <span style="color:#94a3b8;font-size:10px;margin-left:4px;">threshold-based · No consumption data</span>
+      <span style="margin-left:auto;font-size:10px;color:#94a3b8;" id="selectedSummary">0 items selected</span>
+    </div>
+
+    <!-- ── Search + filter bar ── -->
+    <div class="filter-bar">
+      <!-- Category dropdown filter -->
+      <div>
+        <label style="display:block;font-size:9px;font-weight:600;color:#94a3b8;margin-bottom:2px;">CATEGORY</label>
+        <select class="cat-filter" id="catFilter" onchange="applyFilters()">
+          <option value="">All Categories</option>
+          <option value="Dry Goods">Dry Goods</option>
+          <option value="Dairy">Dairy</option>
+          <option value="Spices">Spices</option>
+          <option value="Oils &amp; Fats">Oils &amp; Fats</option>
+          <option value="Nuts &amp; Seeds">Nuts &amp; Seeds</option>
+          <option value="Beverages">Beverages</option>
+        </select>
+      </div>
+      <!-- Item search -->
+      <div class="search-wrap" style="flex:2;min-width:200px;">
+        <label style="display:block;font-size:9px;font-weight:600;color:#94a3b8;margin-bottom:2px;">ITEM SEARCH</label>
+        <span class="search-icon">⌕</span>
+        <input type="text" id="itemSearch" placeholder="Search by item name…" oninput="applyFilters()" />
+      </div>
+      <!-- Status filter pills -->
+      <div>
+        <label style="display:block;font-size:9px;font-weight:600;color:#94a3b8;margin-bottom:2px;">SHOW</label>
+        <div style="display:flex;gap:4px;">
+          <button class="filter-pill red on"   id="fp-out" onclick="toggleFilter('out')">OUT</button>
+          <button class="filter-pill amber on" id="fp-low" onclick="toggleFilter('low')">LOW</button>
+          <button class="filter-pill on"       id="fp-all" onclick="toggleFilter('all')">All</button>
+        </div>
+      </div>
+      <!-- Global select/unselect -->
+      <div style="display:flex;gap:4px;align-items:flex-end;">
+        <button class="cat-btn" onclick="globalSelect(true)">Select All</button>
+        <button class="cat-btn" onclick="globalSelect(false)">Unselect All</button>
+      </div>
+    </div>
+
+    <!-- ── Main dispatch table ── -->
+    <div style="background:white;border:1px solid #e2e8f0;">
+      <table class="dt" id="mainTable">
+        <colgroup>
+          <col style="width:22%">  <!-- Item -->
+          <col style="width:9%">   <!-- Their Stock -->
+          <col style="width:9%">   <!-- Gap -->
+          <col style="width:8%">   <!-- Send Qty -->
+          <col style="width:5%">   <!-- Unit -->
+          <col style="width:30%">  <!-- Source Segment -->
+          <col style="width:13%">  <!-- Your Stock After -->
+          <col style="width:4%">   <!-- ✕ -->
+        </colgroup>
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th class="r">Their Stock</th>
+            <th class="r">Gap</th>
+            <th class="r">Send Qty</th>
+            <th>Unit</th>
+            <th>Source Segment</th>
+            <th class="r">Your Stock After</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+
+          <!-- ══ CATEGORY: Dry Goods ══ -->
+          <tr class="cat-row" data-cat="Dry Goods" id="cat-DryGoods">
+            <td colspan="8">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div class="cat-name" onclick="toggleCat('DryGoods')">
+                  <span class="cat-caret open" id="caret-DryGoods">▶</span>
+                  <span>Dry Goods</span>
+                  <span class="cat-badge-out">2 OUT</span>
+                  <span class="cat-badge-low">1 LOW</span>
+                  <span class="cat-count">· 4 items</span>
+                </div>
+                <div class="cat-actions">
+                  <button class="cat-btn" onclick="catSelect('DryGoods',true)">Select All</button>
+                  <button class="cat-btn" onclick="catSelect('DryGoods',false)">Unselect All</button>
+                </div>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Dry Goods items -->
+          <tr class="item-row out rin" data-cat="DryGoods" data-status="out" id="row-ajwain">
+            <td class="c">
+              <div style="font-size:12px;font-weight:600;">Ajwain <span class="bv out">OUT</span></div>
+              <div style="font-size:10px;color:#94a3b8;">0 kg · min 1 kg</div>
+            </td>
+            <td class="c r" style="font-size:12px;color:#dc2626;font-weight:600;text-align:right;">0 kg</td>
+            <td class="c r" style="font-size:12px;font-weight:700;color:#d97706;text-align:right;">1 kg</td>
+            <td class="c">
+              <input class="ci" type="number" id="sq-ajwain" value="1" style="text-align:right;"
+                     oninput="updateSrc('ajwain')" onkeydown="rowKey(event,'ajwain')" />
+            </td>
+            <td class="c"><div class="ubadge">kg</div></td>
+            <td class="src-cell" id="srcCell-ajwain">
+              <!-- Multi-source widget -->
+              <div id="srcLines-ajwain">
+                <div class="src-line" data-rid="ajwain" data-idx="0">
+                  <select class="src-select" onchange="refreshSrcTotal('ajwain')">
+                    <option value="">Select…</option>
+                    <option value="s1" selected>AJWAIN-OCT-10 · 5 kg avail</option>
+                    <option value="s2">AJWAIN-SEP-01 · 2 kg (32d ⚠)</option>
+                  </select>
+                  <input class="src-qty-in" type="number" value="1" placeholder="qty"
+                         oninput="refreshSrcTotal('ajwain')" />
+                  <span class="src-del" title="Remove" style="display:none;"
+                        onclick="removeSrcLine('ajwain',this)">×</span>
+                </div>
+              </div>
+              <div class="src-total ok" id="srcTotal-ajwain">✓ 1 kg allocated</div>
+              <div class="src-add" onclick="addSrcLine('ajwain','kg')">+ split across another batch</div>
+            </td>
+            <td class="c" style="text-align:right;">
+              <div class="sa-pos" id="sa-ajwain">6 kg</div>
+              <div class="sa-dim">retain 86%</div>
+            </td>
+            <td class="c" style="text-align:center;">
+              <span style="color:#cbd5e1;cursor:pointer;font-size:13px;" onclick="excludeRow('row-ajwain')" title="Exclude">✕</span>
+            </td>
+          </tr>
+
+          <tr class="item-row out rin" data-cat="DryGoods" data-status="out" id="row-maida">
+            <td class="c">
+              <div style="font-size:12px;font-weight:600;">Maida <span class="bv out">OUT</span></div>
+              <div style="font-size:10px;color:#94a3b8;">0 kg · min 5 kg</div>
+            </td>
+            <td class="c r" style="font-size:12px;color:#dc2626;font-weight:600;text-align:right;">0 kg</td>
+            <td class="c r" style="font-size:12px;font-weight:700;color:#d97706;text-align:right;">5 kg</td>
+            <td class="c">
+              <input class="ci" type="number" id="sq-maida" value="5" style="text-align:right;"
+                     oninput="updateSrc('maida')" onkeydown="rowKey(event,'maida')" />
+            </td>
+            <td class="c"><div class="ubadge">kg</div></td>
+            <td class="src-cell" id="srcCell-maida">
+              <div id="srcLines-maida">
+                <!-- Two batches pre-shown (qty 5 > single batch of 3) -->
+                <div class="src-line" data-rid="maida" data-idx="0">
+                  <select class="src-select" onchange="refreshSrcTotal('maida')">
+                    <option value="s1" selected>MAIDA-OCT-12 · 3 kg avail</option>
+                    <option value="s2">MAIDA-SEP-25 · 4 kg avail</option>
+                  </select>
+                  <input class="src-qty-in" type="number" value="3" placeholder="qty"
+                         oninput="refreshSrcTotal('maida')" />
+                  <span class="src-del" title="Remove" onclick="removeSrcLine('maida',this)">×</span>
+                </div>
+                <div class="src-line rin" data-rid="maida" data-idx="1">
+                  <select class="src-select" onchange="refreshSrcTotal('maida')">
+                    <option value="s2" selected>MAIDA-SEP-25 · 4 kg avail</option>
+                    <option value="s1">MAIDA-OCT-12 · 3 kg avail</option>
+                  </select>
+                  <input class="src-qty-in" type="number" value="2" placeholder="qty"
+                         oninput="refreshSrcTotal('maida')" />
+                  <span class="src-del" title="Remove" onclick="removeSrcLine('maida',this)">×</span>
+                </div>
+              </div>
+              <div class="src-total ok" id="srcTotal-maida">✓ 5 kg allocated across 2 batches</div>
+              <div class="src-add" onclick="addSrcLine('maida','kg')">+ split across another batch</div>
+            </td>
+            <td class="c" style="text-align:right;">
+              <div class="sa-pos" id="sa-maida">12 kg</div>
+              <div class="sa-dim">retain 71%</div>
+            </td>
+            <td class="c" style="text-align:center;">
+              <span style="color:#cbd5e1;cursor:pointer;font-size:13px;" onclick="excludeRow('row-maida')">✕</span>
+            </td>
+          </tr>
+
+          <tr class="item-row low rin" data-cat="DryGoods" data-status="low" id="row-wheat">
+            <td class="c">
+              <div style="font-size:12px;font-weight:600;">Wheat Flour <span class="bv low">3d left</span></div>
+              <div style="font-size:10px;color:#94a3b8;" id="wheat-hint">2 kg · 4.1 kg/day · needs 26.7 kg for 7d</div>
+            </td>
+            <td class="c r" style="font-size:12px;color:#d97706;text-align:right;">2 kg</td>
+            <td class="c r" style="font-size:12px;font-weight:700;color:#d97706;text-align:right;" id="wheat-gap">26.7 kg</td>
+            <td class="c">
+              <input class="ci" type="number" id="sq-wheat" value="26.7" style="text-align:right;"
+                     oninput="updateSrc('wheat')" onkeydown="rowKey(event,'wheat')" />
+            </td>
+            <td class="c"><div class="ubadge">kg</div></td>
+            <td class="src-cell" id="srcCell-wheat">
+              <div id="srcLines-wheat">
+                <div class="src-line" data-rid="wheat" data-idx="0">
+                  <select class="src-select" onchange="refreshSrcTotal('wheat')">
+                    <option value="s1" selected>WHEAT-OCT-10 · 30 kg avail</option>
+                  </select>
+                  <input class="src-qty-in" type="number" value="26.7" placeholder="qty"
+                         oninput="refreshSrcTotal('wheat')" />
+                  <span class="src-del" title="Remove" style="display:none;"
+                        onclick="removeSrcLine('wheat',this)">×</span>
+                </div>
+              </div>
+              <div class="src-total ok" id="srcTotal-wheat">✓ 26.7 kg allocated</div>
+              <div class="src-add" onclick="addSrcLine('wheat','kg')">+ split across another batch</div>
+            </td>
+            <td class="c" style="text-align:right;">
+              <div class="sa-pos" id="sa-wheat">3.3 kg</div>
+              <div class="sa-dim">retain 11%</div>
+            </td>
+            <td class="c" style="text-align:center;">
+              <span style="color:#cbd5e1;cursor:pointer;font-size:13px;" onclick="excludeRow('row-wheat')">✕</span>
+            </td>
+          </tr>
+
+          <tr class="item-row rin" data-cat="DryGoods" data-status="ok" id="row-rice">
+            <td class="c">
+              <div style="font-size:12px;font-weight:600;">Rice</div>
+              <div style="font-size:10px;color:#94a3b8;">15 kg · min 8 kg · adequate</div>
+            </td>
+            <td class="c r" style="font-size:12px;text-align:right;color:#64748b;">15 kg</td>
+            <td class="c r" style="font-size:12px;text-align:right;color:#94a3b8;">—</td>
+            <td class="c">
+              <input class="ci" type="number" id="sq-rice" placeholder="0" style="text-align:right;"
+                     oninput="updateSrc('rice')" onkeydown="rowKey(event,'rice')" />
+            </td>
+            <td class="c"><div class="ubadge">kg</div></td>
+            <td class="src-cell" id="srcCell-rice">
+              <div id="srcLines-rice">
+                <div class="src-line" data-rid="rice" data-idx="0">
+                  <select class="src-select">
+                    <option value="">Select…</option>
+                    <option value="s1">RICE-OCT-11 · 80 kg avail</option>
+                  </select>
+                  <input class="src-qty-in" type="number" placeholder="qty" />
+                  <span class="src-del" style="display:none;">×</span>
+                </div>
+              </div>
+              <div class="src-total" id="srcTotal-rice" style="color:#94a3b8;font-size:10px;">— not needed</div>
+              <div class="src-add" onclick="addSrcLine('rice','kg')">+ split across another batch</div>
+            </td>
+            <td class="c" style="text-align:right;"><span style="font-size:12px;color:#94a3b8;" id="sa-rice">—</span></td>
+            <td class="c" style="text-align:center;">
+              <span style="color:#cbd5e1;cursor:pointer;font-size:13px;" onclick="excludeRow('row-rice')">✕</span>
+            </td>
+          </tr>
+
+          <!-- ══ CATEGORY: Spices ══ -->
+          <tr class="cat-row" data-cat="Spices" id="cat-Spices">
+            <td colspan="8">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div class="cat-name" onclick="toggleCat('Spices')">
+                  <span class="cat-caret open" id="caret-Spices">▶</span>
+                  <span>Spices</span>
+                  <span class="cat-badge-out">1 OUT</span>
+                  <span class="cat-count">· 3 items</span>
+                </div>
+                <div class="cat-actions">
+                  <button class="cat-btn" onclick="catSelect('Spices',true)">Select All</button>
+                  <button class="cat-btn" onclick="catSelect('Spices',false)">Unselect All</button>
+                </div>
+              </div>
+            </td>
+          </tr>
+
+          <tr class="item-row out rin" data-cat="Spices" data-status="out" id="row-turmeric">
+            <td class="c">
+              <div style="font-size:12px;font-weight:600;">Turmeric Powder <span class="bv out">OUT</span></div>
+              <div style="font-size:10px;color:#94a3b8;">0 kg · min 0.5 kg</div>
+            </td>
+            <td class="c r" style="font-size:12px;color:#dc2626;font-weight:600;text-align:right;">0 kg</td>
+            <td class="c r" style="font-size:12px;font-weight:700;color:#d97706;text-align:right;">0.5 kg</td>
+            <td class="c">
+              <input class="ci" type="number" id="sq-turmeric" value="0.5" style="text-align:right;"
+                     onkeydown="rowKey(event,'turmeric')" />
+            </td>
+            <td class="c"><div class="ubadge">kg</div></td>
+            <td class="src-cell">
+              <div id="srcLines-turmeric">
+                <div class="src-line">
+                  <select class="src-select">
+                    <option>Select…</option>
+                    <option selected>TURMERIC-OCT-08 · 2 kg avail</option>
+                  </select>
+                  <input class="src-qty-in" type="number" value="0.5" />
+                  <span class="src-del" style="display:none;">×</span>
+                </div>
+              </div>
+              <div class="src-total ok">✓ 0.5 kg allocated</div>
+              <div class="src-add" onclick="addSrcLine('turmeric','kg')">+ split across another batch</div>
+            </td>
+            <td class="c" style="text-align:right;">
+              <div class="sa-pos">1.5 kg</div>
+              <div class="sa-dim">retain 75%</div>
+            </td>
+            <td class="c" style="text-align:center;">
+              <span style="color:#cbd5e1;cursor:pointer;font-size:13px;" onclick="excludeRow('row-turmeric')">✕</span>
+            </td>
+          </tr>
+
+          <tr class="item-row rin" data-cat="Spices" data-status="ok" id="row-cumin">
+            <td class="c">
+              <div style="font-size:12px;font-weight:600;">Cumin Seeds</div>
+              <div style="font-size:10px;color:#94a3b8;">320 g · adequate</div>
+            </td>
+            <td class="c r" style="font-size:12px;text-align:right;color:#64748b;">320 g</td>
+            <td class="c r" style="font-size:12px;text-align:right;color:#94a3b8;">—</td>
+            <td class="c"><input class="ci" type="number" id="sq-cumin" placeholder="0" style="text-align:right;" /></td>
+            <td class="c"><div class="ubadge">g</div></td>
+            <td class="src-cell">
+              <div id="srcLines-cumin">
+                <div class="src-line">
+                  <select class="src-select"><option>Select…</option><option>CUMIN-OCT-01 · 500 g avail</option></select>
+                  <input class="src-qty-in" type="number" placeholder="qty" />
+                  <span class="src-del" style="display:none;">×</span>
+                </div>
+              </div>
+              <div class="src-total" style="color:#94a3b8;font-size:10px;">— not needed</div>
+              <div class="src-add" onclick="addSrcLine('cumin','g')">+ split across another batch</div>
+            </td>
+            <td class="c" style="text-align:right;"><span style="font-size:12px;color:#94a3b8;">—</span></td>
+            <td class="c" style="text-align:center;"><span style="color:#cbd5e1;cursor:pointer;font-size:13px;" onclick="excludeRow('row-cumin')">✕</span></td>
+          </tr>
+
+          <!-- Excluded example -->
+          <tr class="item-row excl rin" data-cat="Spices" data-status="ok" id="row-pepper">
+            <td class="c">
+              <div style="font-size:12px;font-weight:600;">Black Pepper</div>
+              <div style="font-size:10px;color:#94a3b8;">200 g · adequate</div>
+            </td>
+            <td class="c r" style="font-size:12px;text-align:right;color:#64748b;">200 g</td>
+            <td class="c r" style="color:#94a3b8;text-align:right;">—</td>
+            <td class="c" style="text-align:right;padding:6px 8px;"><span style="font-size:10px;color:#94a3b8;font-style:italic;">excluded</span></td>
+            <td class="c"></td>
+            <td class="c src-cell"><span style="font-size:10px;color:#94a3b8;">—</span></td>
+            <td class="c"></td>
+            <td class="c" style="text-align:center;">
+              <span style="color:#818cf8;cursor:pointer;font-size:12px;font-weight:700;" onclick="includeRow('row-pepper')" title="Re-include">+</span>
+            </td>
+          </tr>
+
+          <!-- ══ CATEGORY: Dairy ══ -->
+          <tr class="cat-row" data-cat="Dairy" id="cat-Dairy">
+            <td colspan="8">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div class="cat-name" onclick="toggleCat('Dairy')">
+                  <span class="cat-caret open" id="caret-Dairy">▶</span>
+                  <span>Dairy</span>
+                  <span class="cat-badge-low">2 LOW</span>
+                  <span class="cat-count">· 2 items</span>
+                </div>
+                <div class="cat-actions">
+                  <button class="cat-btn" onclick="catSelect('Dairy',true)">Select All</button>
+                  <button class="cat-btn" onclick="catSelect('Dairy',false)">Unselect All</button>
+                </div>
+              </div>
+            </td>
+          </tr>
+
+          <tr class="item-row low rin" data-cat="Dairy" data-status="low" id="row-cream">
+            <td class="c">
+              <div style="font-size:12px;font-weight:600;">Base Cream <span class="bv low">3d left</span></div>
+              <div style="font-size:10px;color:#94a3b8;" id="cream-hint">1.2 kg · 4.1 kg/day · needs 27.5 kg for 7d</div>
+            </td>
+            <td class="c r" style="font-size:12px;color:#d97706;text-align:right;">1.2 kg</td>
+            <td class="c r" style="font-size:12px;font-weight:700;color:#d97706;text-align:right;" id="cream-gap">27.5 kg</td>
+            <td class="c">
+              <input class="ci" type="number" id="sq-cream" value="27.5" style="text-align:right;"
+                     oninput="updateSrc('cream')" onkeydown="rowKey(event,'cream')" />
+            </td>
+            <td class="c"><div class="ubadge">kg</div></td>
+            <td class="src-cell">
+              <!-- Multi-batch: qty 27.5 split across two batches -->
+              <div id="srcLines-cream">
+                <div class="src-line">
+                  <select class="src-select" onchange="refreshSrcTotal('cream')">
+                    <option selected>BCREAM-OCT-12 · 20 kg avail</option>
+                    <option>BCREAM-SEP-28 · 15 kg (7d ⚠)</option>
+                  </select>
+                  <input class="src-qty-in" type="number" value="20" oninput="refreshSrcTotal('cream')" />
+                  <span class="src-del" onclick="removeSrcLine('cream',this)">×</span>
+                </div>
+                <div class="src-line rin">
+                  <select class="src-select" onchange="refreshSrcTotal('cream')">
+                    <option selected>BCREAM-SEP-28 · 15 kg (7d ⚠)</option>
+                    <option>BCREAM-OCT-12 · 20 kg avail</option>
+                  </select>
+                  <input class="src-qty-in" type="number" value="7.5" oninput="refreshSrcTotal('cream')" />
+                  <span class="src-del" onclick="removeSrcLine('cream',this)">×</span>
+                </div>
+              </div>
+              <div class="src-total ok" id="srcTotal-cream">✓ 27.5 kg across 2 batches</div>
+              <div class="src-add" onclick="addSrcLine('cream','kg')">+ split across another batch</div>
+            </td>
+            <td class="c" style="text-align:right;">
+              <div class="sa-pos" id="sa-cream">7.5 kg</div>
+              <div class="sa-dim">retain 21%</div>
+            </td>
+            <td class="c" style="text-align:center;">
+              <span style="color:#cbd5e1;cursor:pointer;font-size:13px;" onclick="excludeRow('row-cream')">✕</span>
+            </td>
+          </tr>
+
+          <tr class="item-row low rin" data-cat="Dairy" data-status="low" id="row-butter">
+            <td class="c">
+              <div style="font-size:12px;font-weight:600;">Butter <span class="bv low">5d left</span></div>
+              <div style="font-size:10px;color:#94a3b8;">1 kg · min 3 kg · gap: 2 kg</div>
+            </td>
+            <td class="c r" style="font-size:12px;color:#d97706;text-align:right;">1 kg</td>
+            <td class="c r" style="font-size:12px;font-weight:700;color:#d97706;text-align:right;">2 kg</td>
+            <td class="c">
+              <input class="ci" type="number" id="sq-butter" value="2" style="text-align:right;"
+                     onkeydown="rowKey(event,'butter')" />
+            </td>
+            <td class="c"><div class="ubadge">kg</div></td>
+            <td class="src-cell">
+              <div id="srcLines-butter">
+                <div class="src-line">
+                  <select class="src-select">
+                    <option>Select…</option>
+                    <option selected>BUTTER-OCT-09 · 5 kg avail</option>
+                  </select>
+                  <input class="src-qty-in" type="number" value="2" />
+                  <span class="src-del" style="display:none;">×</span>
+                </div>
+              </div>
+              <div class="src-total ok">✓ 2 kg allocated</div>
+              <div class="src-add" onclick="addSrcLine('butter','kg')">+ split across another batch</div>
+            </td>
+            <td class="c" style="text-align:right;">
+              <div class="sa-pos">3 kg</div>
+              <div class="sa-dim">retain 60%</div>
+            </td>
+            <td class="c" style="text-align:center;">
+              <span style="color:#cbd5e1;cursor:pointer;font-size:13px;" onclick="excludeRow('row-butter')">✕</span>
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+
+      <!-- ── Grand total bar ── -->
+      <div class="gbar" id="grandBar">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:11px;color:#94a3b8;" id="barInfo">6 complete · 0 in progress</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <div style="text-align:right;">
+            <span style="font-size:10px;color:#94a3b8;display:block;">ITEMS SELECTED</span>
+            <span style="font-size:20px;font-weight:700;" id="barCount">6</span>
+          </div>
+          <button onclick="setView('confirm')" style="background:#4ade80;color:#14532d;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;">
+            Review Dispatch →
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Keyboard hint -->
+    <div style="margin-top:7px;font-size:10px;color:#94a3b8;display:flex;gap:14px;padding:0 4px;">
+      <span><span class="kbd">Tab</span> Qty → Source</span>
+      <span><span class="kbd">Enter</span> confirm row → next</span>
+      <span style="color:#ef4444;">■</span> OUT &nbsp;
+      <span style="color:#f59e0b;">■</span> LOW &nbsp;
+      <span style="color:#4ade80;">■</span> Complete &nbsp;
+      <span style="opacity:.4;">■</span> Excluded
+    </div>
+
+  </div><!-- /form -->
+
+  <!-- ══════════════════════════════════════
+       CONFIRM VIEW
+  ══════════════════════════════════════ -->
+  <div data-view="confirm">
+    <div class="conf-card">
+      <!-- Summary header -->
+      <div style="padding:14px 16px;border-bottom:1px solid #f1f5f9;display:flex;gap:20px;flex-wrap:wrap;align-items:center;">
+        <div><p style="font-size:10px;color:#94a3b8;">TO</p><p style="font-size:13px;font-weight:600;">Sutraa (Outlet)</p></div>
+        <div><p style="font-size:10px;color:#94a3b8;">COVERAGE</p><p style="font-size:13px;font-weight:600;" id="confCover">7 days</p></div>
+        <div><p style="font-size:10px;color:#94a3b8;">ITEMS</p><p style="font-size:13px;font-weight:600;">6 items</p></div>
+        <div style="margin-left:auto;font-size:10px;color:#94a3b8;text-align:right;">
+          A PO will be auto-generated on dispatch
+        </div>
+      </div>
+
+      <!-- Confirm table — grouped by category -->
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="background:#f8fafc;">
+          <th style="padding:7px 14px;text-align:left;font-size:10px;font-weight:600;color:#94a3b8;border-bottom:1px solid #f1f5f9;">Item</th>
+          <th style="padding:7px 8px;text-align:center;font-size:10px;font-weight:600;color:#94a3b8;border-bottom:1px solid #f1f5f9;">Send Qty</th>
+          <th style="padding:7px 8px;text-align:left;font-size:10px;font-weight:600;color:#94a3b8;border-bottom:1px solid #f1f5f9;">Source Batch(es)</th>
+          <th style="padding:7px 14px;text-align:right;font-size:10px;font-weight:600;color:#94a3b8;border-bottom:1px solid #f1f5f9;">Your Stock After</th>
+        </tr></thead>
+        <tbody>
+          <!-- Category group: Dry Goods -->
+          <tr><td colspan="4" style="background:#f8fafc;padding:4px 14px;font-size:10px;font-weight:700;color:#64748b;border-top:1px solid #e2e8f0;">DRY GOODS</td></tr>
+          <tr style="border-bottom:1px solid #f8fafc;">
+            <td style="padding:9px 14px;font-weight:600;">Ajwain <span class="bv out">OUT→OK</span></td>
+            <td style="padding:9px 8px;text-align:center;">1 kg</td>
+            <td style="padding:9px 8px;color:#64748b;">AJWAIN-OCT-10</td>
+            <td style="padding:9px 14px;text-align:right;font-weight:700;color:#16a34a;">6 kg</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f8fafc;">
+            <td style="padding:9px 14px;font-weight:600;">Maida <span class="bv out">OUT→OK</span></td>
+            <td style="padding:9px 8px;text-align:center;">5 kg</td>
+            <td style="padding:9px 8px;color:#64748b;">
+              <div>MAIDA-OCT-12 · 3 kg</div>
+              <div style="color:#d97706;">MAIDA-SEP-25 · 2 kg</div>
+            </td>
+            <td style="padding:9px 14px;text-align:right;font-weight:700;color:#16a34a;">12 kg</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f8fafc;">
+            <td style="padding:9px 14px;font-weight:600;">Wheat Flour <span class="bv low">3d→7d</span></td>
+            <td style="padding:9px 8px;text-align:center;">26.7 kg</td>
+            <td style="padding:9px 8px;color:#64748b;">WHEAT-OCT-10</td>
+            <td style="padding:9px 14px;text-align:right;font-weight:700;color:#16a34a;">3.3 kg</td>
+          </tr>
+          <!-- Category group: Spices -->
+          <tr><td colspan="4" style="background:#f8fafc;padding:4px 14px;font-size:10px;font-weight:700;color:#64748b;border-top:1px solid #e2e8f0;">SPICES</td></tr>
+          <tr style="border-bottom:1px solid #f8fafc;">
+            <td style="padding:9px 14px;font-weight:600;">Turmeric Powder <span class="bv out">OUT→OK</span></td>
+            <td style="padding:9px 8px;text-align:center;">0.5 kg</td>
+            <td style="padding:9px 8px;color:#64748b;">TURMERIC-OCT-08</td>
+            <td style="padding:9px 14px;text-align:right;font-weight:700;color:#16a34a;">1.5 kg</td>
+          </tr>
+          <!-- Category group: Dairy -->
+          <tr><td colspan="4" style="background:#f8fafc;padding:4px 14px;font-size:10px;font-weight:700;color:#64748b;border-top:1px solid #e2e8f0;">DAIRY</td></tr>
+          <tr style="border-bottom:1px solid #f8fafc;">
+            <td style="padding:9px 14px;font-weight:600;">Base Cream <span class="bv low">3d→7d</span></td>
+            <td style="padding:9px 8px;text-align:center;">27.5 kg</td>
+            <td style="padding:9px 8px;color:#64748b;">
+              <div>BCREAM-OCT-12 · 20 kg</div>
+              <div style="color:#d97706;">BCREAM-SEP-28 · 7.5 kg (7d ⚠)</div>
+            </td>
+            <td style="padding:9px 14px;text-align:right;font-weight:700;color:#16a34a;">7.5 kg</td>
+          </tr>
+          <tr>
+            <td style="padding:9px 14px;font-weight:600;">Butter <span class="bv low">5d→ok</span></td>
+            <td style="padding:9px 8px;text-align:center;">2 kg</td>
+            <td style="padding:9px 8px;color:#64748b;">BUTTER-OCT-09</td>
+            <td style="padding:9px 14px;text-align:right;font-weight:700;color:#16a34a;">3 kg</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr style="background:#f8fafc;border-top:1px solid #e2e8f0;">
+            <td colspan="3" style="padding:10px 14px;font-size:11px;color:#64748b;font-style:italic;">
+              Stock moves from your store immediately on confirm.
+            </td>
+            <td style="padding:10px 14px;text-align:right;">
+              <p style="font-size:10px;color:#94a3b8;margin-bottom:2px;">ITEMS</p>
+              <p style="font-size:18px;font-weight:800;color:#1e293b;">6 items</p>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div style="display:flex;gap:8px;">
+      <button onclick="setView('form')" style="padding:9px 18px;border-radius:7px;font-size:12px;border:1px solid #e2e8f0;background:white;cursor:pointer;">← Back to Edit</button>
+      <button style="padding:9px 24px;border-radius:7px;font-size:13px;font-weight:700;background:#1e293b;color:white;border:none;cursor:pointer;">✓ Confirm Dispatch</button>
+    </div>
+  </div><!-- /confirm -->
+
+</div><!-- /container -->
+
+<script>
+  let coverDays = 7;
+  const filters = { out: true, low: true, all: true };
+
+  // ── View toggle ──
+  function setView(v) {
+    document.querySelectorAll('[data-view]').forEach(el => el.classList.remove('on'));
+    document.querySelector(`[data-view="${v}"]`).classList.add('on');
+    document.getElementById('vbtn-form').classList.toggle('on', v === 'form');
+    document.getElementById('vbtn-confirm').classList.toggle('on', v === 'confirm');
+  }
+
+  // ── Coverage days ──
+  function setCover(d) {
+    coverDays = d;
+    document.querySelectorAll('.cpill').forEach(p => p.classList.toggle('on', Number(p.dataset.d) === d));
+    document.getElementById('customD').value = '';
+    // Recalc wheat flour
+    const wNeeded = Math.max(0, (4.1 * d - 2).toFixed(1));
+    document.getElementById('wheat-hint').textContent = `2 kg · 4.1 kg/day · needs ${wNeeded} kg for ${d}d`;
+    document.getElementById('wheat-gap').textContent = wNeeded + ' kg';
+    const wqIn = document.getElementById('sq-wheat');
+    if (wqIn) wqIn.value = wNeeded;
+    // Recalc cream
+    const cNeeded = Math.max(0, (4.1 * d - 1.2).toFixed(1));
+    document.getElementById('cream-hint').textContent = `1.2 kg · 4.1 kg/day · needs ${cNeeded} kg for ${d}d`;
+    document.getElementById('cream-gap').textContent = cNeeded + ' kg';
+    const cqIn = document.getElementById('sq-cream');
+    if (cqIn) cqIn.value = cNeeded;
+    document.getElementById('confCover').textContent = d + ' days';
+    updateBar();
+  }
+
+  // ── Category collapse ──
+  function toggleCat(catId) {
+    const caret = document.getElementById('caret-' + catId);
+    const rows = document.querySelectorAll(`[data-cat="${catId}"]`);
+    const isOpen = caret.classList.contains('open');
+    caret.classList.toggle('open', !isOpen);
+    rows.forEach(r => {
+      if (r.classList.contains('item-row')) r.classList.toggle('hidden', isOpen);
+    });
+  }
+
+  // ── Category select all / unselect ──
+  function catSelect(catId, include) {
+    document.querySelectorAll(`tr.item-row[data-cat="${catId}"]`).forEach(r => {
+      if (include) {
+        r.classList.remove('excl');
+        r.querySelectorAll('input,select').forEach(el => el.disabled = false);
+      } else {
+        r.classList.add('excl');
+        r.querySelectorAll('input,select').forEach(el => el.disabled = true);
+      }
+    });
+    updateBar();
+  }
+
+  function globalSelect(include) {
+    document.querySelectorAll('tr.item-row').forEach(r => {
+      if (include) {
+        r.classList.remove('excl');
+        r.querySelectorAll('input,select').forEach(el => el.disabled = false);
+      } else {
+        r.classList.add('excl');
+        r.querySelectorAll('input,select').forEach(el => el.disabled = true);
+      }
+    });
+    updateBar();
+  }
+
+  // ── Exclude / include individual row ──
+  function excludeRow(id) {
+    const r = document.getElementById(id);
+    if (!r) return;
+    r.classList.add('excl');
+    r.querySelectorAll('input,select').forEach(el => el.disabled = true);
+    updateBar();
+  }
+  function includeRow(id) {
+    const r = document.getElementById(id);
+    if (!r) return;
+    r.classList.remove('excl');
+    r.querySelectorAll('input,select').forEach(el => el.disabled = false);
+    updateBar();
+  }
+
+  // ── Multi-batch: add a source line ──
+  let batchCounter = 100;
+  function addSrcLine(rid, unit) {
+    batchCounter++;
+    const container = document.getElementById('srcLines-' + rid);
+    if (!container) return;
+    // Show delete on all existing lines
+    container.querySelectorAll('.src-del').forEach(d => d.style.display = '');
+    const div = document.createElement('div');
+    div.className = 'src-line rin';
+    div.dataset.rid = rid;
+    div.innerHTML = `
+      <select class="src-select" onchange="refreshSrcTotal('${rid}')">
+        <option value="">Select batch…</option>
+        <option value="b${batchCounter}">BATCH-OCT-${batchCounter%30+1} · avail qty</option>
+      </select>
+      <input class="src-qty-in" type="number" placeholder="qty" oninput="refreshSrcTotal('${rid}')" />
+      <span class="src-del" title="Remove" onclick="removeSrcLine('${rid}',this)">×</span>
+    `;
+    container.appendChild(div);
+    refreshSrcTotal(rid);
+    div.querySelector('select').focus();
+  }
+
+  function removeSrcLine(rid, el) {
+    const line = el.closest('.src-line');
+    if (!line) return;
+    const container = document.getElementById('srcLines-' + rid);
+    if (container && container.querySelectorAll('.src-line').length <= 1) return; // keep at least 1
+    line.remove();
+    // Hide delete btn if only 1 line left
+    const remaining = container.querySelectorAll('.src-line');
+    if (remaining.length === 1) remaining[0].querySelector('.src-del').style.display = 'none';
+    refreshSrcTotal(rid);
+  }
+
+  function refreshSrcTotal(rid) {
+    const container = document.getElementById('srcLines-' + rid);
+    const totalEl  = document.getElementById('srcTotal-' + rid);
+    if (!container || !totalEl) return;
+    const lines = container.querySelectorAll('.src-line');
+    let allocated = 0, count = 0;
+    lines.forEach(l => {
+      const v = parseFloat(l.querySelector('.src-qty-in')?.value) || 0;
+      if (v > 0) { allocated += v; count++; }
+    });
+    const sendQty = parseFloat(document.getElementById('sq-' + rid)?.value) || 0;
+    if (allocated <= 0) {
+      totalEl.className = 'src-total'; totalEl.style.color = '#94a3b8';
+      totalEl.textContent = '— not allocated';
+    } else if (Math.abs(allocated - sendQty) < 0.001) {
+      totalEl.className = 'src-total ok';
+      totalEl.textContent = `✓ ${allocated} allocated${count > 1 ? ` across ${count} batches` : ''}`;
+    } else if (allocated < sendQty) {
+      totalEl.className = 'src-total warn';
+      totalEl.textContent = `⚠ ${allocated} of ${sendQty} — short by ${(sendQty - allocated).toFixed(1)}`;
+    } else {
+      totalEl.className = 'src-total warn';
+      totalEl.textContent = `⚠ ${allocated} exceeds send qty ${sendQty}`;
+    }
+  }
+
+  function updateSrc(rid) {
+    refreshSrcTotal(rid);
+  }
+
+  // ── Filters ──
+  const statusFilters = { out: true, low: true, all: true };
+  function toggleFilter(f) {
+    if (f === 'all') {
+      statusFilters.out = true; statusFilters.low = true; statusFilters.all = true;
+      document.getElementById('fp-out').classList.add('on');
+      document.getElementById('fp-low').classList.add('on');
+      document.getElementById('fp-all').classList.add('on');
+    } else {
+      statusFilters[f] = !statusFilters[f];
+      document.getElementById('fp-' + f).classList.toggle('on', statusFilters[f]);
+      statusFilters.all = statusFilters.out && statusFilters.low;
+      document.getElementById('fp-all').classList.toggle('on', statusFilters.all);
+    }
+    applyFilters();
+  }
+
+  function applyFilters() {
+    const catVal  = (document.getElementById('catFilter')?.value || '').toLowerCase().replace(/[^a-z]/g,'');
+    const itemVal = (document.getElementById('itemSearch')?.value || '').toLowerCase();
+
+    document.querySelectorAll('tr.item-row').forEach(row => {
+      const cat    = (row.dataset.cat || '').toLowerCase().replace(/[^a-z]/g,'');
+      const status = row.dataset.status || 'ok';
+      const name   = (row.querySelector('.item-name, td.c div')?.textContent || '').toLowerCase();
+
+      const catMatch  = !catVal || cat.startsWith(catVal);
+      const itemMatch = !itemVal || name.includes(itemVal);
+      const statMatch = (status === 'out' && statusFilters.out) ||
+                        (status === 'low' && statusFilters.low) ||
+                        (status === 'ok'  && statusFilters.all);
+
+      row.classList.toggle('hidden', !(catMatch && itemMatch && statMatch));
+    });
+
+    // Hide category header if all its items are hidden
+    document.querySelectorAll('tr.cat-row').forEach(catRow => {
+      const catId = catRow.dataset.cat?.replace(/[^a-zA-Z]/g,'');
+      const items = document.querySelectorAll(`tr.item-row[data-cat="${catRow.dataset.cat}"]`);
+      const anyVisible = [...items].some(r => !r.classList.contains('hidden'));
+      catRow.classList.toggle('hidden', !anyVisible);
+    });
+  }
+
+  function updateBar() {
+    let done = 0;
+    document.querySelectorAll('tr.item-row').forEach(r => {
+      if (!r.classList.contains('excl')) done++;
+    });
+    document.getElementById('barCount').textContent = done;
+    document.getElementById('barInfo').textContent = `${done} items selected`;
+    document.getElementById('selectedSummary').textContent = `${done} items selected`;
+  }
+
+  function rowKey(e, rid) {
+    if (e.key === 'Tab' || e.key === 'Enter') {
+      const srcSel = document.querySelector(`#srcLines-${rid} .src-select`);
+      if (srcSel) { e.preventDefault(); srcSel.focus(); }
+    }
+  }
+
+  // Init
+  updateBar();
+</script>
+</body>
+</html>

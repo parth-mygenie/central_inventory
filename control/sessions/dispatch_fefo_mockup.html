@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dispatch — FEFO Auto-Select Mockup</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f1f5f9; }
+
+    /* ── Table ── */
+    .dt { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .dt thead th {
+      background: #f8fafc; padding: 7px 10px; font-size: 10px; font-weight: 600;
+      color: #94a3b8; text-transform: uppercase; letter-spacing: .06em;
+      border-bottom: 2px solid #e2e8f0; text-align: left;
+    }
+    .dt thead th.r { text-align: right; }
+
+    /* ── Category header ── */
+    .cat-row td { background: #f1f5f9; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; padding: 5px 10px; }
+    .cat-name { font-size: 11px; font-weight: 700; color: #334155; display: flex; align-items: center; gap: 6px; }
+    .cbadge-out { background:#fee2e2; color:#dc2626; border-radius:3px; padding:1px 5px; font-size:9px; font-weight:700; }
+    .cbadge-low { background:#fef3c7; color:#d97706; border-radius:3px; padding:1px 5px; font-size:9px; font-weight:700; }
+    .cat-btn { padding:2px 8px; border-radius:4px; font-size:10px; border:1px solid #e2e8f0; background:white; color:#475569; cursor:pointer; }
+
+    /* ── Item rows ── */
+    .item-row td { border-bottom: 1px solid #f4f4f4; background: white; vertical-align: top; }
+    .item-row.out td { background: #fff8f8; }
+    .item-row.out td:first-child { border-left: 3px solid #ef4444; }
+    .item-row.low td { background: #fffcf0; }
+    .item-row.low td:first-child { border-left: 3px solid #f59e0b; }
+    .item-row.done td { background: #f0fdf4; }
+    .item-row.done td:first-child { border-left: 3px solid #4ade80; }
+
+    td.c { padding: 6px 8px; }
+
+    /* ── Qty input ── */
+    .qty-in {
+      width: 100%; border: 1px solid transparent; border-radius: 4px;
+      padding: 3px 7px; font-size: 12px; background: transparent;
+      outline: none; height: 28px; text-align: right; color: #1e293b;
+    }
+    .qty-in:focus { border-color: #818cf8; background: white; box-shadow: 0 0 0 2px rgba(129,140,248,.15); }
+    .qty-in::placeholder { color: #cbd5e1; }
+
+    /* ── Source segment cell ── */
+    .src-cell { padding: 5px 8px !important; min-width: 280px; }
+    .src-empty { font-size: 11px; color: #cbd5e1; font-style: italic; padding: 3px 0; }
+
+    /* Source line */
+    .src-line {
+      display: flex; align-items: center; gap: 4px; margin-bottom: 3px;
+      position: relative;
+    }
+    .src-line.fefo-auto { animation: lineIn .25s ease-out; }
+    @keyframes lineIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .batch-select {
+      flex: 1; border: 1px solid #e2e8f0; border-radius: 4px;
+      padding: 3px 6px; font-size: 11px; height: 26px;
+      outline: none; color: #1e293b; background: white; cursor: pointer;
+    }
+    .batch-select:focus { border-color: #818cf8; }
+    .batch-select.auto-filled { border-color: #86efac; background: #f0fdf4; }
+
+    .line-qty {
+      width: 52px; border: 1px solid #e2e8f0; border-radius: 4px;
+      padding: 3px 5px; font-size: 11px; height: 26px; text-align: right;
+      outline: none; color: #1e293b; background: white;
+    }
+    .line-qty:focus { border-color: #818cf8; }
+    .line-qty.auto-filled { border-color: #86efac; background: #f0fdf4; }
+
+    /* Auto-fill pulse */
+    @keyframes pulseGreen {
+      0%   { box-shadow: 0 0 0 0 rgba(74,222,128,.5); }
+      60%  { box-shadow: 0 0 0 5px rgba(74,222,128,0); }
+      100% { box-shadow: 0 0 0 0 rgba(74,222,128,0); }
+    }
+    .pulse { animation: pulseGreen .5s ease-out; }
+
+    .src-del { color: #cbd5e1; cursor: pointer; font-size: 12px; padding: 0 2px; flex-shrink: 0; }
+    .src-del:hover { color: #ef4444; }
+
+    /* FEFO tag */
+    .fefo-tag {
+      display: inline-flex; align-items: center; background: #f0fdf4;
+      border: 1px solid #86efac; border-radius: 3px;
+      padding: 1px 5px; font-size: 9px; font-weight: 700; color: #16a34a;
+      margin-left: 2px; white-space: nowrap;
+    }
+    .fefo-tag.warn { background: #fef3c7; border-color: #fcd34d; color: #d97706; }
+
+    /* Allocation status */
+    .alloc-status { font-size: 10px; margin-top: 3px; display: flex; align-items: center; gap: 4px; }
+    .alloc-ok   { color: #16a34a; }
+    .alloc-warn { color: #ef4444; }
+    .alloc-part { color: #d97706; }
+    .alloc-none { color: #cbd5e1; font-style: italic; }
+
+    /* Add-batch link */
+    .src-add { font-size: 10px; color: #818cf8; cursor: pointer; margin-top: 3px;
+               display: inline-flex; align-items: center; gap: 2px; }
+    .src-add:hover { text-decoration: underline; }
+
+    /* Unit badge */
+    .ubadge { display: inline-flex; align-items: center; justify-content: center;
+              background: #f1f5f9; border-radius: 4px; padding: 2px 7px;
+              font-size: 11px; color: #64748b; font-weight: 500; width: 100%; }
+
+    /* Stock after */
+    .sa { font-size: 12px; font-weight: 700; font-family: monospace; }
+    .sa.ok   { color: #16a34a; }
+    .sa.warn { color: #dc2626; }
+    .sa-dim  { font-size: 10px; color: #94a3b8; }
+
+    /* Item badges */
+    .bv { display: inline-flex; align-items: center; border-radius: 3px; padding: 1px 5px; font-size: 9px; font-weight: 700; }
+    .bv.out { background: #fee2e2; color: #dc2626; }
+    .bv.low { background: #fef3c7; color: #d97706; }
+
+    /* Grand bar */
+    .gbar { background: #1e293b; color: white; border-radius: 0 0 10px 10px;
+            padding: 11px 16px; display: flex; justify-content: space-between; align-items: center; }
+
+    /* Header */
+    .hdr { background: white; border: 1px solid #e2e8f0; border-radius: 10px;
+           padding: 10px 14px; margin-bottom: 10px;
+           display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; }
+    .cpill { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
+             cursor: pointer; border: 1px solid #e2e8f0; background: white;
+             color: #64748b; transition: all .12s; }
+    .cpill.on { background: #1e293b; color: white; border-color: #1e293b; }
+    .hs { border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 10px;
+          font-size: 12px; height: 32px; background: white; outline: none; color: #1e293b; }
+    .hs:focus { border-color: #818cf8; }
+
+    /* Filter bar */
+    .fbar { background: white; border: 1px solid #e2e8f0; border-radius: 10px;
+            padding: 9px 14px; margin-bottom: 10px;
+            display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .srch { position: relative; flex: 1; min-width: 180px; }
+    .srch input { width: 100%; border: 1px solid #e2e8f0; border-radius: 6px;
+                  padding: 5px 10px 5px 28px; font-size: 12px; height: 32px;
+                  outline: none; }
+    .srch input:focus { border-color: #818cf8; }
+    .srch span { position: absolute; left: 9px; top: 50%; transform: translateY(-50%);
+                 color: #94a3b8; font-size: 12px; pointer-events: none; }
+    .cfsel { border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 10px;
+             font-size: 12px; height: 32px; background: white; outline: none;
+             color: #1e293b; min-width: 160px; }
+    .fp { padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 600;
+          cursor: pointer; border: 1px solid #e2e8f0; background: white; color: #64748b; }
+    .fp.on { background: #1e293b; color: white; border-color: #1e293b; }
+    .fp.red.on  { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
+    .fp.amb.on  { background: #fef3c7; color: #d97706; border-color: #fcd34d; }
+    .cat-btn { padding: 2px 8px; border-radius: 4px; font-size: 10px;
+               border: 1px solid #e2e8f0; background: white; color: #475569; cursor: pointer; }
+
+    /* Health strip */
+    .hstrip { display: flex; gap: 8px; align-items: center; font-size: 10px;
+              background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;
+              padding: 5px 10px; margin-bottom: 10px; }
+
+    /* kbd */
+    .kbd { display:inline-block;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:3px;
+           padding:1px 5px;font-size:10px;font-family:monospace;color:#475569; }
+
+    /* FEFO legend box */
+    .fefo-legend { background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px;
+                   padding: 10px 14px; margin-bottom: 10px; font-size: 11px; color: #166534; }
+
+    /* Confirm */
+    [data-view] { display: none; }
+    [data-view].on { display: block; }
+    .vbtn { padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 600;
+            cursor: pointer; border: 1px solid #e2e8f0; background: white; color: #64748b; }
+    .vbtn.on { background: #1e293b; color: white; border-color: #1e293b; }
+  </style>
+</head>
+<body class="p-4 md:p-8">
+<div class="max-w-5xl mx-auto">
+
+  <!-- Title -->
+  <div class="flex items-center gap-3 mb-4">
+    <div style="width:30px;height:30px;background:#1e293b;border-radius:7px;display:flex;align-items:center;justify-content:center;">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2.2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </div>
+    <div>
+      <h1 style="font-size:14px;font-weight:700;color:#1e293b;">Direct Dispatch</h1>
+      <p style="font-size:11px;color:#94a3b8;">FEFO auto-select · multi-batch · manual override</p>
+    </div>
+  </div>
+
+  <!-- View toggle -->
+  <div style="display:flex;gap:6px;margin-bottom:12px;">
+    <button class="vbtn on" id="vbtn-form"    onclick="setView('form')">Form</button>
+    <button class="vbtn"    id="vbtn-confirm"  onclick="setView('confirm')">Confirm</button>
+  </div>
+
+  <!-- ════════════════════════════
+       FORM
+  ════════════════════════════ -->
+  <div data-view="form" class="on">
+
+    <!-- FEFO behaviour note -->
+    <div class="fefo-legend">
+      <strong>FEFO auto-select behaviour:</strong>
+      When you type (or accept) a Send Qty, the source batch(es) auto-fill using First-Expiry-First-Out order.
+      If the qty spans multiple batches, extra lines are added automatically.
+      You can override any auto-selection manually — change the batch dropdown or the qty per line.
+      Clearing Send Qty resets all source lines.
+    </div>
+
+    <!-- Header: destination + coverage -->
+    <div class="hdr">
+      <div style="min-width:200px;">
+        <label style="display:block;font-size:10px;font-weight:600;color:#94a3b8;margin-bottom:3px;">DESTINATION STORE *</label>
+        <select class="hs" style="width:100%;">
+          <option>Sutraa (Outlet)</option>
+          <option>Kunafa Mahal (Outlet)</option>
+        </select>
+      </div>
+      <div>
+        <label style="display:block;font-size:10px;font-weight:600;color:#94a3b8;margin-bottom:3px;">DISPATCH FOR</label>
+        <div style="display:flex;gap:3px;" id="coverPills">
+          <button class="cpill"    data-d="3"  onclick="setCover(3)">3d</button>
+          <button class="cpill on" data-d="7"  onclick="setCover(7)">7d</button>
+          <button class="cpill"    data-d="10" onclick="setCover(10)">10d</button>
+          <button class="cpill"    data-d="30" onclick="setCover(30)">30d</button>
+        </div>
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:flex-end;gap:5px;font-size:10px;color:#94a3b8;">
+        <span class="kbd">Tab</span> Qty→Source &nbsp; <span class="kbd">Enter</span> next row
+      </div>
+    </div>
+
+    <!-- Health strip -->
+    <div class="hstrip">
+      <span style="font-weight:600;color:#1e293b;">Sutraa</span>
+      <span style="background:#fee2e2;color:#dc2626;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;">3 OUT</span>
+      <span style="background:#fef3c7;color:#d97706;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;">12 LOW</span>
+      <span style="background:#dcfce7;color:#16a34a;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;">240 OK</span>
+      <span style="color:#94a3b8;font-size:10px;margin-left:4px;">threshold-based</span>
+      <span style="margin-left:auto;font-size:10px;color:#94a3b8;" id="selSummary">0 items selected</span>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="fbar">
+      <div>
+        <label style="display:block;font-size:9px;font-weight:600;color:#94a3b8;margin-bottom:2px;">CATEGORY</label>
+        <select class="cfsel" id="catFilter" onchange="applyFilters()">
+          <option value="">All Categories</option>
+          <option value="DryGoods">Dry Goods</option>
+          <option value="Dairy">Dairy</option>
+          <option value="Spices">Spices</option>
+        </select>
+      </div>
+      <div class="srch" style="flex:2;min-width:200px;">
+        <label style="display:block;font-size:9px;font-weight:600;color:#94a3b8;margin-bottom:2px;">ITEM SEARCH</label>
+        <span>⌕</span>
+        <input type="text" placeholder="Search by item name…" oninput="applyFilters()" id="itemSearch" />
+      </div>
+      <div>
+        <label style="display:block;font-size:9px;font-weight:600;color:#94a3b8;margin-bottom:2px;">SHOW</label>
+        <div style="display:flex;gap:4px;">
+          <button class="fp red on" id="fp-out" onclick="toggleFP('out')">OUT</button>
+          <button class="fp amb on" id="fp-low" onclick="toggleFP('low')">LOW</button>
+          <button class="fp on"     id="fp-all" onclick="toggleFP('all')">All</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:4px;align-items:flex-end;">
+        <button class="cat-btn" onclick="globalSel(true)">Select All</button>
+        <button class="cat-btn" onclick="globalSel(false)">Unselect All</button>
+      </div>
+    </div>
+
+    <!-- Main table -->
+    <div style="background:white;border:1px solid #e2e8f0;">
+      <table class="dt" id="mainTable">
+        <colgroup>
+          <col style="width:22%">
+          <col style="width:9%">
+          <col style="width:9%">
+          <col style="width:8%">
+          <col style="width:5%">
+          <col style="width:33%">
+          <col style="width:10%">
+          <col style="width:4%">
+        </colgroup>
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th class="r">Their Stock</th>
+            <th class="r">Gap</th>
+            <th class="r">Send Qty</th>
+            <th>Unit</th>
+            <th>Source Segment <span style="font-weight:400;color:#86efac;font-size:9px;">FEFO auto</span></th>
+            <th class="r">Your Stock After</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <!-- rows injected by JS -->
+        </tbody>
+      </table>
+
+      <!-- Grand bar -->
+      <div class="gbar">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:11px;color:#94a3b8;" id="barInfo">0 items selected</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <div style="text-align:right;">
+            <span style="font-size:10px;color:#94a3b8;display:block;">ITEMS SELECTED</span>
+            <span style="font-size:20px;font-weight:700;" id="barCount">0</span>
+          </div>
+          <button onclick="setView('confirm')"
+                  style="background:#4ade80;color:#14532d;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;">
+            Review Dispatch →
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div style="margin-top:7px;font-size:10px;color:#94a3b8;display:flex;gap:14px;padding:0 4px;flex-wrap:wrap;">
+      <span><span class="kbd">Tab</span> Qty → Source</span>
+      <span><span class="kbd">Enter</span> next row</span>
+      <span style="color:#ef4444;">■</span> OUT &nbsp;
+      <span style="color:#f59e0b;">■</span> LOW &nbsp;
+      <span style="color:#4ade80;">■</span> Complete (FEFO) &nbsp;
+      <span style="color:#4ade80;font-weight:700;">FEFO</span> auto-filled &nbsp;
+      <span style="color:#d97706;font-weight:700;">FEFO⚠</span> near expiry
+    </div>
+  </div>
+
+  <!-- ════════════════════════════
+       CONFIRM
+  ════════════════════════════ -->
+  <div data-view="confirm">
+    <div style="background:white;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin-bottom:12px;">
+      <div style="padding:14px 16px;border-bottom:1px solid #f1f5f9;display:flex;gap:20px;flex-wrap:wrap;">
+        <div><p style="font-size:10px;color:#94a3b8;">TO</p><p style="font-size:13px;font-weight:600;">Sutraa (Outlet)</p></div>
+        <div><p style="font-size:10px;color:#94a3b8;">COVERAGE</p><p style="font-size:13px;font-weight:600;" id="confCov">7 days</p></div>
+        <div><p style="font-size:10px;color:#94a3b8;">ITEMS</p><p style="font-size:13px;font-weight:600;" id="confItems">—</p></div>
+        <div style="margin-left:auto;font-size:10px;color:#94a3b8;text-align:right;">A PO will be auto-generated on dispatch</div>
+      </div>
+      <div id="confirmBody"></div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="setView('form')" style="padding:9px 18px;border-radius:7px;font-size:12px;border:1px solid #e2e8f0;background:white;cursor:pointer;">← Back to Edit</button>
+      <button style="padding:9px 24px;border-radius:7px;font-size:13px;font-weight:700;background:#1e293b;color:white;border:none;cursor:pointer;">✓ Confirm Dispatch</button>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+// ─────────────────────────────────────────────
+// DATA MODEL
+// segments: sorted FEFO (earliest expiry first)
+// null expiry = no-expiry, goes LAST
+// ─────────────────────────────────────────────
+const ITEMS = [
+  {
+    id: 'ajwain', name: 'Ajwain', cat: 'DryGoods', catLabel: 'Dry Goods',
+    unit: 'kg', status: 'out',
+    destStock: 0, gap: 1, ownStock: 7, suggestedQty: 1,
+    segments: [
+      { id:'s1', batch:'AJWAIN-OCT-10', avail: 5, expiry:'2026-10-10', daysLeft: 0  },
+      { id:'s2', batch:'AJWAIN-DEC-01', avail: 2, expiry:'2026-12-01', daysLeft: 45 },
+    ]
+  },
+  {
+    id: 'maida', name: 'Maida', cat: 'DryGoods', catLabel: 'Dry Goods',
+    unit: 'kg', status: 'out',
+    destStock: 0, gap: 5, ownStock: 17, suggestedQty: 5,
+    // qty 5 spans two batches (3 + 2)
+    segments: [
+      { id:'s1', batch:'MAIDA-OCT-12', avail: 3, expiry:'2026-10-12', daysLeft: 2  },
+      { id:'s2', batch:'MAIDA-SEP-25', avail: 4, expiry:'2026-11-15', daysLeft: 28 },
+      { id:'s3', batch:'MAIDA-NOV-01', avail: 10, expiry:'2027-01-01', daysLeft: 75 },
+    ]
+  },
+  {
+    id: 'wheat', name: 'Wheat Flour', cat: 'DryGoods', catLabel: 'Dry Goods',
+    unit: 'kg', status: 'low',
+    destStock: 2, gap: 27, ownStock: 33, suggestedQty: 27,  // Math.ceil(26.7) = 27
+    segments: [
+      { id:'s1', batch:'WHEAT-OCT-10', avail: 30, expiry:'2026-11-10', daysLeft: 23 },
+    ]
+  },
+  {
+    id: 'rice', name: 'Rice', cat: 'DryGoods', catLabel: 'Dry Goods',
+    unit: 'kg', status: 'ok',
+    destStock: 15, gap: null, ownStock: 90, suggestedQty: 0,
+    segments: [
+      { id:'s1', batch:'RICE-OCT-11', avail: 90, expiry: null, daysLeft: null },
+    ]
+  },
+  {
+    id: 'cream', name: 'Base Cream', cat: 'Dairy', catLabel: 'Dairy',
+    unit: 'kg', status: 'low',
+    destStock: 1.2, gap: 28, ownStock: 35, suggestedQty: 28,  // Math.ceil(27.5) = 28
+    // qty 27.5 spans two batches
+    segments: [
+      { id:'s1', batch:'BCREAM-OCT-07', avail: 5,  expiry:'2026-10-07', daysLeft: -3 }, // EXPIRED
+      { id:'s2', batch:'BCREAM-OCT-12', avail: 20, expiry:'2026-10-12', daysLeft: 2  },
+      { id:'s3', batch:'BCREAM-SEP-28', avail: 15, expiry:'2026-11-28', daysLeft: 40 },
+    ]
+  },
+  {
+    id: 'butter', name: 'Butter', cat: 'Dairy', catLabel: 'Dairy',
+    unit: 'kg', status: 'low',
+    destStock: 1, gap: 2, ownStock: 5, suggestedQty: 2,
+    segments: [
+      { id:'s1', batch:'BUTTER-OCT-09', avail: 5, expiry:'2026-11-09', daysLeft: 22 },
+    ]
+  },
+  {
+    id: 'turmeric', name: 'Turmeric Powder', cat: 'Spices', catLabel: 'Spices',
+    unit: 'kg', status: 'out',
+    destStock: 0, gap: 0.5, ownStock: 2, suggestedQty: 0.5,
+    segments: [
+      { id:'s1', batch:'TURMERIC-OCT-08', avail: 2, expiry:'2026-10-08', daysLeft: -2 }, // EXPIRED
+      { id:'s2', batch:'TURMERIC-NOV-01', avail: 1.5, expiry:'2026-11-01', daysLeft: 14 },
+    ]
+  },
+];
+
+let coverDays = 7;
+// rowState: { qty, srcLines: [{segId, qty, auto}], excluded }
+const rowState = {};
+
+// ─────────────────────────────────────────────
+// FEFO ALGORITHM
+// ─────────────────────────────────────────────
+function fefoAllocate(item, sendQty) {
+  if (!sendQty || sendQty <= 0) return [];
+  // Sort: non-expired by expiry ASC, no-expiry last, expired excluded
+  const sorted = [...item.segments]
+    .filter(s => s.daysLeft === null || s.daysLeft >= 0) // skip expired
+    .sort((a, b) => {
+      if (a.expiry === null) return 1;
+      if (b.expiry === null) return -1;
+      return new Date(a.expiry) - new Date(b.expiry);
+    });
+
+  let remaining = sendQty;
+  const lines = [];
+  for (const seg of sorted) {
+    if (remaining <= 0.001) break;
+    const take = Math.min(seg.avail, Math.round(remaining * 1000) / 1000);
+    if (take > 0) {
+      lines.push({ segId: seg.id, qty: take, auto: true });
+      remaining = Math.round((remaining - take) * 1000) / 1000;
+    }
+  }
+  return lines;
+}
+
+// ─────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────
+function render() {
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+
+  const cats = {};
+  ITEMS.forEach(item => { if (!cats[item.cat]) cats[item.cat] = []; cats[item.cat].push(item); });
+
+  Object.entries(cats).forEach(([catId, items]) => {
+    const label = items[0].catLabel;
+    const outCount = items.filter(i => i.status === 'out').length;
+    const lowCount = items.filter(i => i.status === 'low').length;
+
+    // Category row
+    const ctr = document.createElement('tr');
+    ctr.className = 'cat-row';
+    ctr.dataset.cat = catId;
+    ctr.id = 'cat-' + catId;
+    ctr.innerHTML = `
+      <td colspan="8">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div class="cat-name" onclick="toggleCat('${catId}')">
+            <span style="font-size:10px;color:#94a3b8;" id="caret-${catId}">▼</span>
+            <span>${label}</span>
+            ${outCount ? `<span class="cbadge-out">${outCount} OUT</span>` : ''}
+            ${lowCount ? `<span class="cbadge-low">${lowCount} LOW</span>` : ''}
+            <span style="font-size:10px;color:#94a3b8;">· ${items.length} items</span>
+          </div>
+          <div style="display:flex;gap:4px;">
+            <button class="cat-btn" onclick="catSel('${catId}',true)">Select All</button>
+            <button class="cat-btn" onclick="catSel('${catId}',false)">Unselect All</button>
+          </div>
+        </div>
+      </td>`;
+    tbody.appendChild(ctr);
+
+    items.forEach(item => {
+      if (!rowState[item.id]) {
+        rowState[item.id] = {
+          qty: item.suggestedQty,
+          srcLines: [],
+          excluded: false,
+        };
+      }
+      const s = rowState[item.id];
+      // Init FEFO if qty > 0 and no lines yet
+      if (s.qty > 0 && s.srcLines.length === 0) {
+        s.srcLines = fefoAllocate(item, s.qty);
+      }
+
+      const tr = document.createElement('tr');
+      tr.className = `item-row ${item.status === 'out' ? 'out' : item.status === 'low' ? 'low' : ''} ${s.excluded ? 'excl' : ''}`;
+      tr.dataset.cat = catId;
+      tr.dataset.status = item.status;
+      tr.id = 'row-' + item.id;
+
+      // Compute stockAfter
+      const totalAllocated = s.srcLines.reduce((a, l) => a + (Number(l.qty) || 0), 0);
+      const afterQty = Math.round((item.ownStock - totalAllocated) * 100) / 100;
+      const isComplete = s.qty > 0 && totalAllocated > 0 &&
+                         Math.abs(totalAllocated - s.qty) < 0.01 && !s.excluded;
+      if (isComplete) { tr.className = tr.className.replace('out','').replace('low','').trim(); tr.classList.add('done'); }
+      if (item.status === 'out' && isComplete)  tr.classList.add('out');
+      if (item.status === 'low' && isComplete)  tr.classList.add('low');
+
+      tr.innerHTML = `
+        <td class="c">
+          <div style="font-size:12px;font-weight:600;">
+            ${item.name}
+            ${item.status==='out' ? '<span class="bv out">OUT</span>' : item.status==='low' ? '<span class="bv low">'+daysLabel(item)+'</span>' : ''}
+          </div>
+          <div style="font-size:10px;color:#94a3b8;">${item.destStock} ${item.unit}${item.gap ? ' · gap: '+item.gap+' '+item.unit : ' · adequate'}</div>
+        </td>
+        <td class="c r" style="font-size:12px;text-align:right;${item.status==='out'?'color:#dc2626;font-weight:600;':item.status==='low'?'color:#d97706;':'color:#64748b;'}">${item.destStock} ${item.unit}</td>
+        <td class="c r" style="font-size:12px;text-align:right;font-weight:700;color:${item.gap?'#d97706':'#94a3b8'};">${item.gap ? item.gap+' '+item.unit : '—'}</td>
+        <td class="c">
+          <input class="qty-in" type="number" id="qty-${item.id}"
+                 value="${s.qty || ''}" placeholder="0" step="0.1"
+                 ${s.excluded ? 'disabled' : ''}
+                 oninput="onQtyChange('${item.id}', this.value)"
+                 onkeydown="rowKey(event,'${item.id}')" />
+        </td>
+        <td class="c"><div class="ubadge">${item.unit}</div></td>
+        <td class="src-cell" id="srcCell-${item.id}">
+          ${renderSrcLines(item, s)}
+        </td>
+        <td class="c" style="text-align:right;">
+          ${s.qty > 0
+            ? `<div class="sa ${afterQty < 0 ? 'warn' : 'ok'}">${afterQty} ${item.unit}</div>
+               <div class="sa-dim">${afterQty>=0&&item.ownStock>0?'retain '+Math.round(afterQty/item.ownStock*100)+'%':afterQty<0?'insufficient':''}</div>`
+            : `<span style="font-size:12px;color:#94a3b8;">—</span>`}
+        </td>
+        <td class="c" style="text-align:center;">
+          ${s.excluded
+            ? `<span style="color:#818cf8;cursor:pointer;font-size:12px;font-weight:700;" onclick="toggleExclude('${item.id}',false)" title="Re-include">+</span>`
+            : `<span style="color:#cbd5e1;cursor:pointer;font-size:13px;" onclick="toggleExclude('${item.id}',true)" title="Exclude">✕</span>`}
+        </td>`;
+      tbody.appendChild(tr);
+    });
+  });
+
+  updateBar();
+  applyFilters();
+}
+
+function daysLabel(item) {
+  // rough label
+  const cov = item.destStock / 4.1;
+  return cov < 3 ? Math.round(cov)+'d left' : 'LOW';
+}
+
+function renderSrcLines(item, s) {
+  if (s.excluded) return '<span class="src-empty">excluded</span>';
+  if (!s.qty || s.qty <= 0) return '<span class="src-empty">enter qty to auto-fill →</span>';
+  if (s.srcLines.length === 0) return '<span style="font-size:10px;color:#ef4444;">No eligible segments</span>';
+
+  let html = '<div id="lines-'+item.id+'">';
+
+  const expiredSegs = item.segments.filter(seg => seg.daysLeft !== null && seg.daysLeft < 0);
+  if (expiredSegs.length > 0) {
+    html += `<div style="font-size:9px;color:#dc2626;margin-bottom:3px;">
+      ⚠ ${expiredSegs.length} expired batch${expiredSegs.length>1?'es':''} skipped (FEFO)</div>`;
+  }
+
+  s.srcLines.forEach((line, idx) => {
+    const seg = item.segments.find(s => s.id === line.segId);
+    const isNearExpiry = seg && seg.daysLeft !== null && seg.daysLeft >= 0 && seg.daysLeft <= 14;
+    const isExpired    = seg && seg.daysLeft !== null && seg.daysLeft < 0;
+    html += `
+      <div class="src-line ${line.auto?'fefo-auto':''}" id="line-${item.id}-${idx}">
+        <select class="batch-select ${line.auto?'auto-filled':''}"
+                onchange="onBatchChange('${item.id}',${idx},this.value)"
+                ${isExpired?'disabled':''}>
+          ${item.segments.filter(seg=>seg.daysLeft===null||seg.daysLeft>=0).map(seg=>{
+            const isSel = seg.id === line.segId;
+            const nl = seg.daysLeft !== null && seg.daysLeft <= 14 ? ` (${seg.daysLeft}d ⚠)` :
+                       seg.expiry ? '' : '';
+            return `<option value="${seg.id}" ${isSel?'selected':''}>${seg.batch} · ${seg.avail} ${item.unit}${nl}</option>`;
+          }).join('')}
+        </select>
+        <input class="line-qty ${line.auto?'auto-filled':''}" type="number" step="0.1"
+               value="${line.qty}" placeholder="qty"
+               oninput="onLineQtyChange('${item.id}',${idx},this.value)" />
+        <span class="src-del" onclick="removeLine('${item.id}',${idx})" title="Remove"
+              style="${s.srcLines.length<=1?'visibility:hidden;':''}">×</span>
+        ${line.auto ? `<span class="fefo-tag ${isNearExpiry?'warn':''}">FEFO${isNearExpiry?' ⚠':''}</span>` : ''}
+      </div>`;
+  });
+
+  html += '</div>';
+
+  // Allocation status
+  const total = s.srcLines.reduce((a, l) => a + (Number(l.qty)||0), 0);
+  const sendQ = Number(s.qty) || 0;
+  const diff  = Math.round((sendQ - total) * 1000) / 1000;
+  const count = s.srcLines.length;
+  if (Math.abs(diff) < 0.001) {
+    html += `<div class="alloc-status alloc-ok">✓ ${total} ${item.unit} allocated${count>1?' across '+count+' batches':''}</div>`;
+  } else if (diff > 0) {
+    html += `<div class="alloc-status alloc-warn">⚠ short by ${diff} ${item.unit} — add another batch</div>`;
+  } else {
+    html += `<div class="alloc-status alloc-warn">⚠ over-allocated by ${Math.abs(diff)} ${item.unit}</div>`;
+  }
+
+  html += `<div class="src-add" onclick="addLine('${item.id}')">+ split across another batch</div>`;
+  return html;
+}
+
+// ─────────────────────────────────────────────
+// EVENT HANDLERS
+// ─────────────────────────────────────────────
+let qtyTimer = {};
+
+function onQtyChange(itemId, val) {
+  clearTimeout(qtyTimer[itemId]);
+  qtyTimer[itemId] = setTimeout(() => {
+    const item = ITEMS.find(i => i.id === itemId);
+    const qty  = parseFloat(val) || 0;
+    rowState[itemId].qty = qty;
+    if (qty <= 0) {
+      rowState[itemId].srcLines = [];
+    } else {
+      rowState[itemId].srcLines = fefoAllocate(item, qty);
+    }
+    refreshRow(itemId);
+  }, 200); // 200ms debounce
+}
+
+function onBatchChange(itemId, idx, segId) {
+  // User manually changed batch — clear auto flag
+  if (rowState[itemId].srcLines[idx]) {
+    rowState[itemId].srcLines[idx].segId = segId;
+    rowState[itemId].srcLines[idx].auto  = false;
+  }
+  refreshRow(itemId);
+}
+
+function onLineQtyChange(itemId, idx, val) {
+  if (rowState[itemId].srcLines[idx]) {
+    rowState[itemId].srcLines[idx].qty  = parseFloat(val) || 0;
+    rowState[itemId].srcLines[idx].auto = false;
+  }
+  refreshRow(itemId);
+}
+
+function addLine(itemId) {
+  const item = ITEMS.find(i => i.id === itemId);
+  // Pick first unused segment
+  const usedIds = rowState[itemId].srcLines.map(l => l.segId);
+  const unused  = item.segments.find(s => !usedIds.includes(s.id) && (s.daysLeft === null || s.daysLeft >= 0));
+  rowState[itemId].srcLines.push({
+    segId: unused ? unused.id : item.segments[0].id,
+    qty:   0,
+    auto:  false,
+  });
+  refreshRow(itemId);
+}
+
+function removeLine(itemId, idx) {
+  if (rowState[itemId].srcLines.length <= 1) return;
+  rowState[itemId].srcLines.splice(idx, 1);
+  rowState[itemId].srcLines.forEach(l => l.auto = false);
+  refreshRow(itemId);
+}
+
+function refreshRow(itemId) {
+  const item = ITEMS.find(i => i.id === itemId);
+  const s = rowState[itemId];
+
+  const totalAllocated = s.srcLines.reduce((a, l) => a + (Number(l.qty)||0), 0);
+  const afterQty = Math.round((item.ownStock - totalAllocated) * 100) / 100;
+  const isComplete = s.qty > 0 && totalAllocated > 0 &&
+                     Math.abs(totalAllocated - s.qty) < 0.01 && !s.excluded;
+
+  const tr = document.getElementById('row-' + itemId);
+  if (!tr) return;
+
+  tr.className = `item-row ${item.status==='out'?'out':item.status==='low'?'low':''}`;
+  if (isComplete) tr.classList.add('done');
+
+  // Update source cell
+  document.getElementById('srcCell-' + itemId).innerHTML = renderSrcLines(item, s);
+
+  // Update stock after
+  const saCell = tr.cells[6];
+  if (saCell) {
+    saCell.innerHTML = s.qty > 0
+      ? `<div class="sa ${afterQty<0?'warn':'ok'}">${afterQty} ${item.unit}</div>
+         <div class="sa-dim">${afterQty>=0&&item.ownStock>0?'retain '+Math.round(afterQty/item.ownStock*100)+'%':afterQty<0?'insufficient':''}</div>`
+      : `<span style="font-size:12px;color:#94a3b8;">—</span>`;
+  }
+
+  updateBar();
+}
+
+function toggleExclude(itemId, excl) {
+  rowState[itemId].excluded = excl;
+  render();
+}
+
+function toggleCat(catId) {
+  const items = document.querySelectorAll(`tr.item-row[data-cat="${catId}"]`);
+  const allHidden = [...items].every(r => r.classList.contains('hidden-cat'));
+  items.forEach(r => r.classList.toggle('hidden-cat', !allHidden));
+  document.getElementById('caret-'+catId).textContent = allHidden ? '▼' : '▶';
+}
+
+function catSel(catId, include) {
+  ITEMS.filter(i => i.cat === catId).forEach(item => {
+    rowState[item.id].excluded = !include;
+  });
+  // When unselecting all in a category → auto-collapse that category
+  if (!include) {
+    const items = document.querySelectorAll(`tr.item-row[data-cat="${catId}"]`);
+    items.forEach(r => r.classList.add('hidden-cat'));
+    const caret = document.getElementById('caret-' + catId);
+    if (caret) caret.textContent = '▶';
+  } else {
+    // Re-selecting → re-expand
+    const items = document.querySelectorAll(`tr.item-row[data-cat="${catId}"]`);
+    items.forEach(r => r.classList.remove('hidden-cat'));
+    const caret = document.getElementById('caret-' + catId);
+    if (caret) caret.textContent = '▼';
+  }
+  render();
+}
+
+function globalSel(include) {
+  ITEMS.forEach(item => { rowState[item.id].excluded = !include; });
+  render();
+}
+
+// ─── Filters ───
+const fpState = { out: true, low: true, all: true };
+function toggleFP(f) {
+  if (f === 'all') { fpState.out = fpState.low = fpState.all = true; }
+  else { fpState[f] = !fpState[f]; fpState.all = fpState.out && fpState.low; }
+  ['out','low','all'].forEach(k => document.getElementById('fp-'+k).classList.toggle('on', fpState[k]));
+  applyFilters();
+}
+
+function applyFilters() {
+  const catV  = (document.getElementById('catFilter')?.value  || '').toLowerCase();
+  const itemV = (document.getElementById('itemSearch')?.value || '').toLowerCase();
+  document.querySelectorAll('tr.item-row').forEach(row => {
+    const cat  = (row.dataset.cat  || '').toLowerCase();
+    const stat = row.dataset.status || 'ok';
+    const name = (row.querySelector('td.c div')?.textContent || '').toLowerCase();
+    const catOk  = !catV || cat.startsWith(catV.replace(/[^a-z]/g,''));
+    const itemOk = !itemV || name.includes(itemV);
+    const statOk = (stat === 'out' && fpState.out) ||
+                   (stat === 'low' && fpState.low) ||
+                   (stat === 'ok'  && fpState.all);
+    row.classList.toggle('hidden', !(catOk && itemOk && statOk) || row.classList.contains('hidden-cat'));
+  });
+  document.querySelectorAll('tr.cat-row').forEach(cr => {
+    const catId = cr.dataset.cat;
+    const any = [...document.querySelectorAll(`tr.item-row[data-cat="${catId}"]`)]
+                 .some(r => !r.classList.contains('hidden') && !r.classList.contains('hidden-cat'));
+    cr.classList.toggle('hidden', !any);
+  });
+}
+
+// ─── Bar ───
+function updateBar() {
+  let done = 0;
+  ITEMS.forEach(item => {
+    const s = rowState[item.id];
+    if (!s) return;
+    const total = s.srcLines.reduce((a, l) => a + (Number(l.qty)||0), 0);
+    if (!s.excluded && s.qty > 0 && Math.abs(total - s.qty) < 0.01) done++;
+  });
+  document.getElementById('barCount').textContent = done;
+  document.getElementById('barInfo').textContent = done + ' items selected';
+  document.getElementById('selSummary').textContent = done + ' items selected';
+  buildConfirm();
+}
+
+// ─── Keyboard ───
+function rowKey(e, itemId) {
+  if (e.key === 'Tab' || e.key === 'Enter') {
+    const firstSrc = document.querySelector(`#srcCell-${itemId} .batch-select`);
+    if (firstSrc) { e.preventDefault(); firstSrc.focus(); }
+  }
+}
+
+// ─── Coverage ───
+function setCover(d) {
+  coverDays = d;
+  document.querySelectorAll('.cpill').forEach(p => p.classList.toggle('on', Number(p.dataset.d) === d));
+  document.getElementById('confCov').textContent = d + ' days';
+  // Recalc wheat
+  const wItem = ITEMS.find(i => i.id === 'wheat');
+  if (wItem) {
+    const newQ = Math.ceil(Math.max(0, 4.1 * d - 2));  // Math.ceil to nearest kg
+    wItem.gap = newQ;
+    wItem.suggestedQty = newQ;
+    rowState['wheat'].qty = newQ;
+    rowState['wheat'].srcLines = fefoAllocate(wItem, newQ);
+  }
+  // Recalc cream
+  const cItem = ITEMS.find(i => i.id === 'cream');
+  if (cItem) {
+    const newQ = Math.ceil(Math.max(0, 4.1 * d - 1.2));  // Math.ceil to nearest kg
+    cItem.gap = newQ;
+    cItem.suggestedQty = newQ;
+    rowState['cream'].qty = newQ;
+    rowState['cream'].srcLines = fefoAllocate(cItem, newQ);
+  }
+  render();
+}
+
+// ─── View ───
+function setView(v) {
+  document.querySelectorAll('[data-view]').forEach(el => el.classList.remove('on'));
+  document.querySelector(`[data-view="${v}"]`).classList.add('on');
+  document.getElementById('vbtn-form').classList.toggle('on', v === 'form');
+  document.getElementById('vbtn-confirm').classList.toggle('on', v === 'confirm');
+  if (v === 'confirm') buildConfirm();
+}
+
+// ─── Build Confirm ───
+function buildConfirm() {
+  const selected = ITEMS.filter(item => {
+    const s = rowState[item.id];
+    if (!s || s.excluded) return false;
+    const total = s.srcLines.reduce((a, l) => a + (Number(l.qty)||0), 0);
+    return s.qty > 0 && Math.abs(total - s.qty) < 0.01;
+  });
+
+  document.getElementById('confItems').textContent = selected.length + ' item' + (selected.length !== 1 ? 's' : '');
+
+  const cats = {};
+  selected.forEach(item => {
+    if (!cats[item.catLabel]) cats[item.catLabel] = [];
+    cats[item.catLabel].push(item);
+  });
+
+  let html = '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
+  html += `<thead><tr style="background:#f8fafc;">
+    <th style="padding:7px 14px;text-align:left;font-size:10px;font-weight:600;color:#94a3b8;border-bottom:1px solid #f1f5f9;">Item</th>
+    <th style="padding:7px 8px;text-align:center;font-size:10px;font-weight:600;color:#94a3b8;border-bottom:1px solid #f1f5f9;">Send Qty</th>
+    <th style="padding:7px 8px;text-align:left;font-size:10px;font-weight:600;color:#94a3b8;border-bottom:1px solid #f1f5f9;">Source Batch(es)</th>
+    <th style="padding:7px 14px;text-align:right;font-size:10px;font-weight:600;color:#94a3b8;border-bottom:1px solid #f1f5f9;">Your Stock After</th>
+  </tr></thead><tbody>`;
+
+  if (selected.length === 0) {
+    html += `<tr><td colspan="4" style="padding:20px;text-align:center;color:#94a3b8;">No items fully allocated yet</td></tr>`;
+  } else {
+    Object.entries(cats).forEach(([catLabel, items]) => {
+      html += `<tr><td colspan="4" style="background:#f8fafc;padding:4px 14px;font-size:10px;font-weight:700;color:#64748b;border-top:1px solid #e2e8f0;">${catLabel.toUpperCase()}</td></tr>`;
+      items.forEach(item => {
+        const s = rowState[item.id];
+        const total = s.srcLines.reduce((a, l) => a + (Number(l.qty)||0), 0);
+        const after = Math.round((item.ownStock - total) * 100) / 100;
+        const batchLines = s.srcLines.map(line => {
+          const seg = item.segments.find(sg => sg.id === line.segId);
+          const near = seg && seg.daysLeft !== null && seg.daysLeft <= 14;
+          return `<div style="${near?'color:#d97706;':''}">${seg ? seg.batch : line.segId} · ${line.qty} ${item.unit}${line.auto?' <span style="font-size:9px;font-weight:700;color:#16a34a;">FEFO</span>':''}</div>`;
+        }).join('');
+        html += `<tr style="border-bottom:1px solid #f8fafc;">
+          <td style="padding:9px 14px;font-weight:600;">${item.name}</td>
+          <td style="padding:9px 8px;text-align:center;">${s.qty} ${item.unit}</td>
+          <td style="padding:9px 8px;color:#64748b;">${batchLines}</td>
+          <td style="padding:9px 14px;text-align:right;font-weight:700;color:${after>=0?'#16a34a':'#dc2626'};">${after} ${item.unit}</td>
+        </tr>`;
+      });
+    });
+  }
+
+  html += `</tbody><tfoot><tr style="background:#f8fafc;border-top:1px solid #e2e8f0;">
+    <td colspan="3" style="padding:10px 14px;font-size:11px;color:#64748b;font-style:italic;">
+      Stock moves from your store to Sutraa immediately on confirm.
+    </td>
+    <td style="padding:10px 14px;text-align:right;">
+      <p style="font-size:10px;color:#94a3b8;margin-bottom:2px;">ITEMS</p>
+      <p style="font-size:18px;font-weight:800;color:#1e293b;">${selected.length}</p>
+    </td>
+  </tr></tfoot></table>`;
+
+  document.getElementById('confirmBody').innerHTML = html;
+}
+
+// ─── Init ───
+document.addEventListener('DOMContentLoaded', () => {
+  // Pre-warm row states with FEFO
+  ITEMS.forEach(item => {
+    rowState[item.id] = { qty: item.suggestedQty, srcLines: [], excluded: false };
+    if (item.suggestedQty > 0) {
+      rowState[item.id].srcLines = fefoAllocate(item, item.suggestedQty);
+    }
+  });
+  render();
+});
+</script>
+</body>
+</html>

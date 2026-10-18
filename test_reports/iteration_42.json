@@ -1,0 +1,103 @@
+{
+  "iteration": 42,
+  "test_date": "2026-06-13",
+  "test_type": "Frontend + Backend - CR-016 P20-Phase2 Stock Inventory Hierarchy Toggle",
+  "overall_status": "PASS",
+  "summary": "Verified all CR-016 features: hierarchy toggle visible for master user, hidden for franchise user. Toggle ON shows 4th KPI card 'Stores in Scope', low-stock alert banner, and store heatmap grid with clickable cards sorted worst-first. Toggle OFF hides hierarchy section while own-store table remains functional. Search, sort, category filter, and CSV export all working.",
+  "tests": [
+    {
+      "feature": "Backend API /api/ returns 200",
+      "status": "PASS",
+      "details": "GET /api/ returns 200 with message 'Central Inventory API Proxy'."
+    },
+    {
+      "feature": "Login as Central Store (master@germanfluid.com)",
+      "status": "PASS",
+      "details": "Login successful with credentials manager@germanfluid.com / Qplazm@10. Returns token, restaurant_id=806, restaurant_type_flag='master'."
+    },
+    {
+      "feature": "Navigate to /inventory → page loads with KPI cards, inventory table",
+      "status": "PASS",
+      "details": "Stock Inventory page loads with 3 KPI cards (Total Items: 47, Low Stock Items: 1, Categories: 4) and inventory table with search, sort, category filter."
+    },
+    {
+      "feature": "Hierarchy toggle switch is VISIBLE for Central Store (master) user",
+      "status": "PASS",
+      "details": "data-testid='hierarchy-toggle-container' and data-testid='hierarchy-toggle' both visible. Toggle shows 'My store' label when OFF."
+    },
+    {
+      "feature": "Toggle ON → 4th KPI card 'Stores in Scope' appears",
+      "status": "PASS",
+      "details": "data-testid='kpi-stores-in-scope' appears showing '6 Stores in Scope' when toggle is checked."
+    },
+    {
+      "feature": "Toggle ON → low-stock alert banner appears if low_stock_rows > 0",
+      "status": "PASS",
+      "details": "data-testid='hierarchy-low-stock-alert' shows '52 low stock items across 6 stores'."
+    },
+    {
+      "feature": "Toggle ON → Store heatmap grid appears with per-store cards",
+      "status": "PASS",
+      "details": "data-testid='store-heatmap' appears with 6 heatmap cards showing store name, type, and low-stock ratio. Cards sorted worst-first (Central Kitchen Beta 11/11 first, german fluid 1/47 last)."
+    },
+    {
+      "feature": "Heatmap cards are clickable and navigate to /store/{id}",
+      "status": "PASS",
+      "details": "Clicked heatmap-card-808 (Central Kitchen Beta), navigated to /store/808 showing store details, stock summary, and recent transactions."
+    },
+    {
+      "feature": "Toggle OFF → hierarchy section disappears, own-store table stays",
+      "status": "PASS",
+      "details": "When toggle unchecked: kpi-stores-in-scope, hierarchy-low-stock-alert, and store-heatmap all hidden. Inventory table remains visible. Toggle label shows 'My store'."
+    },
+    {
+      "feature": "Login as Outlet (manager@outletdirectone.com) → toggle is HIDDEN",
+      "status": "PASS",
+      "details": "Logged in as franchise user (restaurant_type_flag='franchise'). hierarchy-toggle-container and hierarchy-toggle NOT present in DOM. Only 3 KPI cards visible (no 'Stores in Scope')."
+    },
+    {
+      "feature": "Own-store inventory table works with search, sort, category filter",
+      "status": "PASS",
+      "details": "Search 'Baking' returns 2 rows, search 'coffee' returns 1 row. Sort and category filter dropdowns functional. Row click navigates to /inventory/{id} detail page."
+    },
+    {
+      "feature": "CSV export still works",
+      "status": "PASS",
+      "details": "Clicked export-inventory-csv button, downloaded stock_inventory.csv successfully."
+    }
+  ],
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/test_reports/iteration_42.json"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "api.js Line 594: _getStockInventory correctly accepts { includeHierarchy } param and appends ?include_hierarchy=true to URL",
+    "useStockInventory.js Line 14: canToggleHierarchy = isTopLevel || isMiddleLevel correctly gates toggle visibility",
+    "useStockInventory.js Line 32: includeHierarchy param correctly passed to API when showHierarchy && canToggleHierarchy",
+    "StockInventorySummary.jsx Line 179-189: Hierarchy toggle container only renders when canToggleHierarchy is true",
+    "StockInventorySummary.jsx Line 279-291: 4th KPI card 'Stores in Scope' only renders when showHierarchy && hierarchySummary",
+    "StockInventorySummary.jsx Line 295-305: Low-stock alert banner only renders when showHierarchy && hierarchySummary?.totals?.low_stock_rows > 0",
+    "StockInventorySummary.jsx Line 470-492: Store heatmap grid renders with cards sorted by low-stock ratio (worst-first) using .sort((a, b) => ratioB - ratioA)",
+    "StockInventorySummary.jsx Line 504-546: StoreHeatmapCard component correctly handles onClick navigation to /store/{id}"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "100% (2/2 API tests passed)",
+    "frontend": "100% (12/12 features verified)"
+  },
+  "test_credentials": {
+    "central_store_806_master": "manager@germanfluid.com / Qplazm@10",
+    "outlet_809_franchise": "manager@outletdirectone.com / Qplazm@10"
+  },
+  "seed_data_creation": "None - used existing POS API data via proxy",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "CR-016 P20-Phase2 Stock Inventory Hierarchy Toggle fully verified. Master user (restaurant_type_flag='master') sees toggle, franchise user (restaurant_type_flag='franchise') does not. Toggle ON shows 4th KPI card, alert banner, and store heatmap with 6 stores. Heatmap cards sorted worst-first by low-stock ratio. All existing functionality (search, sort, filter, CSV export, row navigation) continues to work."
+}

@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PO Flow Mockup — CR-047</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f1f5f9; }
+
+    /* Nav */
+    .screen-nav { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
+    .screen-btn { padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1px solid #e2e8f0; background: white; color: #64748b; transition: all 0.15s; }
+    .screen-btn.active { background: #1e293b; color: white; border-color: #1e293b; }
+
+    /* Shared table styles */
+    .sk-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .sk-table thead th { background: #f8fafc; padding: 8px 10px; text-align: left; font-size: 10px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.07em; border-bottom: 2px solid #e2e8f0; white-space: nowrap; }
+    .sk-table thead th.r { text-align: right; }
+
+    /* Row states */
+    .sk-row td { border-bottom: 1px solid #f1f5f9; background: white; vertical-align: middle; padding: 6px 8px; }
+    .sk-row.complete td { background: #f0fdf4; }
+    .sk-row.complete td:first-child { border-left: 3px solid #4ade80; }
+    .sk-row.active td { background: #fafffe; }
+    .sk-row.active td:first-child { border-left: 3px solid #818cf8; }
+    .sk-row.suggested td { background: #fff7ed; }
+    .sk-row.suggested td:first-child { border-left: 3px solid #fb923c; }
+
+    /* Inputs */
+    .ci { width: 100%; border: 1px solid transparent; border-radius: 5px; padding: 5px 8px; font-size: 12px; background: transparent; height: 30px; outline: none; }
+    .ci:focus { border-color: #818cf8; background: white; box-shadow: 0 0 0 2px rgba(129,140,248,0.15); }
+    .ci.auto { color: #64748b; }
+    .ci.computed { color: #15803d; font-weight: 600; }
+    .ci::placeholder { color: #cbd5e1; }
+    select.ci { cursor: pointer; }
+
+    /* Search cell */
+    .src-wrap { position: relative; }
+    .src-wrap .ci { padding-right: 22px; }
+    .src-arrow { position: absolute; right: 7px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 10px; pointer-events: none; }
+    .src-drop { position: absolute; top: calc(100% + 2px); left: 0; right: 0; background: white; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); z-index: 100; display: none; }
+    .src-item { display: flex; align-items: center; justify-content: space-between; padding: 7px 12px; font-size: 12px; cursor: pointer; }
+    .src-item:hover { background: #f8fafc; }
+    .src-item.oos { color: #ef4444; }
+    .src-item.add { color: #6366f1; font-weight: 500; border-top: 1px solid #f1f5f9; font-size: 11px; }
+    .hint { font-size: 10px; color: #94a3b8; }
+
+    /* Unit badge */
+    .unit-b { display: inline-flex; align-items: center; justify-content: center; background: #f1f5f9; border-radius: 4px; padding: 2px 6px; font-size: 11px; color: #64748b; font-weight: 500; width: 100%; }
+
+    /* Inline badges */
+    .bv { display: inline-flex; align-items: center; border-radius: 4px; padding: 1px 6px; font-size: 9px; font-weight: 600; }
+    .bv.oos { background: #fee2e2; color: #dc2626; }
+    .bv.low { background: #fef3c7; color: #d97706; }
+    .bv.ok { background: #dcfce7; color: #16a34a; }
+    .bv.var-warn { background: #fee2e2; color: #dc2626; }
+    .bv.var-ok { background: #dcfce7; color: #16a34a; }
+
+    /* Grand total bar */
+    .gt-bar { background: #1e293b; color: white; border-radius: 0 0 10px 10px; padding: 11px 16px; display: flex; justify-content: space-between; align-items: center; }
+
+    /* Header bar */
+    .hdr-bar { background: white; border: 1px solid #e2e8f0; border-radius: 10px 10px 0 0; padding: 12px 16px; display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; border-bottom: none; }
+    select.hs, input.hs { border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 10px; font-size: 12px; height: 32px; background: white; color: #1e293b; outline: none; }
+    select.hs:focus, input.hs:focus { border-color: #818cf8; }
+
+    .card { background: white; border: 1px solid #e2e8f0; border-radius: 10px; }
+    .sep { height: 1px; background: #f1f5f9; margin: 0; }
+    .btn { display: inline-flex; align-items: center; gap: 4px; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 500; cursor: pointer; border: none; }
+    .btn-p { background: #1e293b; color: white; }
+    .btn-o { background: white; color: #334155; border: 1px solid #e2e8f0; }
+    .btn-g { background: transparent; color: #64748b; border: 1px solid transparent; }
+    .btn-em { background: #16a34a; color: white; }
+    .kbd { display: inline-block; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 3px; padding: 1px 5px; font-size: 10px; font-family: monospace; color: #475569; }
+
+    /* Screen views */
+    [data-screen] { display: none; }
+    [data-screen].active { display: block; }
+
+    /* Status timeline */
+    .tl { display: flex; align-items: center; gap: 4px; margin-bottom: 12px; }
+    .tl-step { padding: 3px 10px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+    .tl-step.done { background: #1e293b; color: white; }
+    .tl-step.cur { background: #3b82f6; color: white; }
+    .tl-step.todo { background: #f1f5f9; color: #94a3b8; }
+    .tl-line { width: 20px; height: 2px; background: #e2e8f0; }
+    .tl-line.done { background: #1e293b; }
+
+    /* Suggest row label */
+    .sug-label { font-size: 9px; font-weight: 700; color: #ea580c; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 3px; padding: 1px 5px; margin-left: 4px; }
+
+    /* Coverage days pills */
+    .cover-pill { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1px solid #e2e8f0; background: white; color: #64748b; transition: all 0.12s; }
+    .cover-pill.active { background: #1e293b; color: white; border-color: #1e293b; }
+  </style>
+</head>
+<body class="p-4 md:p-8">
+<div class="max-w-5xl mx-auto">
+
+  <div class="flex items-center gap-3 mb-4">
+    <div style="width:32px;height:32px;background:#1e293b;border-radius:8px;display:flex;align-items:center;justify-content:center;">
+      <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/></svg>
+    </div>
+    <div>
+      <h1 style="font-size:15px;font-weight:700;color:#1e293b;">PO Flow — UX Mockup</h1>
+      <p style="font-size:11px;color:#94a3b8;">CR-047 Investigation · 6 screens · Storekeeper UX</p>
+    </div>
+  </div>
+
+  <!-- Screen nav -->
+  <div class="screen-nav">
+    <button class="screen-btn active" onclick="showScreen('s2')">2 · Vendor Select</button>
+    <button class="screen-btn" onclick="showScreen('s3')">3 · Items Entry ★</button>
+    <button class="screen-btn" onclick="showScreen('s4')">4 · Review</button>
+    <button class="screen-btn" onclick="showScreen('s5')">5 · PO Detail</button>
+    <button class="screen-btn" onclick="showScreen('s6')">6 · Receive Goods ★</button>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN 2 — Vendor Select
+  ══════════════════════════════════════ -->
+  <div data-screen="s2" class="active">
+    <div style="margin-bottom:12px;">
+      <h2 style="font-size:14px;font-weight:700;color:#1e293b;">New Purchase Order</h2>
+      <p style="font-size:11px;color:#94a3b8;">Select vendor</p>
+    </div>
+
+    <!-- Proposed: type-to-search vendor instead of cards -->
+    <div class="card p-4 mb-3">
+      <label style="display:block;font-size:10px;font-weight:600;color:#94a3b8;margin-bottom:6px;">VENDOR *</label>
+      <div class="src-wrap" style="max-width:360px;">
+        <input class="ci" type="text" value="fre" placeholder="Type vendor name…" style="border:1px solid #e2e8f0;border-radius:6px;height:36px;font-size:13px;" />
+        <span class="src-arrow" style="font-size:12px;">▾</span>
+        <div class="src-drop" style="display:block;">
+          <div class="src-item">
+            <div>
+              <span style="font-weight:600;">Fresh Farms Pvt Ltd</span>
+              <span class="hint" style="margin-left:8px;">Last order: 3d ago · 12 items</span>
+            </div>
+            <span style="font-size:10px;background:#dcfce7;color:#16a34a;border-radius:4px;padding:1px 6px;font-weight:600;">Active</span>
+          </div>
+          <div class="src-item">
+            <div>
+              <span style="font-weight:600;">Fresh Connect</span>
+              <span class="hint" style="margin-left:8px;">Last order: 45d ago · 4 items</span>
+            </div>
+            <span style="font-size:10px;background:#fef3c7;color:#d97706;border-radius:4px;padding:1px 6px;font-weight:600;">Inactive</span>
+          </div>
+          <div class="src-item add">+ Add new vendor</div>
+        </div>
+      </div>
+      <p style="font-size:10px;color:#94a3b8;margin-top:6px;">Or: <span style="color:#6366f1;cursor:pointer;">browse all vendors →</span></p>
+    </div>
+
+    <div style="font-size:11px;color:#64748b;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;">
+      <strong style="color:#1e293b;">Pain point eliminated:</strong> Type-to-search replaces 3-column card grid. Storekeeper who orders from the same 2–3 vendors daily hits the first keystroke and selects. No scanning required.
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN 3 — Items Entry (CRITICAL)
+  ══════════════════════════════════════ -->
+  <div data-screen="s3">
+    <div style="margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <h2 style="font-size:14px;font-weight:700;color:#1e293b;">New PO — Items</h2>
+        <p style="font-size:11px;color:#94a3b8;">Fresh Farms Pvt Ltd · 15 Oct 2026</p>
+      </div>
+      <div style="display:flex;gap:8px;font-size:10px;color:#94a3b8;align-items:center;">
+        <span class="kbd">Tab</span> next field &nbsp;
+        <span class="kbd">Enter</span> new row
+      </div>
+    </div>
+
+    <!-- Shared: date + notes in single line -->
+    <div class="hdr-bar">
+      <div><label style="display:block;font-size:10px;font-weight:600;color:#94a3b8;margin-bottom:3px;">EXPECTED DELIVERY</label><input type="date" class="hs" value="2026-10-20" /></div>
+      <div style="flex:1;"><label style="display:block;font-size:10px;font-weight:600;color:#94a3b8;margin-bottom:3px;">NOTES</label><input type="text" class="hs" style="width:100%;" placeholder="Optional" /></div>
+
+      <!-- Coverage Days Selector — THE MISSING PIECE -->
+      <div>
+        <label style="display:block;font-size:10px;font-weight:600;color:#94a3b8;margin-bottom:3px;">ORDER COVER</label>
+        <div style="display:flex;gap:3px;" id="coverPills">
+          <button class="cover-pill" data-days="3" onclick="setCover(3)">3d</button>
+          <button class="cover-pill active" data-days="7" onclick="setCover(7)">7d</button>
+          <button class="cover-pill" data-days="10" onclick="setCover(10)">10d</button>
+          <button class="cover-pill" data-days="30" onclick="setCover(30)">30d</button>
+        </div>
+        <div style="font-size:9px;color:#94a3b8;margin-top:3px;" id="coverHint">Ordering for <strong>7-day</strong> cover</div>
+      </div>
+
+      <div style="font-size:10px;color:#ea580c;background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;padding:6px 10px;"><strong id="sugCount">3 suggested</strong> (OOS or low stock)</div>
+    </div>
+
+    <!-- Items table -->
+    <div style="background:white;border:1px solid #e2e8f0;">
+      <table class="sk-table">
+        <colgroup>
+          <col style="width:30%"><col style="width:9%"><col style="width:6%"><col style="width:13%"><col style="width:11%"><col style="width:11%"><col style="width:12%"><col style="width:4%">
+        </colgroup>
+        <thead><tr>
+          <th>Item</th><th class="r">Qty</th><th>Unit</th><th>Batch <span style="font-weight:400;color:#c7d2fe;">auto</span></th><th>Expiry</th><th class="r">Rate</th><th class="r">Total</th><th></th>
+        </tr></thead>
+        <tbody>
+          <!-- Suggested row 1 (OOS) -->
+          <tr class="sk-row suggested">
+            <td>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="font-size:12px;font-weight:600;">Maida</span>
+                <span class="bv oos">OOS</span>
+                <span class="sug-label">SUGGESTED</span>
+              </div>
+              <div style="font-size:10px;color:#94a3b8;" id="maida-hint">0 kg stock · 4.2 kg/day · ordering <strong id="maida-qty-hint">29.4 kg</strong> for <span class="cover-ref">7</span> days</div>
+            </td>
+            <td><input class="ci sug-qty" id="maida-qty" type="number" value="29" style="text-align:right;" data-daily="4.2" data-stock="0" /></td>
+            <td><div class="unit-b">kg</div></td>
+            <td><input class="ci auto" value="MAIDA-OCT-15" readonly /></td>
+            <td><input class="ci" type="date" value="2027-04-15" /></td>
+            <td><input class="ci" type="number" value="42.00" style="text-align:right;" id="maida-rate" /></td>
+            <td style="text-align:right;padding-right:10px;font-size:13px;font-weight:700;color:#15803d;" id="maida-total">₹1,218</td>
+            <td style="text-align:center;color:#94a3b8;cursor:pointer;font-size:14px;">✕</td>
+          </tr>
+          <!-- Suggested row 2 (Low) -->
+          <tr class="sk-row suggested">
+            <td>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="font-size:12px;font-weight:600;">Onion</span>
+                <span class="bv low">3d left</span>
+                <span class="sug-label">SUGGESTED</span>
+              </div>
+              <div style="font-size:10px;color:#94a3b8;">12.4 kg stock · 4.1 kg/day · ordering <strong id="onion-qty-hint">16.3 kg</strong> for <span class="cover-ref">7</span> days</div>
+            </td>
+            <td><input class="ci sug-qty" id="onion-qty" type="number" value="17" style="text-align:right;" data-daily="4.1" data-stock="12.4" /></td>
+            <td><div class="unit-b">kg</div></td>
+            <td><input class="ci auto" value="ONION-OCT-15" readonly /></td>
+            <td><input class="ci" type="date" value="2026-12-15" /></td>
+            <td><input class="ci" type="number" value="18.00" style="text-align:right;" id="onion-rate" /></td>
+            <td style="text-align:right;padding-right:10px;font-size:13px;font-weight:700;color:#15803d;" id="onion-total">₹306</td>
+            <td style="text-align:center;color:#94a3b8;cursor:pointer;font-size:14px;">✕</td>
+          </tr>
+          <!-- Suggested row 3 — threshold-based (no consumption) -->
+          <tr class="sk-row suggested">
+            <td>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="font-size:12px;font-weight:600;">Oil</span>
+                <span class="bv low">5d left</span>
+                <span class="sug-label">SUGGESTED</span>
+              </div>
+              <div style="font-size:10px;color:#94a3b8;" id="oil-hint">2 ltr stock · min threshold 5 ltr · <strong>gap: 3 ltr</strong> · <span style="color:#818cf8;">no consumption data — threshold-based</span></div>
+            </td>
+            <td><input class="ci" id="oil-qty" type="number" value="3" style="text-align:right;" /></td>
+            <td><div class="unit-b">ltr</div></td>
+            <td><input class="ci auto" value="OIL-OCT-15" readonly /></td>
+            <td><input class="ci" type="date" value="2027-06-15" /></td>
+            <td><input class="ci" type="number" value="" placeholder="0.00" style="text-align:right;" id="oil-rate" /></td>
+            <td style="text-align:right;padding-right:10px;font-size:12px;color:#94a3b8;" id="oil-total">—</td>
+            <td style="text-align:center;color:#94a3b8;cursor:pointer;font-size:14px;">✕</td>
+          </tr>
+          <tr><td colspan="8" style="background:#f8fafc;padding:0;border-bottom:2px dashed #e2e8f0;"></td></tr>
+          <!-- Active row (storekeeper adding extra) -->
+          <tr class="sk-row active">
+            <td>
+              <div class="src-wrap" style="position:relative;">
+                <input class="ci" type="text" placeholder="Type item name…" style="border:1px solid #818cf8;background:white;" />
+                <span class="src-arrow">▾</span>
+                <div class="src-drop" style="display:block;">
+                  <div class="src-item"><span>Rice <span class="hint">(kg)</span></span><span class="hint bv ok">80 kg</span></div>
+                  <div class="src-item"><span>Rice Flour <span class="hint">(kg)</span></span><span class="hint bv oos">OOS</span></div>
+                  <div class="src-item add">+ Add to catalogue</div>
+                </div>
+              </div>
+            </td>
+            <td><input class="ci" type="number" placeholder="0" style="text-align:right;" /></td>
+            <td><div class="unit-b">—</div></td>
+            <td><input class="ci auto" placeholder="auto" readonly /></td>
+            <td><input class="ci" type="date" /></td>
+            <td><input class="ci" type="number" placeholder="0.00" style="text-align:right;" /></td>
+            <td style="text-align:right;padding-right:10px;color:#94a3b8;font-size:12px;">—</td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Grand total bar -->
+      <div class="gt-bar">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span style="font-size:11px;color:#94a3b8;">3 items + 1 in progress</span>
+          <button style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:white;border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer;">+ Add row</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <div style="text-align:right;">
+            <span style="font-size:10px;color:#94a3b8;display:block;">ESTIMATED TOTAL</span>
+            <span style="font-size:18px;font-weight:700;" id="grandTotal3">₹—</span>
+          </div>
+          <button class="btn" style="background:#4ade80;color:#14532d;font-weight:700;padding:9px 18px;">Review PO →</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="font-size:10px;color:#64748b;margin-top:8px;display:flex;gap:14px;">
+      <span><span class="kbd">Tab</span> advance field</span>
+      <span><span class="kbd">Enter</span> after rate → next row</span>
+      <span style="color:#ea580c;">■</span> = suggested (OOS / low stock)
+      <span style="color:#818cf8;">■</span> = active row
+    </div>
+
+    <div style="font-size:11px;color:#64748b;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;margin-top:10px;">
+      <strong style="color:#1e293b;">Key changes from current Screen 3:</strong>
+      <ul style="margin-top:4px;list-style:disc;padding-left:16px;line-height:1.7;">
+        <li>Start <strong>empty</strong> — no pre-selected 266 items. OOS/low items appear as orange "SUGGESTED" rows at top.</li>
+        <li>Storekeeper confirms suggested qty or types their own — no checkbox-uncheck for 250 items.</li>
+        <li>Additional items typed by storekeeper just like Add Stock form (same spreadsheet row).</li>
+        <li>9-column table → 7 columns. DoC removed. Last Rate / Avg Rate / Cheapest moved to tooltip on hover.</li>
+        <li>Estimated Total shown live in grand total bar.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN 4 — Review
+  ══════════════════════════════════════ -->
+  <div data-screen="s4">
+    <h2 style="font-size:14px;font-weight:700;color:#1e293b;margin-bottom:12px;">Review Purchase Order</h2>
+
+    <div class="card" style="margin-bottom:12px;overflow:hidden;">
+      <div style="padding:14px 16px;border-bottom:1px solid #f1f5f9;display:flex;gap:20px;flex-wrap:wrap;">
+        <div><p style="font-size:10px;color:#94a3b8;">VENDOR</p><p style="font-size:13px;font-weight:600;">Fresh Farms Pvt Ltd</p></div>
+        <div><p style="font-size:10px;color:#94a3b8;">DELIVERY</p><p style="font-size:13px;font-weight:600;">20 Oct 2026</p></div>
+        <div><p style="font-size:10px;color:#94a3b8;">ITEMS</p><p style="font-size:13px;font-weight:600;">3 lines</p></div>
+        <div style="margin-left:auto;text-align:right;">
+          <p style="font-size:10px;color:#94a3b8;">ESTIMATED TOTAL</p>
+          <p style="font-size:22px;font-weight:800;color:#1e293b;">₹7,290</p>
+          <p style="font-size:10px;color:#94a3b8;">Exact total set at receive</p>
+        </div>
+      </div>
+
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="background:#f8fafc;">
+          <th style="padding:7px 16px;text-align:left;font-size:10px;font-weight:600;color:#94a3b8;border-bottom:1px solid #f1f5f9;">Item</th>
+          <th style="padding:7px 8px;text-align:center;font-size:10px;font-weight:600;color:#94a3b8;border-bottom:1px solid #f1f5f9;">Qty</th>
+          <th style="padding:7px 8px;text-align:right;font-size:10px;font-weight:600;color:#94a3b8;border-bottom:1px solid #f1f5f9;">Est. Rate</th>
+          <th style="padding:7px 16px;text-align:right;font-size:10px;font-weight:600;color:#94a3b8;border-bottom:1px solid #f1f5f9;">Est. Total</th>
+        </tr></thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #f8fafc;">
+            <td style="padding:10px 16px;font-weight:600;">Maida <span class="bv oos" style="vertical-align:middle;">OOS</span></td>
+            <td style="padding:10px 8px;text-align:center;">126 kg</td>
+            <td style="padding:10px 8px;text-align:right;color:#64748b;">₹42.00</td>
+            <td style="padding:10px 16px;text-align:right;font-weight:700;">₹5,292</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f8fafc;">
+            <td style="padding:10px 16px;font-weight:600;">Onion <span class="bv low" style="vertical-align:middle;">3d</span></td>
+            <td style="padding:10px 8px;text-align:center;">111 kg</td>
+            <td style="padding:10px 8px;text-align:right;color:#64748b;">₹18.00</td>
+            <td style="padding:10px 16px;text-align:right;font-weight:700;">₹1,998</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 16px;font-weight:600;">Oil <span class="bv low" style="vertical-align:middle;">5d</span></td>
+            <td style="padding:10px 8px;text-align:center;">27 ltr</td>
+            <td style="padding:10px 8px;text-align:right;color:#94a3b8;">—</td>
+            <td style="padding:10px 16px;text-align:right;color:#94a3b8;">—</td>
+          </tr>
+        </tbody>
+        <tfoot><tr style="background:#f8fafc;">
+          <td colspan="3" style="padding:10px 16px;font-size:11px;color:#64748b;font-style:italic;">Final amounts confirmed at Receive Goods step.</td>
+          <td style="padding:10px 16px;text-align:right;font-size:16px;font-weight:800;">₹7,290</td>
+        </tr></tfoot>
+      </table>
+    </div>
+
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-o">← Edit Items</button>
+      <button class="btn btn-p">Create PO as Draft</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN 5 — PO Detail
+  ══════════════════════════════════════ -->
+  <div data-screen="s5">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div>
+        <h2 style="font-size:14px;font-weight:700;color:#1e293b;font-family:monospace;">PO-806-2026-0041</h2>
+        <p style="font-size:11px;color:#94a3b8;">Fresh Farms Pvt Ltd</p>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-o" style="font-size:11px;padding:5px 12px;">Approve</button>
+        <button class="btn btn-p" style="font-size:11px;padding:5px 12px;">Send to Vendor</button>
+        <button class="btn btn-em" style="font-size:11px;padding:5px 12px;" onclick="showScreen('s6')">Receive Goods →</button>
+      </div>
+    </div>
+
+    <!-- Status timeline -->
+    <div class="tl">
+      <div class="tl-step done">draft</div><div class="tl-line done"></div>
+      <div class="tl-step cur">sent</div><div class="tl-line"></div>
+      <div class="tl-step todo">received</div><div class="tl-line"></div>
+      <div class="tl-step todo">closed</div>
+    </div>
+
+    <!-- Meta + order lines -->
+    <div class="card" style="margin-bottom:10px;overflow:hidden;">
+      <div style="padding:12px 16px;border-bottom:1px solid #f1f5f9;display:flex;gap:20px;">
+        <div><p style="font-size:10px;color:#94a3b8;">VENDOR</p><p style="font-size:12px;font-weight:600;">Fresh Farms</p></div>
+        <div><p style="font-size:10px;color:#94a3b8;">DELIVERY</p><p style="font-size:12px;font-weight:600;">20 Oct 2026</p></div>
+        <div><p style="font-size:10px;color:#94a3b8;">ITEMS</p><p style="font-size:12px;font-weight:600;">3 lines</p></div>
+        <div><p style="font-size:10px;color:#94a3b8;">EST. TOTAL</p><p style="font-size:12px;font-weight:600;">₹7,290</p></div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="background:#f8fafc;">
+          <th style="padding:6px 16px;text-align:left;font-size:10px;font-weight:600;color:#94a3b8;border-bottom:1px solid #f1f5f9;">Item</th>
+          <th style="padding:6px 8px;text-align:center;font-size:10px;font-weight:600;color:#94a3b8;border-bottom:1px solid #f1f5f9;">Ordered</th>
+          <th style="padding:6px 8px;text-align:right;font-size:10px;font-weight:600;color:#94a3b8;border-bottom:1px solid #f1f5f9;">Your Stock</th>
+          <th style="padding:6px 16px;text-align:right;font-size:10px;font-weight:600;color:#94a3b8;border-bottom:1px solid #f1f5f9;">After Receive</th>
+        </tr></thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #f8fafc;"><td style="padding:8px 16px;font-weight:600;">Maida</td><td style="text-align:center;padding:8px;">126 kg</td><td style="text-align:right;padding:8px;color:#ef4444;font-weight:600;">0 kg</td><td style="text-align:right;padding:8px 16px;color:#16a34a;font-weight:600;">126 kg</td></tr>
+          <tr style="border-bottom:1px solid #f8fafc;"><td style="padding:8px 16px;font-weight:600;">Onion</td><td style="text-align:center;padding:8px;">111 kg</td><td style="text-align:right;padding:8px;color:#d97706;font-weight:600;">12.4 kg</td><td style="text-align:right;padding:8px 16px;color:#16a34a;font-weight:600;">123.4 kg</td></tr>
+          <tr><td style="padding:8px 16px;font-weight:600;">Oil</td><td style="text-align:center;padding:8px;">27 ltr</td><td style="text-align:right;padding:8px;color:#d97706;font-weight:600;">5.6 ltr</td><td style="text-align:right;padding:8px 16px;color:#16a34a;font-weight:600;">32.6 ltr</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN 6 — Receive Goods (CRITICAL)
+  ══════════════════════════════════════ -->
+  <div data-screen="s6">
+    <div style="margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <h2 style="font-size:14px;font-weight:700;color:#1e293b;">Receive Goods — PO-806-2026-0041</h2>
+        <p style="font-size:11px;color:#94a3b8;">Fresh Farms Pvt Ltd · Enter actual quantities and rates from invoice</p>
+      </div>
+      <div style="font-size:10px;color:#94a3b8;display:flex;gap:10px;align-items:center;">
+        <span class="kbd">Tab</span> next field &nbsp;
+        <span class="kbd">Enter</span> next row
+      </div>
+    </div>
+
+    <!-- Shared header: invoice date + invoice# + payment -->
+    <div class="hdr-bar">
+      <div><label style="display:block;font-size:10px;font-weight:600;color:#94a3b8;margin-bottom:3px;">INVOICE DATE</label><input type="date" class="hs" value="2026-10-15" /></div>
+      <div><label style="display:block;font-size:10px;font-weight:600;color:#94a3b8;margin-bottom:3px;">INVOICE #</label><input type="text" class="hs" value="INV-0482" placeholder="INV-001" /></div>
+      <div><label style="display:block;font-size:10px;font-weight:600;color:#94a3b8;margin-bottom:3px;">PAYMENT TYPE</label><select class="hs"><option selected>Cash</option><option>Credit</option><option>Online</option></select></div>
+      <div style="display:flex;align-items:flex-end;font-size:10px;color:#16a34a;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:5px 10px;gap:4px;">✓ Invoice available</div>
+    </div>
+
+    <!-- Receive table — same spreadsheet row pattern -->
+    <div style="background:white;border:1px solid #e2e8f0;">
+      <table class="sk-table">
+        <colgroup>
+          <col style="width:18%"><col style="width:9%"><col style="width:6%"><col style="width:10%"><col style="width:6%"><col style="width:12%"><col style="width:11%"><col style="width:11%"><col style="width:10%"><col style="width:4%">
+        </colgroup>
+        <thead><tr>
+          <th>Item</th>
+          <th class="r">PO Qty</th>
+          <th>Unit</th>
+          <th class="r">Rcv Qty</th>
+          <th class="r">Var</th>
+          <th class="r">Rate</th>
+          <th>Batch <span style="font-weight:400;color:#c7d2fe;">auto</span></th>
+          <th>Expiry</th>
+          <th class="r">Total</th>
+          <th></th>
+        </tr></thead>
+        <tbody>
+          <!-- Row 1 — complete receive -->
+          <tr class="sk-row complete">
+            <td>
+              <div style="font-size:12px;font-weight:600;">Maida</div>
+              <div style="font-size:10px;color:#94a3b8;">0 → <span style="color:#16a34a;font-weight:600;">126 kg</span></div>
+            </td>
+            <td style="text-align:right;font-size:12px;color:#64748b;">126</td>
+            <td><div class="unit-b">kg</div></td>
+            <td><input class="ci" type="number" value="126" style="text-align:right;" /></td>
+            <td style="text-align:center;"><span class="bv var-ok">0%</span></td>
+            <td><input class="ci computed" type="number" value="42.00" style="text-align:right;" /></td>
+            <td><input class="ci auto" value="MAIDA-OCT-15" readonly /></td>
+            <td><input class="ci" type="date" value="2027-04-15" /></td>
+            <td style="text-align:right;padding-right:10px;font-size:13px;font-weight:700;color:#15803d;">₹5,292</td>
+            <td style="text-align:center;font-size:12px;color:#16a34a;">✓</td>
+          </tr>
+          <!-- Row 2 — variance flagged -->
+          <tr class="sk-row" style="background:#fff9f9;">
+            <td style="border-left:3px solid #fca5a5;">
+              <div style="font-size:12px;font-weight:600;">Onion</div>
+              <div style="font-size:10px;color:#94a3b8;">12.4 → <span style="color:#16a34a;font-weight:600;">111 kg</span></div>
+            </td>
+            <td style="text-align:right;font-size:12px;color:#64748b;">111</td>
+            <td><div class="unit-b">kg</div></td>
+            <td><input class="ci" type="number" value="108" style="text-align:right;" /></td>
+            <td style="text-align:center;"><span class="bv var-warn">+23% ⚠</span></td>
+            <td><input class="ci" type="number" value="22.20" style="text-align:right;border-color:#fca5a5;" /></td>
+            <td><input class="ci auto" value="ONION-OCT-15" readonly /></td>
+            <td><input class="ci" type="date" value="2026-12-10" /></td>
+            <td style="text-align:right;padding-right:10px;font-size:13px;font-weight:700;color:#ef4444;">₹2,397 ⚠</td>
+            <td></td>
+          </tr>
+          <!-- Row 3 — active -->
+          <tr class="sk-row active">
+            <td>
+              <div style="font-size:12px;font-weight:600;">Oil</div>
+              <div style="font-size:10px;color:#94a3b8;">5.6 → <span style="color:#94a3b8;">? ltr</span></div>
+            </td>
+            <td style="text-align:right;font-size:12px;color:#64748b;">27</td>
+            <td><div class="unit-b">ltr</div></td>
+            <td><input class="ci" type="number" placeholder="0" style="text-align:right;border-color:#818cf8;background:white;" /></td>
+            <td style="text-align:center;color:#94a3b8;font-size:11px;">—</td>
+            <td><input class="ci" type="number" placeholder="0.00" style="text-align:right;" /></td>
+            <td><input class="ci auto" value="OIL-OCT-15" readonly /></td>
+            <td><input class="ci" type="date" /></td>
+            <td style="text-align:right;padding-right:10px;color:#94a3b8;font-size:12px;">—</td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Grand total bar -->
+      <div class="gt-bar">
+        <div style="font-size:11px;color:#94a3b8;">
+          2 received · 1 in progress · <span style="color:#fca5a5;">1 variance flag</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <div style="text-align:right;">
+            <span style="font-size:10px;color:#94a3b8;display:block;">INVOICE TOTAL</span>
+            <span style="font-size:18px;font-weight:700;">₹7,689</span>
+            <span style="font-size:10px;color:#fca5a5;display:block;">PO est. ₹7,290 · +₹399</span>
+          </div>
+          <button class="btn" style="background:#16a34a;color:white;font-weight:700;padding:9px 18px;">Confirm & Receive →</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="font-size:10px;color:#64748b;margin-top:8px;display:flex;gap:14px;">
+      <span><span class="kbd">Tab</span> advance field</span>
+      <span><span class="kbd">Enter</span> after rate → next row</span>
+      <span style="color:#4ade80;">■</span> = complete &nbsp;
+      <span style="color:#fca5a5;">■</span> = variance flagged
+    </div>
+
+    <div style="font-size:11px;color:#64748b;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;margin-top:10px;">
+      <strong style="color:#1e293b;">Key changes from current Screen 6 (Receive Goods):</strong>
+      <ul style="margin-top:4px;list-style:disc;padding-left:16px;line-height:1.7;">
+        <li>Card-per-item → <strong>single table row per item</strong>. Same spreadsheet pattern as Screens 3 and Add Stock.</li>
+        <li>Variance shown as inline badge in "Var" column — no full card panel needed.</li>
+        <li>Stock impact (current → after) shown as single line under item name.</li>
+        <li>Auto-batch still works. Tab/Enter keyboard flow same as other screens.</li>
+        <li>Grand total bar shows invoice total vs PO estimate + delta.</li>
+      </ul>
+    </div>
+
+    <div style="margin-top:10px;display:flex;gap:8px;">
+      <button class="btn btn-o" onclick="showScreen('s5')">← Back to PO</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function showScreen(id) {
+    document.querySelectorAll('[data-screen]').forEach(el => el.classList.remove('active'));
+    document.querySelector(`[data-screen="${id}"]`).classList.add('active');
+    document.querySelectorAll('.screen-btn').forEach((btn, i) => {
+      const map = { s2:0, s3:1, s4:2, s5:3, s6:4 };
+      btn.classList.toggle('active', map[id] === i);
+    });
+  }
+
+  // ── Coverage Days Logic ──
+  let currentCover = 7;
+
+  function setCover(days) {
+    currentCover = days;
+    // Update pills
+    document.querySelectorAll('.cover-pill').forEach(p => {
+      p.classList.toggle('active', Number(p.dataset.days) === days);
+    });
+    // Update hint
+    document.getElementById('coverHint').innerHTML = `Ordering for <strong>${days}-day</strong> cover`;
+    // Update all cover-ref spans
+    document.querySelectorAll('.cover-ref').forEach(el => el.textContent = days);
+    // Recalculate suggested quantities
+    recalcSuggested();
+  }
+
+  function recalcSuggested() {
+    const d = currentCover;
+    // Maida: 4.2 kg/day, 0 in stock
+    const maidaQty = Math.max(0, Math.ceil(4.2 * d - 0));
+    document.getElementById('maida-qty').value = maidaQty;
+    document.getElementById('maida-qty-hint').textContent = `${maidaQty} kg`;
+    const maidaRate = parseFloat(document.getElementById('maida-rate').value) || 0;
+    document.getElementById('maida-total').textContent = maidaRate > 0 ? `₹${(maidaQty * maidaRate).toLocaleString('en-IN')}` : '—';
+
+    // Onion: 4.1 kg/day, 12.4 in stock
+    const onionQty = Math.max(0, Math.ceil(4.1 * d - 12.4));
+    document.getElementById('onion-qty').value = onionQty;
+    document.getElementById('onion-qty-hint').textContent = `${(4.1 * d - 12.4).toFixed(1)} kg`;
+    const onionRate = parseFloat(document.getElementById('onion-rate').value) || 0;
+    document.getElementById('onion-total').textContent = onionRate > 0 ? `₹${(onionQty * onionRate).toLocaleString('en-IN')}` : '—';
+
+    // Oil: threshold-based — qty unchanged (3 ltr gap)
+    // Show note about threshold not changing with days
+    const oilHint = document.getElementById('oil-hint');
+    if (oilHint) oilHint.innerHTML = `2 ltr stock · min threshold 5 ltr · <strong>gap: 3 ltr</strong> · <span style="color:#818cf8;">no consumption data — threshold-based · unaffected by cover days</span>`;
+
+    // Update grand total
+    updateGrandTotal3();
+  }
+
+  function updateGrandTotal3() {
+    const maidaQ = parseFloat(document.getElementById('maida-qty')?.value) || 0;
+    const maidaR = parseFloat(document.getElementById('maida-rate')?.value) || 0;
+    const onionQ = parseFloat(document.getElementById('onion-qty')?.value) || 0;
+    const onionR = parseFloat(document.getElementById('onion-rate')?.value) || 0;
+    const total = maidaQ * maidaR + onionQ * onionR;
+    const gt = document.getElementById('grandTotal3');
+    if (gt) gt.textContent = total > 0 ? `₹${total.toLocaleString('en-IN')}` : '₹—';
+  }
+
+  // Trigger rates to update totals on change
+  document.addEventListener('input', function(e) {
+    if (e.target.id === 'maida-rate') {
+      const q = parseFloat(document.getElementById('maida-qty').value) || 0;
+      const r = parseFloat(e.target.value) || 0;
+      document.getElementById('maida-total').textContent = r > 0 ? `₹${(q * r).toLocaleString('en-IN')}` : '—';
+      updateGrandTotal3();
+    }
+    if (e.target.id === 'onion-rate') {
+      const q = parseFloat(document.getElementById('onion-qty').value) || 0;
+      const r = parseFloat(e.target.value) || 0;
+      document.getElementById('onion-total').textContent = r > 0 ? `₹${(q * r).toLocaleString('en-IN')}` : '—';
+      updateGrandTotal3();
+    }
+  });
+
+</script>
+</body>
+</html>
