@@ -23,37 +23,37 @@
   .nav-item.active svg { opacity: 1; }
 
   .main { flex: 1; overflow: auto; background: #f9fafb; min-width: 0; }
-  .page { padding: 18px 16px 40px 16px; }
+  .page { padding: 12px 14px 32px 14px; }
 
   /* Page header */
   .page-header { display: flex; align-items: center; gap-10px; margin-bottom: 20px; }
-  .page-title { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-  .page-title svg { width: 17px; height: 17px; }
-  .page-subtitle { font-size: 11.5px; color: #6b7280; margin-top: 2px; }
+  .page-title { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 7px; }
+  .page-title svg { width: 15px; height: 15px; }
+  .page-subtitle { font-size: 11px; color: #6b7280; margin-top: 1px; }
 
   /* Tabs */
-  .tabs { display: flex; gap: 2px; background: #f3f4f6; border-radius: 7px; padding: 3px; width: fit-content; margin-bottom: 20px; }
-  .tab { padding: 5px 14px; border-radius: 5px; font-size: 12px; cursor: pointer; color: #6b7280; transition: all .12s; }
+  .tabs { display: flex; gap: 2px; background: #f3f4f6; border-radius: 7px; padding: 2px; width: fit-content; margin-bottom: 10px; }
+  .tab { padding: 4px 12px; border-radius: 5px; font-size: 11.5px; cursor: pointer; color: #6b7280; transition: all .12s; }
   .tab.active { background: #fff; color: #111; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
 
   /* Card */
-  .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; margin-bottom: 14px; }
-  .card-header { padding: 11px 16px 0; border-bottom: 1px solid #f3f4f6; }
-  .card-header-title { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: #9ca3af; padding-bottom: 10px; }
-  .card-body { padding: 12px 14px; }
+  .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 8px; }
+  .card-header { padding: 8px 14px 0; border-bottom: 1px solid #f3f4f6; }
+  .card-header-title { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: #9ca3af; padding-bottom: 7px; }
+  .card-body { padding: 10px 12px; }
 
   /* Vendor/date row */
-  .header-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-  .field-label { font-size: 10.5px; font-weight: 500; color: #374151; margin-bottom: 4px; }
+  .header-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .field-label { font-size: 10.5px; font-weight: 500; color: #374151; margin-bottom: 3px; }
   .field-label .req { color: #ef4444; }
   select, input[type=text], input[type=number], input[type=date] {
-    width: 100%; height: 32px; border: 1px solid #d1d5db; border-radius: 6px; padding: 0 10px;
-    font-size: 12.5px; color: #111; background: #fff; outline: none; transition: border .12s;
+    width: 100%; height: 30px; border: 1px solid #d1d5db; border-radius: 6px; padding: 0 8px;
+    font-size: 12px; color: #111; background: #fff; outline: none; transition: border .12s;
     font-family: inherit;
   }
-  select:focus, input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.1); }
-  .vendor-context { display: flex; align-items: center; gap: 6px; margin-top: 10px; padding: 7px 10px; background: #f8fafc; border-radius: 6px; font-size: 10.5px; color: #6b7280; }
-  .vendor-context svg { width: 12px; height: 12px; flex-shrink: 0; }
+  select:focus, input:focus { border-color: #6366f1; box-shadow: 0 0 0 2px rgba(99,102,241,.1); }
+  .vendor-context { display: flex; align-items: center; gap: 5px; margin-top: 6px; padding: 5px 8px; background: #f8fafc; border-radius: 5px; font-size: 10.5px; color: #6b7280; }
+  .vendor-context svg { width: 11px; height: 11px; flex-shrink: 0; }
 
   /* Spreadsheet table */
   /* spreadsheet-wrap defined below with full rules */
@@ -83,21 +83,21 @@
   .unit-badge { font-size: 11px; color: #6b7280; background: #f3f4f6; border-radius: 4px; padding: 4px 7px; text-align: center; white-space: nowrap; }
 
   /* Add row button */
-  .add-row-btn { width: 100%; padding: 8px; border: 1.5px dashed #d1d5db; border-radius: 6px; background: none; cursor: pointer; font-size: 11.5px; color: #9ca3af; display: flex; align-items: center; justify-content: center; gap: 5px; margin-top: 8px; transition: all .12s; }
+  .add-row-btn { width: 100%; padding: 5px; border: 1.5px dashed #d1d5db; border-radius: 5px; background: none; cursor: pointer; font-size: 11px; color: #9ca3af; display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 5px; transition: all .12s; }
   .add-row-btn:hover { border-color: #6366f1; color: #6366f1; background: #f5f3ff; }
-  .add-row-btn svg { width: 13px; height: 13px; }
+  .add-row-btn svg { width: 12px; height: 12px; }
 
   /* Grand total bar */
-  .grand-total-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: #f0fdf4; border-radius: 8px; border: 1px solid #bbf7d0; margin-top: 6px; }
-  .grand-total-label { font-size: 11.5px; font-weight: 500; color: #15803d; }
-  .grand-total-value { font-size: 16px; font-weight: 700; color: #15803d; font-variant-numeric: tabular-nums; }
+  .grand-total-bar { display: flex; align-items: center; justify-content: space-between; padding: 7px 12px; background: #f0fdf4; border-radius: 6px; border: 1px solid #bbf7d0; margin-top: 5px; }
+  .grand-total-label { font-size: 11px; font-weight: 500; color: #15803d; }
+  .grand-total-value { font-size: 14px; font-weight: 700; color: #15803d; font-variant-numeric: tabular-nums; }
 
   /* Payment section */
-  .payment-section { display: flex; flex-direction: column; gap: 10px; }
-  .payment-row { display: flex; align-items: center; gap: 8px; }
-  .payment-mode-select { width: 170px; flex-shrink: 0; }
-  .payment-amount-input { width: 110px; flex-shrink: 0; }
-  .payment-ref-input { flex: 1; }
+  .payment-section { display: flex; flex-direction: column; gap: 6px; }
+  .payment-row { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; }
+  .payment-mode-select { width: 150px !important; flex: 0 0 150px; }
+  .payment-amount-input { width: 100px !important; flex: 0 0 100px; }
+  .payment-ref-input { flex: 1; min-width: 0; }
   .payment-remove-btn { width: 26px; height: 26px; border: none; background: none; cursor: pointer; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; color: #9ca3af; }
   .payment-remove-btn:hover { background: #fee2e2; color: #ef4444; }
   .payment-remove-btn svg { width: 12px; height: 12px; }
@@ -109,9 +109,8 @@
   .payment-balance.warn { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
   .payment-balance svg { width: 13px; height: 13px; }
 
-  /* Buttons */
-  .btn { height: 34px; padding: 0 16px; border-radius: 6px; font-size: 12.5px; font-weight: 500; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 6px; transition: all .12s; font-family: inherit; }
-  .btn svg { width: 14px; height: 14px; }
+  .btn { height: 30px; padding: 0 14px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 5px; transition: all .12s; font-family: inherit; }
+  .btn svg { width: 13px; height: 13px; }
   .btn-primary { background: #111; color: #fff; }
   .btn-primary:hover { background: #222; }
   .btn-primary:disabled { background: #d1d5db; color: #9ca3af; cursor: not-allowed; }
@@ -119,7 +118,7 @@
   .btn-outline:hover { background: #f9fafb; }
   .btn-ghost { background: none; color: #374151; border: 1px solid transparent; }
   .btn-ghost:hover { background: #f3f4f6; }
-  .btn-row { display: flex; gap: 8px; align-items: center; margin-top: 16px; }
+  .btn-row { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
 
   /* Incomplete warning */
   .incomplete-warn { font-size: 10.5px; color: #ef4444; display: flex; align-items: center; gap: 4px; }
@@ -235,9 +234,9 @@
 
       <!-- FORM VIEW -->
       <div id="formView">
-        <div style="margin-bottom:16px">
+        <div style="margin-bottom:10px">
           <div class="page-title">
-            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:17px;height:17px"><path d="M20 7H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2zm-9 8H7v-2h4v2zm6 0h-4v-2h4v2zM4 7V5a2 2 0 012-2h12a2 2 0 012 2v2H4z"/></svg>
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M20 7H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2zm-9 8H7v-2h4v2zm6 0h-4v-2h4v2zM4 7V5a2 2 0 012-2h12a2 2 0 012 2v2H4z"/></svg>
             Procurement — Add Stock
           </div>
           <div class="page-subtitle">Purchase stock from vendors. Enter items in the table below — Tab or Enter to move between cells.</div>
