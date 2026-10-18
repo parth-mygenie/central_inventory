@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CR-049 Mock — PO Receive Goods Spreadsheet UX (Real Data: RID 828)</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 13px; background: #f5f5f5; color: #111; }
+
+  .shell { display: flex; height: 100vh; overflow: hidden; }
+  .sidebar { width: 200px; background: #fff; border-right: 1px solid #e5e7eb; padding: 12px 0; flex-shrink: 0; }
+  .sidebar-logo { padding: 0 14px 12px; border-bottom: 1px solid #e5e7eb; margin-bottom: 6px; font-weight: 700; font-size: 13px; display: flex; align-items: center; gap: 7px; }
+  .logo-icon { width: 26px; height: 26px; background: #111; border-radius: 5px; display: flex; align-items: center; justify-content: center; }
+  .logo-icon svg { width: 14px; height: 14px; fill: #fff; }
+  .nav-item { display: flex; align-items: center; gap: 7px; padding: 6px 10px; border-radius: 5px; margin: 1px 6px; cursor: pointer; color: #374151; font-size: 12px; transition: background .12s; }
+  .nav-item:hover { background: #f3f4f6; }
+  .nav-item.active { background: #f0fdf4; color: #16a34a; font-weight: 600; }
+  .nav-item svg { width: 14px; height: 14px; flex-shrink: 0; opacity: .65; }
+  .nav-section { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #9ca3af; padding: 8px 12px 3px; }
+
+  .main { flex: 1; overflow: auto; background: #f9fafb; min-width: 0; }
+  .page { padding: 14px 16px 40px; }
+
+  .page-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .back-btn { height: 28px; width: 28px; border: 1px solid #e5e7eb; border-radius: 6px; background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #6b7280; }
+  .back-btn:hover { background: #f3f4f6; }
+  .po-ref { font-size: 16px; font-weight: 700; font-family: monospace; }
+  .po-vendor { font-size: 11px; color: #6b7280; }
+  .status-badge { padding: 3px 10px; border-radius: 20px; font-size: 10.5px; font-weight: 600; background: #eef2ff; color: #4338ca; }
+
+  .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 10px; }
+  .card-header { padding: 8px 14px; border-bottom: 1px solid #f3f4f6; display: flex; align-items: center; gap: 7px; }
+  .card-header-title { font-size: 11.5px; font-weight: 600; }
+  .card-body { padding: 10px 12px; }
+
+  /* Timeline */
+  .timeline { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+  .tl-step { padding: 3px 10px; border-radius: 4px; font-size: 10px; font-weight: 500; background: #f3f4f6; color: #9ca3af; }
+  .tl-step.done { background: #111; color: #fff; }
+  .tl-connector { width: 20px; height: 1.5px; background: #e5e7eb; }
+  .tl-connector.done { background: #111; }
+
+  /* PO info bar */
+  .po-info-bar { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; padding: 10px 14px; background: #f8fafc; border-radius: 7px; border: 1px solid #e5e7eb; margin-bottom: 10px; }
+  .po-info-item .label { font-size: 9.5px; text-transform: uppercase; color: #9ca3af; font-weight: 600; margin-bottom: 2px; }
+  .po-info-item .value { font-size: 12px; font-weight: 500; }
+
+  /* Header form */
+  .header-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .field-label { font-size: 10.5px; font-weight: 500; color: #374151; margin-bottom: 3px; }
+  select, input[type=text], input[type=number], input[type=date] {
+    width: 100%; height: 30px; border: 1px solid #d1d5db; border-radius: 6px; padding: 0 8px;
+    font-size: 12px; color: #111; background: #fff; outline: none; transition: border .12s; font-family: inherit;
+  }
+  input[type=number]::-webkit-outer-spin-button,
+  input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type=number] { -moz-appearance: textfield; }
+  select:focus, input:focus { border-color: #6366f1; box-shadow: 0 0 0 2px rgba(99,102,241,.1); }
+
+  /* Invoice check */
+  .invoice-ok { font-size: 10px; color: #16a34a; margin-top: 3px; }
+  .invoice-warn { font-size: 10px; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; border-radius: 4px; padding: 2px 6px; margin-top: 3px; }
+
+  /* Spreadsheet table */
+  .table-wrap { overflow-x: auto; }
+  table.receive-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  table.receive-table colgroup col { }
+  .col-skip { width: 30px; }
+  .col-item { width: 18%; }
+  .col-poqty { width: 65px; }
+  .col-unit { width: 46px; }
+  .col-rcvqty { width: 75px; }
+  .col-var { width: 80px; }
+  .col-rate { width: 80px; }
+  .col-batch { width: 115px; }
+  .col-expiry { width: 108px; }
+  .col-total { width: 80px; }
+
+  thead tr { background: #f8fafc; }
+  th { padding: 7px 6px; text-align: left; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #9ca3af; border-bottom: 1px solid #e5e7eb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  td { padding: 3px 4px; border-bottom: 1px solid #f3f4f6; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr.skipped-row { opacity: .55; }
+  tr.skipped-row td { text-decoration: line-through; }
+  tr:hover:not(.skipped-row) td { background: #fafafa; }
+
+  table.receive-table input { height: 28px; font-size: 11.5px; border-radius: 5px; width: 100%; border: 1px solid #d1d5db; padding: 0 6px; background: #fff; }
+  table.receive-table input.auto-filled { background: #f0fdf4; border-color: #86efac; color: #15803d; }
+  table.receive-table input:focus { border-color: #6366f1; outline: none; }
+  table.receive-table input[type=number] { -moz-appearance: textfield; }
+  .unit-cell { height: 28px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #6b7280; background: #f3f4f6; border-radius: 4px; border: 1px solid #e5e7eb; }
+
+  /* Item cell */
+  .item-name { font-weight: 500; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .item-sub { font-size: 9.5px; color: #6b7280; margin-top: 1px; white-space: nowrap; }
+  .item-stock { font-size: 9.5px; margin-top: 1px; }
+  .item-stock.restoring { color: #16a34a; }
+  .item-stock.low { color: #b45309; }
+
+  /* Variance badge */
+  .var-badge { display: inline-flex; align-items: center; gap: 2px; padding: 2px 6px; border-radius: 20px; font-size: 10px; font-weight: 600; white-space: nowrap; }
+  .var-badge.ok { background: #dcfce7; color: #15803d; }
+  .var-badge.warn { background: #fef3c7; color: #b45309; }
+  .var-badge.danger { background: #fee2e2; color: #b91c1c; }
+  .var-badge.empty { background: #f3f4f6; color: #9ca3af; font-weight: 400; }
+
+  /* Total cell */
+  .total-cell { font-size: 11.5px; font-weight: 600; tabular-nums; color: #374151; }
+  .total-cell.has-value { color: #15803d; }
+
+  /* Skip checkbox */
+  .skip-check { width: 14px; height: 14px; cursor: pointer; accent-color: #6366f1; margin: 7px auto 0; display: block; }
+
+  /* Grand total bar */
+  .grand-total-bar { display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; background: #f0fdf4; border-radius: 7px; border: 1px solid #bbf7d0; margin-top: 8px; }
+  .gt-left { display: flex; gap: 16px; align-items: center; }
+  .gt-stat { font-size: 11px; color: #15803d; }
+  .gt-stat strong { font-weight: 700; }
+  .gt-total { font-size: 15px; font-weight: 700; color: #15803d; tabular-nums; }
+
+  /* PO estimate comparison */
+  .po-estimate-bar { display: flex; align-items: center; justify-content: space-between; padding: 6px 14px; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 6px; margin-top: 5px; font-size: 11px; color: #6b7280; }
+  .delta-positive { color: #b45309; font-weight: 600; }
+  .delta-zero { color: #16a34a; font-weight: 600; }
+  .delta-negative { color: #6366f1; font-weight: 600; }
+
+  /* Buttons */
+  .btn { height: 32px; padding: 0 14px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 5px; transition: all .12s; font-family: inherit; }
+  .btn svg { width: 13px; height: 13px; }
+  .btn-primary { background: #111; color: #fff; }
+  .btn-primary:hover { background: #222; }
+  .btn-primary:disabled { background: #d1d5db; color: #9ca3af; cursor: not-allowed; }
+  .btn-outline { background: #fff; color: #374151; border: 1px solid #d1d5db; }
+  .btn-outline:hover { background: #f9fafb; }
+  .btn-row { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+
+  /* Variance tooltip */
+  .flagged-row td { background: #fff8f8 !important; }
+  .variance-note { font-size: 9.5px; color: #b91c1c; margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2zm-9 8H7v-2h4v2zm6 0h-4v-2h4v2zM4 7V5a2 2 0 012-2h12a2 2 0 012 2v2H4z"/></svg></div>
+      Central Inventory
+    </div>
+    <div class="nav-section">Inward</div>
+    <div class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Vendor Management</div>
+    <div class="nav-item active"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg> Purchase Orders</div>
+    <div class="nav-section">Operations</div>
+    <div class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6l9-4 9 4v12l-9 4-9-4V6z"/></svg> Stock Inventory</div>
+    <div class="nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 7h12M8 12h12M8 17h12M4 7h.01M4 12h.01M4 17h.01"/></svg> Pending Queues</div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="page">
+
+      <!-- Page header -->
+      <div class="page-header">
+        <button class="back-btn">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        </button>
+        <div>
+          <div class="po-ref">PO-828-20261018-7995</div>
+          <div class="po-vendor">masala dairy · Created 2026-10-18</div>
+        </div>
+        <div class="status-badge">SENT</div>
+      </div>
+
+      <!-- Timeline -->
+      <div class="timeline">
+        <div class="tl-step done">draft</div>
+        <div class="tl-connector done"></div>
+        <div class="tl-step done">sent</div>
+        <div class="tl-connector"></div>
+        <div class="tl-step">received</div>
+        <div class="tl-connector"></div>
+        <div class="tl-step">closed</div>
+      </div>
+
+      <!-- PO info bar (real data: RID 828, vendor masala dairy id=282) -->
+      <div class="po-info-bar">
+        <div class="po-info-item"><div class="label">Vendor</div><div class="value">masala dairy</div></div>
+        <div class="po-info-item"><div class="label">PO Date</div><div class="value">2026-10-18</div></div>
+        <div class="po-info-item"><div class="label">Lines</div><div class="value">5 items</div></div>
+        <div class="po-info-item"><div class="label">PO Estimate</div><div class="value">₹ 3,820.00</div></div>
+      </div>
+
+      <!-- Receive Goods form -->
+      <div class="card">
+        <div class="card-header">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M20 7H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2zm-9 8H7v-2h4v2zm6 0h-4v-2h4v2zM4 7V5a2 2 0 012-2h12a2 2 0 012 2v2H4z"/></svg>
+          <span class="card-header-title">Receive Goods</span>
+          <span style="font-size:10.5px;color:#6b7280;margin-left:4px">Tab / Enter to navigate rows</span>
+        </div>
+        <div class="card-body">
+
+          <!-- Header: Invoice Date | Invoice # | Payment Type -->
+          <div class="header-grid">
+            <div>
+              <div class="field-label">Invoice Date</div>
+              <input type="date" id="rcvDate" value="2026-10-18" data-testid="receive-date" />
+            </div>
+            <div>
+              <div class="field-label">Vendor Invoice #</div>
+              <input type="text" id="invoiceNum" placeholder="INV-001" data-testid="receive-invoice-number" oninput="onInvoiceInput()" />
+              <div id="invoiceStatus"></div>
+            </div>
+            <div>
+              <div class="field-label">Payment Type</div>
+              <select id="paymentType" data-testid="receive-payment">
+                <option value="Cash" selected>Cash</option>
+                <option value="Card">Card</option>
+                <option value="UPI">UPI</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+                <option value="Others">Others</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Spreadsheet table -->
+          <div class="table-wrap">
+            <table class="receive-table">
+              <colgroup>
+                <col class="col-skip" />
+                <col class="col-item" />
+                <col class="col-poqty" />
+                <col class="col-unit" />
+                <col class="col-rcvqty" />
+                <col class="col-var" />
+                <col class="col-rate" />
+                <col class="col-batch" />
+                <col class="col-expiry" />
+                <col class="col-total" />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th title="Skip">☐</th>
+                  <th>Item</th>
+                  <th>PO Qty</th>
+                  <th>Unit</th>
+                  <th>Rcv Qty *</th>
+                  <th>Variance</th>
+                  <th>Rate *</th>
+                  <th>Batch</th>
+                  <th>Expiry</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody id="receiveBody"></tbody>
+            </table>
+          </div>
+
+          <!-- Grand total bar -->
+          <div class="grand-total-bar" id="grandTotalBar">
+            <div class="gt-left">
+              <div class="gt-stat"><strong id="activeCount">0</strong> of 5 lines active</div>
+              <div class="gt-stat"><strong id="skippedCount">0</strong> skipped</div>
+              <div class="gt-stat" id="flagCount" style="display:none"><strong id="flagNum">0</strong> variance flags</div>
+            </div>
+            <div>
+              <div style="font-size:9.5px;color:#6b7280;text-align:right;margin-bottom:1px">Invoice Total</div>
+              <div class="gt-total" id="grandTotalValue">₹ 0.00</div>
+            </div>
+          </div>
+          <!-- PO estimate comparison -->
+          <div class="po-estimate-bar" id="estimateBar">
+            <span>PO Estimate: <strong>₹ 3,820.00</strong></span>
+            <span>Invoice Total: <strong id="invoiceTotalDisplay">₹ 0.00</strong></span>
+            <span>Delta: <span id="deltaDisplay" class="delta-zero">₹ 0.00</span></span>
+          </div>
+
+          <!-- Action bar -->
+          <div class="btn-row">
+            <button class="btn btn-outline" onclick="resetAll()">Reset</button>
+            <button class="btn btn-primary" id="submitBtn" onclick="simulateReceive()" disabled>
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Confirm Receive
+            </button>
+            <span id="validationNote" style="font-size:10.5px;color:#6b7280;display:none">Enter qty for at least one line</span>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Real data: RID 828 inventory items (probed 2026-10-18, owner@mygenietest002.com) ──
+// PO lines: 5 items from Vegetables & Herbs + desi dairy categories
+const PO_LINES = [
+  { line_id: 1, stock_title: "Tomato",       ordered_qty: 50,  ordered_unit: "kg",    expected_rate: 28.00, stock_qty: 0 },
+  { line_id: 2, stock_title: "Onion",        ordered_qty: 40,  ordered_unit: "kg",    expected_rate: 22.00, stock_qty: 0 },
+  { line_id: 3, stock_title: "makkhan",      ordered_qty: 5,   ordered_unit: "kg",    expected_rate: 380.00,stock_qty: 2 },
+  { line_id: 4, stock_title: "Capsicum Red", ordered_qty: 10,  ordered_unit: "kg",    expected_rate: 95.00, stock_qty: 0 },
+  { line_id: 5, stock_title: "Ginger",       ordered_qty: 8,   ordered_unit: "kg",    expected_rate: 60.00, stock_qty: 0 },
+];
+const PO_ESTIMATE = PO_LINES.reduce((s,l) => s + l.ordered_qty * l.expected_rate, 0);
+
+// ── State ──
+let lines = PO_LINES.map(l => ({
+  ...l,
+  received_qty: '',
+  actual_rate: '',
+  batch: '',
+  expiry_date: '',
+  skip: false,
+}));
+
+function autoBatch(title) {
+  const abbrev = title.slice(0,3).toUpperCase().replace(/\s/g,'');
+  const now = new Date();
+  const dd  = String(now.getDate()).padStart(2,'0');
+  const mon = now.toLocaleString('en',{month:'short'}).toUpperCase();
+  const yy  = String(now.getFullYear()).slice(2);
+  const hh  = String(now.getHours()).padStart(2,'0');
+  const mm  = String(now.getMinutes()).padStart(2,'0');
+  return `${abbrev}-${dd}${mon}${yy}-${hh}${mm}`;
+}
+
+function computeLineTotal(rcvQty, actualRate, expectedRate) {
+  const q = Number(rcvQty);
+  const r = Number(actualRate) || Number(expectedRate) || 0;
+  return q > 0 && r > 0 ? q * r : 0;
+}
+
+function variance(actualRate, expectedRate) {
+  if (!actualRate || !expectedRate) return null;
+  return ((Number(actualRate) - Number(expectedRate)) / Number(expectedRate)) * 100;
+}
+
+function renderTable() {
+  const tbody = document.getElementById('receiveBody');
+  tbody.innerHTML = '';
+
+  lines.forEach((ln, idx) => {
+    const tr = document.createElement('tr');
+    if (ln.skip) tr.className = 'skipped-row';
+
+    const v = variance(ln.actual_rate, ln.expected_rate);
+    const vAbs = v !== null ? Math.abs(v) : null;
+    const flagged = vAbs !== null && vAbs > 10;
+    if (flagged && !ln.skip) tr.className = 'flagged-row';
+
+    // Variance badge
+    let varBadge = '<span class="var-badge empty">—</span>';
+    if (v !== null) {
+      const sign = v > 0 ? '+' : '';
+      const cls = vAbs > 10 ? 'danger' : vAbs > 5 ? 'warn' : 'ok';
+      const icon = vAbs > 10 ? '⚠' : '✓';
+      varBadge = `<span class="var-badge ${cls}">${sign}${v.toFixed(1)}% ${icon}</span>`;
+    }
+
+    // Stock impact
+    const currentQ = ln.stock_qty;
+    const afterQ = ln.received_qty ? currentQ + Number(ln.received_qty) : null;
+    const stockLine = afterQ !== null
+      ? `<div class="item-stock restoring">${currentQ} → ${afterQ.toFixed(1)} kg after</div>`
+      : `<div class="item-stock">${currentQ === 0 ? '<span style="color:#ef4444">OUT</span>' : currentQ + ' kg'}</div>`;
+
+    // Line total
+    const total = computeLineTotal(ln.received_qty, ln.actual_rate, ln.expected_rate);
+    const totalDisplay = total > 0 ? `<span class="total-cell has-value">₹${total.toLocaleString('en-IN',{minimumFractionDigits:2})}</span>` : '<span class="total-cell">—</span>';
+
+    tr.innerHTML = `
+      <td style="text-align:center;vertical-align:top;padding-top:5px">
+        <input type="checkbox" class="skip-check" ${ln.skip?'checked':''} onchange="onSkip(${idx},this.checked)" data-testid="receive-skip-${idx}" />
+      </td>
+      <td>
+        <div class="item-name" title="${ln.stock_title}">${ln.stock_title}</div>
+        <div class="item-sub">PO: ${ln.ordered_qty} ${ln.ordered_unit} @ ₹${ln.expected_rate.toFixed(2)}</div>
+        ${stockLine}
+      </td>
+      <td><div style="height:28px;display:flex;align-items:center;padding:0 4px;font-size:11.5px;font-weight:500">${ln.ordered_qty}</div></td>
+      <td><div class="unit-cell">${ln.ordered_unit}</div></td>
+      <td>
+        <input type="number" id="rcvqty${idx}" value="${ln.received_qty}" placeholder="${ln.ordered_qty}"
+          ${ln.skip?'disabled':''} min="0" step="any"
+          oninput="onRcvQty(${idx},this.value)"
+          onkeydown="onCellKey(event,'rcvqty',${idx})"
+          data-testid="receive-qty-${idx}" />
+      </td>
+      <td style="vertical-align:middle;padding-top:3px">${varBadge}</td>
+      <td>
+        <input type="number" id="rate${idx}" value="${ln.actual_rate}" placeholder="${ln.expected_rate}"
+          ${ln.skip?'disabled':''} min="0" step="0.01"
+          oninput="onRate(${idx},this.value)"
+          onkeydown="onCellKey(event,'rate',${idx})"
+          data-testid="receive-rate-${idx}" />
+      </td>
+      <td>
+        <input type="text" id="batch${idx}" value="${ln.batch}" placeholder="AUTO"
+          ${ln.skip?'disabled':''}
+          class="${ln.batch?'auto-filled':''}"
+          oninput="onBatch(${idx},this.value)"
+          onkeydown="onCellKey(event,'batch',${idx})"
+          data-testid="receive-batch-${idx}" />
+      </td>
+      <td>
+        <input type="date" id="expiry${idx}" value="${ln.expiry_date}"
+          ${ln.skip?'disabled':''} autocomplete="off"
+          oninput="onExpiry(${idx},this.value)"
+          onkeydown="onCellKey(event,'expiry',${idx})"
+          data-testid="receive-expiry-${idx}" />
+      </td>
+      <td style="vertical-align:middle;padding-top:3px">${totalDisplay}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+  updateTotals();
+}
+
+function onSkip(idx, checked) {
+  lines[idx].skip = checked;
+  renderTable();
+}
+
+function onRcvQty(idx, val) {
+  lines[idx].received_qty = val;
+  // Auto-batch when qty entered and batch empty
+  if (Number(val) > 0 && !lines[idx].batch) {
+    lines[idx].batch = autoBatch(lines[idx].stock_title);
+    const bEl = document.getElementById(`batch${idx}`);
+    if (bEl) { bEl.value = lines[idx].batch; bEl.className = 'auto-filled'; }
+  }
+  // Update total cell in-place
+  updateLineTotal(idx);
+  updateTotals();
+}
+
+function onRate(idx, val) {
+  lines[idx].actual_rate = val;
+  updateLineTotal(idx);
+  updateTotals();
+  // Re-render variance badge for this row only
+  const v = variance(val, lines[idx].expected_rate);
+  const vAbs = v !== null ? Math.abs(v) : null;
+  const tr = document.getElementById('receiveBody').rows[idx];
+  if (!tr) return;
+  const varCell = tr.cells[5];
+  if (v !== null) {
+    const sign = v > 0 ? '+' : '';
+    const cls = vAbs > 10 ? 'danger' : vAbs > 5 ? 'warn' : 'ok';
+    const icon = vAbs > 10 ? '⚠' : '✓';
+    varCell.innerHTML = `<span class="var-badge ${cls}">${sign}${v.toFixed(1)}% ${icon}</span>`;
+    if (vAbs > 10) { tr.className = 'flagged-row'; }
+    else { tr.className = ''; }
+  } else {
+    varCell.innerHTML = '<span class="var-badge empty">—</span>';
+    tr.className = '';
+  }
+}
+
+function onBatch(idx, val) { lines[idx].batch = val; }
+function onExpiry(idx, val) { lines[idx].expiry_date = val; }
+
+function updateLineTotal(idx) {
+  const ln = lines[idx];
+  const total = computeLineTotal(ln.received_qty, ln.actual_rate, ln.expected_rate);
+  const tr = document.getElementById('receiveBody').rows[idx];
+  if (!tr) return;
+  const totalCell = tr.cells[9];
+  totalCell.innerHTML = total > 0
+    ? `<span class="total-cell has-value">₹${total.toLocaleString('en-IN',{minimumFractionDigits:2})}</span>`
+    : '<span class="total-cell">—</span>';
+}
+
+function updateTotals() {
+  const active = lines.filter(l => !l.skip && Number(l.received_qty) > 0);
+  const skipped = lines.filter(l => l.skip);
+  const flags = active.filter(l => {
+    const v = variance(l.actual_rate, l.expected_rate);
+    return v !== null && Math.abs(v) > 10;
+  });
+  const invoiceTotal = active.reduce((s,l) => s + computeLineTotal(l.received_qty, l.actual_rate, l.expected_rate), 0);
+  const delta = invoiceTotal - PO_ESTIMATE;
+
+  document.getElementById('activeCount').textContent = active.length;
+  document.getElementById('skippedCount').textContent = skipped.length;
+  document.getElementById('grandTotalValue').textContent = '₹ ' + invoiceTotal.toLocaleString('en-IN',{minimumFractionDigits:2});
+  document.getElementById('invoiceTotalDisplay').textContent = '₹ ' + invoiceTotal.toLocaleString('en-IN',{minimumFractionDigits:2});
+
+  const deltaEl = document.getElementById('deltaDisplay');
+  const sign = delta > 0 ? '+' : '';
+  deltaEl.textContent = sign + '₹ ' + Math.abs(delta).toLocaleString('en-IN',{minimumFractionDigits:2});
+  deltaEl.className = delta > 50 ? 'delta-positive' : delta < -50 ? 'delta-negative' : 'delta-zero';
+
+  if (flags.length > 0) {
+    document.getElementById('flagCount').style.display = '';
+    document.getElementById('flagNum').textContent = flags.length;
+  } else {
+    document.getElementById('flagCount').style.display = 'none';
+  }
+
+  const submitBtn = document.getElementById('submitBtn');
+  submitBtn.disabled = active.length === 0;
+  document.getElementById('validationNote').style.display = active.length === 0 ? '' : 'none';
+}
+
+function onCellKey(e, field, idx) {
+  const order = ['rcvqty','rate','batch','expiry'];
+  if (e.key === 'Tab' || e.key === 'Enter') {
+    const ci = order.indexOf(field);
+    if (ci < order.length - 1) {
+      e.preventDefault();
+      document.getElementById(`${order[ci+1]}${idx}`)?.focus();
+    } else if (!e.shiftKey) {
+      e.preventDefault();
+      // Move to NEXT row (PO lines fixed — no addRow)
+      const nextIdx = idx + 1 < lines.length ? idx + 1 : 0;
+      document.getElementById(`rcvqty${nextIdx}`)?.focus();
+    }
+  }
+}
+
+// Invoice number duplicate check (simulated)
+let invoiceTimer = null;
+function onInvoiceInput() {
+  const val = document.getElementById('invoiceNum').value.trim();
+  const el = document.getElementById('invoiceStatus');
+  if (!val) { el.innerHTML = ''; return; }
+  el.innerHTML = '<div style="font-size:10px;color:#9ca3af;margin-top:2px">Checking…</div>';
+  clearTimeout(invoiceTimer);
+  invoiceTimer = setTimeout(() => {
+    if (val === 'INV-DUPLICATE') {
+      el.innerHTML = '<div class="invoice-warn">⚠ Invoice already recorded against PO-828-20261015-7890. You can still submit if intentional.</div>';
+    } else {
+      el.innerHTML = '<div class="invoice-ok">✓ Invoice number available</div>';
+    }
+  }, 500);
+}
+
+function simulateReceive() {
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<svg style="animation:spin .8s linear infinite;width:13px;height:13px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Submitting…';
+  setTimeout(() => {
+    alert('Goods received successfully!\nPO-828-20261018-7995 updated to: received');
+    resetAll();
+  }, 1200);
+}
+
+function resetAll() {
+  lines = PO_LINES.map(l => ({ ...l, received_qty:'', actual_rate:'', batch:'', expiry_date:'', skip:false }));
+  document.getElementById('invoiceNum').value = '';
+  document.getElementById('invoiceStatus').innerHTML = '';
+  renderTable();
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = false;
+  btn.innerHTML = '<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Confirm Receive';
+}
+
+// Spin animation
+const s = document.createElement('style');
+s.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+document.head.appendChild(s);
+
+// Init
+renderTable();
+
+// Demo: pre-fill rows 0+1 to show the table populated
+setTimeout(() => {
+  onRcvQty(0, '48');
+  document.getElementById('rate0').value = '29';
+  onRate(0, '29');
+
+  onRcvQty(1, '40');
+  document.getElementById('rate1').value = '22';
+  onRate(1, '22');
+}, 300);
+</script>
+</body>
+</html>
