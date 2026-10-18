@@ -143,6 +143,7 @@
   .combobox-group-label { padding: 6px 10px 2px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #9ca3af; }
   .combobox-item { padding: 6px 10px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-size: 12px; }
   .combobox-item:hover { background: #f5f3ff; color: #6366f1; }
+  .combobox-item:focus { background: #eef2ff; color: #4338ca; outline: none; }
   .combobox-item.selected { background: #eef2ff; color: #4338ca; font-weight: 500; }
   .combobox-item-unit { font-size: 10.5px; color: #9ca3af; }
   .combobox-empty { padding: 16px 10px; text-align: center; color: #9ca3af; font-size: 11.5px; }
@@ -298,7 +299,7 @@
                       <th class="col-rate">Unit Price</th>
                       <th class="col-amount">Amount</th>
                       <th class="col-batch required">Batch Label</th>
-                      <th class="col-expiry required">Expiry</th>
+                      <th class="col-expiry">Expiry</th>
                       <th class="col-del"></th>
                     </tr>
                   </thead>
@@ -498,9 +499,8 @@ function renderRows() {
   rows.forEach((row, idx) => {
     const tr = document.createElement('tr');
     tr.id = `row-${idx}`;
-    const isComplete = row.itemId && Number(row.qty) > 0 && row.batch.trim() && row.expiry;
+    const isComplete = row.itemId && Number(row.qty) > 0 && row.batch.trim();
     const missingBatch = row.itemId && Number(row.qty) > 0 && !row.batch.trim();
-    const missingExpiry = row.itemId && Number(row.qty) > 0 && !row.expiry;
     const amount = computeTotal(row.qty, row.rate);
 
     tr.innerHTML = `
@@ -522,7 +522,7 @@ function renderRows() {
       </td>
       <td class="col-qty">
         <input type="number" min="0" step="any" id="qty${idx}" value="${row.qty}"
-          placeholder="0" class="${missingBatch||missingExpiry?'error':''}"
+          placeholder="0" class="${missingBatch?'error':''}"
           oninput="onQtyChange(${idx}, this.value)"
           onkeydown="onCellKeydown(event,'qty',${idx})" />
       </td>
@@ -547,7 +547,7 @@ function renderRows() {
       </td>
       <td class="col-expiry">
         <input type="date" id="expiry${idx}" value="${row.expiry}"
-          class="${missingExpiry?' error':''}"
+          autocomplete="off"
           oninput="onExpiryChange(${idx},this.value)"
           onkeydown="onCellKeydown(event,'expiry',${idx})" />
       </td>
@@ -582,7 +582,9 @@ function filterCombo(idx) {
     <div class="combobox-group-label">${cat}</div>
     ${items.map(i => `
       <div class="combobox-item ${rows[idx]?.itemId===String(i.id)?'selected':''}"
-        onclick="selectItem(${idx},${i.id},'${i.title.replace(/'/g,"\\'")}','${i.unit}')">
+        tabindex="0"
+        onclick="selectItem(${idx},${i.id},'${i.title.replace(/'/g,"\\'")}','${i.unit}')"
+        onkeydown="onListItemKey(event,${idx},${i.id},'${i.title.replace(/'/g,"\\'")}','${i.unit}')">
         <span>${highlightMatch(i.title, search)}</span>
         <span class="combobox-item-unit">${i.unit}</span>
       </div>
@@ -641,10 +643,39 @@ function onComboKeydown(e, idx) {
   if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openCombobox(idx); }
 }
 function onComboSearchKey(e, idx) {
-  if (e.key === 'Escape') { document.getElementById(`comboDrop${idx}`)?.classList.remove('open'); document.getElementById(`comboInput${idx}`)?.focus(); }
+  if (e.key === 'Escape') {
+    document.getElementById(`comboDrop${idx}`)?.classList.remove('open');
+    document.getElementById(`comboInput${idx}`)?.focus();
+  }
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    const first = document.querySelector(`#comboList${idx} .combobox-item`);
+    if (first) first.focus();
+  }
   if (e.key === 'Enter') {
     const first = document.querySelector(`#comboList${idx} .combobox-item`);
     if (first) first.click();
+  }
+}
+
+function onListItemKey(e, idx, itemId, title, unit) {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    selectItem(idx, itemId, title, unit);
+  } else if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    let el = e.currentTarget.nextElementSibling;
+    while (el && !el.classList.contains('combobox-item')) el = el.nextElementSibling;
+    if (el) el.focus();
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    let el = e.currentTarget.previousElementSibling;
+    while (el && !el.classList.contains('combobox-item')) el = el.previousElementSibling;
+    if (el) el.focus();
+    else document.getElementById(`comboSearch${idx}`)?.focus();
+  } else if (e.key === 'Escape') {
+    document.getElementById(`comboDrop${idx}`)?.classList.remove('open');
+    document.getElementById(`comboInput${idx}`)?.focus();
   }
 }
 
@@ -721,10 +752,10 @@ function onCellKeydown(e, field, idx) {
       document.getElementById(`${next}${idx}`)?.focus();
     } else if (e.key === 'Enter' || (e.key === 'Tab' && !e.shiftKey)) {
       e.preventDefault();
-      // Move to next row or add row
+      // Move to next row or add row — expiry not required to advance
       if (idx < rows.length-1) {
         document.getElementById(`qty${idx+1}`)?.focus();
-      } else if (rows[idx].itemId && Number(rows[idx].qty)>0 && rows[idx].batch && rows[idx].expiry) {
+      } else if (rows[idx].itemId && Number(rows[idx].qty)>0 && rows[idx].batch) {
         addRow();
         setTimeout(()=>openCombobox(idx+1),50);
       }
@@ -752,8 +783,8 @@ function updateGrandTotal() {
 }
 
 function updateReviewBtn() {
-  const valid = rows.filter(r => r.itemId && Number(r.qty)>0 && r.batch.trim() && r.expiry);
-  const hasIncomplete = rows.some(r => r.itemId && Number(r.qty)>0 && (!r.batch.trim() || !r.expiry));
+  const valid = rows.filter(r => r.itemId && Number(r.qty)>0 && r.batch.trim());
+  const hasIncomplete = rows.some(r => r.itemId && Number(r.qty)>0 && !r.batch.trim());
   const hasVendor = !!document.getElementById('vendorSelect')?.value;
   document.getElementById('reviewBtn').disabled = valid.length===0 || !hasVendor;
   document.getElementById('validCount').textContent = valid.length;
@@ -841,20 +872,28 @@ function switchTab(tab) {
 }
 
 function showConfirm() {
-  const validRows = rows.filter(r => r.itemId && Number(r.qty)>0 && r.batch.trim() && r.expiry);
+  const validRows = rows.filter(r => r.itemId && Number(r.qty)>0 && r.batch.trim());
   if (!validRows.length) return;
+
+  // Sync payment rows from DOM before reading — prevents stale state
+  onPaymentChange();
+
+  // Build payment breakdown string
+  const activePayRows = paymentRows.filter(p => p.mode && Number(p.amount) > 0);
+  const payBreakdown = activePayRows.length
+    ? activePayRows.map(p => `${p.mode}: ₹${Number(p.amount).toFixed(2)}`).join(' + ')
+    : (paymentRows[0]?.mode || '—');
 
   // Meta
   const vendor = document.getElementById('vendorSelect').value === '282' ? 'masala dairy' : '—';
   const date = document.getElementById('purchaseDateInput').value || '—';
-  const payMode = paymentRows.length === 1 ? (paymentRows[0].mode||'—') : 'Split Payment';
   const total = fullPayableTotal();
   const fare = Number(document.getElementById('fareInput')?.value)||0;
 
   document.getElementById('confirmMeta').innerHTML = `
     <div class="meta-item"><div class="meta-label">Vendor</div><div class="meta-value">${vendor}</div></div>
     <div class="meta-item"><div class="meta-label">Purchase Date</div><div class="meta-value">${date}</div></div>
-    <div class="meta-item"><div class="meta-label">Payment</div><div class="meta-value">${payMode}</div></div>
+    <div class="meta-item"><div class="meta-label">Payment</div><div class="meta-value" style="font-size:11.5px">${payBreakdown}</div></div>
   `;
 
   // Rows
@@ -867,28 +906,36 @@ function showConfirm() {
       <td class="mono">${r.rate ? '₹'+Number(r.rate).toFixed(2) : '—'}</td>
       <td class="mono">${r.amount ? '₹'+Number(r.amount).toLocaleString('en-IN',{minimumFractionDigits:2}) : '—'}</td>
       <td><span class="badge badge-purple">${r.batch}</span></td>
-      <td>${r.expiry}</td>
+      <td>${r.expiry || '—'}</td>
     </tr>
   `).join('') + (fare > 0 ? `<tr class="confirm-total-row"><td colspan="4">Fare / Shipping</td><td class="mono">₹${fare.toFixed(2)}</td><td colspan="2"></td></tr>` : '');
 
   document.getElementById('confirmTotal').textContent = '₹ ' + total.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
 
-  // Payment info
+  // Payment breakdown below table — show each leg on its own line
   let payInfo = '';
-  if (paymentRows.length > 1) {
-    payInfo = '<strong>Split payment:</strong> ' + paymentRows.filter(p=>p.mode).map(p => `${p.mode}: ₹${Number(p.amount||0).toFixed(2)}`).join(' + ');
+  if (activePayRows.length > 1) {
+    payInfo = activePayRows.map(p =>
+      `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f3f4f6;font-size:12px">
+        <span style="color:#374151">${p.mode}${p.ref ? ' <span style="color:#9ca3af;font-size:10.5px">· '+p.ref+'</span>' : ''}</span>
+        <span style="font-weight:600;font-variant-numeric:tabular-nums">₹${Number(p.amount).toFixed(2)}</span>
+      </div>`
+    ).join('') +
+    `<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px;font-weight:700;color:#15803d">
+      <span>Total Paid</span><span>₹${activePayRows.reduce((s,p)=>s+Number(p.amount),0).toFixed(2)}</span>
+    </div>`;
   } else if (paymentRows[0]?.mode) {
-    payInfo = `Payment: ${paymentRows[0].mode}`;
+    payInfo = `<span style="font-size:12px;color:#374151">Payment: <strong>${paymentRows[0].mode}</strong></span>`;
   }
   document.getElementById('confirmPaymentInfo').innerHTML = payInfo;
 
   document.getElementById('formView').style.display = 'none';
-  document.getElementById('confirmView').style.display = '';
+  document.getElementById('confirmView').style.display = 'block';
   document.getElementById('successView').style.display = 'none';
 }
 
 function showForm() {
-  document.getElementById('formView').style.display = '';
+  document.getElementById('formView').style.display = 'block';
   document.getElementById('confirmView').style.display = 'none';
   document.getElementById('successView').style.display = 'none';
 }
@@ -900,7 +947,7 @@ function simulateSubmit() {
 
   // Simulate real API response (mirrors actual PUR-828-20261018-8005)
   setTimeout(() => {
-    const validRows = rows.filter(r => r.itemId && Number(r.qty)>0 && r.batch.trim() && r.expiry);
+    const validRows = rows.filter(r => r.itemId && Number(r.qty)>0 && r.batch.trim());
     const fakeId = 8000 + Math.floor(Math.random()*100);
     const today = new Date().toISOString().slice(0,10).replace(/-/g,'');
     const txnId = `PUR-828-${today}-${fakeId}`;
@@ -911,7 +958,7 @@ function simulateSubmit() {
 
     document.getElementById('formView').style.display = 'none';
     document.getElementById('confirmView').style.display = 'none';
-    document.getElementById('successView').style.display = '';
+    document.getElementById('successView').style.display = 'block';
   }, 1200);
 }
 
@@ -924,7 +971,7 @@ function resetForm() {
   document.getElementById('vendorContext').style.display = 'none';
   renderRows();
   renderPaymentRows();
-  document.getElementById('formView').style.display = '';
+  document.getElementById('formView').style.display = 'block';
   document.getElementById('confirmView').style.display = 'none';
   document.getElementById('successView').style.display = 'none';
   document.getElementById('submitBtn').disabled = false;
@@ -945,12 +992,12 @@ setTimeout(()=>{
   selectItem(0, 20856, 'makkhan', 'kg');
   setTimeout(()=>{
     rows[0].qty='2'; rows[0].rate='80'; rows[0].amount='160';
-    rows[0].batch=autoBatch('makkhan'); rows[0].expiry='2027-01-01';
+    rows[0].batch=autoBatch('makkhan');
     // Row 1: Tomato
     selectItem(1, 20878, 'Tomato', 'kg');
     setTimeout(()=>{
       rows[1].qty='10'; rows[1].rate='25'; rows[1].amount='250';
-      rows[1].batch=autoBatch('Tomato'); rows[1].expiry='2026-11-15';
+      rows[1].batch=autoBatch('Tomato');
       // Row 2: empty (for user to fill)
       if (rows.length<3) rows.push(newRow());
       renderRows();

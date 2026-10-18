@@ -1,0 +1,23 @@
+{
+  "summary": "Tested all 5 bug-fix scenarios on CR-047_MOCK_DESIGN_REAL_DATA.html. All fixes verified as working.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_results": {
+    "split_payment_meta": "PASS - PAYMENT meta shows 'Cash: ₹100.00 + UPI: ₹20.00' (not 'Split Payment')",
+    "split_payment_breakdown": "PASS - Both legs rendered: Cash ₹100.00 and UPI ₹20.00 as separate rows below table",
+    "single_payment_confirm": "PASS - PAYMENT meta shows 'Cash: ₹120.00', breakdown shows 'Payment: Cash'",
+    "grand_total": "PASS - Grand Total = ₹120.00 (qty=10 * rate=12, excl. fare)",
+    "back_to_edit": "PASS - Returns to form with all data intact (qty=10, unit_price=12, cash=120)"
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "updated_files": [],
+  "success_rate": { "backend": "N/A", "frontend": "100%" },
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All CR-047 payment confirmation bugs are fixed. Input IDs: payAmt0/payAmt1 (not payAmount0). Page URL: https://central-inventory-11.preview.emergentagent.com/CR-047_MOCK_DESIGN_REAL_DATA.html"
+}
