@@ -53,10 +53,20 @@ PROPOSED → PLANNED → IN_PROGRESS → QA → OWNER_REVIEW → CLOSED
 | ID | Title | Status | Severity | Files |
 |----|-------|:------:|:--------:|-------|
 | **CR-050** | Direct Dispatch — Spreadsheet UX + Category Grouping + FEFO Auto-Select + Burst Fix | PROPOSED | P1 | `DirectDispatchForm.jsx`, `SourceSelector.jsx`, `api.js`, `RequestStockForm.jsx` |
+| **CR-051** | Purchase Report Screen | PROPOSED | P2 | `PurchaseReport.jsx` (new), `api.js`, `screenVisibility.js` (FROZEN — owner approval needed), `App.js` |
+| **CR-052** | Bulk Stock Import — Add Stock Screen (Excel Upload) | PROPOSED | P1 | `AddStockPurchaseForm.jsx`, `api.js` |
+| **CR-053** | Raw Materials Bulk Import/Export — Ingredients Page | PROPOSED | P2 | `IngredientCatalogue.jsx`, `api.js` |
 
-Gate 1 intake artifact: `control/sessions/CR-050_ARTIFACT_1_INTAKE.md`
-Mockups: `dispatch_v2_mockup.html` (category UX) · `dispatch_fefo_mockup.html` (FEFO + multi-batch, latest)
-Open question before PLANNING: OQ-1 — does POS API support adding batch info to un-batched (`segment_id: null`) segments?
+Gate 1 intake artifacts:
+- `control/sessions/CR-050_ARTIFACT_1_INTAKE.md` (updated 2026-10-18 — OQ-1 answered, G-036 closed, Option B revised)
+- `control/sessions/CR-051_ARTIFACT_1_INTAKE.md`
+- `control/sessions/CR-052_ARTIFACT_1_INTAKE.md`
+- `control/sessions/CR-053_ARTIFACT_1_INTAKE.md`
+
+Mockups: `dispatch_v2_mockup.html` · `dispatch_fefo_mockup.html`
+Investigation docs: `INVESTIGATION_20261018_REPRO_UPDATE.md` · `INVESTIGATION_20261018_CR053_IMPORT_FORMAT.md`
+G-037 (un-batched segment batch API): OPEN — CR-050 Option B scoped to info badge only.
+CR-051 blocker: `screenVisibility.js` FROZEN — owner must approve edit before PLANNING.
 
 ## S4 — Purchase UX Overhaul (Registered 2026-10-16)
 

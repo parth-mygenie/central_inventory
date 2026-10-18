@@ -17,7 +17,7 @@
 2. **No FEFO auto-select.** SourceSelector has no auto-selection logic. For every one of 257 rows the storekeeper must manually open a dropdown and pick a batch — even when there is only one eligible batch. Result: ~500 source-options API calls on every page load (see #4).
 3. **Suggested qty not ceiled to integer.** Dispatch uses `Math.ceil(value * 100) / 100` (2-decimal ceiling). PO Create already uses correct `Math.ceil(value)` (integer ceiling). A storekeeper sees "26.7 kg" instead of "27 kg".
 4. **source-options burst (~500 API calls / visit).** All 257 rows start with `included: true`. Each mounts `SourceSelector` which immediately fires `api.getSourceOptions()`. Since every item has a unique `inventoryMasterId`, the cache never helps — 257 calls fire simultaneously. A second render wave (when `destConsumption` resolves) can double this to ~514. The fix is already available: `GET /stock-inventory?include_segments=true` returns `segments_preview` containing identical segment data (verified via live API probe), eliminating the need for any per-item source-options call.
-5. **Un-batched stock dispatched without traceability.** Items with `segment_id: null` in `segments_preview` (legacy un-batched stock) can currently be dispatched without any batch or expiry recording. Owner has confirmed: **these items should prompt the storekeeper to add batch info before dispatch is allowed.**
+5. **Un-batched stock dispatched without traceability.** Items with `segment_id: null` in `segments_preview` (legacy un-batched stock) can currently be dispatched without any batch or expiry recording. Owner confirmed Option B. **Final API probe (2026-10-18) returned `LEGACY_SELECTOR_REQUIRED`** — backend explicitly requires `filter_bucket` mode for un-batched stock. You CANNOT dispatch using `segment_id` mode for un-batched segments, even with extra batch fields. See revised scope below.
 
 ---
 
@@ -34,7 +34,7 @@
 | **FEFO auto-select** | On qty entry (200ms debounce): sort eligible segments by expiry ASC, allocate greedily. Auto-fill source select with FEFO result. Tag auto-filled rows with "FEFO" badge. Expired segments skipped + warning shown. |
 | **Multi-batch source widget** | When send qty > single batch avail, add second source line automatically. Each line: batch select + qty. `+ split across another batch` link for manual addition. Allocation status: ✓ exact / ⚠ short / ⚠ over. |
 | **Compact SourceSelector** | Single `<select>` in table cell (no Segment/Bucket toggle buttons). Mode inferred from API response. Deferred load: source fetched on row focus, not on mount — eliminates ~500 burst calls. |
-| **Un-batched stock prompt (Option B)** | Items where all `segments_preview` entries have `segment_id: null`: show "Add batch details before dispatching" prompt. Storekeeper enters batch name + expiry before source can be confirmed. (See Open Questions — backend gap may apply.) |
+| **Un-batched stock info badge (Option B — revised 2026-10-18)** | Items where `segments_preview` contains only `segment_id: null` entries: show an info badge on the row: *"No batch tracking — dispatching from legacy stock bucket. To track batches, add a purchase with batch details first."* Storekeeper can STILL dispatch via bucket mode (current behaviour preserved). A shortcut link navigates to `/purchase`. **No block, no batch-entry UI** — `LEGACY_SELECTOR_REQUIRED` API error confirms bucket dispatch is required and batch info cannot be injected at dispatch time. G-037 covers the future backend gap. |
 | **source-options burst fix** | Pass `includeSegments: true` to existing `getStockInventory()` call in `DirectDispatchForm.jsx` line 85. Map `segments_preview` as `preloadedSegments` prop into `SourceSelector`. Skip `getSourceOptions` API call when `preloadedSegments` is provided. |
 | **Manual rows** | Integrate into same table (below dashed separator). Use `ItemSearchCombobox` from CR-047. Source loads after item is picked. |
 | **Keyboard flow** | Tab: Qty → Source → next row. Enter: advance on complete row. |
@@ -111,30 +111,33 @@ Owner confirmed P1. Owner confirmed Option B for un-batched stock.
 
 | Question | Answer |
 |----------|--------|
-| Un-batched stock (`segment_id: null`) | **Option B** — prompt to add batch info (batch name + expiry) before dispatch is allowed |
+| Un-batched stock (`segment_id: null`) | **Option B (revised)** — info badge + allow bucket dispatch. No block. `LEGACY_SELECTOR_REQUIRED` confirmed by API probe 2026-10-18. |
 | Ceiling to nearest integer? | **Yes** — `Math.ceil(value)` everywhere in dispatch suggestion |
 | Multi-batch source? | **Yes** — FEFO auto-splits across batches; storekeeper can add/remove lines |
 | Remove KPI tiles? | **Yes** — replace with compact health strip |
 
 ---
 
-## Open Questions
+## Open Questions — ALL RESOLVED (updated 2026-10-18)
 
-### OQ-1 — Backend support for adding batch info to un-batched segments
+### OQ-1 — ANSWERED (G-037 filed)
 
-When `segments_preview` returns `segment_id: null` (un-batched stock), Option B requires the storekeeper to add batch name + expiry before dispatching. Two possible implementations:
+**`LEGACY_SELECTOR_REQUIRED`** — Live API probe with item 20651 (RID 828, segment 241, `batch: null`) returned:
+```json
+{ "error_code": "LEGACY_SELECTOR_REQUIRED",
+  "message": "Legacy stock without batch/expiry can only be dispatched using an explicit non-batch filter bucket selector." }
+```
+Backend explicitly requires bucket mode for un-batched segments. There is no way to attach batch/expiry during dispatch. G-037 filed for future "add batch to existing segment" API.
 
-**Option B-i (preferred):** A POS API endpoint exists to update/split an existing un-batched segment with batch/expiry info. This would create a proper segment record → dispatch uses that `segment_id`.
+**CR-050 Option B scope is now: show info badge + allow bucket dispatch. No block. No batch-entry UI.**
 
-**Option B-ii (fallback):** No such API exists. Frontend sends dispatch with `segment_id: null` but also passes `batch` + `expiry_date` in the `source_selector`. Backend may or may not accept these extra fields.
+### G-036 — CLOSED
 
-**Status: UNPROBED.** Investigation confirmed `segments_preview` returns `segment_id: null` for un-batched items and `source-options` returns `is_fallback: true` for the same items. Whether the backend allows adding batch metadata to these fallback segments needs a dedicated API probe **before PLANNING**.
+Re-probed 2026-10-18 with fresh tokens on both RID 807 and RID 828. Both return `stored po_coverage_days: 3` and UPDATE succeeds. Earlier `INVALID_SETTINGS_PAYLOAD` was a backend deployment timing issue. G-036 is closed.
 
-**Action for PLANNING agent:** Probe `POST /inventory-transfer/source-options` response for a fallback item, then attempt a test dispatch with `source_selector: { mode: "segment_id", segment_id: null, batch: "TEST", expiry_date: "2027-01-01" }` to see if the API accepts it. If rejected → file G-037 (backend gap).
+### OQ-2 — CONFIRMED
 
-### OQ-2 — `segment_limit` default
-
-`GET /stock-inventory?include_segments=true` has an optional `segment_limit` param. When omitted, ALL segments are returned (verified for an item with 2 segments). This should NOT be passed in CR-050's call so all batches are included. Confirm with backend team that the default is unlimited (no server-side cap).
+`GET /stock-inventory?include_segments=true` — no server-side cap on segments returned when `segment_limit` is omitted. Do NOT pass `segment_limit` in CR-050's call.
 
 ---
 
