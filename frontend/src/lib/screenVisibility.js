@@ -46,6 +46,7 @@ export const SCREEN_VISIBILITY = {
   "scr-vendor-management":   { master: FULL,  central: FULL,    franchise: HIDDEN },
   "scr-store-management":    { master: FULL,  central: FULL,    franchise: HIDDEN },
   "scr-wastage-report":      { master: FULL,  central: FULL,    franchise: FULL  },
+  "scr-purchase-report":     { master: FULL,  central: FULL,    franchise: FULL  },   // CR-051
 };
 
 // ── Action permission matrix ─────────────────────────────────────
@@ -113,6 +114,7 @@ export const NAV_SECTIONS = [
     items: [
       { id: "consumption-report", screen: "scr-consumption-report", label: "Consumption Report", path: "/reports/consumption", icon: "BarChart3" },
       { id: "wastage-report", screen: "scr-wastage-report", label: "Wastage Report", path: "/wastage/report", icon: "TrendingDown" },
+      { id: "purchase-report", screen: "scr-purchase-report", label: "Purchase Report", path: "/reports/purchase", icon: "ShoppingCart" },  // CR-051
     ],
   },
   {

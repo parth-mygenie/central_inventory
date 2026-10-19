@@ -1098,6 +1098,24 @@ function _getVendorItemList(restaurantId, { fromDate, toDate } = {}) {
 }
 const getVendorItemList = _cached("getVendorItemList", TTL.LONG, _getVendorItemList);
 
+// ── CR-051 — Purchase Report API ─────────────────────────────────
+
+function _getVendorItemListFull(restaurantId, { fromDate, toDate, vendorId, paymentType } = {}) {
+  const params = new URLSearchParams();
+  params.set("restaurant_ids[]", restaurantId);
+  if (fromDate) params.set("from_date", fromDate);
+  if (toDate)   params.set("to_date", toDate);
+  if (vendorId) params.set("vendor_id", String(vendorId));
+  if (paymentType && paymentType !== "all") params.set("payment_type", paymentType);
+  // Returns full response: { data[], total_amount, summary, by_restaurant }
+  return client.get(`/proxy/v2/inventory/vendor-item-list?${params.toString()}`);
+}
+const getVendorItemListFull = _cached("getVendorItemListFull", TTL.SHORT, _getVendorItemListFull);
+
+function exportInventoryMaster() {
+  return client.get("/proxy/v2/inventory/export-inventory-master");
+}
+
 // ── CR-030: Purchase Order APIs (10 endpoints) ───────────────────
 
 function createPO(payload) {
@@ -1307,6 +1325,9 @@ const api = {
   REVERSE_PUSH_MODULES,
   // CR-030: Vendor Purchase Intelligence
   getVendorItemList,
+  // CR-051 — Purchase Report
+  getVendorItemListFull,
+  exportInventoryMaster,
   // CR-030: Purchase Order Module (10 endpoints)
   createPO,
   listPOs,

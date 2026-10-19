@@ -22,6 +22,7 @@ import StockDetailPanel from "@/components/central-inventory/StockDetailPanel";
 import IngredientCatalogue from "@/components/central-inventory/IngredientCatalogue";
 import ProductCatalogue from "@/components/central-inventory/ProductCatalogue";
 import DailyConsumptionReport from "@/components/central-inventory/DailyConsumptionReport";
+import PurchaseReport from "@/components/central-inventory/PurchaseReport";             // CR-051
 import ProductionRunForm from "@/components/central-inventory/ProductionRunForm";
 import ProductionHistory from "@/components/central-inventory/ProductionHistory";
 import SubRecipeMaster from "@/components/central-inventory/SubRecipeMaster";
@@ -97,6 +98,7 @@ function AppRoutes() {
         {/* Reports */}
         <Route path="/reports/consumption" element={<DailyConsumptionReport />} />
         <Route path="/wastage/report" element={<WastageReport />} />
+        <Route path="/reports/purchase" element={<PurchaseReport />} />                {/* CR-051 */}
 
         {/* Settings */}
         <Route path="/settings" element={<OperationalSettings />} />
