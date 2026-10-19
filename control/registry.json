@@ -6971,7 +6971,7 @@
       "files": [
         "frontend/src/components/central-inventory/AddStockPurchaseForm.jsx"
       ],
-      "notes": "handleKeyDown(expiry) line 682: getElementById(qty-{idx+1}) focuses wrong field. Item combobox has data-testid=item-select-{idx}, no id. Fix: querySelector([data-testid=item-select-{idx+1}]). Also: onTabFromLast branch (line 681) adds a row but never focuses new item-select — fix with setTimeout 50ms (same pattern as line 718). ~6 lines changed.",
+      "notes": "handleKeyDown(expiry) line 682: getElementById(qty-{idx+1}) focuses wrong field. Item combobox has data-testid=item-select-{idx}, no id. Fix: querySelector([data-testid=item-select-{idx+1}]). Also: onTabFromLast branch (line 681) adds a row but never focuses new item-select — fix with setTimeout 50ms (same pattern as line 718). ~6 lines changed. | SECONDARY ROOT CAUSE (2026-10-19): .focus() alone does not open the Popover. CommandInput is portal-mounted only when open=true. Fix also needs .click() after .focus() at both call sites (lines ~694, ~697). Investigation: INVESTIGATION_20261019_BUG057_POPOVER.md",
       "artifact_refs": [
         {
           "artifact": 0,

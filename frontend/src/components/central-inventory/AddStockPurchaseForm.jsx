@@ -40,6 +40,7 @@ export default function AddStockPurchaseForm() {
   const [vendorId, setVendorId] = useState("");
   const [purchaseDate, setPurchaseDate] = useState(new Date().toISOString().split("T")[0]);
   const [fare, setFare] = useState(0);
+  const [invoiceNumber, setInvoiceNumber] = useState("");   // BUG-055
 
   // Spreadsheet rows
   const [rows, setRows] = useState([emptyRow()]);
@@ -193,7 +194,7 @@ export default function AddStockPurchaseForm() {
   }, [fullPayableTotal, legs.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function resetForm() {
-    setRows([emptyRow()]); setVendorId(""); setFare(0);
+    setRows([emptyRow()]); setVendorId(""); setFare(0); setInvoiceNumber("");  // BUG-055
     setPurchaseDate(new Date().toISOString().split("T")[0]);
     setLegs([{ mode: "Cash", amount: "", ref: "" }]);
     setConfirmMode(false); setSuccessResult(null);
@@ -212,6 +213,7 @@ export default function AddStockPurchaseForm() {
         item_total:    parseFloat(grandTotal.toFixed(2)),
         tot_fair:      Number(fare) || 0,
         tot_tax:       0,
+        ...(invoiceNumber.trim() && { invoice_number: invoiceNumber.trim() }),  // BUG-055
         ...(isSplit && {
           partial_payments: legs
             .filter(l => l.mode && Number(l.amount) > 0)
@@ -513,6 +515,14 @@ export default function AddStockPurchaseForm() {
                     onChange={e => setPurchaseDate(e.target.value)} className="h-8 text-xs" />
                 </div>
 
+                {/* Invoice # — BUG-055 */}
+                <div style={{ flex: "0.9", minWidth: 0 }}>
+                  <p className="text-[10px] font-medium text-muted-foreground mb-1">Invoice #</p>
+                  <Input data-testid="invoice-number-input" placeholder="e.g. INV-001"
+                    value={invoiceNumber} onChange={e => setInvoiceNumber(e.target.value)}
+                    className="h-8 text-xs" />
+                </div>
+
                 {/* Fare */}
                 <div style={{ flex: "0.55", minWidth: 0 }}>
                   <p className="text-[10px] font-medium text-muted-foreground mb-1">Fare</p>
@@ -678,8 +688,14 @@ function SpreadsheetRow({ idx, row, inventoryItems, ownStock, itemIdCount, isLas
         document.getElementById(`${order[ci + 1]}-${idx}`)?.focus();
       } else if (!e.shiftKey) {
         e.preventDefault();
-        if (isLast && row.itemId && Number(row.qty) > 0 && row.batch) onTabFromLast();
-        else document.getElementById(`qty-${idx + 1}`)?.focus();
+        if (isLast && row.itemId && Number(row.qty) > 0 && row.batch) {
+          onTabFromLast();
+          // BUG-057: after addRow re-renders, focus new row's item search (not qty)
+          setTimeout(() => document.querySelector(`[data-testid="item-select-${idx + 1}"]`)?.focus(), 50);
+        } else {
+          // BUG-057: jump to next row's item search, not qty
+          document.querySelector(`[data-testid="item-select-${idx + 1}"]`)?.focus();
+        }
       }
     }
   }
