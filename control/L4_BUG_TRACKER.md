@@ -63,7 +63,8 @@ OPEN → IN_PROGRESS → RESOLVED → CLOSED
 
 ---
 
-## BUG-055 — Add Stock: Invoice # Field Missing
+| **BUG-056** | Purchase Report — Unit Price per-gram + split payment legs | IMPLEMENTED — QA PASS (live, iteration_73) | P1 | `PurchaseReport.jsx` |
+
 
 | Field | Value |
 |-------|-------|

@@ -3854,7 +3854,7 @@
     "id": "BUG-056",
     "type": "BUG",
     "title": "Purchase Report — Unit Price shows per-gram API value (B1) + Split payment legs not rendered (B2)",
-    "status": "OPEN",
+    "status": "IMPLEMENTED",
     "severity": "P1",
     "sprint_key": "S5",
     "related_to": "CR-051",
@@ -3891,14 +3891,14 @@
       {
         "artifact": 4,
         "label": "Code-Gate",
-        "status": "MISSING",
-        "path": ""
+        "status": "DONE",
+        "path": "control/sessions/INVESTIGATION_20261019_CR051_DISPLAY.md"
       },
       {
         "artifact": 5,
         "label": "QA-Report",
-        "status": "MISSING",
-        "path": ""
+        "status": "DONE",
+        "path": "test_reports/iteration_73.json"
       },
       {
         "artifact": 6,
@@ -3908,15 +3908,13 @@
       }
     ],
     "completeness": {
-      "done": 4,
+      "done": 6,
       "total": 7,
-      "pct": 57
+      "pct": 86
     },
     "doc_count": 0,
     "is_debt": true,
     "debt_reasons": [
-      "Code-Gate: MISSING",
-      "QA-Report: MISSING",
       "Owner-Signoff: MISSING"
     ],
     "sprint_name": "S5"

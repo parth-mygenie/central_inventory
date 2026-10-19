@@ -171,6 +171,11 @@
 
 | `frontend/src/components/central-inventory/RecipeCatalogue.jsx` | BUG-046 | 2026-07-16 | Lines 326-338: food Select dropdown in add mode |
 
+### BUG-056: Purchase Report Display Fixes (session 2026-10-19)
+| File | Change | Item |
+|------|--------|------|
+| `frontend/src/components/central-inventory/PurchaseReport.jsx` | MODIFIED — B1: line_total/stock_quantity_raw for unit price; B2: partial_payments legs conditional render | BUG-056 |
+
 ### BUG-054: Dispatch Keyboard Navigation (session 2026-10-19)
 | File | Change | Item |
 |------|--------|------|

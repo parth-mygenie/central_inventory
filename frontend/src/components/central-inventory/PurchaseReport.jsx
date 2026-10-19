@@ -243,15 +243,27 @@ export default function PurchaseReport() {
                     <td className="px-3 py-1.5 text-muted-foreground">{r.Vendor_Name}</td>
                     <td className="px-3 py-1.5 tabular-nums whitespace-nowrap">{r.Quantity}</td>
                     <td className="px-3 py-1.5 tabular-nums whitespace-nowrap text-muted-foreground">
-                      {r.unit_price > 0 ? `₹${r.unit_price}` : "—"}
+                      {/* BUG-056 B1: unit_price is per-gram; compute per-display-unit via line_total/stock_quantity_raw */}
+                      {r.stock_quantity_raw > 0 && r.line_total > 0
+                        ? `₹${(r.line_total / r.stock_quantity_raw).toLocaleString("en-IN")}`
+                        : "—"}
                     </td>
                     <td className="px-3 py-1.5 tabular-nums font-semibold whitespace-nowrap">
                       ₹{Number(r.line_total).toLocaleString("en-IN")}
                     </td>
                     <td className="px-3 py-1.5">
-                      {r.Payment_Type
-                        ? <Badge variant="outline" className="text-[9px] py-0 px-1.5 whitespace-nowrap">{r.Payment_Type}</Badge>
-                        : <span className="text-muted-foreground">—</span>}
+                      {/* BUG-056 B2: render partial_payments legs when present; fallback to Payment_Type badge */}
+                      {r.Payment_Type === "partial" && r.partial_payments?.length > 0
+                        ? <div className="flex flex-col gap-0.5">
+                            {r.partial_payments.map((leg, i) => (
+                              <span key={i} className="text-[10px] whitespace-nowrap">
+                                {leg.payment_mode} ₹{Number(leg.amount).toLocaleString("en-IN")}
+                              </span>
+                            ))}
+                          </div>
+                        : r.Payment_Type
+                          ? <Badge variant="outline" className="text-[9px] py-0 px-1.5 whitespace-nowrap">{r.Payment_Type}</Badge>
+                          : <span className="text-muted-foreground">—</span>}
                     </td>
                     {/* CR-051 A2 — Invoice # column (store-only, no duplicate check) */}
                     <td className="px-3 py-1.5 font-mono text-[10px] text-muted-foreground">
