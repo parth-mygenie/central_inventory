@@ -3706,5 +3706,76 @@
       "Owner-Signoff: MISSING"
     ],
     "sprint_name": "S5"
+  },
+  {
+    "id": "BUG-054",
+    "type": "BUG",
+    "title": "Dispatch Screen — Keyboard Navigation Gaps (B1: search Enter, B2: qty Enter, B3: disabled guard, B4: auto-select on qty entry)",
+    "status": "OPEN",
+    "severity": "P1",
+    "sprint_key": "S5",
+    "related_to": "CR-050",
+    "registered": "2026-10-19",
+    "files": [
+      "frontend/src/components/central-inventory/DirectDispatchForm.jsx"
+    ],
+    "notes": "B1: search <input> line 457 has no onKeyDown — Enter does nothing. B2: qty <Input> line 741 has no onKeyDown — Enter does nothing. B3: included:false default (line 253) + disabled={!row.included} (line 747) + row-click INPUT guard (line 700) means focused qty is still disabled after B1 fires. B4: qty onChange (line 746) does not auto-set included:true — storekeeper must manually click checkbox before typing. Combined fix: remove disabled, auto-check in qty onChange, add onKeyDown to search (+8 lines) and qty (+6 lines). All fixes in 1 file.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "path": ""
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/BUG-054_ARTIFACT_1_INTAKE.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "path": ""
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "path": ""
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "MISSING",
+        "path": ""
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "MISSING",
+        "path": ""
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "MISSING",
+        "path": ""
+      }
+    ],
+    "completeness": {
+      "done": 4,
+      "total": 7,
+      "pct": 57
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "Code-Gate: MISSING",
+      "QA-Report: MISSING",
+      "Owner-Signoff: MISSING"
+    ],
+    "sprint_name": "S5"
   }
 ]

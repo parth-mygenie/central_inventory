@@ -948,5 +948,21 @@
     ],
     "missing_count": 2,
     "pending_count": 0
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-054",
+    "title": "Dispatch Screen — Keyboard Navigation Gaps (B1: search Enter, B2: qty Enter, B3: disabled guard, B4: auto-select on qty entry)",
+    "status": "OPEN",
+    "severity": "P1",
+    "sprint_key": "S5",
+    "sprint_name": "S5",
+    "debt_reasons": [
+      "Code-Gate: MISSING",
+      "QA-Report: MISSING",
+      "Owner-Signoff: MISSING"
+    ],
+    "missing_count": 3,
+    "pending_count": 0
   }
 ]
