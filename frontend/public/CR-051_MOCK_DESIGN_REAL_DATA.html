@@ -94,6 +94,9 @@
   .pay-bank{background:#fff7ed;color:#c2410c}
   .pay-others{background:#f8fafc;color:#475569}
   .pay-partial{background:#fef3c7;color:#b45309}
+  .pay-split-leg{font-size:9.5px;color:#6b7280;margin-top:2px;display:flex;align-items:center;gap:3px}
+  .pay-split-leg span{padding:1px 5px;border-radius:3px;font-size:9px;font-weight:500}
+  .pay-gap-note{font-size:9px;color:#9ca3af;font-style:italic;margin-top:1px}
   .empty-state{padding:32px;text-align:center;color:#9ca3af;font-size:12px}
 
   /* Footer */
@@ -275,18 +278,19 @@
 // unit_price fix: display = line_total / stock_quantity_raw (API stores per-gram, not per-kg)
 const ALL_DATA = [
   // ── REAL RECORDS ─────────────────────────────────────────────────────────────────
-  { id:13787, date:"2026-10-19", store:"Mygenietest002", store_type:"master", ingredient:"American Corn", vendor:"masala dairy", vendor_id:282, qty:"10 kg", qty_raw:10, line_total:2000, tot_fair:300,  tot_amount:2300, pay:"Cash",          txn:"PUR-828-20261019-8006", real:true },
-  { id:13786, date:"2026-10-18", store:"Mygenietest002", store_type:"master", ingredient:"makkhan",       vendor:"masala dairy", vendor_id:282, qty:"2 kg",  qty_raw:2,  line_total:160,  tot_fair:0,    tot_amount:160,  pay:"Cash",          txn:"PUR-828-20261018-8005", real:true },
+  { id:13788, date:"2026-10-19", store:"Mygenietest002", store_type:"master", ingredient:"Avocado",      vendor:"masala dairy", vendor_id:282, qty:"2 kg",  qty_raw:2,  line_total:200,  tot_fair:100,  tot_amount:300,  pay:"partial", pay_legs:[{mode:"Cash",amount:150},{mode:"UPI",amount:150}], txn:"PUR-828-20261019-8007", real:true },
+  { id:13787, date:"2026-10-19", store:"Mygenietest002", store_type:"master", ingredient:"American Corn", vendor:"masala dairy", vendor_id:282, qty:"10 kg", qty_raw:10, line_total:2000, tot_fair:300,  tot_amount:2300, pay:"Cash",    pay_legs:[], txn:"PUR-828-20261019-8006", real:true },
+  { id:13786, date:"2026-10-18", store:"Mygenietest002", store_type:"master", ingredient:"makkhan",       vendor:"masala dairy", vendor_id:282, qty:"2 kg",  qty_raw:2,  line_total:160,  tot_fair:0,    tot_amount:160,  pay:"Cash",    pay_legs:[], txn:"PUR-828-20261018-8005", real:true },
   // ── DEMO RECORDS (representative — varied payment types, vendors, stores) ────────
-  { id:20001, date:"2026-10-17", store:"Mygenietest002", store_type:"master", ingredient:"Tomato",        vendor:"masala dairy", vendor_id:282, qty:"25 kg", qty_raw:25, line_total:1125, tot_fair:50,   tot_amount:1175, pay:"UPI",           txn:"PUR-828-20261017-7990", real:false },
-  { id:20002, date:"2026-10-16", store:"Mygenietest002", store_type:"master", ingredient:"Onion",         vendor:"masala dairy", vendor_id:282, qty:"50 kg", qty_raw:50, line_total:1400, tot_fair:100,  tot_amount:1500, pay:"Bank Transfer",  txn:"PUR-828-20261016-7985", real:false },
-  { id:20003, date:"2026-10-15", store:"Mygenietest002", store_type:"master", ingredient:"Garlic Peeled", vendor:"Green Farms",  vendor_id:999, qty:"10 kg", qty_raw:10, line_total:1200, tot_fair:0,    tot_amount:1200, pay:"Cash",           txn:"PUR-828-20261015-7980", real:false },
-  { id:20004, date:"2026-10-14", store:"Mygenietest002", store_type:"master", ingredient:"Potato Big",    vendor:"Green Farms",  vendor_id:999, qty:"100 kg",qty_raw:100,line_total:2200, tot_fair:200,  tot_amount:2400, pay:"Card",           txn:"PUR-828-20261014-7975", real:false },
-  { id:20005, date:"2026-10-13", store:"Mygenietest002", store_type:"master", ingredient:"Carrot",        vendor:"masala dairy", vendor_id:282, qty:"15 kg", qty_raw:15, line_total:825,  tot_fair:0,    tot_amount:825,  pay:"UPI",            txn:"PUR-828-20261013-7970", real:false },
-  { id:20006, date:"2026-10-12", store:"Mygenietest002", store_type:"master", ingredient:"Eggs",          vendor:"Green Farms",  vendor_id:999, qty:"200 pc",qty_raw:200,line_total:1700, tot_fair:0,    tot_amount:1700, pay:"Cash",           txn:"PUR-828-20261012-7965", real:false },
-  { id:20007, date:"2026-10-10", store:"Mygenietest001", store_type:"central",ingredient:"Tomato",        vendor:"masala dairy", vendor_id:282, qty:"30 kg", qty_raw:30, line_total:1320, tot_fair:80,   tot_amount:1400, pay:"Others",         txn:"PUR-827-20261010-6800", real:false },
-  { id:20008, date:"2026-10-08", store:"Mygenietest001", store_type:"central",ingredient:"Onion",         vendor:"masala dairy", vendor_id:282, qty:"45 kg", qty_raw:45, line_total:1215, tot_fair:0,    tot_amount:1215, pay:"Bank Transfer",  txn:"PUR-827-20261008-6790", real:false },
-  { id:20009, date:"2026-10-05", store:"Mygenietest002", store_type:"master", ingredient:"Green Chilli",  vendor:"Green Farms",  vendor_id:999, qty:"5 kg",  qty_raw:5,  line_total:900,  tot_fair:0,    tot_amount:900,  pay:"UPI",            txn:"PUR-828-20261005-7950", real:false },
+  { id:20001, date:"2026-10-17", store:"Mygenietest002", store_type:"master", ingredient:"Tomato",        vendor:"masala dairy", vendor_id:282, qty:"25 kg", qty_raw:25, line_total:1125, tot_fair:50,   tot_amount:1175, pay:"UPI",           pay_legs:[], txn:"PUR-828-20261017-7990", real:false },
+  { id:20002, date:"2026-10-16", store:"Mygenietest002", store_type:"master", ingredient:"Onion",         vendor:"masala dairy", vendor_id:282, qty:"50 kg", qty_raw:50, line_total:1400, tot_fair:100,  tot_amount:1500, pay:"Bank Transfer",  pay_legs:[], txn:"PUR-828-20261016-7985", real:false },
+  { id:20003, date:"2026-10-15", store:"Mygenietest002", store_type:"master", ingredient:"Garlic Peeled", vendor:"Green Farms",  vendor_id:999, qty:"10 kg", qty_raw:10, line_total:1200, tot_fair:0,    tot_amount:1200, pay:"Cash",           pay_legs:[], txn:"PUR-828-20261015-7980", real:false },
+  { id:20004, date:"2026-10-14", store:"Mygenietest002", store_type:"master", ingredient:"Potato Big",    vendor:"Green Farms",  vendor_id:999, qty:"100 kg",qty_raw:100,line_total:2200, tot_fair:200,  tot_amount:2400, pay:"partial",        pay_legs:[{mode:"Card",amount:1200},{mode:"Cash",amount:1200}], txn:"PUR-828-20261014-7975", real:false },
+  { id:20005, date:"2026-10-13", store:"Mygenietest002", store_type:"master", ingredient:"Carrot",        vendor:"masala dairy", vendor_id:282, qty:"15 kg", qty_raw:15, line_total:825,  tot_fair:0,    tot_amount:825,  pay:"UPI",            pay_legs:[], txn:"PUR-828-20261013-7970", real:false },
+  { id:20006, date:"2026-10-12", store:"Mygenietest002", store_type:"master", ingredient:"Eggs",          vendor:"Green Farms",  vendor_id:999, qty:"200 pc",qty_raw:200,line_total:1700, tot_fair:0,    tot_amount:1700, pay:"Cash",           pay_legs:[], txn:"PUR-828-20261012-7965", real:false },
+  { id:20007, date:"2026-10-10", store:"Mygenietest001", store_type:"central",ingredient:"Tomato",        vendor:"masala dairy", vendor_id:282, qty:"30 kg", qty_raw:30, line_total:1320, tot_fair:80,   tot_amount:1400, pay:"Others",         pay_legs:[], txn:"PUR-827-20261010-6800", real:false },
+  { id:20008, date:"2026-10-08", store:"Mygenietest001", store_type:"central",ingredient:"Onion",         vendor:"masala dairy", vendor_id:282, qty:"45 kg", qty_raw:45, line_total:1215, tot_fair:0,    tot_amount:1215, pay:"Bank Transfer",  pay_legs:[], txn:"PUR-827-20261008-6790", real:false },
+  { id:20009, date:"2026-10-05", store:"Mygenietest002", store_type:"master", ingredient:"Green Chilli",  vendor:"Green Farms",  vendor_id:999, qty:"5 kg",  qty_raw:5,  line_total:900,  tot_fair:0,    tot_amount:900,  pay:"UPI",            pay_legs:[], txn:"PUR-828-20261005-7950", real:false },
 ];
 
 let activePayFilter = "";
@@ -300,6 +304,21 @@ function fmtDate(d) {
 function fmtCurrency(n) {
   return "₹" + Number(n).toLocaleString("en-IN", {minimumFractionDigits:2, maximumFractionDigits:2});
 }
+function buildSplitLegs(r) {
+  // If legs are available (future: when API returns partial_payments[])
+  if (r.pay_legs && r.pay_legs.length > 0) {
+    const legs = r.pay_legs.map(l =>
+      `<span class="pay-split-leg">
+        <span class="${payClass(l.mode)}">${l.mode}</span>
+        <span style="color:#374151">${fmtCurrency(l.amount)}</span>
+       </span>`
+    ).join('');
+    return `<div style="margin-top:3px">${legs}</div>`;
+  }
+  // API doesn't return legs yet (G-039) — show gap note
+  return `<div class="pay-gap-note">legs: G-039 pending</div>`;
+}
+
 function payClass(p) {
   const m={"Cash":"pay-cash","UPI":"pay-upi","Card":"pay-card","Bank Transfer":"pay-bank","Others":"pay-others"};
   return m[p]||"pay-others";
@@ -374,7 +393,9 @@ function renderTable() {
       <td class="td-amount">${fmtCurrency(r.line_total)}</td>
       <td class="td-price" style="color:${r.tot_fair>0?'#b45309':'#9ca3af'}">${r.tot_fair > 0 ? fmtCurrency(r.tot_fair) : '—'}</td>
       <td class="td-amount" style="font-weight:700">${fmtCurrency(r.tot_amount)}</td>
-      <td><span class="pay-type ${payClass(r.pay)}">${r.pay||'—'}</span></td>
+      <td><span class="pay-type ${payClass(r.pay)}">${r.pay||'—'}</span>
+        ${r.pay==='partial' ? buildSplitLegs(r) : ''}
+      </td>
       <td class="td-txn">${r.txn}</td>
     `;
     body.appendChild(tr);
