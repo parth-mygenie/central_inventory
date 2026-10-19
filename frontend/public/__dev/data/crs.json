@@ -3978,7 +3978,7 @@
     "type": "CR",
     "id": "CR-051",
     "title": "Purchase Report Screen",
-    "status": "PROPOSED",
+    "status": "IN_PROGRESS",
     "severity": "P2",
     "sprint_key": null,
     "phase": "S5 — Dispatch UX Overhaul",
@@ -4017,8 +4017,8 @@
       {
         "artifact": 4,
         "label": "Code-Gate",
-        "status": "MISSING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/CR-051_ARTIFACT_4_CODE_GATE.md"
       },
       {
         "artifact": 5,
@@ -4034,14 +4034,13 @@
       }
     ],
     "completeness": {
-      "done": 4,
+      "done": 5,
       "total": 7,
-      "pct": 57
+      "pct": 71
     },
     "doc_count": 0,
-    "is_debt": false,
+    "is_debt": true,
     "debt_reasons": [
-      "Code-Gate: MISSING",
       "QA-Report: MISSING",
       "Owner-Signoff: MISSING"
     ],
