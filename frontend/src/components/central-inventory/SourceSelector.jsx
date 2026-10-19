@@ -22,7 +22,10 @@ const BUCKET_OPTIONS = [
   { value: "without_expiry_only", label: "Without Expiry Only" },
 ];
 
-export default function SourceSelector({ fromRestaurantId, inventoryMasterId, value, onChange, disabled }) {
+// CR-050 — preloadedSegments: opt-in prop. When provided, renders compact select directly (no API call).
+// All callers that omit preloadedSegments take the existing path unchanged.
+export default function SourceSelector({ fromRestaurantId, inventoryMasterId, value, onChange, disabled, preloadedSegments }) {
+  // Existing path — unchanged for all other callers
   const [mode, setMode] = useState("segment_id");
   const [segments, setSegments] = useState([]);
   const [filters, setFilters] = useState(null);
@@ -31,6 +34,7 @@ export default function SourceSelector({ fromRestaurantId, inventoryMasterId, va
   const [unauthorized, setUnauthorized] = useState(false);
 
   useEffect(() => {
+    if (preloadedSegments !== undefined) return; // CR-050 — skip API call when preloaded
     if (!fromRestaurantId || !inventoryMasterId) {
       setSegments([]); setFilters(null); setUnauthorized(false); setError(null);
       return;
@@ -64,8 +68,41 @@ export default function SourceSelector({ fromRestaurantId, inventoryMasterId, va
     return () => { cancelled = true; };
   }, [fromRestaurantId, inventoryMasterId]);
 
-  if (loading) {
+  // CR-050 — preloaded early return (after all hooks so React rules-of-hooks is satisfied)
+  if (preloadedSegments !== undefined) {
+    const segs = (preloadedSegments || []).filter(s => s.segment_id !== null);
+    if (segs.length === 0) {
+      return <div className="text-[10px] text-muted-foreground" data-testid="source-preloaded-empty">No segments</div>;
+    }
     return (
+      <Select
+        value={value?.segment_id ? String(value.segment_id) : ""}
+        onValueChange={(v) => onChange({ mode: "segment_id", segment_id: Number(v) })}
+        disabled={disabled}
+      >
+        <SelectTrigger className="h-7 text-[10px]" data-testid="source-preloaded-select">
+          <SelectValue placeholder="Select segment" />
+        </SelectTrigger>
+        <SelectContent>
+          {segs.map(seg => {
+            const daysLeft = seg.expiry_date
+              ? Math.ceil((new Date(seg.expiry_date + "T23:59:59") - new Date()) / 86400000)
+              : null;
+            const expired = daysLeft !== null && daysLeft < 0;
+            return (
+              <SelectItem key={seg.segment_id} value={String(seg.segment_id)} disabled={expired}>
+                {seg.batch || `Seg #${seg.segment_id}`} — {Number(seg.display_qty)} avail
+                {seg.expiry_date ? ` (exp: ${seg.expiry_date})` : ""}
+                {expired ? " [EXPIRED]" : daysLeft !== null && daysLeft <= 30 ? ` [${daysLeft}d left]` : ""}
+              </SelectItem>
+            );
+          })}
+        </SelectContent>
+      </Select>
+    );
+  }
+
+  if (loading) {    return (
       <div className="flex items-center gap-1 text-[10px] text-muted-foreground" data-testid="source-selector-loading">
         <Loader2 className="h-3 w-3 animate-spin" /> Loading source options...
       </div>

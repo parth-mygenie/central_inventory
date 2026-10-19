@@ -173,7 +173,7 @@ export default function RequestStockForm() {
         // Consumption-based: order for coverage period
         daysOfCover = currentStock / avgDaily;
         const projectedNeed = avgDaily * coverageDays;
-        orderQty = Math.max(0, Math.ceil((projectedNeed - currentStock) * 100) / 100);
+        orderQty = Math.max(0, Math.ceil(projectedNeed - currentStock)); // CR-050 — integer ceiling
 
         if (orderQty > 0) {
           if (daysOfCover < 1) {
@@ -186,7 +186,7 @@ export default function RequestStockForm() {
         }
       } else if (minQty > 0 && currentStock < minQty) {
         // Threshold-based fallback
-        orderQty = Math.ceil((minQty - currentStock) * 100) / 100;
+        orderQty = Math.ceil(minQty - currentStock); // CR-050 — integer ceiling
         suggestion = `Gap to min: ${orderQty} ${item.display_unit || ""}`;
         urgency = currentStock === 0 ? 80 : 40;
       }

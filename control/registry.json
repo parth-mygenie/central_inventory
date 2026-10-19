@@ -6271,7 +6271,7 @@
       "type": "CR",
       "id": "CR-050",
       "title": "Direct Dispatch \u2014 Spreadsheet UX + Category Grouping + FEFO Source Auto-Select + Burst Fix",
-      "status": "PROPOSED",
+      "status": "IMPLEMENTED",
       "severity": "P1",
       "sprint_key": null,
       "phase": "S5 \u2014 Dispatch UX Overhaul",
@@ -6310,8 +6310,8 @@
         {
           "artifact": 4,
           "label": "Code-Gate",
-          "status": "MISSING",
-          "path": null
+          "status": "DONE",
+          "path": "control/sessions/CR-050_ARTIFACT_4_CODE_GATE.md"
         },
         {
           "artifact": 5,

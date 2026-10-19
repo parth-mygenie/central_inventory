@@ -52,6 +52,48 @@ export default function DirectDispatchForm() {
   // Manual add rows (extra items beyond suggestions)
   const [manualRows, setManualRows] = useState([]);
 
+  // CR-050 — category grouping + filter state
+  const [collapsedCats, setCollapsedCats] = useState({});
+  const [filterStatus, setFilterStatus]   = useState("all"); // "all" | "out" | "low"
+  const [filterCat, setFilterCat]         = useState("all"); // category name or "all"
+  const [searchText, setSearchText]       = useState("");
+
+  // CR-050 — FEFO auto-select: sort by expiry ASC, greedy allocate, skip expired + un-batched
+  function fefoAutoSelect(segments, sendQty) {
+    const eligible = (segments || [])
+      .filter(s => s.segment_id !== null)
+      .filter(s => !s.expiry_date || new Date(s.expiry_date + "T23:59:59") > new Date())
+      .sort((a, b) => new Date(a.expiry_date || "9999") - new Date(b.expiry_date || "9999"));
+    let remaining = Number(sendQty) || 0;
+    const allocs = [];
+    for (const seg of eligible) {
+      if (remaining <= 0) break;
+      const take = Math.min(remaining, Number(seg.display_qty) || 0);
+      if (take > 0) {
+        allocs.push({ segment_id: seg.segment_id, qty: take,
+                      batch: seg.batch, expiry: seg.expiry_date,
+                      available: Number(seg.display_qty) });
+        remaining -= take;
+      }
+    }
+    return { allocations: allocs, short: remaining > 0 };
+  }
+
+  // CR-050 — filter + group rows for category-grouped rendering
+  function getFilteredGrouped(rows) {
+    const q = searchText.toLowerCase();
+    const filtered = rows.filter(r => {
+      if (filterStatus === "out" && !r.isOut) return false;
+      if (filterStatus === "low" && !r.isLow) return false;
+      if (filterCat !== "all" && r.category !== filterCat) return false;
+      if (q && !(r.stockTitle || "").toLowerCase().includes(q)) return false;
+      return true;
+    });
+    const groups = {};
+    filtered.forEach(r => { const c = r.category || "Other"; (groups[c] = groups[c] || []).push(r); });
+    return groups;
+  }
+
   // Load destinations + inventory master
   useEffect(() => {
     let cancelled = false;
@@ -82,7 +124,7 @@ export default function DirectDispatchForm() {
     const today = new Date().toISOString().split("T")[0];
     Promise.allSettled([
       api.getHierarchyDetail({ storeRestaurantId: Number(selectedDest) }),
-      api.getStockInventory(),
+      api.getStockInventory({ includeSegments: true }), // CR-050 — burst fix: segments_preview in one call
       api.getDailyConsumptionReport({ fromDate: thirtyAgo, toDate: today, restaurantIds: [Number(selectedDest)] }),
     ]).then(([detailResp, stockResp, consResp]) => {
       if (cancelled) return;
@@ -159,7 +201,7 @@ export default function DirectDispatchForm() {
       if (avgDaily > 0) {
         daysOfCover = destQty / avgDaily;
         const projectedNeed = avgDaily * coverageDays;
-        qtyToSend = Math.max(0, Math.ceil((projectedNeed - destQty) * 100) / 100);
+        qtyToSend = Math.max(0, Math.ceil(projectedNeed - destQty)); // CR-050 — integer ceiling
         if (qtyToSend > 0) {
           suggestion = daysOfCover < 1
             ? `< 1 day cover at dest, sending for ${coverageDays}d`
@@ -167,7 +209,7 @@ export default function DirectDispatchForm() {
           urgency = daysOfCover < 1 ? 100 : 50 + (coverageDays - daysOfCover);
         }
       } else if (minQty > 0 && destQty < minQty) {
-        qtyToSend = Math.ceil((minQty - destQty) * 100) / 100;
+        qtyToSend = Math.ceil(minQty - destQty); // CR-050 — integer ceiling
         suggestion = `Gap to min: ${qtyToSend} ${item.unit || ""}`;
         urgency = destQty === 0 ? 80 : 40;
       }
@@ -179,6 +221,14 @@ export default function DirectDispatchForm() {
       const exceedsOwn = qtyToSend > ownQty;
       const afterDispatch = Math.round((ownQty - cappedQty) * 100) / 100;
       const retainPct = ownQty > 0 ? Math.round((afterDispatch / ownQty) * 100) : 0;
+
+      // CR-050 — segments from includeSegments:true + FEFO auto-select
+      const ownSegments = ownItem?.segments_preview || [];
+      const isUnbatched = ownSegments.length > 0 && ownSegments.every(s => s.segment_id === null);
+      const { allocations: fefoAllocs, short: fefoShort } = fefoAutoSelect(ownSegments, cappedQty);
+      const autoSource = fefoAllocs.length === 1
+        ? { mode: "segment_id", segment_id: fefoAllocs[0].segment_id }
+        : null;
 
       return {
         invMasterId,
@@ -200,8 +250,13 @@ export default function DirectDispatchForm() {
         isOut: destQty === 0,
         isLow: (item.is_low_stock || destQty < minQty) && destQty > 0,
         qty: String(exceedsOwn ? cappedQty : qtyToSend),
-        sourceSelector: null,
-        included: true,
+        sourceSelector: autoSource,
+        included: false,          // CR-050 — default unchecked; storekeeper opts in
+        segments_preview: ownSegments, // CR-050
+        isUnbatched,              // CR-050
+        fefoAllocs,               // CR-050
+        fefoShort,                // CR-050
+        sourceManuallySet: false, // CR-050
       };
     }).filter(Boolean)
       .filter((item, idx, arr) => arr.findIndex(x => x.invMasterId === item.invMasterId) === idx)
@@ -238,8 +293,16 @@ export default function DirectDispatchForm() {
         row.afterDispatch = Math.round((row.ownQty - q) * 100) / 100;
         row.retainPct = row.ownQty > 0 ? Math.round((row.afterDispatch / row.ownQty) * 100) : 0;
         row.exceedsOwn = q > row.ownQty;
+        // CR-050 — re-run FEFO on qty change
+        const { allocations, short } = fefoAutoSelect(row.segments_preview || [], q);
+        row.fefoAllocs = allocations;
+        row.fefoShort  = short;
+        if (allocations.length === 1 && !row.sourceManuallySet) {
+          row.sourceSelector = { mode: "segment_id", segment_id: allocations[0].segment_id };
+        }
       } else {
         row[field] = value;
+        if (field === "sourceSelector") row.sourceManuallySet = true; // CR-050 — storekeeper override
       }
       next[idx] = row;
       return next;
@@ -262,32 +325,16 @@ export default function DirectDispatchForm() {
     });
   };
 
-  // Stat cards
-  const stats = useMemo(() => {
-    let needDispatching = 0, partial = 0, covered = 0;
-    destStock.forEach(item => {
-      const name = (item.stock_title || "").toLowerCase();
-      const qty = parseFloat(item.display_quantity) || 0;
-      const minQty = parseFloat(item.min_qty_alert) || 0;
-      // BUG-036: Normalize consumption to item's display unit
-      const cEntry2 = destConsumptionMap[name];
-      const avgDaily = cEntry2 ? normalizeToDisplayUnit(cEntry2.dailyQty, cEntry2.unit, item.unit || "") : 0;
-      if (avgDaily > 0) {
-        const doc = qty / avgDaily;
-        if (doc < 1) needDispatching++;
-        else if (doc < coverageDays) partial++;
-        else covered++;
-      } else if (minQty > 0) {
-        if (qty === 0) needDispatching++;
-        else if (qty < minQty) partial++;
-        else covered++;
-      } else {
-        if (qty === 0) needDispatching++;
-        else covered++;
-      }
+  // CR-050 — compact health strip stats (replaces 4 KPI tile cards)
+  const healthStats = useMemo(() => {
+    let outCount = 0, lowCount = 0, okCount = 0;
+    dispatchRows.forEach(r => {
+      if (r.isOut) outCount++;
+      else if (r.isLow) lowCount++;
+      else okCount++;
     });
-    return { needDispatching, partial, covered, total: destStock.length };
-  }, [destStock, destConsumptionMap, coverageDays]);
+    return { outCount, lowCount, okCount };
+  }, [dispatchRows]);
 
   const includedRows = dispatchRows.filter(r => r.included && Number(r.qty) > 0 && r.sourceSelector);
   const validManualRows = manualRows.filter(r => r.itemId && Number(r.quantity) > 0 && r.sourceSelector);
@@ -392,33 +439,31 @@ export default function DirectDispatchForm() {
         </CardContent>
       </Card>
 
-      {/* Stat cards (after dest selected) */}
-      {selectedDest && !destLoading && destStock.length > 0 && (
-        <div className="grid grid-cols-4 gap-2 mb-4" data-testid="dispatch-stats">
-          <Card className={stats.needDispatching > 0 ? "border-l-[3px] border-l-red-500" : ""}>
-            <CardContent className="py-2.5 px-3 text-center">
-              <p className={`text-xl font-bold tabular-nums ${stats.needDispatching > 0 ? "text-red-600" : ""}`}>{stats.needDispatching}</p>
-              <p className="text-[9px] text-muted-foreground uppercase">Need Dispatching</p>
-            </CardContent>
-          </Card>
-          <Card className={stats.partial > 0 ? "border-l-[3px] border-l-amber-500" : ""}>
-            <CardContent className="py-2.5 px-3 text-center">
-              <p className={`text-xl font-bold tabular-nums ${stats.partial > 0 ? "text-amber-600" : ""}`}>{stats.partial}</p>
-              <p className="text-[9px] text-muted-foreground uppercase">Partially Covered</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="py-2.5 px-3 text-center">
-              <p className="text-xl font-bold tabular-nums">{stats.covered}</p>
-              <p className="text-[9px] text-muted-foreground uppercase">Fully Covered</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="py-2.5 px-3 text-center">
-              <p className="text-xl font-bold tabular-nums">{dispatchRows.filter(r => r.included).length}</p>
-              <p className="text-[9px] text-muted-foreground uppercase">In This Dispatch</p>
-            </CardContent>
-          </Card>
+      {/* CR-050 — compact health strip replaces 4 KPI tile cards */}
+      {selectedDest && !destLoading && dispatchRows.length > 0 && (
+        <div className="flex items-center gap-2 px-3 py-2 bg-background border border-border rounded-lg mb-3 text-xs flex-wrap"
+          data-testid="dispatch-health-strip">
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-red-500 inline-block" />
+            <span className="font-bold text-red-600" data-testid="health-out">{healthStats.outCount}</span>
+            <span className="text-muted-foreground">OUT</span>
+          </span>
+          <span className="text-muted-foreground">·</span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
+            <span className="font-bold text-amber-600" data-testid="health-low">{healthStats.lowCount}</span>
+            <span className="text-muted-foreground">LOW</span>
+          </span>
+          <span className="text-muted-foreground">·</span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-green-500 inline-block" />
+            <span className="font-bold text-green-600" data-testid="health-ok">{healthStats.okCount}</span>
+            <span className="text-muted-foreground">OK</span>
+          </span>
+          <span className="text-muted-foreground ml-2">·</span>
+          <span className="text-[10px] text-muted-foreground ml-1" data-testid="burst-note">
+            Segments pre-loaded · 0 source-options API calls
+          </span>
         </div>
       )}
 
@@ -429,98 +474,93 @@ export default function DirectDispatchForm() {
         </CardContent></Card>
       )}
 
-      {/* Integrated dispatch table */}
+      {/* CR-050 — category-grouped dispatch table */}
       {selectedDest && !destLoading && dispatchRows.length > 0 && (
-        <Card className="mb-4 border-l-[3px] border-l-amber-500" data-testid="dispatch-needs-table">
-          <CardHeader className="py-2.5 px-4">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xs font-medium uppercase tracking-wider flex items-center gap-1.5 text-amber-700">
-                <Zap className="h-3.5 w-3.5" />
-                {hasConsumptionData
-                  ? `Dispatch for ${coverageDays}-Day Coverage (${dispatchRows.length} items)`
-                  : `Items Below Threshold (${dispatchRows.length})`}
-              </CardTitle>
-              <span className="text-[10px] text-muted-foreground">
-                {hasConsumptionData ? "Based on destination consumption" : "Based on min stock thresholds"}
-              </span>
-            </div>
-          </CardHeader>
-          {/* CR-046 — Select All / Unselect All */}
-          <div className="flex items-center gap-2 px-4 pb-2">
-            <Button variant="outline" size="sm" className="h-7 text-[10px] px-2.5" onClick={selectAllDispatchRows} data-testid="dispatch-select-all">Select All</Button>
-            <Button variant="outline" size="sm" className="h-7 text-[10px] px-2.5" onClick={unselectAllDispatchRows} data-testid="dispatch-unselect-all">Unselect All</Button>
-            <span className="text-[10px] text-muted-foreground ml-1">{dispatchRows.filter(r => r.included).length}/{dispatchRows.length} selected</span>
+        <Card className="mb-4" data-testid="dispatch-needs-table">
+          {/* Toolbar: filter pills + category combobox + search + master select */}
+          <div className="px-4 pt-3 pb-2 flex items-center gap-2 flex-wrap border-b border-border/50">
+            {["all", "out", "low"].map(f => (
+              <button key={f} tabIndex={-1}
+                className={`h-6 px-3 rounded-full text-[10px] border transition-colors font-medium
+                  ${filterStatus === f
+                    ? f === "out" ? "bg-red-500 text-white border-red-500"
+                    : f === "low" ? "bg-amber-400 text-white border-amber-400"
+                    : "bg-foreground text-background border-foreground"
+                    : "bg-background text-muted-foreground border-border hover:bg-muted"}`}
+                onClick={() => setFilterStatus(f)}
+                data-testid={`filter-pill-${f}`}>
+                {f.toUpperCase()}
+              </button>
+            ))}
+            <span className="text-muted-foreground text-xs">|</span>
+            <CategoryCombobox
+              categories={[...new Set(dispatchRows.map(r => r.category).filter(Boolean))]}
+              value={filterCat}
+              onChange={setFilterCat}
+            />
+            <input
+              className="h-7 border border-input rounded-md px-2 text-xs bg-background min-w-[130px]
+                         focus:outline-none focus:border-primary"
+              placeholder="Search item…"
+              value={searchText}
+              onChange={e => {
+                const v = e.target.value;
+                setSearchText(v);
+                if (v) {
+                  const q = v.toLowerCase();
+                  const matchCats = new Set(
+                    dispatchRows.filter(r => (r.stockTitle || "").toLowerCase().includes(q)).map(r => r.category)
+                  );
+                  setCollapsedCats(prev => {
+                    const next = { ...prev };
+                    matchCats.forEach(c => delete next[c]);
+                    return next;
+                  });
+                }
+              }}
+              data-testid="dispatch-search-input"
+            />
+            <button tabIndex={-1}
+              className="h-6 px-2 text-[10px] border border-border rounded bg-background text-muted-foreground hover:bg-muted"
+              onClick={() => setDispatchRows(p => p.map(r => ({ ...r, included: true })))}
+              data-testid="dispatch-select-all">Select All</button>
+            <button tabIndex={-1}
+              className="h-6 px-2 text-[10px] border border-border rounded bg-background text-muted-foreground hover:bg-muted"
+              onClick={() => setDispatchRows(p => p.map(r => ({ ...r, included: false })))}
+              data-testid="dispatch-unselect-all">Unselect All</button>
+            <span className="ml-auto text-[10px] text-muted-foreground">
+              {dispatchRows.filter(r => r.included).length}/{dispatchRows.length} selected
+            </span>
           </div>
+
+          {/* Category sections */}
           <CardContent className="py-0 px-0">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-[10px] w-8"></TableHead>
-                    <TableHead className="text-[10px]">Item</TableHead>
-                    <TableHead className="text-[10px] text-right">Their Stock</TableHead>
-                    <TableHead className="text-[10px] text-right">Gap</TableHead>
-                    <TableHead className="text-[10px] text-right w-24">Qty to Send</TableHead>
-                    <TableHead className="text-[10px]">Source Segment</TableHead>
-                    <TableHead className="text-[10px] text-right">Your Stock After</TableHead>
-                    <TableHead className="text-[10px]">Suggestion</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {dispatchRows.map((item, idx) => (
-                    <TableRow key={`d-${idx}`} data-testid={`dispatch-row-${idx}`} className={item.isOut ? "bg-red-50/20" : item.isLow ? "bg-amber-50/20" : ""}>
-                      <TableCell className="text-center">
-                        <input type="checkbox" checked={item.included} onChange={() => updateDispatchRow(idx, "included", !item.included)} className="rounded" data-testid={`dispatch-check-${idx}`} />
-                      </TableCell>
-                      <TableCell className="text-xs">
-                        <span className="font-medium">{item.stockTitle}</span>
-                        <span className="text-muted-foreground ml-1">{item.unit}</span>
-                        {item.isOut && <Badge variant="destructive" className="ml-1 text-[8px] px-1 py-0">OUT</Badge>}
-                        {item.isLow && !item.isOut && <Badge className="ml-1 text-[8px] px-1 py-0 bg-amber-100 text-amber-700 border-amber-200">LOW</Badge>}
-                      </TableCell>
-                      <TableCell className={`text-xs text-right tabular-nums ${item.isOut ? "text-red-600 font-semibold" : item.isLow ? "text-amber-600" : "text-muted-foreground"}`}>
-                        {item.destQty} {item.unit}
-                      </TableCell>
-                      <TableCell className="text-xs text-right tabular-nums font-semibold text-amber-700">
-                        {item.idealQty > 0 ? item.idealQty : "—"} {item.idealQty > 0 ? item.unit : ""}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Input type="number" min="0" step="any" value={item.qty} onChange={(e) => updateDispatchRow(idx, "qty", e.target.value)} className={`h-7 text-xs w-20 text-right inline-block ${item.exceedsOwn ? "border-red-400" : ""}`} disabled={!item.included || submitting} data-testid={`dispatch-qty-${idx}`} />
-                        <span className="text-[10px] text-muted-foreground ml-1">{item.unit}</span>
-                        {item.exceedsOwn && (
-                          <p className="text-[10px] text-red-600 font-medium mt-0.5" data-testid={`own-stock-warn-${idx}`}>
-                            You only have {item.ownQty} {item.unit}
-                          </p>
-                        )}
-                      </TableCell>
-                      <TableCell className="min-w-[180px]">
-                        {item.included && (
-                          <SourceSelector
-                            fromRestaurantId={restaurantId}
-                            inventoryMasterId={Number(item.invMasterId)}
-                            value={item.sourceSelector}
-                            onChange={(v) => updateDispatchRow(idx, "sourceSelector", v)}
-                            disabled={submitting}
-                          />
-                        )}
-                      </TableCell>
-                      <TableCell className="text-xs text-right">
-                        <span className={`tabular-nums font-mono ${item.afterDispatch < 0 ? "text-red-600 font-semibold" : "text-muted-foreground"}`}>
-                          {item.afterDispatch} {item.unit}
-                        </span>
-                        {item.afterDispatch >= 0 && item.ownQty > 0 && (
-                          <p className="text-[10px] text-muted-foreground">You'll retain {item.retainPct}%</p>
-                        )}
-                        {item.afterDispatch < 0 && (
-                          <p className="text-[10px] text-red-600">Insufficient</p>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground max-w-[150px]">{item.suggestion}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            {Object.entries(getFilteredGrouped(dispatchRows)).map(([cat, catRows]) => (
+              <DispatchCategorySection
+                key={cat}
+                cat={cat}
+                rows={catRows}
+                collapsed={collapsedCats[cat] === true}
+                onToggle={() => setCollapsedCats(prev =>
+                  prev[cat] ? (({ [cat]: _x, ...rest }) => rest)(prev) : { ...prev, [cat]: true }
+                )}
+                onCatSelect={(select) => {
+                  setDispatchRows(p => p.map(r => r.category === cat ? { ...r, included: select } : r));
+                  if (!select) setCollapsedCats(prev => ({ ...prev, [cat]: true }));
+                  else setCollapsedCats(prev => (({ [cat]: _x, ...rest }) => rest)(prev));
+                }}
+                onRowUpdate={(idx, field, value) => {
+                  const globalIdx = dispatchRows.findIndex(r => r === catRows[idx]);
+                  if (globalIdx >= 0) updateDispatchRow(globalIdx, field, value);
+                }}
+                submitting={submitting}
+              />
+            ))}
+            {Object.keys(getFilteredGrouped(dispatchRows)).length === 0 && (
+              <div className="py-6 text-center text-xs text-muted-foreground">
+                No items match the current filters.
+              </div>
+            )}
             <div className="px-4 py-2 border-t border-border/50">
               <Button variant="ghost" size="sm" className="text-xs" onClick={addManualRow}>
                 <Plus className="h-3 w-3 mr-1" /> Add item manually
@@ -622,5 +662,254 @@ export default function DirectDispatchForm() {
       </Button>
       <p className="text-[10px] text-muted-foreground text-center mt-2" data-testid="po-auto-note">A PO will be auto-generated for {destName || "the destination"} on dispatch creation</p>
     </div>
+  );
+}
+
+
+// CR-050 — CategoryCombobox: searchable category picker (position:fixed avoids overflow clipping)
+function CategoryCombobox({ categories, value, onChange }) {
+  const [open, setOpen] = React.useState(false);
+  const [search, setSearch] = React.useState("");
+  const btnRef = React.useRef(null);
+  const [pos, setPos] = React.useState({ top: 0, left: 0 });
+
+  const options = [{ v: "all", l: "All Categories" }, ...(categories || []).map(c => ({ v: c, l: c }))];
+  const filtered = options.filter(o => !search || o.l.toLowerCase().includes(search.toLowerCase()));
+  const label = value === "all" ? "All Categories" : (value || "All Categories");
+
+  const openDropdown = (e) => {
+    e.stopPropagation();
+    const r = btnRef.current?.getBoundingClientRect();
+    if (r) setPos({ top: r.bottom + 3, left: r.left });
+    setOpen(o => !o);
+    setSearch("");
+  };
+
+  React.useEffect(() => {
+    if (!open) return;
+    const close = () => setOpen(false);
+    document.addEventListener("click", close);
+    return () => document.removeEventListener("click", close);
+  }, [open]);
+
+  const onSearchKey = (e) => {
+    if (e.key === "Enter") { if (filtered[0]) { onChange(filtered[0].v); setOpen(false); } }
+    else if (e.key === "ArrowDown") { e.preventDefault(); document.querySelector(".cr050-cat-item")?.focus(); }
+    else if (e.key === "Escape") setOpen(false);
+  };
+
+  return (
+    <div style={{ position: "relative", display: "inline-block" }}>
+      <button ref={btnRef} tabIndex={-1} onClick={openDropdown}
+        className="h-7 min-w-[130px] border border-input rounded-md px-2 pr-6 text-xs bg-background
+                   text-left relative hover:bg-muted/50 truncate"
+        data-testid="cat-combo-btn">
+        {label}
+        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground text-[10px]">▾</span>
+      </button>
+      {open && (
+        <div style={{ position: "fixed", top: pos.top, left: pos.left, zIndex: 9999 }}
+          className="bg-background border border-border rounded-lg shadow-lg w-48"
+          onClick={e => e.stopPropagation()}>
+          <div className="p-1.5 border-b border-border/50">
+            <input autoFocus
+              className="w-full h-6 text-xs border border-input rounded px-2 focus:outline-none focus:border-primary"
+              placeholder="Search category…" value={search}
+              onChange={e => setSearch(e.target.value)} onKeyDown={onSearchKey}
+              data-testid="cat-combo-search" />
+          </div>
+          <div className="max-h-40 overflow-y-auto py-1">
+            {filtered.map(o => (
+              <div key={o.v} tabIndex={0}
+                className={`cr050-cat-item px-3 py-1.5 text-xs cursor-pointer hover:bg-muted/70
+                            focus:bg-muted/70 focus:outline-none
+                            ${value === o.v ? "bg-primary/10 text-primary font-medium" : ""}`}
+                onClick={() => { onChange(o.v); setOpen(false); }}
+                onKeyDown={e => {
+                  if (e.key === "Enter") { onChange(o.v); setOpen(false); }
+                  else if (e.key === "ArrowDown") { e.preventDefault(); e.target.nextElementSibling?.focus(); }
+                  else if (e.key === "ArrowUp") { e.preventDefault(); e.target.previousElementSibling ? e.target.previousElementSibling.focus() : document.querySelector("[data-testid=cat-combo-search]")?.focus(); }
+                  else if (e.key === "Escape") setOpen(false);
+                }}>
+                {o.l}
+              </div>
+            ))}
+            {filtered.length === 0 && <div className="px-3 py-2 text-xs text-muted-foreground">No match</div>}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// CR-050 — DispatchCategorySection: category header + collapsible rows
+function DispatchCategorySection({ cat, rows, collapsed, onToggle, onCatSelect, onRowUpdate, submitting }) {
+  const outN = rows.filter(r => r.isOut).length;
+  const lowN = rows.filter(r => r.isLow && !r.isOut).length;
+  return (
+    <div>
+      <div tabIndex={-1} onClick={onToggle}
+        className="flex items-center gap-2 px-4 py-1.5 bg-muted/30 border-b border-border/50
+                   cursor-pointer hover:bg-muted/50 select-none"
+        data-testid={`cat-header-${cat}`}>
+        <span className={`text-[10px] text-muted-foreground transition-transform inline-block
+                          ${collapsed ? "" : "rotate-90"}`}>▶</span>
+        <span className="text-[10px] font-bold uppercase tracking-wider text-foreground/80">{cat}</span>
+        <span className="text-[10px] text-muted-foreground">{rows.length} items</span>
+        {outN > 0 && <span className="px-1.5 rounded text-[9px] font-bold bg-red-100 text-red-700">{outN} OUT</span>}
+        {lowN > 0 && <span className="px-1.5 rounded text-[9px] font-bold bg-amber-100 text-amber-700">{lowN} LOW</span>}
+        <div className="ml-auto flex gap-1.5" onClick={e => e.stopPropagation()}>
+          <button tabIndex={-1} onClick={() => onCatSelect(true)}
+            className="h-5 px-2 text-[9px] border border-border rounded bg-background hover:bg-muted text-muted-foreground">
+            Select All
+          </button>
+          <button tabIndex={-1} onClick={() => onCatSelect(false)}
+            className="h-5 px-2 text-[9px] border border-border rounded bg-background hover:bg-muted text-muted-foreground">
+            Unselect All
+          </button>
+        </div>
+      </div>
+      {!collapsed && (
+        <div className="overflow-x-auto">
+          <table className="w-full" style={{ tableLayout: "fixed" }}>
+            <colgroup>
+              <col style={{ width: "30px" }} /><col style={{ width: "20%" }} />
+              <col style={{ width: "70px" }} /><col style={{ width: "65px" }} />
+              <col style={{ width: "90px" }} /><col style={{ width: "210px" }} />
+              <col style={{ width: "95px" }} /><col />
+            </colgroup>
+            <thead>
+              <tr className="border-b border-border/30">
+                {["", "Item", "At Dest", "Cover", "Send Qty", "Source (FEFO)", "After Dispatch", "Note"].map((h, i) => (
+                  <th key={i} className="text-[9.5px] font-semibold text-muted-foreground uppercase
+                                         tracking-wider px-2 py-1.5 text-left">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row, idx) => (
+                <DispatchRow key={row.invMasterId} row={row}
+                  onUpdate={(field, val) => onRowUpdate(idx, field, val)}
+                  submitting={submitting} />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// CR-050 — DispatchRow: single table row with row-click toggle + FEFO source display
+function DispatchRow({ row, onUpdate, submitting }) {
+  const handleRowClick = (e) => {
+    if (["INPUT", "SELECT", "BUTTON", "A", "OPTION"].includes(e.target.tagName)) return;
+    onUpdate("included", !row.included);
+  };
+  const coverText = row.daysOfCover !== null
+    ? (row.daysOfCover < 1 ? "<1d" : `~${Math.round(row.daysOfCover)}d`)
+    : "—";
+  const rowCls = [
+    row.isOut ? "bg-red-50/40" : row.isLow ? "bg-amber-50/30" : "",
+    !row.included ? "opacity-40" : "",
+  ].filter(Boolean).join(" ");
+
+  return (
+    <tr className={`border-b border-border/20 cursor-pointer hover:bg-muted/20 ${rowCls}`}
+      onClick={handleRowClick} data-testid={`dispatch-row-${row.invMasterId}`}>
+
+      <td className="px-2 text-center">
+        <input type="checkbox" checked={row.included}
+          onChange={e => { e.stopPropagation(); onUpdate("included", e.target.checked); }}
+          className="rounded accent-primary" tabIndex={0}
+          data-testid={`dispatch-check-${row.invMasterId}`} />
+      </td>
+
+      <td className="px-2 py-1.5">
+        <div className="text-xs font-medium truncate">{row.stockTitle}</div>
+        <div className="text-[10px] text-muted-foreground">{row.ownQty} {row.unit} avail</div>
+      </td>
+
+      <td className={`px-2 text-xs text-right tabular-nums
+        ${row.isOut ? "text-red-600 font-semibold" : row.isLow ? "text-amber-600 font-medium" : "text-muted-foreground"}`}>
+        {row.destQty} {row.unit}
+      </td>
+
+      <td className={`px-2 text-xs text-right
+        ${row.isOut ? "text-red-600 font-semibold" : row.isLow ? "text-amber-600" : "text-muted-foreground"}`}>
+        {coverText}
+      </td>
+
+      <td className="px-2">
+        <div className="flex items-center gap-1">
+          <Input type="number" min="0" step="1"
+            className={`h-6 w-16 text-xs text-right tabular-nums
+              [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none
+              ${row.exceedsOwn ? "border-red-400 bg-red-50" : ""}`}
+            value={row.qty}
+            onChange={e => onUpdate("qty", e.target.value)}
+            disabled={!row.included || submitting}
+            data-testid={`dispatch-qty-${row.invMasterId}`} />
+          <span className="text-[9.5px] text-muted-foreground">{row.unit}</span>
+        </div>
+        {row.exceedsOwn && <div className="text-[9px] text-red-600 mt-0.5">max {row.ownQty}</div>}
+      </td>
+
+      <td className="px-2">
+        {row.isUnbatched ? (
+          <div className="text-[9.5px] text-amber-700 bg-amber-50 rounded px-1.5 py-0.5 leading-tight">
+            No batch tracking — bucket dispatch.{" "}
+            <a href="/purchase" className="text-primary underline text-[9px]" tabIndex={-1}>Add purchase</a>
+          </div>
+        ) : (row.fefoAllocs || []).length > 0 ? (
+          <div className="space-y-0.5">
+            {(row.fefoAllocs || []).map((alloc, i) => (
+              <div key={i} className="flex items-center gap-1">
+                <select
+                  className="h-6 text-[10px] border border-green-300 bg-green-50 text-green-800
+                             rounded px-1 flex-1 min-w-0"
+                  value={String(alloc.segment_id)}
+                  onChange={e => onUpdate("sourceSelector",
+                    { mode: "segment_id", segment_id: Number(e.target.value) })}
+                  disabled={!row.included || submitting}
+                  data-testid={`dispatch-source-${row.invMasterId}-${i}`}>
+                  <option value={String(alloc.segment_id)}>
+                    {alloc.batch || `Seg #${alloc.segment_id}`} ({alloc.qty} {row.unit})
+                  </option>
+                </select>
+                <span className="text-[8.5px] font-bold bg-green-100 text-green-700 rounded px-1 whitespace-nowrap">
+                  FEFO
+                </span>
+              </div>
+            ))}
+            {(() => {
+              const total = (row.fefoAllocs || []).reduce((s, a) => s + a.qty, 0);
+              const need = Number(row.qty) || 0;
+              return Math.abs(total - need) < 0.01
+                ? <div className="text-[9px] text-green-700">✓ Exact</div>
+                : total < need
+                  ? <div className="text-[9px] text-amber-700">⚠ Short {(need - total).toFixed(1)} {row.unit}</div>
+                  : null;
+            })()}
+          </div>
+        ) : (
+          <div className="text-[10px] text-muted-foreground">—</div>
+        )}
+      </td>
+
+      <td className="px-2 text-right">
+        <div className={`text-xs tabular-nums font-mono
+          ${row.afterDispatch < 0 ? "text-red-600 font-semibold" : "text-muted-foreground"}`}>
+          {row.afterDispatch} {row.unit}
+        </div>
+        {row.retainPct > 0 && (
+          <div className="text-[9.5px] text-muted-foreground">{row.retainPct}% retained</div>
+        )}
+      </td>
+
+      <td className="px-2 text-[10px] text-muted-foreground">
+        {row.fefoShort ? "⚠ Short on stock" : (row.suggestion || "")}
+      </td>
+    </tr>
   );
 }
