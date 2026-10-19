@@ -63,6 +63,28 @@ OPEN → IN_PROGRESS → RESOLVED → CLOSED
 
 ---
 
+## BUG-055 — Add Stock: Invoice # Field Missing
+
+| Field | Value |
+|-------|-------|
+| **ID** | BUG-055 |
+| **Severity** | P2 — MEDIUM |
+| **Status** | OPEN |
+| **File** | `frontend/src/components/central-inventory/AddStockPurchaseForm.jsx` |
+| **Related** | CR-047 (omission from implementation) |
+| **Registered** | 2026-10-19 |
+| **Found By** | OWNER-REPORTED (A1) |
+
+`addPurchase()` payload (lines 207–233) has no `invoice_number`. No `invoiceNumber`
+state in form. No input field. api.js does NOT need changing (raw payload passthrough).
+Fix: +1 state declaration, +1 input in header strip, +1 payload key. SMALL scope, 1 file.
+
+Open Q (owner): duplicate-check warning (like CR-040) or store-only?
+
+Intake: `control/sessions/BUG-055_ARTIFACT_1_INTAKE.md`
+
+---
+
 ## BUG-054 — Dispatch Screen: Keyboard Navigation Gaps (B1/B2/B3/B4)
 
 | Field | Value |

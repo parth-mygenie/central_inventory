@@ -6398,7 +6398,7 @@
         "frontend/src/lib/screenVisibility.js",
         "frontend/src/App.js"
       ],
-      "notes": "New screen at /reports/purchase under Reports sidebar section. Data: GET /inventory/vendor-item-list?from_date=&to_date= (already wired as getVendorItemList in api.js line 1083 — needs enhancement: add filter params vendor_id/ingredient_id/payment_type + return full response including summary/by_restaurant/total_amount). Table cols: Purchase Date, Store (master only), Ingredient, Vendor, Qty, Unit Price, Amount, Payment Type, Transaction ID. Grand total bar. By-store accordion for master accounts. Date range picker (default 30d). Export button -> GET /inventory/export-inventory-master -> download_url. screenVisibility.js FROZEN: new item { id:'purchase-report', label:'Purchase Report', path:'/reports/purchase', icon:'ShoppingCart' } under reports section. Requires owner approval for screenVisibility edit. All roles see it. Investigation: INVESTIGATION_20261018_REPRO_UPDATE.md",
+      "notes": "New screen at /reports/purchase under Reports sidebar section. Data: GET /inventory/vendor-item-list?from_date=&to_date= (already wired as getVendorItemList in api.js line 1083 — needs enhancement: add filter params vendor_id/ingredient_id/payment_type + return full response including summary/by_restaurant/total_amount). Table cols: Purchase Date, Store (master only), Ingredient, Vendor, Qty, Unit Price, Amount, Payment Type, Transaction ID. Grand total bar. By-store accordion for master accounts. Date range picker (default 30d). Export button -> GET /inventory/export-inventory-master -> download_url. screenVisibility.js FROZEN: new item { id:'purchase-report', label:'Purchase Report', path:'/reports/purchase', icon:'ShoppingCart' } under reports section. Requires owner approval for screenVisibility edit. All roles see it. Investigation: INVESTIGATION_20261018_REPRO_UPDATE.md | A2 (2026-10-19): invoice_number column MUST be included in Gate 3 plan. vendor-item-list returns invoice_number per row (confirmed G-039). Add as a column in the Purchase Report table alongside existing columns.",
       "artifact_refs": [
         {
           "artifact": 0,
@@ -6833,6 +6833,64 @@
           "artifact": 5,
           "label": "QA-Report",
           "status": "PENDING",
+          "path": ""
+        },
+        {
+          "artifact": 6,
+          "label": "Owner-Signoff",
+          "status": "MISSING",
+          "path": ""
+        }
+      ]
+    },
+    {
+      "id": "BUG-055",
+      "type": "BUG",
+      "title": "Add Stock — Invoice # field missing (not wired in form or payload)",
+      "status": "OPEN",
+      "severity": "P2",
+      "sprint_key": "S5",
+      "related_to": "CR-047",
+      "registered": "2026-10-19",
+      "files": [
+        "frontend/src/components/central-inventory/AddStockPurchaseForm.jsx"
+      ],
+      "notes": "addPurchase() payload (lines 207-233) has no invoice_number key. No invoiceNumber state. No input field. api.js unchanged — raw payload passthrough. Fix: 3 additions to AddStockPurchaseForm only. Open Q: duplicate-check warning (same as CR-040) or store-only?",
+      "artifact_refs": [
+        {
+          "artifact": 0,
+          "label": "Session-Start",
+          "status": "WAIVED",
+          "path": ""
+        },
+        {
+          "artifact": 1,
+          "label": "Intake",
+          "status": "DONE",
+          "path": "control/sessions/BUG-055_ARTIFACT_1_INTAKE.md"
+        },
+        {
+          "artifact": 2,
+          "label": "Impact-Analysis",
+          "status": "MISSING",
+          "path": ""
+        },
+        {
+          "artifact": 3,
+          "label": "Impl-Plan",
+          "status": "MISSING",
+          "path": ""
+        },
+        {
+          "artifact": 4,
+          "label": "Code-Gate",
+          "status": "MISSING",
+          "path": ""
+        },
+        {
+          "artifact": 5,
+          "label": "QA-Report",
+          "status": "MISSING",
           "path": ""
         },
         {
