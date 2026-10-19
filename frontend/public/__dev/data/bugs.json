@@ -3672,8 +3672,8 @@
       {
         "artifact": 3,
         "label": "Impl-Plan",
-        "status": "WAIVED",
-        "path": ""
+        "status": "DONE",
+        "path": "control/sessions/BUG-053_ARTIFACT_3_IMPLEMENTATION_PLAN.md"
       },
       {
         "artifact": 4,
