@@ -705,7 +705,7 @@ function DispatchRow({ row, onUpdate, submitting }) {
     : "—";
   const rowCls = [
     row.isOut ? "bg-red-50/40" : row.isLow ? "bg-amber-50/30" : "",
-    !row.included ? "opacity-40" : "",
+    // BUG-053 Option C: no whole-row opacity — item name dimmed per-cell; checkbox is the selected indicator
   ].filter(Boolean).join(" ");
 
   return (
@@ -720,7 +720,9 @@ function DispatchRow({ row, onUpdate, submitting }) {
       </td>
 
       <td className="px-2 py-1.5">
-        <div className="text-xs font-medium truncate">{row.stockTitle}</div>
+        <div className={`text-xs font-medium truncate ${!row.included ? "text-muted-foreground" : ""}`}>
+          {row.stockTitle}
+        </div>
         <div className="text-[10px] text-muted-foreground">{row.ownQty} {row.unit} avail</div>
       </td>
 
