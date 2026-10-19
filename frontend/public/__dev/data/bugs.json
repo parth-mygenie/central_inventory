@@ -3645,7 +3645,7 @@
     "id": "BUG-053",
     "type": "BUG",
     "title": "CR-050 Rectification — Header cards not compact, only 1 item shown, manual-add still present",
-    "status": "PROPOSED",
+    "status": "IMPLEMENTED",
     "severity": "P1",
     "sprint_key": "S5",
     "related_to": "CR-050",
@@ -3700,7 +3700,7 @@
       "pct": 71
     },
     "doc_count": 0,
-    "is_debt": false,
+    "is_debt": true,
     "debt_reasons": [
       "QA-Report: MISSING",
       "Owner-Signoff: MISSING"

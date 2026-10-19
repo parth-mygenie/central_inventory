@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom"; // BUG-053: useSearchParams removed (BUG-033 wire removed)
 import { useLoginContext } from "@/hooks/useLoginContext";
 import { useWriteAction } from "@/hooks/useWriteAction";
 import api from "@/services/api";
@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { LoadingState, PermissionDenied } from "@/components/common/StateDisplays";
-import { ArrowLeft, Plus, Trash2, Loader2, Truck, AlertTriangle, Package, Calendar, Zap } from "lucide-react";
+import { ArrowLeft, Plus, Loader2, Truck, AlertTriangle, Calendar } from "lucide-react"; // BUG-053: removed Trash2, Package, Zap (unused after manual rows removed)
 
 const COVERAGE_OPTIONS = [
   { value: 3, label: "3 days" },
@@ -26,13 +26,10 @@ const COVERAGE_OPTIONS = [
 
 export default function DirectDispatchForm() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams(); // BUG-033
-  const preselectedItemId = searchParams.get("item"); // BUG-033
   const { restaurantId, restaurantType, canDo } = useLoginContext();
   const { submitting, execute } = useWriteAction();
 
   const [destinations, setDestinations] = useState([]);
-  const [allItems, setAllItems] = useState([]);
   const [selectedDest, setSelectedDest] = useState("");
   const [loadingData, setLoadingData] = useState(true);
   const [coverageDays, setCoverageDays] = useState(7);
@@ -48,9 +45,6 @@ export default function DirectDispatchForm() {
 
   // Duplicate dispatch
   const [todayDispatchWarning, setTodayDispatchWarning] = useState("");
-
-  // Manual add rows (extra items beyond suggestions)
-  const [manualRows, setManualRows] = useState([]);
 
   // CR-050 — category grouping + filter state
   const [collapsedCats, setCollapsedCats] = useState({});
@@ -101,15 +95,12 @@ export default function DirectDispatchForm() {
     Promise.all([
       api.getHierarchySummary({ storeType: "central" }),
       api.getHierarchySummary({ storeType: "franchise" }),
-      api.getInventoryMaster(),
-    ]).then(([centralResp, franchiseResp, invResp]) => {
+    ]).then(([centralResp, franchiseResp]) => { // BUG-053: getInventoryMaster removed — allItems no longer needed
       if (cancelled) return;
       setDestinations([
         ...(centralResp.data?.data?.stores || []),
         ...(franchiseResp.data?.data?.stores || []),
       ]);
-      const inv = invResp.data?.data || invResp.data || [];
-      setAllItems(Array.isArray(inv) ? inv : []);
     }).catch(() => {})
       .finally(() => { if (!cancelled) setLoadingData(false); });
     return () => { cancelled = true; };
@@ -178,20 +169,22 @@ export default function DirectDispatchForm() {
 
   const hasConsumptionData = Object.keys(destConsumptionMap).length > 0;
 
-  // Compute intelligent dispatch items
+  // Compute dispatch items — BUG-053: iterate ownStock (all items), show ALL regardless of need
   const dispatchNeeds = useMemo(() => {
-    if (!destStock.length || !ownStock.length) return [];
-    return destStock.map(item => {
-      const name = (item.stock_title || "").toLowerCase();
-      const destQty = parseFloat(item.display_quantity) || 0;
-      const minQty = parseFloat(item.min_qty_alert) || 0;
+    if (!ownStock.length) return [];
+    return ownStock.map(ownItem => {
+      const name = (ownItem.stock_title || "").toLowerCase();
+      // Look up destination qty for this item (0 if item not at destination)
+      const destItem = destStock.find(d => (d.stock_title || "").toLowerCase() === name);
+      const destQty = parseFloat(destItem?.display_quantity) || 0;
+      const minQty  = parseFloat(destItem?.min_qty_alert || ownItem.min_qty_alert) || 0;
+      // CI-R3: display_qty is a string — always Number() wrap
+      const ownQty = Number(ownItem.display_qty) || 0;
+      const invMasterId = ownItem.id;
+
       // BUG-036: Normalize consumption to item's display unit before calculation
       const cEntry = destConsumptionMap[name];
-      const avgDaily = cEntry ? normalizeToDisplayUnit(cEntry.dailyQty, cEntry.unit, item.unit || ownItem?.display_unit || "") : 0;
-      const ownItem = ownStock.find(s => (s.stock_title || "").toLowerCase() === name);
-      if (!ownItem) return null;
-      const ownQty = ownItem.display_qty ?? 0;
-      const invMasterId = ownItem.id;
+      const avgDaily = cEntry ? normalizeToDisplayUnit(cEntry.dailyQty, cEntry.unit, ownItem.display_unit || ownItem.unit || "") : 0;
 
       let qtyToSend = 0;
       let daysOfCover = null;
@@ -210,15 +203,13 @@ export default function DirectDispatchForm() {
         }
       } else if (minQty > 0 && destQty < minQty) {
         qtyToSend = Math.ceil(minQty - destQty); // CR-050 — integer ceiling
-        suggestion = `Gap to min: ${qtyToSend} ${item.unit || ""}`;
+        suggestion = `Gap to min: ${qtyToSend} ${ownItem.unit || ""}`;
         urgency = destQty === 0 ? 80 : 40;
       }
+      // BUG-053: NO early return for qtyToSend=0 — all items stay visible (OK items)
 
-      if (qtyToSend <= 0) return null;
-
-      // Cap at own stock
-      const cappedQty = Math.min(qtyToSend, ownQty);
-      const exceedsOwn = qtyToSend > ownQty;
+      const cappedQty = Math.min(Math.max(qtyToSend, 0), ownQty);
+      const exceedsOwn = qtyToSend > 0 && qtyToSend > ownQty;
       const afterDispatch = Math.round((ownQty - cappedQty) * 100) / 100;
       const retainPct = ownQty > 0 ? Math.round((afterDispatch / ownQty) * 100) : 0;
 
@@ -230,11 +221,19 @@ export default function DirectDispatchForm() {
         ? { mode: "segment_id", segment_id: fefoAllocs[0].segment_id }
         : null;
 
+      const isOut = destQty === 0 && (avgDaily > 0 || minQty > 0);
+      const isLow = !isOut && qtyToSend > 0 && (
+        (ownItem.is_low_stock) ||
+        (destItem?.is_low_stock) ||
+        (daysOfCover !== null && daysOfCover < coverageDays) ||
+        (minQty > 0 && destQty < minQty && destQty > 0)
+      );
+
       return {
         invMasterId,
-        stockTitle: item.stock_title,
-        unit: ownItem.display_unit || item.unit || "",
-        category: item.category_name || ownItem.category_name || "",
+        stockTitle: ownItem.stock_title,
+        unit: ownItem.display_unit || ownItem.unit || "",
+        category: ownItem.category_name || destItem?.category_name || "",
         destQty,
         minQty,
         avgDaily,
@@ -247,20 +246,26 @@ export default function DirectDispatchForm() {
         retainPct,
         suggestion,
         urgency,
-        isOut: destQty === 0,
-        isLow: (item.is_low_stock || destQty < minQty) && destQty > 0,
-        qty: String(exceedsOwn ? cappedQty : qtyToSend),
+        isOut,
+        isLow,
+        qty: cappedQty > 0 ? String(cappedQty) : "",
         sourceSelector: autoSource,
-        included: false,          // CR-050 — default unchecked; storekeeper opts in
+        included: false,           // CR-050 — default unchecked; storekeeper opts in
         segments_preview: ownSegments, // CR-050
-        isUnbatched,              // CR-050
-        fefoAllocs,               // CR-050
-        fefoShort,                // CR-050
-        sourceManuallySet: false, // CR-050
+        isUnbatched,               // CR-050
+        fefoAllocs,                // CR-050
+        fefoShort,                 // CR-050
+        sourceManuallySet: false,  // CR-050
       };
-    }).filter(Boolean)
+    })
       .filter((item, idx, arr) => arr.findIndex(x => x.invMasterId === item.invMasterId) === idx)
-      .sort((a, b) => b.urgency - a.urgency);
+      .sort((a, b) => {
+        if (a.isOut && !b.isOut) return -1;
+        if (!a.isOut && b.isOut) return 1;
+        if (a.isLow && !b.isLow) return -1;
+        if (!a.isLow && b.isLow) return 1;
+        return b.urgency - a.urgency;
+      });
   }, [destStock, ownStock, destConsumptionMap, coverageDays]);
 
   // Editable state
@@ -269,19 +274,7 @@ export default function DirectDispatchForm() {
     setDispatchRows(dispatchNeeds.map(item => ({ ...item })));
   }, [dispatchNeeds]);
 
-  // BUG-033: Pre-select item from URL param — add as manual row if not in dispatch needs
-  useEffect(() => {
-    if (preselectedItemId && allItems.length > 0 && dispatchRows.length === 0 && manualRows.length === 0) {
-      const match = allItems.find(i => String(i.id) === preselectedItemId);
-      if (match && !dispatchNeeds.find(d => String(d.invMasterId) === preselectedItemId)) {
-        setManualRows([{ itemId: String(match.id), qty: "", source: "segment" }]);
-      }
-    }
-  }, [preselectedItemId, allItems, dispatchRows.length, manualRows.length, dispatchNeeds]);
-
-  // CR-046 — Select All / Unselect All for dispatch items
-  const selectAllDispatchRows = () => setDispatchRows(p => p.map(r => ({ ...r, included: true })));
-  const unselectAllDispatchRows = () => setDispatchRows(p => p.map(r => ({ ...r, included: false })));
+  // BUG-053: BUG-033 pre-select wire removed — all items now visible in dispatch list
 
   const updateDispatchRow = (idx, field, value) => {
     setDispatchRows(prev => {
@@ -309,22 +302,6 @@ export default function DirectDispatchForm() {
     });
   };
 
-  // Manual row handlers
-  const addManualRow = () => setManualRows(r => [...r, { itemId: "", quantity: "", unit: "", sourceSelector: null }]);
-  const removeManualRow = (idx) => setManualRows(r => r.filter((_, i) => i !== idx));
-  const updateManualRow = (idx, field, value) => {
-    setManualRows(r => {
-      const next = [...r];
-      next[idx] = { ...next[idx], [field]: value };
-      if (field === "itemId") {
-        const item = allItems.find(i => String(i.id) === String(value));
-        next[idx].unit = item?.unit || "";
-        next[idx].sourceSelector = null;
-      }
-      return next;
-    });
-  };
-
   // CR-050 — compact health strip stats (replaces 4 KPI tile cards)
   const healthStats = useMemo(() => {
     let outCount = 0, lowCount = 0, okCount = 0;
@@ -337,8 +314,7 @@ export default function DirectDispatchForm() {
   }, [dispatchRows]);
 
   const includedRows = dispatchRows.filter(r => r.included && Number(r.qty) > 0 && r.sourceSelector);
-  const validManualRows = manualRows.filter(r => r.itemId && Number(r.quantity) > 0 && r.sourceSelector);
-  const allIncluded = [...includedRows, ...validManualRows];
+  const allIncluded = includedRows; // BUG-053: manual rows removed
   const reviewWarnings = dispatchRows.filter(r => r.included && r.exceedsOwn && Number(r.qty) > 0);
 
   if (!canDo("dispatch")) return <PermissionDenied />;
@@ -346,23 +322,12 @@ export default function DirectDispatchForm() {
 
   const handleSubmit = () => {
     if (!selectedDest || allIncluded.length === 0) return;
-    const payloadItems = [
-      ...includedRows.map(r => ({
-        source_inventory_master_id: Number(r.invMasterId),
-        quantity: Number(r.qty),
-        unit: r.unit,
-        source_selector: r.sourceSelector,
-      })),
-      ...validManualRows.map(r => {
-        const item = allItems.find(i => String(i.id) === String(r.itemId));
-        return {
-          source_inventory_master_id: Number(r.itemId),
-          quantity: Number(r.quantity),
-          unit: item?.unit || r.unit,
-          source_selector: r.sourceSelector,
-        };
-      }),
-    ];
+    const payloadItems = includedRows.map(r => ({ // BUG-053: manual rows removed
+      source_inventory_master_id: Number(r.invMasterId),
+      quantity: Number(r.qty),
+      unit: r.unit,
+      source_selector: r.sourceSelector,
+    }));
     execute(
       () => api.initiateTransfer({ fromRestaurantId: restaurantId, toRestaurantId: Number(selectedDest), items: payloadItems }),
       {
@@ -379,65 +344,56 @@ export default function DirectDispatchForm() {
 
   return (
     <div data-testid="direct-dispatch-form">
-      <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground mb-3 transition-colors">
-        <ArrowLeft className="h-3.5 w-3.5" /> Back
-      </button>
-      <div className="flex items-center gap-2 mb-1">
-        <Truck className="h-5 w-5 text-primary" />
-        <h1 className="text-lg font-bold">Direct Dispatch</h1>
+      {/* BUG-053 — compact inline header: Back + title + dest selector + coverage pills */}
+      <div className="flex items-center gap-2 mb-3 border border-border rounded-lg px-3 py-2 bg-background flex-wrap">
+        <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0">
+          <ArrowLeft className="h-3.5 w-3.5" />
+        </button>
+        <div className="w-px h-4 bg-border shrink-0" />
+        <div className="flex items-center gap-1.5 shrink-0">
+          <Truck className="h-4 w-4 text-primary" />
+          <span className="font-bold text-sm">Direct Dispatch</span>
+        </div>
+        <div className="w-px h-4 bg-border shrink-0" />
+        <Select value={selectedDest} onValueChange={setSelectedDest} disabled={submitting}>
+          <SelectTrigger className="h-7 text-xs w-auto min-w-[180px] max-w-[240px]" data-testid="dispatch-dest-select">
+            <SelectValue placeholder="Select destination store…" />
+          </SelectTrigger>
+          <SelectContent>
+            {destinations.map(d => (
+              <SelectItem key={d.restaurant_id} value={String(d.restaurant_id)}>
+                {d.restaurant_name} ({mapRestaurantType(d.restaurant_type)})
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <div className="w-px h-4 bg-border shrink-0" />
+        <span className="text-xs text-muted-foreground shrink-0">Dispatch for:</span>
+        <div className="flex gap-1" data-testid="coverage-period-selector">
+          {COVERAGE_OPTIONS.map(opt => (
+            <Button key={opt.value} variant={coverageDays === opt.value ? "default" : "outline"} size="sm"
+              className="h-7 text-xs px-2.5" onClick={() => setCoverageDays(opt.value)}
+              data-testid={`coverage-${opt.value}d`}>
+              {opt.value}d
+            </Button>
+          ))}
+        </div>
+        {selectedDest && !hasConsumptionData && !destLoading && (
+          <span className="text-[10px] text-muted-foreground ml-auto">No consumption data — using thresholds</span>
+        )}
       </div>
-      <p className="text-xs text-muted-foreground mb-4">Send stock to a store in your hierarchy</p>
 
-      {/* Coverage selector */}
-      <Card className="mb-4" data-testid="coverage-selector-card">
-        <CardContent className="py-3 px-4">
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex items-center gap-1.5">
-              <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="text-xs font-medium">Dispatch for:</span>
-            </div>
-            <div className="flex gap-1.5" data-testid="coverage-period-selector">
-              {COVERAGE_OPTIONS.map(opt => (
-                <Button key={opt.value} variant={coverageDays === opt.value ? "default" : "outline"} size="sm" className="h-7 text-xs px-3" onClick={() => setCoverageDays(opt.value)} data-testid={`coverage-${opt.value}d`}>
-                  {opt.label}
-                </Button>
-              ))}
-            </div>
-            {selectedDest && !hasConsumptionData && !destLoading && (
-              <span className="text-[10px] text-muted-foreground bg-muted px-2 py-1 rounded">No consumption data — using thresholds</span>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Destination picker */}
-      <Card className="mb-4">
-        <CardContent className="py-3 px-4 space-y-3">
-          <div>
-            <Label className="text-xs">Destination Store *</Label>
-            <Select value={selectedDest} onValueChange={setSelectedDest} disabled={submitting}>
-              <SelectTrigger data-testid="dispatch-dest-select"><SelectValue placeholder="Select destination" /></SelectTrigger>
-              <SelectContent>
-                {destinations.map(d => (
-                  <SelectItem key={d.restaurant_id} value={String(d.restaurant_id)}>
-                    {d.restaurant_name} ({mapRestaurantType(d.restaurant_type)})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          {selectedDest && (() => {
-            const dest = destinations.find(d => String(d.restaurant_id) === selectedDest);
-            return dest ? <StoreHealthStrip storeName={dest.restaurant_name} outCount={dest.out_of_stock_count || 0} lowCount={dest.low_stock_count || 0} adequateCount={dest.adequate_count || 0} totalItems={dest.total_items || 0} urgent={(dest.out_of_stock_count || 0) >= 2} className="rounded-lg border border-border/50 mt-2" /> : null;
-          })()}
-          {todayDispatchWarning && (
-            <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-md text-xs mt-2" data-testid="duplicate-dispatch-warning">
-              <AlertTriangle className="h-3.5 w-3.5 text-amber-600 shrink-0" />
-              <span className="text-amber-700 font-medium">{todayDispatchWarning}</span>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Dest health + duplicate warning — inline, no card wrapper */}
+      {selectedDest && (() => {
+        const dest = destinations.find(d => String(d.restaurant_id) === selectedDest);
+        return dest ? <StoreHealthStrip storeName={dest.restaurant_name} outCount={dest.out_of_stock_count || 0} lowCount={dest.low_stock_count || 0} adequateCount={dest.adequate_count || 0} totalItems={dest.total_items || 0} urgent={(dest.out_of_stock_count || 0) >= 2} className="rounded-lg border border-border/50 mb-2" /> : null;
+      })()}
+      {todayDispatchWarning && (
+        <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-md text-xs mb-3" data-testid="duplicate-dispatch-warning">
+          <AlertTriangle className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+          <span className="text-amber-700 font-medium">{todayDispatchWarning}</span>
+        </div>
+      )}
 
       {/* CR-050 — compact health strip replaces 4 KPI tile cards */}
       {selectedDest && !destLoading && dispatchRows.length > 0 && (
@@ -556,73 +512,15 @@ export default function DirectDispatchForm() {
                 submitting={submitting}
               />
             ))}
-            {Object.keys(getFilteredGrouped(dispatchRows)).length === 0 && (
-              <div className="py-6 text-center text-xs text-muted-foreground">
-                No items match the current filters.
-              </div>
-            )}
-            <div className="px-4 py-2 border-t border-border/50">
-              <Button variant="ghost" size="sm" className="text-xs" onClick={addManualRow}>
-                <Plus className="h-3 w-3 mr-1" /> Add item manually
-              </Button>
-            </div>
           </CardContent>
         </Card>
       )}
 
-      {selectedDest && !destLoading && dispatchRows.length === 0 && destStock.length > 0 && (
+      {/* BUG-053: shows only when ownStock has items but dispatchRows is empty */}
+      {selectedDest && !destLoading && dispatchRows.length === 0 && ownStock.length > 0 && (
         <Card className="mb-4"><CardContent className="py-6 text-center text-muted-foreground text-sm">
-          {hasConsumptionData
-            ? `All items have sufficient stock for ${coverageDays}-day coverage at this destination.`
-            : "No items below threshold at this destination."}
-          <br /><Button variant="ghost" size="sm" className="text-xs mt-2" onClick={addManualRow}><Plus className="h-3 w-3 mr-1" /> Add item manually</Button>
+          No inventory items found. Add stock via the Purchase screen first.
         </CardContent></Card>
-      )}
-
-      {/* Manual add rows */}
-      {manualRows.length > 0 && (
-        <Card className="mb-4">
-          <CardHeader className="py-2.5 px-4"><CardTitle className="text-xs uppercase tracking-wider text-muted-foreground">Additional Items</CardTitle></CardHeader>
-          <CardContent className="py-0 px-4 space-y-3 pb-4">
-            {manualRows.map((row, idx) => {
-              const selectedItem = allItems.find(i => String(i.id) === String(row.itemId));
-              const qtyErr = row.quantity && validateQuantityForUnit(row.quantity, row.unit);
-              return (
-                <div key={`m-${idx}`} className="border rounded-md p-3 space-y-2" data-testid={`manual-dispatch-row-${idx}`}>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] text-muted-foreground">Manual Item {idx + 1}</span>
-                    <button type="button" onClick={() => removeManualRow(idx)} className="text-destructive hover:text-destructive/80" disabled={submitting}><Trash2 className="h-3.5 w-3.5" /></button>
-                  </div>
-                  <Select value={row.itemId ? String(row.itemId) : ""} onValueChange={(v) => updateManualRow(idx, "itemId", v)} disabled={submitting}>
-                    <SelectTrigger className="text-xs"><SelectValue placeholder="Select item" /></SelectTrigger>
-                    <SelectContent>
-                      {allItems.map(item => (
-                        <SelectItem key={item.id} value={String(item.id)}>{item.stock_title} ({item.unit})</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <Label className="text-[10px]">Quantity *</Label>
-                      <Input type="number" min="0" step="any" value={row.quantity} onChange={(e) => updateManualRow(idx, "quantity", e.target.value)} className="h-7 text-xs" disabled={submitting} />
-                      {qtyErr && <p className="text-[10px] text-destructive mt-0.5">{qtyErr}</p>}
-                    </div>
-                    <div>
-                      <Label className="text-[10px]">Unit</Label>
-                      <Input value={row.unit || "—"} className="h-7 text-xs bg-muted" readOnly />
-                    </div>
-                  </div>
-                  {row.itemId && (
-                    <div>
-                      <Label className="text-[10px]">Source *</Label>
-                      <SourceSelector fromRestaurantId={restaurantId} inventoryMasterId={Number(row.itemId)} value={row.sourceSelector} onChange={(v) => updateManualRow(idx, "sourceSelector", v)} disabled={submitting} />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </CardContent>
-        </Card>
       )}
 
       {/* Review warnings */}
@@ -646,10 +544,6 @@ export default function DirectDispatchForm() {
               {includedRows.map(r => (
                 <span key={r.invMasterId} className="text-xs tabular-nums"><span className="font-medium">{r.stockTitle}</span> <span className="text-muted-foreground">{r.qty} {r.unit}</span></span>
               ))}
-              {validManualRows.map((r, i) => {
-                const item = allItems.find(it => String(it.id) === String(r.itemId));
-                return <span key={`m-${i}`} className="text-xs tabular-nums"><span className="font-medium">{item?.stock_title || "Item"}</span> <span className="text-muted-foreground">{r.quantity} {r.unit}</span></span>;
-              })}
             </div>
             <p className="text-[10px] text-muted-foreground">{allIncluded.length} item{allIncluded.length !== 1 ? "s" : ""} to {destName}</p>
           </CardContent>
