@@ -53,7 +53,7 @@ PROPOSED → PLANNED → IN_PROGRESS → QA → OWNER_REVIEW → CLOSED
 | ID | Title | Status | Severity | Files |
 |----|-------|:------:|:--------:|-------|
 | **CR-050** | Direct Dispatch — Spreadsheet UX + Category Grouping + FEFO Auto-Select + Burst Fix | PROPOSED | P1 | `DirectDispatchForm.jsx`, `SourceSelector.jsx`, `api.js`, `RequestStockForm.jsx` |
-| **CR-051** | Purchase Report Screen | PROPOSED | P2 | `PurchaseReport.jsx` (new), `api.js`, `screenVisibility.js` (FROZEN — owner approval needed), `App.js` |
+| **CR-051** | Purchase Report Screen | PROPOSED — **Gate 3 DONE, awaiting Gate 4 GO** | P2 | `PurchaseReport.jsx` (new), `api.js`, `screenVisibility.js` (FROZEN — owner approved), `App.js` |
 | **CR-052** | Bulk Stock Import — Add Stock Screen (Excel Upload) | PROPOSED | P1 | `AddStockPurchaseForm.jsx`, `api.js` |
 | **CR-053** | Raw Materials Bulk Import/Export — Ingredients Page | PROPOSED | P2 | `IngredientCatalogue.jsx`, `api.js` |
 
