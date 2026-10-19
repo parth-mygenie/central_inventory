@@ -3789,7 +3789,7 @@
     "files": [
       "frontend/src/components/central-inventory/AddStockPurchaseForm.jsx"
     ],
-    "notes": "addPurchase() payload (lines 207-233) has no invoice_number key. No invoiceNumber state. No input field. api.js unchanged — raw payload passthrough. Fix: 3 additions to AddStockPurchaseForm only. Open Q: duplicate-check warning (same as CR-040) or store-only?",
+    "notes": "addPurchase() payload (lines 207-233) has no invoice_number key. No invoiceNumber state. No input field. api.js unchanged — raw payload passthrough. Fix: 3 additions to AddStockPurchaseForm only. Open Q: duplicate-check warning (same as CR-040) or store-only? | Q1 ANSWERED (2026-10-19): store-only — no duplicate check warning. Invoice can repeat across vendors (owner confirmed in CR-051 context).",
     "artifact_refs": [
       {
         "artifact": 0,
@@ -3915,6 +3915,77 @@
     "doc_count": 0,
     "is_debt": true,
     "debt_reasons": [
+      "Owner-Signoff: MISSING"
+    ],
+    "sprint_name": "S5"
+  },
+  {
+    "id": "BUG-057",
+    "type": "BUG",
+    "title": "Add Stock — Expiry Enter jumps to next row Qty instead of Item search",
+    "status": "OPEN",
+    "severity": "P2",
+    "sprint_key": "S5",
+    "related_to": "CR-047",
+    "registered": "2026-10-19",
+    "files": [
+      "frontend/src/components/central-inventory/AddStockPurchaseForm.jsx"
+    ],
+    "notes": "handleKeyDown(expiry) line 682: getElementById(qty-{idx+1}) focuses wrong field. Item combobox has data-testid=item-select-{idx}, no id. Fix: querySelector([data-testid=item-select-{idx+1}]). Also: onTabFromLast branch (line 681) adds a row but never focuses new item-select — fix with setTimeout 50ms (same pattern as line 718). ~6 lines changed.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "path": ""
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/BUG-057_ARTIFACT_1_INTAKE.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "WAIVED",
+        "path": ""
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "WAIVED",
+        "path": ""
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "MISSING",
+        "path": ""
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "MISSING",
+        "path": ""
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "MISSING",
+        "path": ""
+      }
+    ],
+    "completeness": {
+      "done": 4,
+      "total": 7,
+      "pct": 57
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "Code-Gate: MISSING",
+      "QA-Report: MISSING",
       "Owner-Signoff: MISSING"
     ],
     "sprint_name": "S5"
