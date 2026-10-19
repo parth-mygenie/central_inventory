@@ -3666,19 +3666,19 @@
       {
         "artifact": 2,
         "label": "Impact-Analysis",
-        "status": "MISSING",
-        "path": ""
+        "status": "DONE",
+        "path": "control/sessions/BUG-053_ARTIFACT_2_IMPACT_ANALYSIS.md"
       },
       {
         "artifact": 3,
         "label": "Impl-Plan",
-        "status": "MISSING",
+        "status": "WAIVED",
         "path": ""
       },
       {
         "artifact": 4,
         "label": "Code-Gate",
-        "status": "MISSING",
+        "status": "WAIVED",
         "path": ""
       },
       {
@@ -3695,16 +3695,13 @@
       }
     ],
     "completeness": {
-      "done": 2,
+      "done": 5,
       "total": 7,
-      "pct": 29
+      "pct": 71
     },
     "doc_count": 0,
     "is_debt": false,
     "debt_reasons": [
-      "Impact-Analysis: MISSING",
-      "Impl-Plan: MISSING",
-      "Code-Gate: MISSING",
       "QA-Report: MISSING",
       "Owner-Signoff: MISSING"
     ],
