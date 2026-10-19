@@ -3,8 +3,8 @@
 ## Original Problem Statement
 Deploy the existing React frontend repo directly into `/app` and run it as-is, with no code edits.
 - Repo: https://github.com/parth-mygenie/central_inventory.git
-- **Current Branch: 18oct** (deployed 2026-10-18)
-- Previous Branch: handover_investigate_intake-16oct (deployed 2026-10-17)
+- **Current Branch: 19oct** (deployed 2026-10-19)
+- Previous Branch: 18oct (deployed 2026-10-18)
 - Previous Branch: 7-8-26 (deployed 2026-10-15)
 - Destination: `/app` (repo contents pulled directly into `/app`, not a subfolder)
 - Platform files preserved during clear-and-clone
@@ -17,6 +17,19 @@ Deploy the existing React frontend repo directly into `/app` and run it as-is, w
 - **External API:** preprod.mygenie.online (POS API proxy)
 
 ## Deployment History
+
+### 2026-10-19 — Branch 19oct Deployed
+- Cleared `/app` (preserved `.emergent/`)
+- Cloned branch `19oct` from GitHub into `/tmp/ci_clone`, then moved contents into `/app`
+- Note: branch specified as `19ct` in problem statement; resolved to `19oct` (confirmed via git ls-remote)
+- Preserved platform files: `backend/.env`, `frontend/.env`, `.emergent/` (cron, markers, emergent.yml)
+- Ran `pip install -r requirements.txt` for backend (minor idna version warning, non-blocking)
+- Ran `yarn install` for frontend (success, 55s)
+- Restarted backend + frontend via supervisorctl
+- Both services running: backend (port 8001), frontend (port 3000)
+- App loads: Central Inventory sign-in page confirmed via screenshot
+- memory dir fully synced: repo's memory/ used as-is (5 investigation reports, PRD, QA report, JSON data files)
+- Current branch: `19oct` (commit: 4d3e97cf11a0404b882c455fe310f2cc1349623f)
 
 ### 2026-10-18 — Branch 18oct Deployed
 - Cleared `/app` (preserved `.git`)
