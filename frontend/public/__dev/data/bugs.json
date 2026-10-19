@@ -3711,7 +3711,7 @@
     "id": "BUG-054",
     "type": "BUG",
     "title": "Dispatch Screen — Keyboard Navigation Gaps (B1: search Enter, B2: qty Enter, B3: disabled guard, B4: auto-select on qty entry)",
-    "status": "OPEN",
+    "status": "IMPLEMENTED",
     "severity": "P1",
     "sprint_key": "S5",
     "related_to": "CR-050",
@@ -3748,13 +3748,13 @@
       {
         "artifact": 4,
         "label": "Code-Gate",
-        "status": "MISSING",
-        "path": ""
+        "status": "DONE",
+        "path": "control/sessions/BUG-054_ARTIFACT_2_IMPACT_ANALYSIS.md"
       },
       {
         "artifact": 5,
         "label": "QA-Report",
-        "status": "MISSING",
+        "status": "PENDING",
         "path": ""
       },
       {
@@ -3765,15 +3765,14 @@
       }
     ],
     "completeness": {
-      "done": 4,
+      "done": 5,
       "total": 7,
-      "pct": 57
+      "pct": 71
     },
     "doc_count": 0,
     "is_debt": true,
     "debt_reasons": [
-      "Code-Gate: MISSING",
-      "QA-Report: MISSING",
+      "QA-Report: PENDING",
       "Owner-Signoff: MISSING"
     ],
     "sprint_name": "S5"

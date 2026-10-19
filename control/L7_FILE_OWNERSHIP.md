@@ -171,6 +171,11 @@
 
 | `frontend/src/components/central-inventory/RecipeCatalogue.jsx` | BUG-046 | 2026-07-16 | Lines 326-338: food Select dropdown in add mode |
 
+### BUG-054: Dispatch Keyboard Navigation (session 2026-10-19)
+| File | Change | Item |
+|------|--------|------|
+| `frontend/src/components/central-inventory/DirectDispatchForm.jsx` | MODIFIED — onKeyDown on search input (B1+B3), onKeyDown on qty Input (B2+B4), removed !row.included from qty disabled guard | BUG-054 |
+
 ### BUG-047: Addon Recipe CRUD Fix (session 2026-07-24)
 | File | Change | Item |
 |------|--------|------|

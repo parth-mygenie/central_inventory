@@ -69,17 +69,18 @@ OPEN → IN_PROGRESS → RESOLVED → CLOSED
 |-------|-------|
 | **ID** | BUG-054 |
 | **Severity** | P1 — HIGH |
-| **Status** | OPEN |
+| **Status** | IMPLEMENTED — QA PENDING (preprod login required for live UI test) |
 | **File** | `frontend/src/components/central-inventory/DirectDispatchForm.jsx` |
 | **Related** | CR-050 (post-implementation gap) |
 | **Registered** | 2026-10-19 |
 | **Found By** | OWNER-REPORTED (B1/B2/B3) + OWNER-ADDED (B4) |
 
-**B1** Search `<input>` (line 457) has no `onKeyDown` — Enter does nothing. Fix: +8 lines.
-**B2** Qty `<Input>` (line 741) has no `onKeyDown` — Enter does nothing. Fix: +6 lines.
-**B3** `included:false` default (line 253) + `disabled={!row.included}` (line 747) + INPUT guard in row click (line 700) — qty still disabled even after B1 focuses it. Fix: B1 handler must also call `included:true`.
-**B4** Qty `onChange` (line 746) does not auto-set `included:true`. Storekeeper must click checkbox before typing qty. Fix: remove `disabled`, auto-toggle `included` in `onChange`.
+**B1** `onKeyDown` added to search `<input>` (line ~477) — Enter finds first visible row, auto-checks it, focuses its qty. ✅
+**B2** `onKeyDown` added to qty `<Input>` (line ~758) — Enter jumps focus to next row's qty. ✅
+**B3** B1 handler calls `updateDispatchRow(idx, "included", true)` before `.focus()` — qty is active when focus lands. ✅
+**B4** `disabled={!row.included}` guard removed from qty input (line ~767). Qty always editable; Enter auto-checks row if qty>0. ✅
 
+Impact Analysis: `control/sessions/BUG-054_ARTIFACT_2_IMPACT_ANALYSIS.md`
 Investigation: `control/sessions/INVESTIGATION_20261019_DISPATCH_KEYBOARD.md`
 Intake: `control/sessions/BUG-054_ARTIFACT_1_INTAKE.md`
 

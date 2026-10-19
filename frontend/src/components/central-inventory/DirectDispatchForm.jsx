@@ -474,6 +474,17 @@ export default function DirectDispatchForm() {
                   });
                 }
               }}
+              onKeyDown={e => {
+                // BUG-054 B1+B3: Enter → first visible row auto-checked + qty focused
+                if (e.key !== "Enter") return;
+                e.preventDefault();
+                const groups = getFilteredGrouped(dispatchRows);
+                const firstRow = Object.values(groups)[0]?.[0];
+                if (!firstRow) return;
+                const idx = dispatchRows.findIndex(r => r.invMasterId === firstRow.invMasterId);
+                if (idx >= 0) updateDispatchRow(idx, "included", true);
+                document.querySelector(`[data-testid="dispatch-qty-${firstRow.invMasterId}"]`)?.focus();
+              }}
               data-testid="dispatch-search-input"
             />
             <button tabIndex={-1}
@@ -744,7 +755,16 @@ function DispatchRow({ row, onUpdate, submitting }) {
               ${row.exceedsOwn ? "border-red-400 bg-red-50" : ""}`}
             value={row.qty}
             onChange={e => onUpdate("qty", e.target.value)}
-            disabled={!row.included || submitting}
+            onKeyDown={e => {
+              // BUG-054 B2+B4: Enter → auto-checks row if qty>0, jumps to next row
+              if (e.key !== "Enter") return;
+              e.preventDefault();
+              if (Number(row.qty) > 0 && !row.included) onUpdate("included", true);
+              const all = Array.from(document.querySelectorAll('[data-testid^="dispatch-qty-"]'));
+              const cur = all.indexOf(e.target);
+              if (cur >= 0 && cur + 1 < all.length) { all[cur + 1].focus(); all[cur + 1].select(); }
+            }}
+            disabled={submitting}
             data-testid={`dispatch-qty-${row.invMasterId}`} />
           <span className="text-[9.5px] text-muted-foreground">{row.unit}</span>
         </div>
