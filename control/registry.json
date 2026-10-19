@@ -6872,8 +6872,8 @@
         {
           "artifact": 2,
           "label": "Impact-Analysis",
-          "status": "MISSING",
-          "path": ""
+          "status": "DONE",
+          "path": "control/sessions/BUG-055_057_ARTIFACT_2_IMPACT_ANALYSIS.md"
         },
         {
           "artifact": 3,
@@ -6988,8 +6988,8 @@
         {
           "artifact": 2,
           "label": "Impact-Analysis",
-          "status": "WAIVED",
-          "path": ""
+          "status": "DONE",
+          "path": "control/sessions/BUG-055_057_ARTIFACT_2_IMPACT_ANALYSIS.md"
         },
         {
           "artifact": 3,

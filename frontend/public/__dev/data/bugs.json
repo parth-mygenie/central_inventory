@@ -3806,8 +3806,8 @@
       {
         "artifact": 2,
         "label": "Impact-Analysis",
-        "status": "MISSING",
-        "path": ""
+        "status": "DONE",
+        "path": "control/sessions/BUG-055_057_ARTIFACT_2_IMPACT_ANALYSIS.md"
       },
       {
         "artifact": 3,
@@ -3835,14 +3835,13 @@
       }
     ],
     "completeness": {
-      "done": 2,
+      "done": 3,
       "total": 7,
-      "pct": 29
+      "pct": 43
     },
     "doc_count": 0,
     "is_debt": true,
     "debt_reasons": [
-      "Impact-Analysis: MISSING",
       "Impl-Plan: MISSING",
       "Code-Gate: MISSING",
       "QA-Report: MISSING",
@@ -3948,8 +3947,8 @@
       {
         "artifact": 2,
         "label": "Impact-Analysis",
-        "status": "WAIVED",
-        "path": ""
+        "status": "DONE",
+        "path": "control/sessions/BUG-055_057_ARTIFACT_2_IMPACT_ANALYSIS.md"
       },
       {
         "artifact": 3,
