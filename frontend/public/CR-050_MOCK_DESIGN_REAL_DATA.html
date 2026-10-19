@@ -25,6 +25,9 @@
   .page-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
   .page-title { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 7px; }
   .dest-select { height: 30px; border: 1px solid #d1d5db; border-radius: 6px; padding: 0 8px; font-size: 12px; background: #fff; font-family: inherit; }
+  .cov-pill { height: 26px; padding: 0 10px; border-radius: 5px; border: 1px solid #e5e7eb; background: #fff; font-size: 11px; cursor: pointer; font-family: inherit; color: #374151; transition: all .12s; }
+  .cov-pill:hover { background: #f3f4f6; }
+  .cov-pill.active { background: #111; color: #fff; border-color: #111; font-weight: 600; }
 
   /* Compact health strip (replaces 4 KPI tiles) */
   .health-strip { display: flex; align-items: center; gap: 8px; padding: 7px 12px; background: #fff; border: 1px solid #e5e7eb; border-radius: 7px; margin-bottom: 10px; font-size: 11.5px; flex-wrap: wrap; }
@@ -172,23 +175,29 @@
   <div class="main">
     <div class="page">
 
-      <!-- Header -->
-      <div class="page-header">
-        <div class="page-title">
-          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h11a2 2 0 012 2v3m-3 8h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-          Dispatch Stock
+      <!-- Compact page header: title + dest + coverage all inline -->
+      <div class="page-header" style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:8px 12px;margin-bottom:10px;gap:10px;flex-wrap:wrap">
+        <div class="page-title" style="font-size:13px;font-weight:700;flex-shrink:0">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h11a2 2 0 012 2v3m-3 8h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          Direct Dispatch
         </div>
-        <select class="dest-select" id="destSelect" onchange="onDestChange()">
+        <div style="width:1px;height:20px;background:#e5e7eb;flex-shrink:0"></div>
+        <select class="dest-select" id="destSelect" onchange="onDestChange()" style="flex:1;min-width:160px;max-width:260px">
           <option value="">Select destination store…</option>
           <option value="809" selected>Outlet Direct One (Outlet)</option>
           <option value="807">Central Kitchen Alpha (Master)</option>
         </select>
-        <select class="dest-select" id="coverageSel" onchange="render()" style="width:90px">
-          <option value="3" selected>3 days</option>
-          <option value="7">7 days</option>
-          <option value="10">10 days</option>
-          <option value="30">30 days</option>
-        </select>
+        <div style="width:1px;height:20px;background:#e5e7eb;flex-shrink:0"></div>
+        <span style="font-size:11px;color:#6b7280;white-space:nowrap;flex-shrink:0">Dispatch for:</span>
+        <div style="display:flex;gap:4px;flex-shrink:0">
+          <button onclick="setCoverage(3,this)" class="cov-pill active" data-val="3">3d</button>
+          <button onclick="setCoverage(7,this)" class="cov-pill" data-val="7">7d</button>
+          <button onclick="setCoverage(10,this)" class="cov-pill" data-val="10">10d</button>
+          <button onclick="setCoverage(30,this)" class="cov-pill" data-val="30">30d</button>
+        </div>
+        <div id="dupWarning" style="display:none;font-size:10.5px;color:#b45309;background:#fef3c7;border-radius:4px;padding:3px 8px;flex-shrink:0">
+          ⚠ Already dispatched today (1 transfer)
+        </div>
       </div>
 
       <!-- Compact health strip (CR-050: replaces 4 KPI tiles) -->
@@ -262,16 +271,30 @@ const ITEMS = [
   { id:20835, title:"Eggs",             unit:"piece", cat:"Vegetables & Herbs", destQty:12,  minQty:30, avgDaily:8.0,  ownQty:300, segments:[{seg:215,batch:"EGG-18OCT26-1423",expiry:"2026-11-15",qty:300}]},
   // desi dairy
   { id:20856, title:"makkhan",          unit:"kg",    cat:"desi dairy",         destQty:0,   minQty:1,  avgDaily:0.3,  ownQty:2,   segments:[{seg:241,batch:"MAK-18OCT26-1423",expiry:"2027-01-01",qty:2}]},
+  // OK items — sufficient stock at destination (no dispatch needed)
+  { id:20815, title:"Beetroot",         unit:"kg",    cat:"Vegetables & Herbs", destQty:18,  minQty:5,  avgDaily:1.0,  ownQty:40,  segments:[{seg:220,batch:"BEE-18OCT26-1423",expiry:"2027-06-01",qty:40}]},
+  { id:20820, title:"Black Pepper",     unit:"kg",    cat:"Vegetables & Herbs", destQty:12,  minQty:2,  avgDaily:0.5,  ownQty:20,  segments:[{seg:221,batch:"BLA-18OCT26-1423",expiry:"2027-08-01",qty:20}]},
+  { id:20825, title:"Capsicum Yellow",  unit:"kg",    cat:"Vegetables & Herbs", destQty:22,  minQty:5,  avgDaily:1.5,  ownQty:60,  segments:[{seg:222,batch:"CAY-18OCT26-1423",expiry:"2027-03-15",qty:60}]},
+  { id:20830, title:"Coconut",          unit:"piece", cat:"Vegetables & Herbs", destQty:30,  minQty:10, avgDaily:2.0,  ownQty:80,  segments:[{seg:223,batch:"COC-18OCT26-1423",expiry:"2027-05-01",qty:80}]},
+  { id:20845, title:"Lemon",            unit:"kg",    cat:"Vegetables & Herbs", destQty:9,   minQty:3,  avgDaily:0.8,  ownQty:35,  segments:[{seg:224,batch:"LEM-18OCT26-1423",expiry:"2027-02-20",qty:35}]},
 ];
 
 const COVERAGE_DAYS_DEFAULT = 3;
 let filter = 'all';
-let selectedCat = 'all';   // replaces catFilter <select>
+let selectedCat = 'all';
 let collapsedCats = {};
+window._coverage = 3;
+
+function setCoverage(val, btn) {
+  window._coverage = val;
+  document.querySelectorAll('.cov-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
 let rows = [];
 
 function computeRows() {
-  const coverage = Number(document.getElementById('coverageSel')?.value) || COVERAGE_DAYS_DEFAULT;
+  const coverage = Number(window._coverage || 3);
   rows = ITEMS.map(item => {
     const destQty = item.destQty;
     const avgDaily = item.avgDaily;
@@ -283,49 +306,52 @@ function computeRows() {
     if (avgDaily > 0) {
       daysOfCover = destQty / avgDaily;
       const projected = avgDaily * coverage;
-      // CR-050 FIX: Math.ceil(x) not Math.ceil(x*100)/100
       qtyToSend = Math.max(0, Math.ceil(projected - destQty));
+      if (qtyToSend > 0) {
+        suggestion = daysOfCover < 1
+          ? `<1d cover, sending ${coverage}d`
+          : `~${Math.round(daysOfCover)}d cover, sending ${coverage}d`;
+        urgency = daysOfCover < 1 ? 100 : 50 + (coverage - daysOfCover);
+      }
     } else if (item.minQty > 0 && destQty < item.minQty) {
       qtyToSend = Math.ceil(item.minQty - destQty);
       suggestion = `Gap to min: ${qtyToSend} ${item.unit}`;
+      urgency = destQty === 0 ? 80 : 40;
     }
 
-    if (qtyToSend <= 0) return null;
+    // CR-050: show ALL items — capped qty may be 0 for OK items
     const capped = Math.min(qtyToSend, ownQty);
-    if (capped <= 0) return null;
-
     const afterDispatch = ownQty - capped;
     const retainPct = ownQty > 0 ? Math.round((afterDispatch / ownQty) * 100) : 0;
-    const isOut = destQty === 0;
-    const isLow = !isOut && daysOfCover !== null && daysOfCover < coverage;
+    const isOut = destQty === 0 && (avgDaily > 0 || item.minQty > 0);
+    const isLow = !isOut && daysOfCover !== null && daysOfCover < coverage && qtyToSend > 0;
     const exceedsOwn = qtyToSend > ownQty;
 
-    // FEFO auto-select
     const { allocations, short } = fefoAutoSelect(item, capped);
     const isUnbatched = item.segments.length > 0 && item.segments.every(s => s.seg === null);
 
-    // Preserve existing included state across re-renders; default = false (unselected on first load)
     const existing = rows.find(r => r.id === item.id);
     return {
       ...item,
       qtyToSend: capped,
       idealQty: qtyToSend,
-      qty: String(capped),
+      qty: capped > 0 ? String(capped) : '',
       afterDispatch,
       retainPct,
       isOut,
       isLow,
       exceedsOwn,
       daysOfCover,
+      urgency,
+      suggestion,
       included: existing ? existing.included : false,
       fefoAllocations: allocations,
       fefoShort: short,
       isUnbatched,
-      sourceMode: allocations.length > 0 ? 'fefo' : (isUnbatched ? 'bucket' : 'manual'),
     };
-  }).filter(Boolean);
+  });
 
-  // Sort by urgency: OUT first, then LOW, then by days of cover asc
+  // Sort: OUT → LOW → OK, then by days of cover asc
   rows.sort((a,b) => {
     if (a.isOut && !b.isOut) return -1;
     if (!a.isOut && b.isOut) return 1;
@@ -682,13 +708,14 @@ function masterSelect(select) {
 }
 
 function resetAll() {
-  rows.forEach(r => r.included = true);
+  rows.forEach(r => r.included = false);
   filter = 'all';
   selectedCat = 'all';
   collapsedCats = {};
+  window._coverage = 3;
   document.getElementById('searchInput').value = '';
   document.getElementById('catComboBtn').textContent = 'All Categories';
-  document.getElementById('coverageSel').value = '3';
+  document.querySelectorAll('.cov-pill').forEach(b => { b.classList.remove('active'); if (b.dataset.val==='3') b.classList.add('active'); });
   setFilter('all');
 }
 
