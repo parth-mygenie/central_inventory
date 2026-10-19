@@ -4,8 +4,7 @@
 Deploy the existing React frontend repo directly into `/app` and run it as-is, with no code edits.
 - Repo: https://github.com/parth-mygenie/central_inventory.git
 - **Current Branch: 19oct** (deployed 2026-10-19)
-- Previous Branch: 18oct (deployed 2026-10-18)
-- Previous Branch: 7-8-26 (deployed 2026-10-15)
+- Previous Branch: 18oct (deployed 2026-10-18)- Previous Branch: 7-8-26 (deployed 2026-10-15)
 - Destination: `/app` (repo contents pulled directly into `/app`, not a subfolder)
 - Platform files preserved during clear-and-clone
 - No code edits — deployed and run as-is
@@ -30,6 +29,29 @@ Deploy the existing React frontend repo directly into `/app` and run it as-is, w
 - App loads: Central Inventory sign-in page confirmed via screenshot
 - memory dir fully synced: repo's memory/ used as-is (5 investigation reports, PRD, QA report, JSON data files)
 - Current branch: `19oct` (commit: 4d3e97cf11a0404b882c455fe310f2cc1349623f)
+
+### 2026-10-19 — Branch 19oct Deployed + Sprint S5 Work
+
+**Deployment:**
+- Branch `19oct` deployed from GitHub — all services running
+
+**Implemented this session:**
+
+| Item | Title | QA |
+|------|-------|----|
+| CR-051 | Purchase Report Screen (new screen `/reports/purchase`) | Gate 6 pending |
+| BUG-054 | Dispatch keyboard nav (search Enter + qty Enter + auto-check) | Pending (preprod 401) |
+| BUG-055 | Add Stock — Invoice # field in header strip | ✅ PASS iter_74 |
+| BUG-056 | Purchase Report — unit price per-gram fix + split payment legs | ✅ PASS iter_73 |
+| BUG-057 | Add Stock — Expiry Enter → item search (onKeyUp + Popover click) | ✅ PASS iter_75 |
+
+**Investigated (not yet fixed):**
+- Purchase Report fare not shown — root cause confirmed (line_total excludes fare; needs live probe for `tot_fair`/`tot_amount` field names)
+
+**Open P1 items:**
+- BUG-051 (Add Stock duplicate gate) — PROPOSED, blocks CR-047 QA
+- CR-051 Gate 6 QA pending
+- BUG-054 live QA pending
 
 ### 2026-10-18 — Branch 18oct Deployed
 - Cleared `/app` (preserved `.git`)
