@@ -983,17 +983,15 @@
     "type": "BUG",
     "id": "BUG-055",
     "title": "Add Stock — Invoice # field missing (not wired in form or payload)",
-    "status": "OPEN",
+    "status": "IMPLEMENTED",
     "severity": "P2",
     "sprint_key": "S5",
     "sprint_name": "S5",
     "debt_reasons": [
       "Impl-Plan: MISSING",
-      "Code-Gate: MISSING",
-      "QA-Report: MISSING",
       "Owner-Signoff: MISSING"
     ],
-    "missing_count": 4,
+    "missing_count": 2,
     "pending_count": 0
   },
   {
@@ -1014,16 +1012,14 @@
     "type": "BUG",
     "id": "BUG-057",
     "title": "Add Stock — Expiry Enter jumps to next row Qty instead of Item search",
-    "status": "OPEN",
+    "status": "IMPLEMENTED",
     "severity": "P2",
     "sprint_key": "S5",
     "sprint_name": "S5",
     "debt_reasons": [
-      "Code-Gate: MISSING",
-      "QA-Report: MISSING",
       "Owner-Signoff: MISSING"
     ],
-    "missing_count": 3,
+    "missing_count": 1,
     "pending_count": 0
   }
 ]

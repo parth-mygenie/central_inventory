@@ -171,6 +171,11 @@
 
 | `frontend/src/components/central-inventory/RecipeCatalogue.jsx` | BUG-046 | 2026-07-16 | Lines 326-338: food Select dropdown in add mode |
 
+### BUG-055 + BUG-057: Add Stock Invoice # + Expiry Navigation (session 2026-10-19)
+| File | Change | Item |
+|------|--------|------|
+| `frontend/src/components/central-inventory/AddStockPurchaseForm.jsx` | MODIFIED — invoiceNumber state/input/payload/reset (BUG-055); handleKeyDown btn.focus()+btn.click() + expiry onKeyDown→onKeyUp (BUG-057) | BUG-055, BUG-057 |
+
 ### BUG-056: Purchase Report Display Fixes (session 2026-10-19)
 | File | Change | Item |
 |------|--------|------|

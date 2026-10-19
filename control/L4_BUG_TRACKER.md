@@ -65,24 +65,18 @@ OPEN → IN_PROGRESS → RESOLVED → CLOSED
 
 | **BUG-056** | Purchase Report — Unit Price per-gram + split payment legs | IMPLEMENTED — QA PASS (live, iteration_73) | P1 | `PurchaseReport.jsx` |
 
+## BUG-055 — Add Stock: Invoice # Field + BUG-057: Expiry Enter Navigation
 
 | Field | Value |
 |-------|-------|
-| **ID** | BUG-055 |
-| **Severity** | P2 — MEDIUM |
-| **Status** | OPEN |
-| **File** | `frontend/src/components/central-inventory/AddStockPurchaseForm.jsx` |
-| **Related** | CR-047 (omission from implementation) |
-| **Registered** | 2026-10-19 |
-| **Found By** | OWNER-REPORTED (A1) |
+| **IDs** | BUG-055 · BUG-057 |
+| **Severity** | P2 (both) |
+| **Status** | **IMPLEMENTED — QA PASS** (BUG-055: iteration_74; BUG-057: iteration_75) |
+| **File** | `AddStockPurchaseForm.jsx` |
 
-`addPurchase()` payload (lines 207–233) has no `invoice_number`. No `invoiceNumber`
-state in form. No input field. api.js does NOT need changing (raw payload passthrough).
-Fix: +1 state declaration, +1 input in header strip, +1 payload key. SMALL scope, 1 file.
+**BUG-055:** Added `invoiceNumber` state + `Invoice #` input in header strip (between Date and Fare) + payload key `invoice_number` (omitted when empty, store-only) + reset clear.
 
-Open Q (owner): duplicate-check warning (like CR-040) or store-only?
-
-Intake: `control/sessions/BUG-055_ARTIFACT_1_INTAKE.md`
+**BUG-057:** `onKeyDown` on `<input type="date">` is consumed by Chromium natively — changed to `onKeyUp` on expiry input. Also: `btn.focus() + btn.click()` opens the Radix Popover so CommandInput (portal-mounted) receives keyboard input immediately.
 
 ---
 

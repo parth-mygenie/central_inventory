@@ -690,11 +690,15 @@ function SpreadsheetRow({ idx, row, inventoryItems, ownStock, itemIdCount, isLas
         e.preventDefault();
         if (isLast && row.itemId && Number(row.qty) > 0 && row.batch) {
           onTabFromLast();
-          // BUG-057: after addRow re-renders, focus new row's item search (not qty)
-          setTimeout(() => document.querySelector(`[data-testid="item-select-${idx + 1}"]`)?.focus(), 50);
+          // BUG-057: after addRow re-renders, focus + open item search of new row
+          setTimeout(() => {
+            const btn = document.querySelector(`[data-testid="item-select-${idx + 1}"]`);
+            if (btn) { btn.focus(); btn.click(); }
+          }, 50);
         } else {
-          // BUG-057: jump to next row's item search, not qty
-          document.querySelector(`[data-testid="item-select-${idx + 1}"]`)?.focus();
+          // BUG-057: focus + open item search of next row directly
+          const btn = document.querySelector(`[data-testid="item-select-${idx + 1}"]`);
+          if (btn) { btn.focus(); btn.click(); }
         }
       }
     }
@@ -801,7 +805,7 @@ function SpreadsheetRow({ idx, row, inventoryItems, ownStock, itemIdCount, isLas
         <Input id={`expiry-${idx}`} data-testid={`expiry-input-${idx}`}
           type="date" value={row.expiry} autoComplete="off"
           onChange={e => onUpdate("expiry", e.target.value)}
-          onKeyDown={e => handleKeyDown("expiry", e)}
+          onKeyUp={e => handleKeyDown("expiry", e)}
           className="h-[28px] text-xs" />
       </td>
 

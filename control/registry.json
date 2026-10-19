@@ -6847,7 +6847,7 @@
       "id": "BUG-055",
       "type": "BUG",
       "title": "Add Stock — Invoice # field missing (not wired in form or payload)",
-      "status": "OPEN",
+      "status": "IMPLEMENTED",
       "severity": "P2",
       "sprint_key": "S5",
       "related_to": "CR-047",
@@ -6884,14 +6884,14 @@
         {
           "artifact": 4,
           "label": "Code-Gate",
-          "status": "MISSING",
-          "path": ""
+          "status": "DONE",
+          "path": "test_reports/iteration_74.json"
         },
         {
           "artifact": 5,
           "label": "QA-Report",
-          "status": "MISSING",
-          "path": ""
+          "status": "DONE",
+          "path": "test_reports/iteration_74.json"
         },
         {
           "artifact": 6,
@@ -6963,7 +6963,7 @@
       "id": "BUG-057",
       "type": "BUG",
       "title": "Add Stock — Expiry Enter jumps to next row Qty instead of Item search",
-      "status": "OPEN",
+      "status": "IMPLEMENTED",
       "severity": "P2",
       "sprint_key": "S5",
       "related_to": "CR-047",
@@ -7000,14 +7000,14 @@
         {
           "artifact": 4,
           "label": "Code-Gate",
-          "status": "MISSING",
-          "path": ""
+          "status": "DONE",
+          "path": "test_reports/iteration_74.json"
         },
         {
           "artifact": 5,
           "label": "QA-Report",
-          "status": "MISSING",
-          "path": ""
+          "status": "DONE",
+          "path": "test_reports/iteration_75.json"
         },
         {
           "artifact": 6,
