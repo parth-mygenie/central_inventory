@@ -3984,5 +3984,293 @@
       "Owner-Signoff: MISSING"
     ],
     "sprint_name": "S5"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-058",
+    "title": "Review Screen — Fare + Invoice # Not Shown in Confirm Header",
+    "status": "REGISTERED",
+    "severity": "P2",
+    "sprint_key": null,
+    "phase": "S5 — Dispatch UX Overhaul",
+    "files": [
+      "frontend/src/components/central-inventory/AddStockPurchaseForm.jsx"
+    ],
+    "notes": "confirmMode review screen header (lines 302–321) shows Vendor/Date/Payment only. Fare and Invoice# are entered in the form but absent from the review. Grand Total uses fullPayableTotal (correct) but no subtotal breakdown (items + fare) is shown. Fix: add Fare + Invoice# to header grid; add items subtotal + fare line before Grand Total. SMALL scope, 1 file ~10 lines.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/BUG-058_ARTIFACT_1_INTAKE.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "MISSING",
+        "path": null
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "MISSING",
+        "path": null
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "MISSING",
+        "path": null
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "MISSING",
+        "path": null
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "MISSING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 2,
+      "total": 7,
+      "pct": 29
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "Impact-Analysis: MISSING",
+      "Impl-Plan: MISSING",
+      "Code-Gate: MISSING",
+      "QA-Report: MISSING",
+      "Owner-Signoff: MISSING"
+    ],
+    "sprint_name": "Unassigned"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-059",
+    "title": "Add Stock — BATCH Enter Skips Date Field (keyup transfer bug)",
+    "status": "REGISTERED",
+    "severity": "P2",
+    "sprint_key": null,
+    "phase": "S5 — Dispatch UX Overhaul",
+    "files": [
+      "frontend/src/components/central-inventory/AddStockPurchaseForm.jsx"
+    ],
+    "notes": "SpreadsheetRow: pressing Enter on batch field focuses the expiry date input. But Chromium fires keyup on the newly-focused element, so the date input's onKeyUp immediately fires handleKeyDown(\"expiry\", Enter) → advances to next row before user types date. Fix: add justFocused ref in SpreadsheetRow; onFocus sets it true; onKeyUp skips if justFocused is true. Note: native <input type=date> sub-field (mm/dd/yyyy) navigation uses Tab/ArrowRight not Enter — cannot step through sub-fields with Enter without a custom picker. SMALL scope, 1 file ~5 lines.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/BUG-059_ARTIFACT_1_INTAKE.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "MISSING",
+        "path": null
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "MISSING",
+        "path": null
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "MISSING",
+        "path": null
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "MISSING",
+        "path": null
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "MISSING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 2,
+      "total": 7,
+      "pct": 29
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "Impact-Analysis: MISSING",
+      "Impl-Plan: MISSING",
+      "Code-Gate: MISSING",
+      "QA-Report: MISSING",
+      "Owner-Signoff: MISSING"
+    ],
+    "sprint_name": "Unassigned"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-060",
+    "title": "Dispatch — Multi-Batch Source Selection Not Wired (FEFO multi-alloc broken)",
+    "status": "REGISTERED",
+    "severity": "P2",
+    "sprint_key": null,
+    "phase": "S5 — Dispatch UX Overhaul",
+    "files": [
+      "frontend/src/components/central-inventory/DirectDispatchForm.jsx"
+    ],
+    "notes": "fefoAutoSelect() correctly computes multi-alloc (e.g. 5kg seg_A + 5kg seg_B). But autoSource=null when allocs>1 (line 221) → sourceSelector=null. The multi-batch <select> UI renders but onChange overwrites to a single segment_id (line 788). Payload sends source_selector:null for multi-batch items. Fix requires: (1) API probe — can items[] accept same source_inventory_master_id twice with different source_selector+qty? If yes → split multi-alloc into multiple payload items (Option B). If no → file G-040 (backend gap for array source_selector). API probe needs live dispatch test in dev env before PLANNING can proceed. MEDIUM scope.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/BUG-060_ARTIFACT_1_INTAKE.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "MISSING",
+        "path": null
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "MISSING",
+        "path": null
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "MISSING",
+        "path": null
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "MISSING",
+        "path": null
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "MISSING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 2,
+      "total": 7,
+      "pct": 29
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "Impact-Analysis: MISSING",
+      "Impl-Plan: MISSING",
+      "Code-Gate: MISSING",
+      "QA-Report: MISSING",
+      "Owner-Signoff: MISSING"
+    ],
+    "sprint_name": "Unassigned"
+  },
+  {
+    "type": "BUG",
+    "id": "BUG-061",
+    "title": "Purchase Report — Fare Column Missing + Summary Excludes Fare (NO-CODE)",
+    "status": "REGISTERED",
+    "severity": "P2",
+    "sprint_key": null,
+    "phase": "S5 — Dispatch UX Overhaul",
+    "files": [
+      "frontend/src/components/central-inventory/PurchaseReport.jsx"
+    ],
+    "notes": "Live API probe confirmed: PUR-828-20261020-8011 has tot_fair=200, tot_amount=1200, line_total=1000. Amount column (line 252) uses line_total (items only) — fare excluded. Summary total (line 55) uses d.total_amount (API root) which per G-038 = sum(line_totals), also excludes fare. Fix (when approved): (1) Add Fare column — show r.tot_fair on first row per transaction_id, dash elsewhere (avoids double-count on multi-item purchases). (2) Summary: deduplicate by transaction_id → sum unique tot_amount. SMALL scope 1 file ~15 lines. OWNER INSTRUCTION: NO-CODE, SKIP GATE — Gate 1 only until owner gives GO.",
+    "artifact_refs": [
+      {
+        "artifact": 0,
+        "label": "Session-Start",
+        "status": "WAIVED",
+        "path": null
+      },
+      {
+        "artifact": 1,
+        "label": "Intake",
+        "status": "DONE",
+        "path": "control/sessions/BUG-061_ARTIFACT_1_INTAKE.md"
+      },
+      {
+        "artifact": 2,
+        "label": "Impact-Analysis",
+        "status": "MISSING",
+        "path": null
+      },
+      {
+        "artifact": 3,
+        "label": "Impl-Plan",
+        "status": "MISSING",
+        "path": null
+      },
+      {
+        "artifact": 4,
+        "label": "Code-Gate",
+        "status": "MISSING",
+        "path": null
+      },
+      {
+        "artifact": 5,
+        "label": "QA-Report",
+        "status": "MISSING",
+        "path": null
+      },
+      {
+        "artifact": 6,
+        "label": "Owner-Signoff",
+        "status": "MISSING",
+        "path": null
+      }
+    ],
+    "completeness": {
+      "done": 2,
+      "total": 7,
+      "pct": 29
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "Impact-Analysis: MISSING",
+      "Impl-Plan: MISSING",
+      "Code-Gate: MISSING",
+      "QA-Report: MISSING",
+      "Owner-Signoff: MISSING"
+    ],
+    "sprint_name": "Unassigned"
   }
 ]
