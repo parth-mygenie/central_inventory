@@ -3,8 +3,8 @@
 ## Original Problem Statement
 Deploy the existing React frontend repo directly into `/app` and run it as-is, with no code edits.
 - Repo: https://github.com/parth-mygenie/central_inventory.git
-- **Current Branch: 19oct** (deployed 2026-10-19)
-- Previous Branch: 18oct (deployed 2026-10-18)- Previous Branch: 7-8-26 (deployed 2026-10-15)
+- **Current Branch: main** (deployed 2026-10-20, repo: Abhi-mygenie/central-iventory)
+- Previous Branch: 19oct (deployed 2026-10-19) — Previous Branch: 18oct (deployed 2026-10-18)
 - Destination: `/app` (repo contents pulled directly into `/app`, not a subfolder)
 - Platform files preserved during clear-and-clone
 - No code edits — deployed and run as-is
@@ -16,6 +16,21 @@ Deploy the existing React frontend repo directly into `/app` and run it as-is, w
 - **External API:** preprod.mygenie.online (POS API proxy)
 
 ## Deployment History
+
+### 2026-10-20 — Branch `main` Deployed (repo: Abhi-mygenie/central-iventory)
+- Source: https://github.com/Abhi-mygenie/central-iventory.git, branch `main`
+- Cleared `/app` (preserved `.emergent/`)
+- Cloned `main` branch into `/tmp/central_repo`, then moved contents into `/app`
+- Preserved platform files: `backend/.env`, `frontend/.env`
+- Ran `pip install -r requirements.txt` for backend (success, minor idna version warning, non-blocking)
+- Ran `yarn install` for frontend (success, ~55s)
+- Restarted backend + frontend via supervisorctl
+- Both services running: backend (port 8001), frontend (port 3000)
+- App loads: Central Inventory sign-in page confirmed via screenshot
+- Backend API health: `GET /api/` → `{"message":"Central Inventory API Proxy"}` ✅
+- `memory/` directory fully in sync from repo's latest state
+
+
 
 ### 2026-10-19 — Branch 19oct Deployed
 - Cleared `/app` (preserved `.emergent/`)
