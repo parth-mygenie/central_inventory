@@ -4,7 +4,7 @@
     "repo": "parth-mygenie/central_inventory",
     "branch": "13-6-26",
     "schema_version": "1.0",
-    "last_updated": "2026-10-20T05:00:00Z",
+    "last_updated": "2026-10-20T06:00:00Z",
     "generator": "control/gen_dashboard_data.js"
   },
   "sprints": {
@@ -7216,8 +7216,8 @@
         {
           "artifact": 2,
           "label": "Impact-Analysis",
-          "status": "MISSING",
-          "path": null
+          "status": "DONE",
+          "path": "control/sessions/BUG-061_ARTIFACT_2_IMPACT_ANALYSIS.md"
         },
         {
           "artifact": 3,
