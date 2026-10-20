@@ -1072,7 +1072,7 @@
     "type": "BUG",
     "id": "BUG-061",
     "title": "Purchase Report — Fare Column Missing + Summary Excludes Fare (NO-CODE)",
-    "status": "REGISTERED",
+    "status": "PLANNED",
     "severity": "P2",
     "sprint_key": null,
     "sprint_name": "Unassigned",
