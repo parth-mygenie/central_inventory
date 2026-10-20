@@ -4,7 +4,7 @@
     "repo": "parth-mygenie/central_inventory",
     "branch": "13-6-26",
     "schema_version": "1.0",
-    "last_updated": "2026-10-20T09:00:00Z",
+    "last_updated": "2026-10-20T10:00:00Z",
     "generator": "control/gen_dashboard_data.js"
   },
   "sprints": {
@@ -7199,7 +7199,7 @@
       "files": [
         "frontend/src/components/central-inventory/PurchaseReport.jsx"
       ],
-      "notes": "Live API probe confirmed: PUR-828-20261020-8011 has tot_fair=200, tot_amount=1200, line_total=1000. Amount column (line 252) uses line_total (items only) \u2014 fare excluded. Summary total (line 55) uses d.total_amount (API root) which per G-038 = sum(line_totals), also excludes fare. Fix (when approved): (1) Add Fare column \u2014 show r.tot_fair on first row per transaction_id, dash elsewhere (avoids double-count on multi-item purchases). (2) Summary: deduplicate by transaction_id \u2192 sum unique tot_amount. SMALL scope 1 file ~15 lines. OWNER INSTRUCTION: NO-CODE, SKIP GATE \u2014 Gate 1 only until owner gives GO. Investigation complete: INVESTIGATION_20261020_BUG061_DESIGN.md \u2014 proposed transaction-grouped table design, fare pill on header, correctTotal useMemo. Awaiting owner GO for Planning+Implementation.",
+      "notes": "Live API probe confirmed: PUR-828-20261020-8011 has tot_fair=200, tot_amount=1200, line_total=1000. Amount column (line 252) uses line_total (items only) \u2014 fare excluded. Summary total (line 55) uses d.total_amount (API root) which per G-038 = sum(line_totals), also excludes fare. Fix (when approved): (1) Add Fare column \u2014 show r.tot_fair on first row per transaction_id, dash elsewhere (avoids double-count on multi-item purchases). (2) Summary: deduplicate by transaction_id \u2192 sum unique tot_amount. SMALL scope 1 file ~15 lines. OWNER INSTRUCTION: NO-CODE, SKIP GATE \u2014 Gate 1 only until owner gives GO. Investigation complete: INVESTIGATION_20261020_BUG061_DESIGN.md \u2014 proposed transaction-grouped table design, fare pill on header, correctTotal useMemo. Awaiting owner GO for Planning+Implementation. | Design revision: Option B (dedicated Fare column) chosen by owner 2026-10-20. Plan: BUG-061_ARTIFACT_3b_IMPL_PLAN_OPTION_B.md",
       "artifact_refs": [
         {
           "artifact": 0,
@@ -7223,7 +7223,7 @@
           "artifact": 3,
           "label": "Impl-Plan",
           "status": "DONE",
-          "path": "control/sessions/BUG-061_ARTIFACT_3_IMPLEMENTATION_PLAN.md"
+          "path": "control/sessions/BUG-061_ARTIFACT_3b_IMPL_PLAN_OPTION_B.md"
         },
         {
           "artifact": 4,
