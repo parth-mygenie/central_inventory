@@ -3989,7 +3989,7 @@
     "type": "BUG",
     "id": "BUG-058",
     "title": "Review Screen — Fare + Invoice # Not Shown in Confirm Header",
-    "status": "REGISTERED",
+    "status": "PLANNED",
     "severity": "P2",
     "sprint_key": null,
     "phase": "S5 — Dispatch UX Overhaul",
@@ -4013,8 +4013,8 @@
       {
         "artifact": 2,
         "label": "Impact-Analysis",
-        "status": "MISSING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/BUG-058_059_ARTIFACT_2_IMPACT_ANALYSIS.md"
       },
       {
         "artifact": 3,
@@ -4042,14 +4042,13 @@
       }
     ],
     "completeness": {
-      "done": 2,
+      "done": 3,
       "total": 7,
-      "pct": 29
+      "pct": 43
     },
     "doc_count": 0,
     "is_debt": true,
     "debt_reasons": [
-      "Impact-Analysis: MISSING",
       "Impl-Plan: MISSING",
       "Code-Gate: MISSING",
       "QA-Report: MISSING",
@@ -4061,7 +4060,7 @@
     "type": "BUG",
     "id": "BUG-059",
     "title": "Add Stock — BATCH Enter Skips Date Field (keyup transfer bug)",
-    "status": "REGISTERED",
+    "status": "PLANNED",
     "severity": "P2",
     "sprint_key": null,
     "phase": "S5 — Dispatch UX Overhaul",
@@ -4085,8 +4084,8 @@
       {
         "artifact": 2,
         "label": "Impact-Analysis",
-        "status": "MISSING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/BUG-058_059_ARTIFACT_2_IMPACT_ANALYSIS.md"
       },
       {
         "artifact": 3,
@@ -4114,14 +4113,13 @@
       }
     ],
     "completeness": {
-      "done": 2,
+      "done": 3,
       "total": 7,
-      "pct": 29
+      "pct": 43
     },
     "doc_count": 0,
     "is_debt": true,
     "debt_reasons": [
-      "Impact-Analysis: MISSING",
       "Impl-Plan: MISSING",
       "Code-Gate: MISSING",
       "QA-Report: MISSING",

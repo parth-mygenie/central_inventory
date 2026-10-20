@@ -4,7 +4,7 @@
     "repo": "parth-mygenie/central_inventory",
     "branch": "13-6-26",
     "schema_version": "1.0",
-    "last_updated": "2026-10-20T00:00:00Z",
+    "last_updated": "2026-10-20T01:00:00Z",
     "generator": "control/gen_dashboard_data.js"
   },
   "sprints": {
@@ -7021,7 +7021,7 @@
       "type": "BUG",
       "id": "BUG-058",
       "title": "Review Screen \u2014 Fare + Invoice # Not Shown in Confirm Header",
-      "status": "REGISTERED",
+      "status": "PLANNED",
       "severity": "P2",
       "sprint_key": null,
       "phase": "S5 \u2014 Dispatch UX Overhaul",
@@ -7045,8 +7045,8 @@
         {
           "artifact": 2,
           "label": "Impact-Analysis",
-          "status": "MISSING",
-          "path": null
+          "status": "DONE",
+          "path": "control/sessions/BUG-058_059_ARTIFACT_2_IMPACT_ANALYSIS.md"
         },
         {
           "artifact": 3,
@@ -7078,7 +7078,7 @@
       "type": "BUG",
       "id": "BUG-059",
       "title": "Add Stock \u2014 BATCH Enter Skips Date Field (keyup transfer bug)",
-      "status": "REGISTERED",
+      "status": "PLANNED",
       "severity": "P2",
       "sprint_key": null,
       "phase": "S5 \u2014 Dispatch UX Overhaul",
@@ -7102,8 +7102,8 @@
         {
           "artifact": 2,
           "label": "Impact-Analysis",
-          "status": "MISSING",
-          "path": null
+          "status": "DONE",
+          "path": "control/sessions/BUG-058_059_ARTIFACT_2_IMPACT_ANALYSIS.md"
         },
         {
           "artifact": 3,
