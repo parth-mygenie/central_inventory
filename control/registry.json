@@ -4,7 +4,7 @@
     "repo": "parth-mygenie/central_inventory",
     "branch": "13-6-26",
     "schema_version": "1.0",
-    "last_updated": "2026-10-20T10:00:00Z",
+    "last_updated": "2026-10-20T11:00:00Z",
     "generator": "control/gen_dashboard_data.js"
   },
   "sprints": {
@@ -7229,13 +7229,13 @@
           "artifact": 4,
           "label": "Code-Gate",
           "status": "DONE",
-          "path": "control/sessions/BUG-061_ARTIFACT_4_CODE_GATE.md"
+          "path": "control/sessions/BUG-061_ARTIFACT_4b_CODE_GATE.md"
         },
         {
           "artifact": 5,
           "label": "QA-Report",
           "status": "DONE",
-          "path": "control/sessions/BUG-061_ARTIFACT_5_QA_REPORT.md"
+          "path": "control/sessions/BUG-061_ARTIFACT_5b_QA_REPORT.md"
         },
         {
           "artifact": 6,

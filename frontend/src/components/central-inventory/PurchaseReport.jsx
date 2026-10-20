@@ -237,7 +237,7 @@ export default function PurchaseReport() {
               <thead>
                 <tr className="border-b border-border/50 bg-muted/30">
                   {["Date", isMultiStore && "Store", "Ingredient", "Vendor",
-                    "Qty", "Unit Price", "Amount", "Payment", "Invoice #", "Txn ID"]
+                    "Qty", "Unit Price", "Item Amt", "Fare", "Payment", "Invoice #", "Txn ID"]
                     .filter(Boolean).map(h => (
                       <th key={h}
                         className="text-left px-3 py-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">
@@ -284,14 +284,19 @@ export default function PurchaseReport() {
                               ? `₹${(m.line_total / m.stock_quantity_raw).toLocaleString("en-IN")}`
                               : "—"}
                         </td>
+                        {/* BUG-061 Option B: Item Amt = line_total; Fare gets its own column */}
                         <td className="px-3 py-1.5 tabular-nums font-semibold whitespace-nowrap">
-                          ₹{Number(m.tot_amount).toLocaleString("en-IN")}
-                          {hasFare && (
-                            <div className="text-[9px] font-normal text-orange-600 whitespace-nowrap mt-0.5"
-                              data-testid={`pr-fare-${m.transaction_id}`}>
-                              + ₹{Number(m.tot_fair).toLocaleString("en-IN")} fare
-                            </div>
-                          )}
+                          {isMulti
+                            ? <span className="text-muted-foreground">—</span>
+                            : `₹${Number(m.line_total).toLocaleString("en-IN")}`}
+                        </td>
+                        <td className="px-3 py-1.5 tabular-nums whitespace-nowrap"
+                          data-testid={`pr-fare-${m.transaction_id}`}>
+                          {hasFare
+                            ? <span className="font-semibold text-orange-600">
+                                ₹{Number(m.tot_fair).toLocaleString("en-IN")}
+                              </span>
+                            : <span className="text-muted-foreground">—</span>}
                         </td>
                         <td className="px-3 py-1.5">
                           {/* BUG-056 B2 preserved: partial_payments legs or single Payment_Type badge */}
@@ -336,7 +341,7 @@ export default function PurchaseReport() {
                           <td className="px-3 py-1 tabular-nums text-[11px] text-muted-foreground whitespace-nowrap">
                             ₹{Number(r.line_total).toLocaleString("en-IN")}
                           </td>
-                          <td /><td /><td />
+                          <td /><td /><td /><td />
                         </tr>
                       ))}
 

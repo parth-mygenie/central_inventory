@@ -4234,13 +4234,13 @@
         "artifact": 4,
         "label": "Code-Gate",
         "status": "DONE",
-        "path": "control/sessions/BUG-061_ARTIFACT_4_CODE_GATE.md"
+        "path": "control/sessions/BUG-061_ARTIFACT_4b_CODE_GATE.md"
       },
       {
         "artifact": 5,
         "label": "QA-Report",
         "status": "DONE",
-        "path": "control/sessions/BUG-061_ARTIFACT_5_QA_REPORT.md"
+        "path": "control/sessions/BUG-061_ARTIFACT_5b_QA_REPORT.md"
       },
       {
         "artifact": 6,
