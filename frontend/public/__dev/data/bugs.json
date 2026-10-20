@@ -3989,7 +3989,7 @@
     "type": "BUG",
     "id": "BUG-058",
     "title": "Review Screen — Fare + Invoice # Not Shown in Confirm Header",
-    "status": "PLANNED",
+    "status": "QA_PASS",
     "severity": "P2",
     "sprint_key": null,
     "phase": "S5 — Dispatch UX Overhaul",
@@ -4025,14 +4025,14 @@
       {
         "artifact": 4,
         "label": "Code-Gate",
-        "status": "MISSING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/BUG-058_059_ARTIFACT_4_CODE_GATE.md"
       },
       {
         "artifact": 5,
         "label": "QA-Report",
-        "status": "MISSING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/BUG-058_059_ARTIFACT_5_QA_REPORT.md"
       },
       {
         "artifact": 6,
@@ -4042,15 +4042,13 @@
       }
     ],
     "completeness": {
-      "done": 4,
+      "done": 6,
       "total": 7,
-      "pct": 57
+      "pct": 86
     },
     "doc_count": 0,
     "is_debt": true,
     "debt_reasons": [
-      "Code-Gate: MISSING",
-      "QA-Report: MISSING",
       "Owner-Signoff: MISSING"
     ],
     "sprint_name": "Unassigned"
@@ -4059,7 +4057,7 @@
     "type": "BUG",
     "id": "BUG-059",
     "title": "Add Stock — BATCH Enter Skips Date Field (keyup transfer bug)",
-    "status": "PLANNED",
+    "status": "QA_PASS",
     "severity": "P2",
     "sprint_key": null,
     "phase": "S5 — Dispatch UX Overhaul",
@@ -4095,14 +4093,14 @@
       {
         "artifact": 4,
         "label": "Code-Gate",
-        "status": "MISSING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/BUG-058_059_ARTIFACT_4_CODE_GATE.md"
       },
       {
         "artifact": 5,
         "label": "QA-Report",
-        "status": "MISSING",
-        "path": null
+        "status": "DONE",
+        "path": "control/sessions/BUG-058_059_ARTIFACT_5_QA_REPORT.md"
       },
       {
         "artifact": 6,
@@ -4112,15 +4110,13 @@
       }
     ],
     "completeness": {
-      "done": 4,
+      "done": 6,
       "total": 7,
-      "pct": 57
+      "pct": 86
     },
     "doc_count": 0,
     "is_debt": true,
     "debt_reasons": [
-      "Code-Gate: MISSING",
-      "QA-Report: MISSING",
       "Owner-Signoff: MISSING"
     ],
     "sprint_name": "Unassigned"

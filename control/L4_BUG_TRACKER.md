@@ -149,6 +149,38 @@ Intake: `control/sessions/BUG-054_ARTIFACT_1_INTAKE.md`
 
 ---
 
+## BUG-058 — Review Screen: Fare + Invoice # Not Shown
+
+| Field | Value |
+|-------|-------|
+| **ID** | BUG-058 |
+| **Severity** | P2 — MEDIUM |
+| **Status** | IMPLEMENTED |
+| **File** | `frontend/src/components/central-inventory/AddStockPurchaseForm.jsx` |
+| **Root Cause** | `confirmMode` header grid (lines 302–321) had 3 columns only (Vendor/Date/Payment). `fare` and `invoiceNumber` were populated but not rendered. Grand Total showed `fullPayableTotal` with no breakdown. |
+| **Fix** | Header → flex-wrap with conditional Fare + Invoice # cells. Added items subtotal + fare breakdown rows before Grand Total (conditional on fare > 0). |
+| **Registered** | 2026-10-20 |
+| **Implemented** | 2026-10-20 |
+| **Found By** | OWNER-REPORTED (screenshot provided) |
+
+---
+
+## BUG-059 — Add Stock: BATCH Enter Skips Date Field
+
+| Field | Value |
+|-------|-------|
+| **ID** | BUG-059 |
+| **Severity** | P2 — MEDIUM |
+| **Status** | IMPLEMENTED |
+| **File** | `frontend/src/components/central-inventory/AddStockPurchaseForm.jsx` |
+| **Root Cause** | Chromium fires `keyup` on the newly-focused element when focus moves during `keydown`. Batch Enter focused the date input, then the date's `onKeyUp` immediately fired `handleKeyDown("expiry", Enter)` → advanced to next row before user could type. |
+| **Fix** | Added `justFocused = useRef(false)` in SpreadsheetRow. `onFocus` sets it true. `onKeyUp` skips the first keyup (the focus-transfer one), drops the guard, and all subsequent Enter presses on the date field advance to the next row as expected. |
+| **Registered** | 2026-10-20 |
+| **Implemented** | 2026-10-20 |
+| **Found By** | OWNER-REPORTED |
+
+---
+
 ## BUG-048 — Receive Transfer Fails: INVALID_STOCK_DATA
 
 | Field | Value |

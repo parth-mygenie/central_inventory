@@ -4,7 +4,7 @@
     "repo": "parth-mygenie/central_inventory",
     "branch": "13-6-26",
     "schema_version": "1.0",
-    "last_updated": "2026-10-20T02:00:00Z",
+    "last_updated": "2026-10-20T04:00:00Z",
     "generator": "control/gen_dashboard_data.js"
   },
   "sprints": {
@@ -7021,7 +7021,7 @@
       "type": "BUG",
       "id": "BUG-058",
       "title": "Review Screen \u2014 Fare + Invoice # Not Shown in Confirm Header",
-      "status": "PLANNED",
+      "status": "QA_PASS",
       "severity": "P2",
       "sprint_key": null,
       "phase": "S5 \u2014 Dispatch UX Overhaul",
@@ -7057,14 +7057,14 @@
         {
           "artifact": 4,
           "label": "Code-Gate",
-          "status": "MISSING",
-          "path": null
+          "status": "DONE",
+          "path": "control/sessions/BUG-058_059_ARTIFACT_4_CODE_GATE.md"
         },
         {
           "artifact": 5,
           "label": "QA-Report",
-          "status": "MISSING",
-          "path": null
+          "status": "DONE",
+          "path": "control/sessions/BUG-058_059_ARTIFACT_5_QA_REPORT.md"
         },
         {
           "artifact": 6,
@@ -7078,7 +7078,7 @@
       "type": "BUG",
       "id": "BUG-059",
       "title": "Add Stock \u2014 BATCH Enter Skips Date Field (keyup transfer bug)",
-      "status": "PLANNED",
+      "status": "QA_PASS",
       "severity": "P2",
       "sprint_key": null,
       "phase": "S5 \u2014 Dispatch UX Overhaul",
@@ -7114,14 +7114,14 @@
         {
           "artifact": 4,
           "label": "Code-Gate",
-          "status": "MISSING",
-          "path": null
+          "status": "DONE",
+          "path": "control/sessions/BUG-058_059_ARTIFACT_4_CODE_GATE.md"
         },
         {
           "artifact": 5,
           "label": "QA-Report",
-          "status": "MISSING",
-          "path": null
+          "status": "DONE",
+          "path": "control/sessions/BUG-058_059_ARTIFACT_5_QA_REPORT.md"
         },
         {
           "artifact": 6,

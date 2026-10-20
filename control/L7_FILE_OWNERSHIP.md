@@ -191,3 +191,8 @@
 |------|--------|------|
 | `frontend/src/components/central-inventory/AddonRecipeCatalogue.jsx` | MODIFIED — payload fix (preparation_time/serves_people/serve_time + ingredient keys id/qty/unit) + addon select auto-fills name | BUG-047 |
 | `frontend/src/services/api.js` | MODIFIED — deleteAddonRecipe sends reason body | BUG-047 |
+
+### BUG-058 + BUG-059: Review Screen Fare + Date Skip Fix (session 2026-10-20)
+| File | Change | Item |
+|------|--------|------|
+| `frontend/src/components/central-inventory/AddStockPurchaseForm.jsx` | MODIFIED — useRef import; justFocused ref + onFocus/onKeyUp guard on expiry input (BUG-059); confirm header flex-wrap + Fare + Invoice # cells + items subtotal + fare breakdown rows (BUG-058) | BUG-058, BUG-059 |

@@ -1,5 +1,5 @@
 // CR-047 — Add Stock: Spreadsheet UX + add-purchase API + Split Payment
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react"; // BUG-059
 import { useLoginContext } from "@/hooks/useLoginContext";
 import api from "@/services/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -300,7 +300,8 @@ export default function AddStockPurchaseForm() {
         </h1>
         <div className="rounded-lg border bg-card mb-3">
           <div className="px-4 py-2.5 border-b bg-muted/30">
-            <div className="grid grid-cols-3 gap-3 text-xs">
+            {/* BUG-058: flex-wrap so Fare + Invoice # appear naturally when present */}
+            <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs">
               <div>
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Vendor</p>
                 <p className="font-medium">{selectedVendor?.vendor_name || vendorId}</p>
@@ -317,6 +318,18 @@ export default function AddStockPurchaseForm() {
                     : (legs[0]?.mode || "—")}
                 </p>
               </div>
+              {Number(fare) > 0 && (
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Fare</p>
+                  <p className="font-medium">₹{Number(fare).toFixed(2)}</p>
+                </div>
+              )}
+              {invoiceNumber.trim() && (
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Invoice #</p>
+                  <p className="font-medium font-mono text-[11px]">{invoiceNumber.trim()}</p>
+                </div>
+              )}
             </div>
           </div>
           <div className="overflow-x-auto">
@@ -343,6 +356,19 @@ export default function AddStockPurchaseForm() {
               </tbody>
             </table>
           </div>
+          {/* BUG-058: items subtotal + fare breakdown — shown only when fare > 0 */}
+          {Number(fare) > 0 && (
+            <div className="border-t">
+              <div className="px-4 py-1.5 flex justify-between text-xs text-muted-foreground">
+                <span>Items subtotal</span>
+                <span className="tabular-nums">₹ {grandTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+              </div>
+              <div className="px-4 py-1.5 flex justify-between text-xs text-muted-foreground border-t border-border/30">
+                <span>Fare</span>
+                <span className="tabular-nums">₹ {Number(fare).toFixed(2)}</span>
+              </div>
+            </div>
+          )}
           <div className="px-4 py-2.5 border-t bg-green-50 flex justify-between items-center">
             <span className="text-[11px] font-medium text-green-700">Grand Total</span>
             <span className="text-sm font-bold text-green-700 tabular-nums">
@@ -654,6 +680,7 @@ export default function AddStockPurchaseForm() {
 function SpreadsheetRow({ idx, row, inventoryItems, ownStock, itemIdCount, isLast, canDelete, onUpdate, onDelete, onTabFromLast }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const justFocused = useRef(false); // BUG-059: guard against keyup firing on focus-transfer from batch Enter
 
   const isDuplicate = row.itemId && (itemIdCount[row.itemId] || 0) > 1;
 
@@ -805,7 +832,11 @@ function SpreadsheetRow({ idx, row, inventoryItems, ownStock, itemIdCount, isLas
         <Input id={`expiry-${idx}`} data-testid={`expiry-input-${idx}`}
           type="date" value={row.expiry} autoComplete="off"
           onChange={e => onUpdate("expiry", e.target.value)}
-          onKeyUp={e => handleKeyDown("expiry", e)}
+          onFocus={() => { justFocused.current = true; }}
+          onKeyUp={e => { // BUG-059: skip the keyup that fires when focus arrives via batch Enter
+            if (justFocused.current) { justFocused.current = false; return; }
+            handleKeyDown("expiry", e);
+          }}
           className="h-[28px] text-xs" />
       </td>
 
