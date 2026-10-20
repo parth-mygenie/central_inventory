@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-20T07:24:36.567Z",
+  "generated_at": "2026-10-20T07:33:28.180Z",
   "project": "Central Inventory",
   "repo": "parth-mygenie/central_inventory",
   "branch": "13-6-26",
@@ -22,12 +22,11 @@
     "DEFERRED": 2,
     "RESOLVED": 6,
     "CLOSED": 2,
-    "QA_PASS": 21,
+    "QA_PASS": 22,
     "IMPLEMENTED": 15,
     "OPEN": 1,
     "PROPOSED": 1,
-    "REGISTERED": 1,
-    "PLANNED": 1
+    "REGISTERED": 1
   },
   "bugs_by_severity": {
     "LOW": 12,

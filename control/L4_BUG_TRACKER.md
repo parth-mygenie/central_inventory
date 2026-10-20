@@ -192,3 +192,19 @@ Intake: `control/sessions/BUG-054_ARTIFACT_1_INTAKE.md`
 | **Root Cause** | `destination_inventory_master_id` is NULL on transfer lines. `franchise/list` returns 0 children for RID 813. Catalog push linkage missing between 813↔815. |
 | **Registered** | 2026-07-24 |
 | **Found By** | INVESTIGATION role (owner-reported, confirmed via full e2e dispatch+receive curl test) |
+
+---
+
+## BUG-061 — Purchase Report: Fare Column Missing + Summary Excludes Fare
+
+| Field | Value |
+|-------|-------|
+| **ID** | BUG-061 |
+| **Severity** | P2 — MEDIUM |
+| **Status** | IMPLEMENTED |
+| **File** | `frontend/src/components/central-inventory/PurchaseReport.jsx` |
+| **Root Cause** | Flat row-per-ingredient layout caused: (A) fare invisible — `line_total` used in Amount, `tot_fair` never rendered; (B) multi-item purchases looked like separate events — Payment/Invoice# repeated per ingredient row; (C) summary total used `d.total_amount` which excludes fare per G-038. |
+| **Fix** | Transaction-grouped render: `txnGroups` useMemo groups rows by `transaction_id`. Header row per purchase shows `tot_amount` + orange `+₹X fare` badge when `tot_fair > 0`. Payment/Invoice# shown once per purchase. Sub-rows for multi-item purchases only. `correctTotal` useMemo replaces `totalAmount` state — deduplicates by `transaction_id`, sums `tot_amount`. |
+| **Registered** | 2026-10-20 |
+| **Implemented** | 2026-10-20 |
+| **Found By** | OWNER-REPORTED |

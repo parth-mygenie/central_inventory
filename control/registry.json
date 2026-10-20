@@ -4,7 +4,7 @@
     "repo": "parth-mygenie/central_inventory",
     "branch": "13-6-26",
     "schema_version": "1.0",
-    "last_updated": "2026-10-20T07:00:00Z",
+    "last_updated": "2026-10-20T09:00:00Z",
     "generator": "control/gen_dashboard_data.js"
   },
   "sprints": {
@@ -7192,7 +7192,7 @@
       "type": "BUG",
       "id": "BUG-061",
       "title": "Purchase Report \u2014 Fare Column Missing + Summary Excludes Fare (NO-CODE)",
-      "status": "PLANNED",
+      "status": "QA_PASS",
       "severity": "P2",
       "sprint_key": null,
       "phase": "S5 \u2014 Dispatch UX Overhaul",
@@ -7228,14 +7228,14 @@
         {
           "artifact": 4,
           "label": "Code-Gate",
-          "status": "MISSING",
-          "path": null
+          "status": "DONE",
+          "path": "control/sessions/BUG-061_ARTIFACT_4_CODE_GATE.md"
         },
         {
           "artifact": 5,
           "label": "QA-Report",
-          "status": "MISSING",
-          "path": null
+          "status": "DONE",
+          "path": "control/sessions/BUG-061_ARTIFACT_5_QA_REPORT.md"
         },
         {
           "artifact": 6,

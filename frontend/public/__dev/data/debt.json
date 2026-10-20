@@ -1072,16 +1072,14 @@
     "type": "BUG",
     "id": "BUG-061",
     "title": "Purchase Report — Fare Column Missing + Summary Excludes Fare (NO-CODE)",
-    "status": "PLANNED",
+    "status": "QA_PASS",
     "severity": "P2",
     "sprint_key": null,
     "sprint_name": "Unassigned",
     "debt_reasons": [
-      "Code-Gate: MISSING",
-      "QA-Report: MISSING",
       "Owner-Signoff: MISSING"
     ],
-    "missing_count": 3,
+    "missing_count": 1,
     "pending_count": 0
   }
 ]

@@ -196,3 +196,8 @@
 | File | Change | Item |
 |------|--------|------|
 | `frontend/src/components/central-inventory/AddStockPurchaseForm.jsx` | MODIFIED — useRef import; justFocused ref + onFocus/onKeyUp guard on expiry input (BUG-059); confirm header flex-wrap + Fare + Invoice # cells + items subtotal + fare breakdown rows (BUG-058) | BUG-058, BUG-059 |
+
+### BUG-061: Purchase Report Fare + Transaction-Grouped Layout (session 2026-10-20)
+| File | Change | Item |
+|------|--------|------|
+| `frontend/src/components/central-inventory/PurchaseReport.jsx` | MODIFIED — Fragment import; totalAmount state removed; txnGroups + correctTotal useMemos added; summary bar uses correctTotal; tbody replaced with transaction-grouped render (header rows + ingredient sub-rows) | BUG-061 |
