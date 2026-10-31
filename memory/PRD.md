@@ -17,6 +17,16 @@ Deploy the existing React frontend repo directly into `/app` and run it as-is, w
 
 ## Deployment History
 
+### 2026-10-31 — Investigation: Forward Push Module-Level Selection Screen
+- **Investigation role** completed — no code changes
+- Curl-probed push-form API: confirmed `push_summary.breakdown` returns per-module counts (source/child_matched for 8 modules)
+- Confirmed backend already supports `modules` parameter on POST push (verified in prior investigation)
+- Traced full code paths: CategoryPushDialog, ReversePushWizardDialog, api.js, useHierarchyManagement
+- Identified scope: 1 new file (`ModulePushWizardDialog.jsx` ~300-370 lines) + 3 modified files (`api.js`, `useHierarchyManagement.js`, `StoreManagement.jsx`)
+- 5 open questions documented for owner decision
+- Report: `control/sessions/INVESTIGATION_20261031_MODULE_PUSH_SCREEN.md`
+- Next: INTAKE → PLANNING (Gates 2-3) → IMPLEMENTATION after owner answers open questions
+
 ### 2026-10-31 — Branch `31oct-push-modules-investigation` Deployed (repo: parth-mygenie/central_inventory)
 - Source: https://github.com/parth-mygenie/central_inventory.git, branch `31oct-push-modules-investigation`
 - Cleared `/app` (preserved `.git`, `.emergent/`)
