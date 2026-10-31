@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P35 — Purchase Order Receive Flow — UX Mock v3 (Intelligence)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f8f9fa; }
+  .card { background: white; border: 1px solid #e5e7eb; border-radius: 10px; }
+  .badge { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 9999px; }
+  .mono { font-variant-numeric: tabular-nums; font-family: "SF Mono", "Menlo", monospace; }
+  table { width: 100%; border-collapse: collapse; }
+  th { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; padding: 8px 12px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+  td { font-size: 12px; padding: 10px 12px; border-bottom: 1px solid #f3f4f6; vertical-align: top; }
+  input, select { font-size: 12px; padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; }
+  input:focus, select:focus { border-color: #111; box-shadow: 0 0 0 1px #111; }
+  .btn-primary { background: #111; color: white; font-size: 12px; font-weight: 600; padding: 7px 16px; border-radius: 6px; border: none; cursor: pointer; }
+  .btn-outline { background: white; color: #374151; font-size: 12px; font-weight: 600; padding: 7px 16px; border-radius: 6px; border: 1px solid #d1d5db; cursor: pointer; }
+  .btn-green { background: #059669; color: white; font-size: 12px; font-weight: 600; padding: 7px 16px; border-radius: 6px; border: none; cursor: pointer; }
+  .nav-btn { cursor: pointer; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; transition: all 0.15s; }
+  .nav-btn.active { background: #111; color: #fff; }
+  .nav-btn:not(.active) { background: #f1f1f1; color: #555; }
+  .screen-section { display: none; }
+  .screen-section.active { display: block; }
+  .price-bar { height: 10px; border-radius: 3px; min-width: 8px; }
+  .stock-bar { height: 6px; border-radius: 3px; background: #e5e7eb; overflow: hidden; }
+  .stock-bar-fill { height: 100%; border-radius: 3px; }
+  .kpi-card { text-align: center; padding: 12px 8px; }
+  .kpi-card .kpi-val { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .kpi-card .kpi-label { font-size: 10px; color: #6b7280; margin-top: 2px; }
+  .variance-ok { color: #059669; }
+  .variance-warn { color: #d97706; }
+  .variance-flag { color: #dc2626; }
+  .timeline-dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid; display: inline-block; }
+  .timeline-line { height: 2px; flex: 1; }
+  .fefo-badge { font-size: 9px; padding: 1px 6px; border-radius: 4px; font-weight: 600; }
+</style>
+</head>
+<body class="p-0 m-0">
+
+<div class="sticky top-0 z-50 bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-3">
+  <span class="text-xs font-bold text-gray-400 mr-2">RECEIVE FLOW:</span>
+  <button class="nav-btn active" onclick="showScreen('po-detail')">1. PO Detail (Sent)</button>
+  <button class="nav-btn" onclick="showScreen('receive-form')">2. Receive with Intelligence</button>
+  <button class="nav-btn" onclick="showScreen('receive-partial')">3. Partial Receive (2nd event)</button>
+  <button class="nav-btn" onclick="showScreen('post-receive')">4. Post-Receive Confirmation</button>
+  <button class="nav-btn" onclick="showScreen('grn-history')">5. GRN History on PO</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SCREEN 1: PO DETAIL — Goods sent, ready to receive            -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="screen-po-detail" class="screen-section active max-w-4xl mx-auto py-6 px-4">
+  <div class="flex items-center gap-3 mb-1">
+    <button class="btn-outline text-xs py-1 px-2">&larr; Back to POs</button>
+    <h1 class="text-lg font-bold mono">PO-806-2026-0005</h1>
+    <span class="badge" style="background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd">Sent</span>
+  </div>
+  <p class="text-xs text-gray-400 mb-5 ml-16">Budget Ingredients Co · Sent 13 Jun · Expected 18 Jun (in 4 days)</p>
+
+  <!-- Header -->
+  <div class="card p-4 mb-4">
+    <div class="grid grid-cols-5 gap-4 text-xs">
+      <div><span class="text-[10px] text-gray-400 block">Vendor</span><span class="font-bold">Budget Ingredients Co</span></div>
+      <div><span class="text-[10px] text-gray-400 block">Expected</span><span class="font-semibold">18 Jun 2026</span></div>
+      <div><span class="text-[10px] text-gray-400 block">Payment</span><span>Cash</span></div>
+      <div><span class="text-[10px] text-gray-400 block">Total</span><span class="font-bold mono">₹6,900</span></div>
+      <div><span class="text-[10px] text-gray-400 block">Notes</span><span>Monthly cookie ingredients</span></div>
+    </div>
+  </div>
+
+  <!-- Timeline -->
+  <div class="card p-4 mb-4">
+    <h3 class="text-[10px] font-bold text-gray-400 mb-3">STATUS TIMELINE</h3>
+    <div class="flex items-center">
+      <div class="flex flex-col items-center">
+        <span class="timeline-dot bg-emerald-500 border-emerald-500"></span>
+        <span class="text-[9px] text-gray-500 mt-1">Created</span>
+        <span class="text-[9px] text-gray-400">13 Jun 10:30am</span>
+      </div>
+      <div class="timeline-line bg-emerald-300 mx-2"></div>
+      <div class="flex flex-col items-center">
+        <span class="timeline-dot bg-emerald-500 border-emerald-500"></span>
+        <span class="text-[9px] text-gray-500 mt-1">Sent to Vendor</span>
+        <span class="text-[9px] text-gray-400">13 Jun 10:32am</span>
+      </div>
+      <div class="timeline-line bg-gray-200 mx-2 border-dashed" style="border-top:2px dashed #d1d5db;height:0"></div>
+      <div class="flex flex-col items-center">
+        <span class="timeline-dot bg-white border-amber-400"></span>
+        <span class="text-[9px] text-amber-600 font-semibold mt-1">Awaiting Delivery</span>
+        <span class="text-[9px] text-gray-400">Expected 18 Jun</span>
+      </div>
+      <div class="timeline-line bg-gray-200 mx-2"></div>
+      <div class="flex flex-col items-center">
+        <span class="timeline-dot bg-white border-gray-300"></span>
+        <span class="text-[9px] text-gray-400 mt-1">Closed</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Lines with stock context -->
+  <div class="card p-4 mb-4">
+    <h3 class="text-[10px] font-bold text-gray-400 mb-3">ORDER LINES (4 items · ₹6,900)</h3>
+    <table>
+      <thead><tr>
+        <th>Item</th><th>Ordered</th><th>Exp Rate</th><th>Line Total</th><th>Your Stock Now</th><th>Days Left</th><th>After Receive</th><th>Status</th>
+      </tr></thead>
+      <tbody>
+        <tr style="background:#fef2f2">
+          <td class="font-medium">Carrot<br><span class="text-[10px] text-red-600 font-semibold">OUT OF STOCK</span></td>
+          <td class="mono">10 kg</td><td class="mono">₹80/kg</td><td class="mono font-semibold">₹800</td>
+          <td><span class="mono text-red-600 font-bold">0 kg</span>
+            <div class="stock-bar w-16 mt-1"><div class="stock-bar-fill bg-red-500" style="width:0%"></div></div>
+          </td>
+          <td class="mono text-red-600 font-bold">0d</td>
+          <td class="text-emerald-600 font-semibold mono">10 kg</td>
+          <td><span class="badge" style="background:#fef3c7;color:#92400e">Open</span></td>
+        </tr>
+        <tr style="background:#fef2f2">
+          <td class="font-medium">Coconut Powder<br><span class="text-[10px] text-red-600 font-semibold">OUT OF STOCK</span></td>
+          <td class="mono">5 kg</td><td class="mono">₹220/kg</td><td class="mono font-semibold">₹1,100</td>
+          <td><span class="mono text-red-600 font-bold">0 kg</span>
+            <div class="stock-bar w-16 mt-1"><div class="stock-bar-fill bg-red-500" style="width:0%"></div></div>
+          </td>
+          <td class="mono text-red-600 font-bold">0d</td>
+          <td class="text-emerald-600 font-semibold mono">5 kg</td>
+          <td><span class="badge" style="background:#fef3c7;color:#92400e">Open</span></td>
+        </tr>
+        <tr style="background:#fffbeb">
+          <td class="font-medium">Sesame Till<br><span class="text-[10px] text-amber-600">Low stock</span></td>
+          <td class="mono">20 kg</td><td class="mono">₹160/kg</td><td class="mono font-semibold">₹3,200</td>
+          <td><span class="mono text-amber-600">3.97 kg</span>
+            <div class="stock-bar w-16 mt-1"><div class="stock-bar-fill bg-amber-400" style="width:10%"></div></div>
+          </td>
+          <td class="mono text-amber-600">5d</td>
+          <td class="text-emerald-600 font-semibold mono">23.97 kg <span class="text-[10px] text-gray-400">+30d</span></td>
+          <td><span class="badge" style="background:#fef3c7;color:#92400e">Open</span></td>
+        </tr>
+        <tr>
+          <td class="font-medium">Jaggery Powder</td>
+          <td class="mono">15 kg</td><td class="mono">₹120/kg</td><td class="mono font-semibold">₹1,800</td>
+          <td><span class="mono">3.85 kg</span>
+            <div class="stock-bar w-16 mt-1"><div class="stock-bar-fill bg-amber-400" style="width:35%"></div></div>
+          </td>
+          <td class="mono text-amber-600">12d</td>
+          <td class="text-emerald-600 font-semibold mono">18.85 kg <span class="text-[10px] text-gray-400">+47d</span></td>
+          <td><span class="badge" style="background:#fef3c7;color:#92400e">Open</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Actions -->
+  <div class="card p-4 flex items-center gap-3">
+    <button class="btn-green text-sm flex items-center gap-2" onclick="showScreen('receive-form');document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.nav-btn')[1].classList.add('active')">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8 8-4-4"/></svg>
+      Receive Goods
+    </button>
+    <button class="btn-outline text-xs" style="color:#dc2626;border-color:#fca5a5">Cancel PO</button>
+    <span class="text-[10px] text-gray-400 ml-auto">Vendor delivery expected in 4 days</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SCREEN 2: RECEIVE FORM — Full Intelligence                     -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="screen-receive-form" class="screen-section max-w-5xl mx-auto py-6 px-4">
+  <div class="flex items-center gap-3 mb-1">
+    <button class="btn-outline text-xs py-1 px-2">&larr; Back to PO</button>
+    <h1 class="text-lg font-bold">Receive Goods — PO-806-2026-0005</h1>
+    <span class="badge" style="background:#dbeafe;color:#1d4ed8">Budget Ingredients Co</span>
+  </div>
+  <p class="text-xs text-gray-400 mb-5 ml-16">Record what was actually delivered. Compare against expected rates.</p>
+
+  <!-- Receive Header -->
+  <div class="card p-4 mb-4">
+    <div class="grid grid-cols-3 gap-4">
+      <div><label class="text-[10px] font-semibold text-gray-500 block mb-1">PURCHASE DATE</label><input type="date" value="2026-06-18" class="w-full" /></div>
+      <div><label class="text-[10px] font-semibold text-gray-500 block mb-1">PAYMENT TYPE</label><select class="w-full"><option selected>Cash</option><option>Credit</option><option>UPI</option></select></div>
+      <div><label class="text-[10px] font-semibold text-gray-500 block mb-1">DELIVERY NOTE #</label><input type="text" placeholder="Optional — vendor's DN reference" class="w-full" /></div>
+    </div>
+  </div>
+
+  <!-- Per-Line Receive with Intelligence -->
+  <div class="card p-5 mb-4" style="border-left: 4px solid #059669;">
+    <h3 class="text-xs font-bold text-emerald-700 mb-1">Receive Lines</h3>
+    <p class="text-[10px] text-gray-400 mb-4">Enter received qty, actual rate, batch &amp; expiry for each item. Variance is calculated automatically.</p>
+
+    <!-- LINE 1: Carrot -->
+    <div class="mb-5 p-4 rounded-lg border border-gray-200 bg-white">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <span class="text-sm font-bold">Carrot</span>
+          <span class="text-[10px] text-gray-400 ml-2">Line L01 · Ordered 10 kg @ ₹80/kg</span>
+        </div>
+        <span class="badge" style="background:#fef2f2;color:#991b1b">OUT OF STOCK — critical</span>
+      </div>
+      
+      <div class="grid grid-cols-5 gap-3 mb-3">
+        <div>
+          <label class="text-[10px] text-gray-500 block mb-1">Received Qty</label>
+          <input type="number" value="10" class="w-full mono" />
+          <span class="text-[10px] text-gray-400">of 10 kg ordered</span>
+        </div>
+        <div>
+          <label class="text-[10px] text-gray-500 block mb-1">Actual Rate (₹/kg)</label>
+          <input type="number" value="82" class="w-full mono" />
+        </div>
+        <div>
+          <label class="text-[10px] text-gray-500 block mb-1">Batch Label</label>
+          <input type="text" value="CARROT-JUN-001" class="w-full mono" />
+        </div>
+        <div>
+          <label class="text-[10px] text-gray-500 block mb-1">Expiry Date</label>
+          <input type="date" value="2026-07-15" class="w-full" />
+        </div>
+        <div>
+          <label class="text-[10px] text-gray-500 block mb-1">Line Total</label>
+          <div class="text-base font-bold mono mt-1">₹820</div>
+          <span class="text-[10px] text-gray-400">expected ₹800</span>
+        </div>
+      </div>
+
+      <!-- Intelligence Strip -->
+      <div class="grid grid-cols-3 gap-3 p-3 rounded-lg bg-gray-50 border border-gray-100">
+        <!-- Variance -->
+        <div>
+          <span class="text-[10px] font-semibold text-gray-500 block mb-1">RATE VARIANCE</span>
+          <div class="flex items-center gap-2">
+            <span class="mono text-sm variance-ok font-bold">+2.5%</span>
+            <span class="text-[10px] text-gray-400">₹82 vs expected ₹80</span>
+          </div>
+          <div class="text-[10px] text-emerald-600 mt-1">Within threshold (10%)</div>
+        </div>
+        <!-- Historical comparison -->
+        <div>
+          <span class="text-[10px] font-semibold text-gray-500 block mb-1">RATE HISTORY (Budget)</span>
+          <div class="flex items-center gap-1 text-[10px]">
+            <span>Last: ₹80</span>
+            <span class="text-gray-300">·</span>
+            <span>Avg: ₹78</span>
+            <span class="text-gray-300">·</span>
+            <span>Best: <span class="text-emerald-600 font-semibold">₹75</span></span>
+          </div>
+          <div class="flex gap-0.5 mt-1.5">
+            <div class="price-bar bg-emerald-300" style="width:91%" title="₹75"></div>
+            <div class="price-bar bg-emerald-400" style="width:95%" title="₹78 avg"></div>
+            <div class="price-bar bg-amber-400" style="width:100%" title="₹82 now"></div>
+          </div>
+          <div class="flex justify-between text-[9px] text-gray-400 mt-0.5">
+            <span>₹75 best</span><span>₹82 now</span>
+          </div>
+        </div>
+        <!-- Stock impact -->
+        <div>
+          <span class="text-[10px] font-semibold text-gray-500 block mb-1">STOCK IMPACT</span>
+          <div class="flex items-center gap-2">
+            <span class="mono text-red-500">0 kg</span>
+            <span class="text-gray-400">&rarr;</span>
+            <span class="mono text-emerald-600 font-bold">10 kg</span>
+          </div>
+          <div class="text-[10px] text-gray-400 mt-0.5">Restores from out-of-stock</div>
+          <div class="stock-bar w-full mt-1">
+            <div class="stock-bar-fill bg-emerald-500" style="width:60%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LINE 2: Sesame Till -->
+    <div class="mb-5 p-4 rounded-lg border border-amber-200 bg-amber-50/30">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <span class="text-sm font-bold">Sesame Till</span>
+          <span class="text-[10px] text-gray-400 ml-2">Line L03 · Ordered 20 kg @ ₹160/kg</span>
+        </div>
+        <span class="badge" style="background:#fef3c7;color:#92400e">Low stock — 5d cover</span>
+      </div>
+      
+      <div class="grid grid-cols-5 gap-3 mb-3">
+        <div>
+          <label class="text-[10px] text-gray-500 block mb-1">Received Qty</label>
+          <input type="number" value="15" class="w-full mono" />
+          <span class="text-[10px] text-amber-600 font-semibold">Partial: 15 of 20</span>
+        </div>
+        <div>
+          <label class="text-[10px] text-gray-500 block mb-1">Actual Rate (₹/kg)</label>
+          <input type="number" value="185" class="w-full mono" style="border-color:#f59e0b" />
+        </div>
+        <div>
+          <label class="text-[10px] text-gray-500 block mb-1">Batch Label</label>
+          <input type="text" value="SES-JUN-001" class="w-full mono" />
+        </div>
+        <div>
+          <label class="text-[10px] text-gray-500 block mb-1">Expiry Date</label>
+          <input type="date" value="2026-12-31" class="w-full" />
+        </div>
+        <div>
+          <label class="text-[10px] text-gray-500 block mb-1">Line Total</label>
+          <div class="text-base font-bold mono mt-1">₹2,775</div>
+          <span class="text-[10px] text-gray-400">expected ₹3,200</span>
+        </div>
+      </div>
+
+      <!-- Intelligence Strip with WARNING -->
+      <div class="grid grid-cols-3 gap-3 p-3 rounded-lg bg-amber-50 border border-amber-200">
+        <div>
+          <span class="text-[10px] font-semibold text-gray-500 block mb-1">RATE VARIANCE</span>
+          <div class="flex items-center gap-2">
+            <span class="mono text-lg variance-flag font-bold">+15.6%</span>
+            <span class="badge" style="background:#fee2e2;color:#991b1b">EXCEEDS THRESHOLD</span>
+          </div>
+          <div class="text-[10px] text-red-600 mt-1">₹185 vs expected ₹160 · Threshold: 10%</div>
+        </div>
+        <div>
+          <span class="text-[10px] font-semibold text-gray-500 block mb-1">RATE HISTORY (Budget)</span>
+          <div class="flex items-center gap-1 text-[10px]">
+            <span>Last: ₹160</span>
+            <span class="text-gray-300">·</span>
+            <span>Avg: ₹155</span>
+            <span class="text-gray-300">·</span>
+            <span>Best: <span class="text-emerald-600 font-semibold">₹150</span></span>
+          </div>
+          <div class="flex gap-0.5 mt-1.5">
+            <div class="price-bar bg-emerald-300" style="width:81%" title="₹150"></div>
+            <div class="price-bar bg-emerald-400" style="width:84%" title="₹155"></div>
+            <div class="price-bar bg-red-400" style="width:100%" title="₹185 now"></div>
+          </div>
+          <div class="text-[10px] text-red-600 mt-1 font-semibold">⚠ Highest rate ever from this vendor</div>
+        </div>
+        <div>
+          <span class="text-[10px] font-semibold text-gray-500 block mb-1">STOCK IMPACT</span>
+          <div class="flex items-center gap-2">
+            <span class="mono text-amber-600">3.97 kg</span>
+            <span class="text-gray-400">&rarr;</span>
+            <span class="mono text-emerald-600 font-bold">18.97 kg</span>
+          </div>
+          <div class="text-[10px] text-gray-400 mt-0.5">5d &rarr; ~24d cover (+19 days)</div>
+          <div class="stock-bar w-full mt-1">
+            <div class="stock-bar-fill bg-emerald-500" style="width:55%"></div>
+          </div>
+          <div class="text-[10px] text-amber-600 mt-1">5 kg remaining on PO (will need 2nd delivery)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LINE 3: Jaggery -->
+    <div class="mb-5 p-4 rounded-lg border border-gray-200 bg-white">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <span class="text-sm font-bold">Jaggery Powder</span>
+          <span class="text-[10px] text-gray-400 ml-2">Line L04 · Ordered 15 kg @ ₹120/kg</span>
+        </div>
+        <span class="badge" style="background:#f0fdf4;color:#065f46">12d cover</span>
+      </div>
+      
+      <div class="grid grid-cols-5 gap-3 mb-3">
+        <div>
+          <label class="text-[10px] text-gray-500 block mb-1">Received Qty</label>
+          <input type="number" value="15" class="w-full mono" />
+          <span class="text-[10px] text-emerald-600">Full qty received</span>
+        </div>
+        <div>
+          <label class="text-[10px] text-gray-500 block mb-1">Actual Rate (₹/kg)</label>
+          <input type="number" value="118" class="w-full mono" />
+        </div>
+        <div>
+          <label class="text-[10px] text-gray-500 block mb-1">Batch</label>
+          <input type="text" value="JAG-JUN-001" class="w-full mono" />
+        </div>
+        <div>
+          <label class="text-[10px] text-gray-500 block mb-1">Expiry</label>
+          <input type="date" value="2027-06-30" class="w-full" />
+        </div>
+        <div>
+          <label class="text-[10px] text-gray-500 block mb-1">Line Total</label>
+          <div class="text-base font-bold mono mt-1">₹1,770</div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-3 p-3 rounded-lg bg-gray-50 border border-gray-100">
+        <div>
+          <span class="text-[10px] font-semibold text-gray-500 block mb-1">RATE VARIANCE</span>
+          <span class="mono variance-ok font-bold">-1.7%</span>
+          <span class="text-[10px] text-emerald-600 ml-1">Below expected — good deal</span>
+        </div>
+        <div>
+          <span class="text-[10px] font-semibold text-gray-500 block mb-1">RATE HISTORY</span>
+          <span class="text-[10px]">Last: ₹120 · Avg: ₹118 · Best: <span class="text-emerald-600">₹115</span></span>
+          <div class="text-[10px] text-emerald-600 mt-0.5">At avg rate — consistent pricing</div>
+        </div>
+        <div>
+          <span class="text-[10px] font-semibold text-gray-500 block mb-1">STOCK IMPACT</span>
+          <span class="mono">3.85 &rarr; <span class="text-emerald-600 font-bold">18.85 kg</span></span>
+          <span class="text-[10px] text-gray-400 ml-1">12d &rarr; ~59d (+47d)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- LINE 4: Coconut Powder — Not received (vendor didn't send) -->
+    <div class="mb-3 p-4 rounded-lg border border-gray-200 bg-gray-50 opacity-60">
+      <div class="flex items-center justify-between mb-2">
+        <div>
+          <span class="text-sm font-bold text-gray-500">Coconut Powder</span>
+          <span class="text-[10px] text-gray-400 ml-2">Line L02 · Ordered 5 kg @ ₹220/kg</span>
+        </div>
+        <label class="flex items-center gap-2 text-[10px] text-gray-500 cursor-pointer">
+          <input type="checkbox" /> Skip — not delivered this time
+        </label>
+      </div>
+      <div class="text-[10px] text-gray-400">Coconut Powder was ordered but vendor hasn't included it. Skip to mark as remaining on PO.</div>
+    </div>
+  </div>
+
+  <!-- Order Summary -->
+  <div class="card p-5 mb-4">
+    <h3 class="text-xs font-bold mb-3">Receive Summary</h3>
+    <div class="grid grid-cols-4 gap-3 mb-3">
+      <div class="card kpi-card" style="border-bottom:3px solid #059669">
+        <div class="kpi-val">3</div>
+        <div class="kpi-label">Lines Receiving</div>
+      </div>
+      <div class="card kpi-card" style="border-bottom:3px solid #6b7280">
+        <div class="kpi-val text-gray-400">1</div>
+        <div class="kpi-label">Skipped</div>
+      </div>
+      <div class="card kpi-card" style="border-bottom:3px solid #059669">
+        <div class="kpi-val mono">₹5,365</div>
+        <div class="kpi-label">Receive Total</div>
+      </div>
+      <div class="card kpi-card" style="border-bottom:3px solid #f59e0b">
+        <div class="kpi-val text-amber-600">1</div>
+        <div class="kpi-label">Variance Flags</div>
+      </div>
+    </div>
+
+    <!-- Variance Warning Banner -->
+    <div class="p-3 rounded-lg border border-red-200 bg-red-50 text-xs mb-4">
+      <div class="flex items-center gap-2 mb-1">
+        <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+        <span class="font-bold text-red-700">1 line exceeds variance threshold (10%)</span>
+      </div>
+      <div class="text-red-600">
+        <strong>Sesame Till:</strong> ₹185/kg vs expected ₹160/kg (+15.6%) — highest rate ever from Budget Ingredients Co.
+        You can still receive, but this will be flagged in the GRN record.
+      </div>
+    </div>
+
+    <!-- FEFO Context -->
+    <div class="p-3 rounded-lg bg-blue-50 border border-blue-100 text-xs text-blue-800 mb-4">
+      <strong>FEFO Note:</strong> New batches will be placed after existing segments in the FEFO queue.
+      Sesame Till (SES-JUN-001, exp Dec 2026) has 1 existing segment expiring Sep 2026 — it will be consumed first.
+    </div>
+
+    <div class="flex items-center justify-between">
+      <div class="text-xs text-gray-500">
+        PO will move to <strong>"Partially Received"</strong> (Coconut Powder still pending)
+      </div>
+      <div class="flex gap-2">
+        <button class="btn-outline">Cancel</button>
+        <button class="btn-green flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8 8-4-4"/></svg>
+          Confirm &amp; Receive 3 Lines
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SCREEN 3: PARTIAL RECEIVE — 2nd delivery event                 -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="screen-receive-partial" class="screen-section max-w-5xl mx-auto py-6 px-4">
+  <div class="flex items-center gap-3 mb-1">
+    <button class="btn-outline text-xs py-1 px-2">&larr; Back to PO</button>
+    <h1 class="text-lg font-bold">Receive Remaining — PO-806-2026-0005</h1>
+    <span class="badge" style="background:#fef3c7;color:#92400e">Partially Received</span>
+  </div>
+  <p class="text-xs text-gray-400 mb-5 ml-16">2 lines have remaining qty. Record the 2nd delivery.</p>
+
+  <!-- What's already received -->
+  <div class="card p-4 mb-4">
+    <h3 class="text-[10px] font-bold text-gray-400 mb-3">PREVIOUSLY RECEIVED (GRN #1 — 18 Jun)</h3>
+    <div class="grid grid-cols-3 gap-2 text-[10px]">
+      <div class="p-2 rounded bg-gray-50">Carrot · 10 kg @ ₹82 · <span class="variance-ok">+2.5%</span> · <span class="font-semibold text-emerald-600">COMPLETE</span></div>
+      <div class="p-2 rounded bg-gray-50">Sesame · 15/20 kg @ ₹185 · <span class="variance-flag">+15.6% ⚠</span> · <span class="font-semibold text-amber-600">PARTIAL</span></div>
+      <div class="p-2 rounded bg-gray-50">Jaggery · 15 kg @ ₹118 · <span class="variance-ok">-1.7%</span> · <span class="font-semibold text-emerald-600">COMPLETE</span></div>
+    </div>
+  </div>
+
+  <!-- Remaining lines -->
+  <div class="card p-5 mb-4" style="border-left: 4px solid #059669;">
+    <h3 class="text-xs font-bold text-emerald-700 mb-4">Remaining Lines (2nd Delivery)</h3>
+
+    <!-- Sesame remaining 5kg -->
+    <div class="mb-4 p-4 rounded-lg border border-gray-200">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-sm font-bold">Sesame Till <span class="text-[10px] text-gray-400 font-normal">· 5 kg remaining of 20 ordered</span></span>
+        <span class="text-[10px] text-emerald-600 font-semibold">Stock now: 18.97 kg (after GRN #1)</span>
+      </div>
+      <div class="grid grid-cols-5 gap-3">
+        <div><label class="text-[10px] text-gray-500 block mb-1">Receive</label><input type="number" value="5" class="w-full mono" /></div>
+        <div><label class="text-[10px] text-gray-500 block mb-1">Rate</label><input type="number" value="165" class="w-full mono" /></div>
+        <div><label class="text-[10px] text-gray-500 block mb-1">Batch</label><input type="text" value="SES-JUN-002" class="w-full mono" /></div>
+        <div><label class="text-[10px] text-gray-500 block mb-1">Expiry</label><input type="date" value="2027-01-15" class="w-full" /></div>
+        <div>
+          <label class="text-[10px] text-gray-500 block mb-1">Variance</label>
+          <span class="mono variance-ok font-bold text-sm">+3.1%</span>
+          <span class="text-[10px] text-emerald-600 block">OK (within 10%)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Coconut Powder full -->
+    <div class="mb-4 p-4 rounded-lg border border-gray-200">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-sm font-bold">Coconut Powder <span class="text-[10px] text-gray-400 font-normal">· 5 kg remaining (full line — skipped in GRN #1)</span></span>
+        <span class="text-[10px] text-red-600 font-semibold">Still OUT OF STOCK: 0 kg</span>
+      </div>
+      <div class="grid grid-cols-5 gap-3">
+        <div><label class="text-[10px] text-gray-500 block mb-1">Receive</label><input type="number" value="5" class="w-full mono" /></div>
+        <div><label class="text-[10px] text-gray-500 block mb-1">Rate</label><input type="number" value="225" class="w-full mono" /></div>
+        <div><label class="text-[10px] text-gray-500 block mb-1">Batch</label><input type="text" value="COCO-JUN-001" class="w-full mono" /></div>
+        <div><label class="text-[10px] text-gray-500 block mb-1">Expiry</label><input type="date" value="2027-03-31" class="w-full" /></div>
+        <div>
+          <label class="text-[10px] text-gray-500 block mb-1">Variance</label>
+          <span class="mono variance-ok font-bold text-sm">+2.3%</span>
+          <span class="text-[10px] text-emerald-600 block">OK</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-3 rounded-lg bg-emerald-50 border border-emerald-100 text-xs text-emerald-800 mb-3">
+      This will complete all 4 lines. PO will auto-close (<code>po_auto_close_on_full_receive: true</code>).
+    </div>
+
+    <div class="flex justify-end gap-2">
+      <button class="btn-outline">Cancel</button>
+      <button class="btn-green">Confirm &amp; Receive 2 Lines (Final)</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SCREEN 4: POST-RECEIVE CONFIRMATION                            -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="screen-post-receive" class="screen-section max-w-3xl mx-auto py-10 px-4">
+  <div class="card p-8 text-center">
+    <div class="w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-4">
+      <svg class="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    </div>
+    <h2 class="text-lg font-bold mb-1">Goods Received Successfully</h2>
+    <p class="text-xs text-gray-500 mb-6">PO-806-2026-0005 · Budget Ingredients Co</p>
+
+    <div class="grid grid-cols-3 gap-4 mb-6 text-left max-w-md mx-auto">
+      <div class="card kpi-card"><div class="kpi-val text-emerald-600">3</div><div class="kpi-label">Lines Received</div></div>
+      <div class="card kpi-card"><div class="kpi-val mono">₹5,365</div><div class="kpi-label">GRN Total</div></div>
+      <div class="card kpi-card"><div class="kpi-val text-amber-600">1</div><div class="kpi-label">Variance Flagged</div></div>
+    </div>
+
+    <!-- Stock Impact Summary -->
+    <div class="text-left max-w-md mx-auto mb-6">
+      <h3 class="text-[10px] font-bold text-gray-400 mb-2">STOCK IMPACT</h3>
+      <div class="space-y-2 text-xs">
+        <div class="flex items-center justify-between p-2 rounded bg-emerald-50">
+          <span class="font-medium">Carrot</span>
+          <span class="mono">0 &rarr; <span class="text-emerald-600 font-bold">10 kg</span></span>
+          <span class="text-[10px] text-emerald-600">Restored</span>
+        </div>
+        <div class="flex items-center justify-between p-2 rounded bg-emerald-50">
+          <span class="font-medium">Sesame Till</span>
+          <span class="mono">3.97 &rarr; <span class="text-emerald-600 font-bold">18.97 kg</span></span>
+          <span class="text-[10px] text-gray-400">5 kg still on PO</span>
+        </div>
+        <div class="flex items-center justify-between p-2 rounded bg-emerald-50">
+          <span class="font-medium">Jaggery Powder</span>
+          <span class="mono">3.85 &rarr; <span class="text-emerald-600 font-bold">18.85 kg</span></span>
+          <span class="text-[10px] text-emerald-600">+47d cover</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex gap-3 justify-center">
+      <button class="btn-outline">View PO Detail</button>
+      <button class="btn-outline">View Stock Inventory</button>
+      <button class="btn-primary">Back to PO List</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SCREEN 5: GRN HISTORY ON PO DETAIL                             -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="screen-grn-history" class="screen-section max-w-4xl mx-auto py-6 px-4">
+  <div class="flex items-center gap-3 mb-1">
+    <button class="btn-outline text-xs py-1 px-2">&larr; Back to POs</button>
+    <h1 class="text-lg font-bold mono">PO-806-2026-0005</h1>
+    <span class="badge" style="background:#e5e7eb;color:#374151">Closed</span>
+  </div>
+  <p class="text-xs text-gray-400 mb-5 ml-16">Budget Ingredients Co · Fully received &amp; auto-closed · 2 GRN events</p>
+
+  <!-- Final Line Status -->
+  <div class="card p-4 mb-4">
+    <h3 class="text-[10px] font-bold text-gray-400 mb-3">FINAL LINE STATUS</h3>
+    <table>
+      <thead><tr><th>Item</th><th>Ordered</th><th>Total Received</th><th>Avg Rate</th><th>Total Cost</th><th>Variance</th><th>GRN Events</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="font-medium">Carrot</td><td class="mono">10 kg</td><td class="mono font-semibold">10 kg</td><td class="mono">₹82</td><td class="mono">₹820</td>
+          <td class="variance-ok mono">+2.5%</td><td>1</td><td><span class="badge" style="background:#d1fae5;color:#065f46">Received</span></td>
+        </tr>
+        <tr>
+          <td class="font-medium">Coconut Powder</td><td class="mono">5 kg</td><td class="mono font-semibold">5 kg</td><td class="mono">₹225</td><td class="mono">₹1,125</td>
+          <td class="variance-ok mono">+2.3%</td><td>1</td><td><span class="badge" style="background:#d1fae5;color:#065f46">Received</span></td>
+        </tr>
+        <tr style="background:#fef2f2">
+          <td class="font-medium">Sesame Till</td><td class="mono">20 kg</td><td class="mono font-semibold">20 kg</td><td class="mono">₹180</td><td class="mono">₹3,600</td>
+          <td class="variance-flag mono font-bold">+12.5% ⚠</td><td>2</td><td><span class="badge" style="background:#d1fae5;color:#065f46">Received</span></td>
+        </tr>
+        <tr>
+          <td class="font-medium">Jaggery Powder</td><td class="mono">15 kg</td><td class="mono font-semibold">15 kg</td><td class="mono">₹118</td><td class="mono">₹1,770</td>
+          <td class="variance-ok mono">-1.7%</td><td>1</td><td><span class="badge" style="background:#d1fae5;color:#065f46">Received</span></td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr class="border-t-2"><td class="font-bold" colspan="4">Grand Total</td><td class="mono font-bold">₹7,315</td><td colspan="3"><span class="text-[10px] text-gray-400">Expected: ₹6,900 · Over by ₹415 (+6%)</span></td></tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <!-- GRN Events -->
+  <div class="card p-4 mb-4">
+    <h3 class="text-[10px] font-bold text-gray-400 mb-3">GRN EVENTS (Goods Receipt Notes)</h3>
+
+    <!-- GRN 1 -->
+    <div class="p-4 rounded-lg border border-gray-200 mb-3">
+      <div class="flex items-center justify-between mb-2">
+        <div>
+          <span class="text-xs font-bold">GRN #1 — 18 Jun 2026</span>
+          <span class="text-[10px] text-gray-400 ml-2">3 lines · ₹5,365</span>
+        </div>
+        <span class="text-[10px] text-gray-400">purchase_ids: 6028, 6029, 6030</span>
+      </div>
+      <table>
+        <thead><tr><th>Item</th><th>Qty</th><th>Rate</th><th>Batch</th><th>Expiry</th><th>Variance</th><th>Cost</th></tr></thead>
+        <tbody>
+          <tr><td>Carrot</td><td class="mono">10 kg</td><td class="mono">₹82</td><td class="mono">CARROT-JUN-001</td><td>15 Jul 2026</td><td class="variance-ok mono">+2.5%</td><td class="mono">₹820</td></tr>
+          <tr style="background:#fef2f2"><td>Sesame Till</td><td class="mono">15 kg</td><td class="mono">₹185</td><td class="mono">SES-JUN-001</td><td>31 Dec 2026</td><td class="variance-flag mono">+15.6% ⚠</td><td class="mono">₹2,775</td></tr>
+          <tr><td>Jaggery Powder</td><td class="mono">15 kg</td><td class="mono">₹118</td><td class="mono">JAG-JUN-001</td><td>30 Jun 2027</td><td class="variance-ok mono">-1.7%</td><td class="mono">₹1,770</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- GRN 2 -->
+    <div class="p-4 rounded-lg border border-gray-200">
+      <div class="flex items-center justify-between mb-2">
+        <div>
+          <span class="text-xs font-bold">GRN #2 — 22 Jun 2026</span>
+          <span class="text-[10px] text-gray-400 ml-2">2 lines · ₹1,950 · Final delivery</span>
+        </div>
+        <span class="text-[10px] text-gray-400">purchase_ids: 6031, 6032</span>
+      </div>
+      <table>
+        <thead><tr><th>Item</th><th>Qty</th><th>Rate</th><th>Batch</th><th>Expiry</th><th>Variance</th><th>Cost</th></tr></thead>
+        <tbody>
+          <tr><td>Sesame Till</td><td class="mono">5 kg</td><td class="mono">₹165</td><td class="mono">SES-JUN-002</td><td>15 Jan 2027</td><td class="variance-ok mono">+3.1%</td><td class="mono">₹825</td></tr>
+          <tr><td>Coconut Powder</td><td class="mono">5 kg</td><td class="mono">₹225</td><td class="mono">COCO-JUN-001</td><td>31 Mar 2027</td><td class="variance-ok mono">+2.3%</td><td class="mono">₹1,125</td></tr>
+        </tbody>
+      </table>
+      <div class="mt-2 p-2 rounded bg-emerald-50 text-[10px] text-emerald-700">All lines complete. PO auto-closed.</div>
+    </div>
+  </div>
+
+  <!-- PO Cost Analysis -->
+  <div class="card p-4" style="border-left: 3px solid #3b82f6;">
+    <h3 class="text-[10px] font-bold text-blue-700 mb-3">PO COST ANALYSIS</h3>
+    <div class="grid grid-cols-3 gap-4 text-xs">
+      <div>
+        <span class="text-[10px] text-gray-400 block">Expected Total</span>
+        <span class="mono font-bold text-base">₹6,900</span>
+      </div>
+      <div>
+        <span class="text-[10px] text-gray-400 block">Actual Total</span>
+        <span class="mono font-bold text-base">₹7,315</span>
+      </div>
+      <div>
+        <span class="text-[10px] text-gray-400 block">Variance</span>
+        <span class="mono font-bold text-base text-amber-600">+₹415 (+6.0%)</span>
+      </div>
+    </div>
+    <div class="mt-3 text-[10px] text-gray-500">
+      Sesame Till accounted for 89% of the cost overrun (₹185 actual vs ₹160 expected on 15kg delivery).
+      The 2nd delivery came in at ₹165 — closer to expected. Consider negotiating rate before next PO to this vendor.
+    </div>
+  </div>
+</div>
+
+<script>
+function showScreen(id) {
+  document.querySelectorAll('.screen-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>

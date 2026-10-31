@@ -1,0 +1,93 @@
+{
+  "iteration": 49,
+  "test_date": "2026-01-14",
+  "test_type": "BUG-017 Duplicate Ingredient Filter Verification",
+  "overall_status": "PASS",
+  "summary": "BUG-017 fix verified. Duplicate ingredient filter is working correctly in both Recipe Catalogue and Sub-Recipe Master BOM editors. When an ingredient is selected in one row, it is excluded from other row dropdowns. Removing a row makes the ingredient available again.",
+  
+  "features_tested": [
+    {
+      "feature": "Sub-Recipe BOM editor duplicate filter",
+      "status": "PASS",
+      "details": "First dropdown: 49 options. After selecting Ajwain, second dropdown: 48 options (Ajwain excluded). Third dropdown: 47 options (Ajwain and Almonds excluded)."
+    },
+    {
+      "feature": "Sub-Recipe row removal restores ingredient",
+      "status": "PASS",
+      "details": "After removing Ajwain row, dropdown shows 49 options again with Ajwain available."
+    },
+    {
+      "feature": "Recipe BOM editor duplicate filter",
+      "status": "PASS",
+      "details": "First dropdown: 49 options. After selecting Ajwain, second dropdown: 48 options (Ajwain excluded, starts with Almonds)."
+    },
+    {
+      "feature": "Ingredient dropdowns load correctly with filtering",
+      "status": "PASS",
+      "details": "Both Recipe and Sub-Recipe dropdowns load all inventory items and filter correctly based on selections."
+    }
+  ],
+  
+  "code_review": {
+    "RecipeCatalogue.jsx": {
+      "line": 317,
+      "implementation": "inventoryMaster.filter(m => !ingredients.some((other, j) => j !== ing.idx && String(other.ingredient_id) === String(m.id)))",
+      "status": "CORRECT",
+      "notes": "Filter excludes IDs selected in OTHER rows using j !== ing.idx comparison"
+    },
+    "SubRecipeMaster.jsx": {
+      "line": 363,
+      "implementation": "inventoryMaster.filter(m => !ingredients.some((other, j) => j !== idx && String(other.ingredient_id) === String(m.id)))",
+      "status": "CORRECT",
+      "notes": "Same filter logic, excludes IDs selected in OTHER rows using j !== idx comparison"
+    }
+  },
+  
+  "test_results": {
+    "sub_recipe_master": {
+      "first_dropdown_options": 49,
+      "second_dropdown_options_after_selection": 48,
+      "third_dropdown_options_after_two_selections": 47,
+      "options_restored_after_row_removal": 49,
+      "filter_working": true
+    },
+    "recipe_catalogue": {
+      "first_dropdown_options": 49,
+      "second_dropdown_options_after_selection": 48,
+      "filter_working": true
+    }
+  },
+  
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  
+  "action_items": [],
+  
+  "critical_code_review_comments": [],
+  
+  "updated_files": [],
+  
+  "success_rate": {
+    "backend": "N/A (frontend only test)",
+    "frontend": "100% (4/4 features verified)"
+  },
+  
+  "test_credentials": {
+    "central_store": "manager@germanfluid.com / Qplazm@10"
+  },
+  
+  "seed_data_creation": "None - used existing inventory master data",
+  
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  
+  "context_for_next_testing_agent": "BUG-017 duplicate ingredient filter fix verified. Both RecipeCatalogue.jsx (line 317) and SubRecipeMaster.jsx (line 363) correctly filter inventoryMaster to exclude ingredients already selected in other rows. The filter uses .some() with j !== idx to exclude the current row from comparison."
+}

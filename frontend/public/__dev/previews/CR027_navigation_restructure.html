@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CR-027 — Navigation Restructure Mock</title>
+<style>
+:root{--bg:#fff;--surface:#fff;--surface2:#f4f4f5;--surface3:#fafafa;--border:#e4e4e7;--border-light:#f4f4f5;--text:#09090b;--text-sec:#52525b;--text-muted:#a1a1aa;--primary:#18181b;--primary-fg:#fafafa;--amber:#b45309;--amber-light:#fffbeb;--amber-border:#fde68a;--font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--surface2);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5;}
+
+.preview-bar{background:var(--amber-light);border:1px solid var(--amber-border);border-radius:6px;padding:8px 14px;margin:16px 24px;font-size:11px;color:var(--amber);font-weight:600;}
+
+.mock-container{display:flex;gap:40px;padding:20px 24px;flex-wrap:wrap;}
+
+/* Sidebar mock */
+.sidebar-mock{width:220px;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;flex-shrink:0;height:fit-content;}
+.sidebar-mock .logo{padding:12px 16px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);}
+.sidebar-mock .logo .icon{width:24px;height:24px;background:var(--primary);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--primary-fg);font-size:10px;font-weight:700;}
+
+.section-header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 4px;cursor:pointer;user-select:none;}
+.section-header .section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-muted);}
+.section-header .chevron{font-size:10px;color:var(--text-muted);transition:transform .2s;}
+.section-header.collapsed .chevron{transform:rotate(-90deg);}
+.section-header:hover .section-label{color:var(--text-sec);}
+
+.section-divider{height:1px;background:var(--border-light);margin:4px 12px;}
+
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 16px;font-size:13px;color:var(--text-sec);cursor:pointer;transition:all .15s;text-decoration:none;}
+.nav-item:hover{background:var(--surface2);color:var(--text);}
+.nav-item.active{background:var(--primary);color:var(--primary-fg);border-radius:0;}
+.nav-item .nav-icon{width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;opacity:.7;}
+.nav-item.active .nav-icon{opacity:1;}
+.nav-item .nav-label{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+.new-tag{font-size:8px;font-weight:700;background:#2563eb;color:#fff;padding:1px 5px;border-radius:3px;margin-left:4px;}
+.renamed-tag{font-size:8px;font-weight:700;background:#16a34a;color:#fff;padding:1px 5px;border-radius:3px;margin-left:4px;}
+.moved-tag{font-size:8px;font-weight:700;background:#b45309;color:#fff;padding:1px 5px;border-radius:3px;margin-left:4px;}
+
+/* Annotation panel */
+.annotation-panel{flex:1;min-width:300px;max-width:600px;}
+.annotation-panel h2{font-size:18px;font-weight:800;margin-bottom:4px;}
+.annotation-panel .subtitle{font-size:13px;color:var(--text-muted);margin-bottom:16px;}
+.change-table{width:100%;border-collapse:collapse;font-size:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.change-table th{text-align:left;padding:8px 12px;font-size:10px;text-transform:uppercase;color:var(--text-muted);font-weight:600;background:var(--surface2);border-bottom:1px solid var(--border);}
+.change-table td{padding:6px 12px;border-bottom:1px solid var(--border-light);}
+.change-table tr:last-child td{border-bottom:none;}
+.change-table .old{text-decoration:line-through;color:var(--text-muted);}
+.change-table .new{font-weight:600;color:var(--text);}
+.change-table .section-row{background:var(--surface2);font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);}
+
+/* Collapsed section mock */
+.collapsed-section{padding:4px 16px 8px;}
+.collapsed-section .collapsed-hint{font-size:10px;color:var(--text-muted);font-style:italic;padding:2px 0;}
+
+/* Comparison side-by-side */
+.comparison{display:flex;gap:24px;margin-top:24px;flex-wrap:wrap;}
+.comparison .col{flex:1;min-width:220px;}
+.comparison .col-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid var(--border);}
+.comparison .col-label.before{border-color:#dc2626;}
+.comparison .col-label.after{border-color:#16a34a;}
+</style>
+</head>
+<body>
+
+<div class="preview-bar">MOCK — CR-027 Navigation Restructure — For owner review &amp; freeze before implementation</div>
+
+<div class="mock-container">
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- NEW SIDEBAR — Expanded State                               -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<div>
+  <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:8px;">New Sidebar (Expanded)</div>
+  <div class="sidebar-mock">
+    <div class="logo"><div class="icon">CI</div>Central Inventory</div>
+
+    <!-- DASHBOARD -->
+    <div class="section-header">
+      <span class="section-label">Dashboard</span>
+      <span class="chevron">&#9660;</span>
+    </div>
+    <a class="nav-item active"><span class="nav-icon">&#9638;</span><span class="nav-label">Operations Hub</span></a>
+
+    <div class="section-divider"></div>
+
+    <!-- INWARD -->
+    <div class="section-header">
+      <span class="section-label">Inward</span>
+      <span class="chevron">&#9660;</span>
+    </div>
+    <a class="nav-item"><span class="nav-icon">&#9964;</span><span class="nav-label">Vendor Management</span><span class="renamed-tag">RENAMED</span></a>
+    <a class="nav-item"><span class="nav-icon">&#9878;</span><span class="nav-label">Raw Material Master</span><span class="renamed-tag">RENAMED</span></a>
+    <a class="nav-item"><span class="nav-icon">&#128722;</span><span class="nav-label">Purchase</span><span class="new-tag">NEW NAV</span></a>
+
+    <div class="section-divider"></div>
+
+    <!-- PRODUCTION -->
+    <div class="section-header">
+      <span class="section-label">Production</span>
+      <span class="chevron">&#9660;</span>
+    </div>
+    <a class="nav-item"><span class="nav-icon">&#128218;</span><span class="nav-label">Sub-Recipe Master</span><span class="moved-tag">MOVED</span></a>
+    <a class="nav-item"><span class="nav-icon">&#9881;</span><span class="nav-label">Run Production</span></a>
+    <a class="nav-item"><span class="nav-icon">&#128203;</span><span class="nav-label">Production History</span></a>
+
+    <div class="section-divider"></div>
+
+    <!-- OUTWARD -->
+    <div class="section-header">
+      <span class="section-label">Outward</span>
+      <span class="chevron">&#9660;</span>
+    </div>
+    <a class="nav-item"><span class="nav-icon">&#127978;</span><span class="nav-label">Store Management</span><span class="moved-tag">MERGED</span></a>
+    <a class="nav-item"><span class="nav-icon">&#127860;</span><span class="nav-label">Product Catalog</span><span class="renamed-tag">RENAMED</span></a>
+    <a class="nav-item"><span class="nav-icon">&#128230;</span><span class="nav-label">Stock Inventory</span></a>
+    <a class="nav-item"><span class="nav-icon">&#128229;</span><span class="nav-label">Pending Queues</span></a>
+    <a class="nav-item"><span class="nav-icon">&#128220;</span><span class="nav-label">History &amp; Ledger</span></a>
+
+    <div class="section-divider"></div>
+
+    <!-- REPORTS -->
+    <div class="section-header">
+      <span class="section-label">Reports</span>
+      <span class="chevron">&#9660;</span>
+    </div>
+    <a class="nav-item"><span class="nav-icon">&#128202;</span><span class="nav-label">Consumption Report</span></a>
+    <a class="nav-item"><span class="nav-icon">&#128200;</span><span class="nav-label">Wastage Report</span><span class="new-tag">NEW NAV</span></a>
+
+    <div class="section-divider"></div>
+
+    <!-- SETTINGS -->
+    <div class="section-header">
+      <span class="section-label">Settings</span>
+      <span class="chevron">&#9660;</span>
+    </div>
+    <a class="nav-item"><span class="nav-icon">&#9881;</span><span class="nav-label">Settings</span></a>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- NEW SIDEBAR — Collapsed Section Example                    -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<div>
+  <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:8px;">Collapsed Sections Example</div>
+  <div class="sidebar-mock">
+    <div class="logo"><div class="icon">CI</div>Central Inventory</div>
+
+    <!-- DASHBOARD — expanded -->
+    <div class="section-header">
+      <span class="section-label">Dashboard</span>
+      <span class="chevron">&#9660;</span>
+    </div>
+    <a class="nav-item active"><span class="nav-icon">&#9638;</span><span class="nav-label">Operations Hub</span></a>
+
+    <div class="section-divider"></div>
+
+    <!-- INWARD — collapsed -->
+    <div class="section-header collapsed">
+      <span class="section-label">Inward</span>
+      <span class="chevron">&#9660;</span>
+    </div>
+    <div class="collapsed-section">
+      <div class="collapsed-hint">3 items hidden</div>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- PRODUCTION — collapsed -->
+    <div class="section-header collapsed">
+      <span class="section-label">Production</span>
+      <span class="chevron">&#9660;</span>
+    </div>
+    <div class="collapsed-section">
+      <div class="collapsed-hint">3 items hidden</div>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- OUTWARD — expanded (user is on this section) -->
+    <div class="section-header">
+      <span class="section-label">Outward</span>
+      <span class="chevron">&#9660;</span>
+    </div>
+    <a class="nav-item"><span class="nav-icon">&#127978;</span><span class="nav-label">Store Management</span></a>
+    <a class="nav-item"><span class="nav-icon">&#127860;</span><span class="nav-label">Product Catalog</span></a>
+    <a class="nav-item"><span class="nav-icon">&#128230;</span><span class="nav-label">Stock Inventory</span></a>
+    <a class="nav-item"><span class="nav-icon">&#128229;</span><span class="nav-label">Pending Queues</span></a>
+    <a class="nav-item"><span class="nav-icon">&#128220;</span><span class="nav-label">History &amp; Ledger</span></a>
+
+    <div class="section-divider"></div>
+
+    <!-- REPORTS — collapsed -->
+    <div class="section-header collapsed">
+      <span class="section-label">Reports</span>
+      <span class="chevron">&#9660;</span>
+    </div>
+    <div class="collapsed-section">
+      <div class="collapsed-hint">2 items hidden</div>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- SETTINGS — collapsed -->
+    <div class="section-header collapsed">
+      <span class="section-label">Settings</span>
+      <span class="chevron">&#9660;</span>
+    </div>
+    <div class="collapsed-section">
+      <div class="collapsed-hint">1 item hidden</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- CHANGE LOG TABLE                                           -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<div class="annotation-panel">
+  <h2>Navigation Change Map</h2>
+  <div class="subtitle">Every item: what changed, where it moved, what's new</div>
+
+  <table class="change-table">
+    <thead>
+      <tr><th>Old Name</th><th>New Name</th><th>Old Path</th><th>New Path</th><th>Change</th></tr>
+    </thead>
+    <tbody>
+      <tr class="section-row"><td colspan="5">DASHBOARD</td></tr>
+      <tr><td>Operations Hub</td><td class="new">Operations Hub</td><td>/</td><td>/</td><td>No change</td></tr>
+
+      <tr class="section-row"><td colspan="5">INWARD</td></tr>
+      <tr><td class="old">Vendors</td><td class="new">Vendor Management</td><td class="old">/vendors</td><td class="new">/vendor-management</td><td><span class="renamed-tag">RENAMED</span></td></tr>
+      <tr><td class="old">Ingredients</td><td class="new">Raw Material Master</td><td class="old">/catalogue/ingredients</td><td class="new">/raw-materials</td><td><span class="renamed-tag">RENAMED</span></td></tr>
+      <tr><td><em>(Quick Action only)</em></td><td class="new">Purchase</td><td class="old">/procurement/new</td><td class="new">/purchase</td><td><span class="new-tag">NEW NAV</span></td></tr>
+
+      <tr class="section-row"><td colspan="5">PRODUCTION</td></tr>
+      <tr><td><em>Sub-Recipes tab in Recipes</em></td><td class="new">Sub-Recipe Master</td><td class="old">/catalogue/recipes#sub</td><td class="new">/sub-recipe-master</td><td><span class="moved-tag">EXTRACTED</span></td></tr>
+      <tr><td>Production</td><td class="new">Run Production</td><td>/production/new</td><td>/production/new</td><td>No change</td></tr>
+      <tr><td>Production History</td><td class="new">Production History</td><td>/production/history</td><td>/production/history</td><td>No change</td></tr>
+
+      <tr class="section-row"><td colspan="5">OUTWARD</td></tr>
+      <tr><td class="old">Hierarchy Summary + Store Management</td><td class="new">Store Management</td><td class="old">/hierarchy + /hierarchy/manage</td><td class="new">/store-management</td><td><span class="moved-tag">MERGED</span></td></tr>
+      <tr><td class="old">Products</td><td class="new">Product Catalog</td><td class="old">/catalogue/products</td><td class="new">/product-catalog</td><td><span class="renamed-tag">RENAMED</span></td></tr>
+      <tr><td>Stock Inventory</td><td class="new">Stock Inventory</td><td>/inventory</td><td>/inventory</td><td>No change (+ FG/Raw tabs in CR-029)</td></tr>
+      <tr><td>Pending Queues</td><td class="new">Pending Queues</td><td>/queues</td><td>/queues</td><td>No change</td></tr>
+      <tr><td>History &amp; Ledger</td><td class="new">History &amp; Ledger</td><td>/history</td><td>/history</td><td>No change</td></tr>
+
+      <tr class="section-row"><td colspan="5">REPORTS</td></tr>
+      <tr><td>Consumption Report</td><td class="new">Consumption Report</td><td>/reports/consumption</td><td>/reports/consumption</td><td>No change</td></tr>
+      <tr><td><em>(Route only, no nav)</em></td><td class="new">Wastage Report</td><td>/wastage/report</td><td>/wastage/report</td><td><span class="new-tag">NEW NAV</span></td></tr>
+
+      <tr class="section-row"><td colspan="5">SETTINGS</td></tr>
+      <tr><td>Settings</td><td class="new">Settings</td><td>/settings</td><td>/settings</td><td>No change</td></tr>
+
+      <tr class="section-row"><td colspan="5">REMOVED FROM NAV</td></tr>
+      <tr><td class="old">Recipes</td><td><em>Absorbed into Product Catalog + Sub-Recipe Master</em></td><td class="old">/catalogue/recipes</td><td><em>Redirect → /product-catalog</em></td><td>Deleted</td></tr>
+      <tr><td class="old">Addon Recipes</td><td><em>Absorbed into Product Catalog</em></td><td class="old">/catalogue/addon-recipes</td><td><em>Redirect → /product-catalog</em></td><td>Deleted</td></tr>
+      <tr><td class="old">Hierarchy Summary</td><td><em>Merged into Store Management tab</em></td><td class="old">/hierarchy</td><td><em>Redirect → /store-management</em></td><td>Merged</td></tr>
+    </tbody>
+  </table>
+
+  <div style="margin-top:20px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:12px;">
+    <strong>Collapse Behavior:</strong> Sections remember collapse state in localStorage. The section containing the active page auto-expands. Clicking a section header toggles its items. When sidebar is collapsed to icon-only mode, section headers are hidden — only icons remain (existing behavior preserved).
+  </div>
+
+  <div style="margin-top:12px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:12px;">
+    <strong>Redirect Safety Net:</strong> All old routes get <code>&lt;Navigate to="new-path"&gt;</code> in App.js. Old bookmarks and Quick Action links continue working silently.
+  </div>
+</div>
+
+</div><!-- /mock-container -->
+
+</body>
+</html>

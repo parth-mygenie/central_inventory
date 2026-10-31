@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flow E — Configuration (Intelligent UI Preview)</title>
+<style>
+:root{--bg:#fff;--surface:#fff;--surface2:#f4f4f5;--surface3:#fafafa;--border:#e4e4e7;--border-light:#f4f4f5;--text:#09090b;--text-sec:#52525b;--text-muted:#a1a1aa;--primary:#18181b;--primary-fg:#fafafa;--amber:#b45309;--amber-light:#fffbeb;--amber-border:#fde68a;--red:#dc2626;--red-light:#fef2f2;--red-border:#fecaca;--green:#16a34a;--green-light:#f0fdf4;--green-border:#bbf7d0;--font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;--mono:'SF Mono',Consolas,monospace;--sidebar-w:200px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--surface2);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5;}
+.shell{display:flex;min-height:100vh;}
+.sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);padding:16px 0;flex-shrink:0;position:sticky;top:0;height:100vh;}
+.sidebar .logo{padding:0 16px 16px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.sidebar .logo .icon{width:24px;height:24px;background:var(--primary);border-radius:6px;}
+.sidebar nav a{display:flex;align-items:center;padding:8px 16px;font-size:13px;color:var(--text-sec);text-decoration:none;}
+.sidebar nav a:hover{background:var(--surface2);}
+.sidebar nav a.active{background:var(--surface2);color:var(--text);font-weight:600;border-right:2px solid var(--primary);}
+.topbar{height:48px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;background:var(--surface);}
+.topbar .store-name{font-size:13px;font-weight:600;}
+.topbar .badge{font-size:10px;padding:2px 8px;border-radius:4px;background:var(--surface2);color:var(--text-sec);border:1px solid var(--border);font-weight:600;margin-left:8px;}
+.main{flex:1;display:flex;flex-direction:column;}
+.content{flex:1;padding:20px 28px 40px;max-width:1200px;}
+.preview-bar{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 12px;margin-bottom:16px;font-size:11px;color:var(--text-sec);}
+h1{font-size:20px;font-weight:700;margin-bottom:4px;}
+.sub{font-size:13px;color:var(--text-muted);margin-bottom:16px;}
+.section-div{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin:32px 0 12px;padding-top:24px;border-top:2px solid var(--border);}
+.section-div:first-of-type{border-top:none;margin-top:0;padding-top:0;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:12px;overflow:hidden;}
+.card-head{padding:10px 16px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between;}
+.card-head h2{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:600;}
+table{width:100%;border-collapse:collapse;}
+th{text-align:left;padding:8px 14px;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:600;border-bottom:1px solid var(--border);background:var(--surface3);}
+td{padding:10px 14px;border-bottom:1px solid var(--border-light);font-size:12px;}
+tr:last-child td{border-bottom:none;}
+.mono{font-family:var(--mono);}
+.btn{font-size:12px;font-weight:500;padding:6px 14px;border-radius:5px;border:1px solid var(--border);background:var(--surface);color:var(--text-sec);cursor:pointer;}
+.btn-primary{background:var(--primary);color:var(--primary-fg);border-color:var(--primary);}
+.search{width:240px;border:1px solid var(--border);border-radius:5px;padding:7px 10px;font-size:12px;color:var(--text);}
+.badge-s{font-size:10px;font-weight:600;padding:2px 8px;border-radius:4px;}
+.badge-ok{background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);}
+.badge-warn{background:var(--amber-light);color:var(--amber);border:1px solid var(--amber-border);}
+.badge-danger{background:var(--red-light);color:var(--red);border:1px solid var(--red-border);}
+.badge-active{background:var(--green-light);color:var(--green);border:1px solid var(--green-border);}
+/* Settings specific */
+.setting-group{margin-bottom:16px;}
+.sg-head{display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:13px;font-weight:600;border-bottom:1px solid var(--border-light);}
+.sg-row{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--border-light);}
+.sg-row:last-child{border-bottom:none;}
+.sg-label{font-size:13px;font-weight:500;}
+.sg-desc{font-size:11px;color:var(--text-muted);margin-top:1px;}
+.sg-impact{font-size:10px;padding:3px 8px;border-radius:4px;margin-left:8px;}
+.toggle{width:40px;height:22px;border-radius:11px;background:var(--border);position:relative;cursor:pointer;display:inline-block;}
+.toggle.on{background:var(--primary);}
+.toggle::after{content:'';width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:left .15s;}
+.toggle.on::after{left:20px;}
+/* Stats row */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 16px;text-align:center;}
+.stat-card .v{font-size:22px;font-weight:700;font-family:var(--mono);}
+.stat-card .l{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
+.stat-card.red .v{color:var(--red);}
+.stat-card.amber .v{color:var(--amber);}
+@media(max-width:900px){.sidebar{display:none;}.stats-row{grid-template-columns:repeat(2,1fr);}.content{padding:16px;}}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside class="sidebar">
+  <div class="logo"><div class="icon"></div>Central Inventory</div>
+  <nav>
+    <a href="#">Operations Hub</a>
+    <a href="#">Stock Inventory</a>
+    <a href="#">Pending Queues</a>
+    <a href="#" class="active">Settings</a>
+    <a href="#">Vendors</a>
+    <a href="#">Ingredients</a>
+    <a href="#">Consumption Report</a>
+    <a href="#">Store Management</a>
+  </nav>
+</aside>
+<div class="main">
+<div class="topbar"><div class="store-name">Kala Bahia Central<span class="badge">Central Store</span></div></div>
+<div class="content">
+<div class="preview-bar">PREVIEW &mdash; Flow E: Configuration &mdash; E1 Settings + E2 Vendors + E3-E6 Catalogue + E7 Consumption + E8 Hierarchy</div>
+
+<!-- ═══════════ E1: OPERATIONAL SETTINGS ═══════════ -->
+<div class="section-div">E1 &mdash; Operational Settings (Central Only)</div>
+<h1>Operational Settings</h1>
+<div class="sub">Hierarchy-wide policies. Changes take effect immediately for all stores.</div>
+
+<div class="card">
+  <div class="sg-head">Hierarchy Policy <span class="badge-s badge-warn" style="margin-left:auto">3 settings &middot; Affects all stores</span></div>
+  <div class="sg-row">
+    <div>
+      <div class="sg-label">Allow Direct Vendor Purchase</div>
+      <div class="sg-desc">Central and franchise stores can record stock purchases independently</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span class="sg-impact badge-danger">High impact</span>
+      <span class="toggle on"></span>
+    </div>
+  </div>
+  <div class="sg-row">
+    <div>
+      <div class="sg-label">Allow Lateral Central Transfers</div>
+      <div class="sg-desc">Central stores can transfer stock to sibling central stores</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span class="sg-impact badge-ok">Low impact</span>
+      <span class="toggle"></span>
+    </div>
+  </div>
+  <div class="sg-row">
+    <div>
+      <div class="sg-label">Allow Cross-Branch Dispatch</div>
+      <div class="sg-desc">Central stores can dispatch to franchises under sibling central stores</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span class="sg-impact badge-warn">Medium impact</span>
+      <span class="toggle"></span>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="sg-head">Alerts &amp; Thresholds</div>
+  <div class="sg-row">
+    <div>
+      <div class="sg-label">Near-Expiry Alert (days)</div>
+      <div class="sg-desc">Items expiring within this window are flagged</div>
+    </div>
+    <div><input style="width:60px;border:1px solid var(--border);border-radius:4px;padding:4px 8px;font-size:13px;text-align:center;" value="30" /></div>
+  </div>
+  <div class="sg-row">
+    <div>
+      <div class="sg-label">Stale Transfer Warning (hours)</div>
+      <div class="sg-desc">Transfers idle longer than this are flagged as stale</div>
+    </div>
+    <div><input style="width:60px;border:1px solid var(--border);border-radius:4px;padding:4px 8px;font-size:13px;text-align:center;" value="24" /></div>
+  </div>
+</div>
+
+<!-- ═══════════ E2: VENDOR MANAGEMENT ═══════════ -->
+<div class="section-div">E2 &mdash; Vendor Management</div>
+<h1>Vendors</h1>
+<div class="sub">Manage supplier relationships. Last purchase and total volume tracked.</div>
+
+<div class="card">
+  <div class="card-head">
+    <div style="display:flex;gap:8px;align-items:center;">
+      <input class="search" placeholder="Search vendors..." />
+      <span style="font-size:11px;color:var(--text-muted)">3 vendors</span>
+    </div>
+    <button class="btn btn-primary" style="font-size:11px;padding:5px 12px;">+ Add Vendor</button>
+  </div>
+  <table>
+    <thead><tr><th>Vendor</th><th>Contact</th><th>Last Purchase</th><th>Total Orders</th><th>Avg Order Value</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <tr>
+        <td style="font-weight:600;">Test Vendor</td>
+        <td style="font-size:11px;color:var(--text-muted)">vendor@test.com</td>
+        <td style="font-size:11px">20 May 2026 <span style="color:var(--text-muted)">(11 days ago)</span></td>
+        <td class="mono">12</td>
+        <td class="mono">Rs 4,500</td>
+        <td><span class="badge-s badge-active">Active</span></td>
+        <td><button class="btn" style="font-size:10px;padding:3px 8px;">Edit</button></td>
+      </tr>
+      <tr>
+        <td style="font-weight:600;">Fresh Farms Ltd</td>
+        <td style="font-size:11px;color:var(--text-muted)">orders@freshfarms.com</td>
+        <td style="font-size:11px;color:var(--amber)">15 Mar 2026 <span>(77 days ago)</span></td>
+        <td class="mono">3</td>
+        <td class="mono">Rs 8,200</td>
+        <td><span class="badge-s badge-warn">Inactive 77d</span></td>
+        <td><button class="btn" style="font-size:10px;padding:3px 8px;">Edit</button></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════ E3-E6: CATALOGUE (Combined) ═══════════ -->
+<div class="section-div">E3-E6 &mdash; Catalogue (Ingredients, Products, Recipes, Addon-Recipes)</div>
+<h1>Catalogue Management</h1>
+<div class="sub">Central-only. All entity types with usage context and push status.</div>
+
+<div class="stats-row">
+  <div class="stat-card"><div class="v">4</div><div class="l">Ingredients</div></div>
+  <div class="stat-card"><div class="v">8</div><div class="l">Products</div></div>
+  <div class="stat-card"><div class="v">5</div><div class="l">Recipes</div></div>
+  <div class="stat-card amber"><div class="v">2</div><div class="l">Unmapped Items</div></div>
+</div>
+
+<div class="card">
+  <div class="card-head">
+    <h2>Ingredients</h2>
+    <div style="display:flex;gap:6px;">
+      <input class="search" placeholder="Search..." style="width:180px;" />
+      <button class="btn btn-primary" style="font-size:11px;padding:5px 12px;">+ Add</button>
+    </div>
+  </div>
+  <table>
+    <thead><tr><th>Item</th><th>Category</th><th>Unit</th><th>Used in Recipes</th><th>Current Stock</th><th>Pushed to Stores</th><th></th></tr></thead>
+    <tbody>
+      <tr>
+        <td style="font-weight:600;">Cooking Oil</td>
+        <td style="font-size:11px;color:var(--text-muted)">Veggies</td>
+        <td style="font-size:11px">ltr</td>
+        <td class="mono">3 recipes</td>
+        <td class="mono">24.82 ltr</td>
+        <td><span class="badge-s badge-active">4 stores</span></td>
+        <td><button class="btn" style="font-size:10px;padding:3px 8px;">Edit</button></td>
+      </tr>
+      <tr>
+        <td style="font-weight:600;">Red Meat</td>
+        <td style="font-size:11px;color:var(--text-muted)">Non Veg</td>
+        <td style="font-size:11px">gm</td>
+        <td class="mono">2 recipes</td>
+        <td class="mono">1,250 gm</td>
+        <td><span class="badge-s badge-active">4 stores</span></td>
+        <td><button class="btn" style="font-size:10px;padding:3px 8px;">Edit</button></td>
+      </tr>
+      <tr style="background:var(--amber-light);">
+        <td style="font-weight:600;">Spice Mix <span style="font-size:10px;color:var(--amber)">(new)</span></td>
+        <td style="font-size:11px;color:var(--text-muted)">Spices</td>
+        <td style="font-size:11px">pkt</td>
+        <td class="mono" style="color:var(--amber)">0 recipes</td>
+        <td class="mono" style="color:var(--text-muted)">0</td>
+        <td><span class="badge-s badge-warn">Not pushed</span></td>
+        <td><button class="btn" style="font-size:10px;padding:3px 8px;">Edit</button> <button class="btn" style="font-size:10px;padding:3px 8px;">Push</button></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════ E7: CONSUMPTION REPORT ═══════════ -->
+<div class="section-div">E7 &mdash; Daily Consumption Report</div>
+<h1>Consumption Report</h1>
+<div class="sub">Recipe-based consumption with stock comparison and anomaly detection</div>
+
+<div class="stats-row">
+  <div class="stat-card"><div class="v">1,260</div><div class="l">Total Consumed (gm)</div></div>
+  <div class="stat-card"><div class="v">4</div><div class="l">Items Consumed</div></div>
+  <div class="stat-card red"><div class="v">1</div><div class="l">Above Avg</div></div>
+  <div class="stat-card"><div class="v">3</div><div class="l">Stores Covered</div></div>
+</div>
+
+<div class="card">
+  <div class="card-head"><h2>Consumption by Item</h2><span style="font-size:10px;color:var(--text-muted)">Last 7 days</span></div>
+  <table>
+    <thead><tr><th>Item</th><th>Consumed</th><th>Avg Daily</th><th>Current Stock</th><th>Days of Cover</th><th>Trend</th></tr></thead>
+    <tbody>
+      <tr>
+        <td style="font-weight:600;">Red Meat <span style="font-size:10px;color:var(--text-muted)">gm</span></td>
+        <td class="mono">1,260 gm</td>
+        <td class="mono">180 gm/day</td>
+        <td class="mono">1,250 gm</td>
+        <td class="mono" style="color:var(--amber)">~7 days</td>
+        <td><span style="font-size:10px;color:var(--red);">&uarr; 1.5x above avg</span></td>
+      </tr>
+      <tr>
+        <td style="font-weight:600;">Cooking Oil <span style="font-size:10px;color:var(--text-muted)">ltr</span></td>
+        <td class="mono">3.5 ltr</td>
+        <td class="mono">0.5 ltr/day</td>
+        <td class="mono">24.82 ltr</td>
+        <td class="mono">~50 days</td>
+        <td><span style="font-size:10px;color:var(--text-muted)">Normal</span></td>
+      </tr>
+      <tr>
+        <td style="font-weight:600;">Maida <span style="font-size:10px;color:var(--text-muted)">kg</span></td>
+        <td class="mono">2.1 kg</td>
+        <td class="mono">0.3 kg/day</td>
+        <td class="mono" style="color:var(--red)">3.2 kg</td>
+        <td class="mono" style="color:var(--red)">~11 days</td>
+        <td><span style="font-size:10px;color:var(--text-muted)">Normal</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════ E8: HIERARCHY MANAGEMENT ═══════════ -->
+<div class="section-div">E8 &mdash; Hierarchy Management</div>
+<h1>Store Management</h1>
+<div class="sub">View stores, create children, push catalogue bundles. Last-push status per store.</div>
+
+<div class="card">
+  <div class="card-head">
+    <h2>Your Stores</h2>
+    <button class="btn btn-primary" style="font-size:11px;padding:5px 12px;">+ Create Store</button>
+  </div>
+  <table>
+    <thead><tr><th>Store</th><th>Type</th><th>Status</th><th>Items Count</th><th>Last Push</th><th>Push Status</th><th>Actions</th></tr></thead>
+    <tbody>
+      <tr>
+        <td style="font-weight:600;">DemoCentral1</td>
+        <td><span class="badge-s" style="background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;">Master Store</span></td>
+        <td><span class="badge-s badge-active">Active</span></td>
+        <td class="mono">4 items</td>
+        <td style="font-size:11px">28 May 2026 <span style="color:var(--text-muted)">(3 days ago)</span></td>
+        <td><span class="badge-s badge-active">Synced</span></td>
+        <td><button class="btn" style="font-size:10px;padding:3px 8px;">View</button> <button class="btn" style="font-size:10px;padding:3px 8px;">Push</button></td>
+      </tr>
+      <tr>
+        <td style="font-weight:600;">DemoFranchise1</td>
+        <td><span class="badge-s" style="background:#fff7ed;color:#9a3412;border:1px solid #fed7aa;">Outlet</span></td>
+        <td><span class="badge-s badge-active">Active</span></td>
+        <td class="mono">4 items</td>
+        <td style="font-size:11px">28 May 2026</td>
+        <td><span class="badge-s badge-active">Synced</span></td>
+        <td><button class="btn" style="font-size:10px;padding:3px 8px;">View</button> <button class="btn" style="font-size:10px;padding:3px 8px;">Push</button></td>
+      </tr>
+      <tr style="background:var(--amber-light);">
+        <td style="font-weight:600;">DemoFranchise3</td>
+        <td><span class="badge-s" style="background:#fff7ed;color:#9a3412;border:1px solid #fed7aa;">Outlet</span></td>
+        <td><span class="badge-s badge-active">Active</span></td>
+        <td class="mono" style="color:var(--amber)">2 items</td>
+        <td style="font-size:11px;color:var(--amber)">15 May 2026 <span>(16 days ago)</span></td>
+        <td><span class="badge-s badge-warn">Stale &mdash; 2 items behind</span></td>
+        <td><button class="btn" style="font-size:10px;padding:3px 8px;">View</button> <button class="btn btn-primary" style="font-size:10px;padding:3px 8px;">Push Now</button></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Legend -->
+<div style="margin-top:20px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;">
+  <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;color:var(--text-sec);">Intelligence Elements &mdash; Flow E</div>
+  <div style="font-size:11px;color:var(--text-sec);line-height:2;">
+    <div><strong>E1:</strong> Impact badges per setting (High/Medium/Low), "Affects all stores" warning, threshold inputs with descriptions</div>
+    <div><strong>E2:</strong> Last purchase date with relative time, "Inactive 77d" status for dormant vendors, avg order value, total orders count</div>
+    <div><strong>E3-E6:</strong> "Used in X recipes" cross-reference, "Pushed to X stores" sync status, "Not pushed" warning on new items, "0 recipes" unmapped highlight, stat cards with "Unmapped Items" count</div>
+    <div><strong>E7:</strong> Consumption vs current stock with days-of-cover, trend vs average ("1.5x above avg"), anomaly stat card</div>
+    <div><strong>E8:</strong> Last push date with relative time, push status (Synced/Stale), "2 items behind" gap indicator, "Push Now" highlighted for stale stores, item count per store</div>
+  </div>
+</div>
+
+</div></div></div>
+</body>
+</html>

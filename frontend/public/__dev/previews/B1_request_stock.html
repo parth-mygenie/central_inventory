@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>B1 — Intelligent PO: Web View (Reduced Color)</title>
+<style>
+:root {
+  --bg:#ffffff;--surface:#ffffff;--surface2:#f4f4f5;--surface3:#fafafa;
+  --border:#e4e4e7;--border-light:#f4f4f5;
+  --text:#09090b;--text-sec:#52525b;--text-muted:#a1a1aa;
+  --primary:#18181b;--primary-fg:#fafafa;
+  --amber:#b45309;--amber-light:#fffbeb;--amber-border:#fde68a;
+  --red:#dc2626;--red-light:#fef2f2;--red-border:#fecaca;
+  --sidebar-w:200px;
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --mono:'SF Mono',Consolas,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5;}
+
+.shell{display:flex;min-height:100vh;}
+
+.sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);padding:16px 0;flex-shrink:0;position:sticky;top:0;height:100vh;}
+.sidebar .logo{padding:0 16px 16px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.sidebar .logo .icon{width:24px;height:24px;background:var(--primary);border-radius:6px;}
+.sidebar nav a{display:flex;align-items:center;gap:8px;padding:8px 16px;font-size:13px;color:var(--text-sec);text-decoration:none;}
+.sidebar nav a:hover{background:var(--surface2);}
+.sidebar nav a.active{background:var(--surface2);color:var(--text);font-weight:600;border-right:2px solid var(--primary);}
+
+.topbar{height:48px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;justify-content:space-between;}
+.topbar .store-name{font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;}
+.topbar .store-badge{font-size:10px;padding:2px 8px;border-radius:4px;background:var(--surface2);color:var(--text-sec);border:1px solid var(--border);font-weight:600;}
+
+.main{flex:1;display:flex;flex-direction:column;}
+.content{flex:1;padding:20px 28px 40px;max-width:1100px;}
+
+.preview-bar{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 12px;margin-bottom:16px;font-size:11px;color:var(--text-sec);}
+
+.back-link{font-size:12px;color:var(--text-muted);cursor:pointer;text-decoration:none;display:inline-block;margin-bottom:8px;}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+.page-header h1{font-size:20px;font-weight:700;}
+.page-sub{font-size:13px;color:var(--text-muted);margin-bottom:18px;}
+
+.mode-bar{display:inline-flex;background:var(--surface2);border-radius:6px;padding:3px;border:1px solid var(--border);}
+.mode-btn{padding:7px 20px;border:none;background:none;font-size:12px;font-weight:500;color:var(--text-muted);cursor:pointer;border-radius:4px;}
+.mode-btn.active{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.08);font-weight:600;}
+
+/* Stats — monochrome except problems */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 16px;text-align:center;}
+.stat-card .v{font-size:26px;font-weight:700;font-family:var(--mono);color:var(--text);}
+.stat-card .l{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
+.stat-card.problem .v{color:var(--red);}
+.stat-card.caution .v{color:var(--amber);}
+/* adequate + suggested = just black, no color */
+
+.context-row{display:flex;gap:12px;margin-bottom:14px;align-items:stretch;}
+.source-card{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;}
+.source-card .name{font-size:14px;font-weight:600;}
+.source-card .tag{font-size:10px;font-weight:500;padding:2px 8px;border-radius:3px;background:var(--surface2);color:var(--text-sec);border:1px solid var(--border);margin-left:8px;}
+.source-card select{font-size:12px;border:1px solid var(--border);border-radius:4px;padding:4px 8px;}
+
+.alert-card{background:var(--amber-light);border:1px solid var(--amber-border);border-radius:8px;padding:12px 16px;font-size:12px;color:var(--amber);display:flex;align-items:center;gap:8px;white-space:nowrap;}
+.alert-card a{color:var(--text-sec);text-decoration:underline;}
+
+/* Items table */
+.items-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:16px;}
+.items-head{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.items-head h2{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:600;}
+.items-head .badge{font-size:10px;padding:3px 10px;border-radius:10px;font-weight:500;background:var(--surface2);color:var(--text-sec);border:1px solid var(--border);}
+
+.item-table{width:100%;border-collapse:collapse;}
+.item-table th{text-align:left;padding:8px 16px;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:600;border-bottom:1px solid var(--border);background:var(--surface3);}
+.item-table td{padding:12px 16px;border-bottom:1px solid var(--border-light);vertical-align:top;}
+.item-table tr:last-child td{border-bottom:none;}
+.item-table tr:hover td{background:var(--surface3);}
+
+/* Category group row */
+.cat-row td{padding:8px 16px;background:var(--surface2);border-bottom:1px solid var(--border);}
+.cat-label{font-size:12px;font-weight:600;color:var(--text);}
+.cat-count{font-size:11px;color:var(--text-muted);margin-left:8px;}
+.cat-tag{font-size:10px;color:var(--text-muted);background:var(--surface2);border:1px solid var(--border);padding:1px 6px;border-radius:3px;}
+
+.item-name{font-size:13px;font-weight:600;}
+.item-unit{font-size:11px;color:var(--text-muted);margin-left:4px;}
+
+/* Stock indicators — ONLY red/amber get color, rest are neutral */
+.stock-val{font-size:12px;display:flex;align-items:center;gap:4px;}
+.stock-val .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.stock-val.out .dot{background:var(--red);}
+.stock-val.out{color:var(--red);font-weight:600;}
+.stock-val.low .dot{background:var(--amber);}
+.stock-val.low{color:var(--amber);font-weight:600;}
+.stock-val.ok .dot{background:#d4d4d8;}
+.stock-val.ok{color:var(--text-sec);}
+
+.stock-label{font-size:10px;color:var(--text-muted);margin-top:1px;}
+
+/* Qty */
+.qty-input{width:90px;border:1px solid var(--border);border-radius:4px;padding:6px 8px;font-size:13px;color:var(--text);}
+.qty-input:focus{outline:none;border-color:var(--text-sec);box-shadow:0 0 0 2px rgba(0,0,0,.05);}
+.qty-input.warn{border-color:var(--amber);}
+.unit-label{font-size:12px;color:var(--text-muted);margin-left:6px;}
+.note{font-size:10px;margin-top:3px;}
+.note.warn{color:var(--amber);}
+
+/* Suggestion — neutral, not colored */
+.sug{font-size:10px;color:var(--text-muted);line-height:1.6;}
+.sug .tag{display:inline-block;background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:1px 6px;font-size:10px;margin-right:4px;margin-bottom:2px;}
+.sug .tag.warn{background:var(--amber-light);border-color:var(--amber-border);color:var(--amber);}
+
+.check{width:16px;height:16px;accent-color:var(--primary);}
+
+.add-btn{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--text-sec);cursor:pointer;font-weight:500;border:none;background:none;padding:8px 16px;text-decoration:underline;}
+
+/* Footer */
+.footer-area{display:flex;gap:12px;align-items:flex-start;}
+.footer-left{flex:1;}
+.footer-right{width:280px;flex-shrink:0;}
+
+.summary-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:10px;}
+.summary-box .line{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;}
+.summary-box .line:last-child{margin-bottom:0;}
+.summary-box .total{font-weight:700;border-top:1px solid var(--border);padding-top:6px;margin-top:6px;}
+
+.val-box{background:var(--amber-light);border:1px solid var(--amber-border);border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:11px;color:var(--amber);}
+.val-box ul{margin:4px 0 0 16px;}
+
+.submit-btn{width:100%;padding:10px 16px;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;background:var(--primary);color:var(--primary-fg);}
+.submit-btn:hover{opacity:.9;}
+
+@media(max-width:900px){
+  .sidebar{display:none;}
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+  .context-row{flex-direction:column;}
+  .footer-area{flex-direction:column;}
+  .footer-right{width:100%;}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<aside class="sidebar">
+  <div class="logo"><div class="icon"></div>Central Inventory</div>
+  <nav>
+    <a href="#">Operations Hub</a>
+    <a href="#">Stock Inventory</a>
+    <a href="#">Hierarchy Summary</a>
+    <a href="#">Pending Queues</a>
+    <a href="#">History & Ledger</a>
+    <a href="#" class="active">Request Stock</a>
+    <a href="#">Vendors</a>
+  </nav>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div class="store-name">DemoCentral1 <span class="store-badge">Master Store</span></div>
+  </div>
+
+  <div class="content">
+    <div class="preview-bar">PREVIEW — B1 Intelligent PO — Reduced color palette (red + amber + neutral only)</div>
+
+    <a class="back-link">← Back</a>
+    <div class="page-header">
+      <h1>Request Stock</h1>
+      <div class="mode-bar">
+        <button class="mode-btn active">Suggested Reorder</button>
+        <button class="mode-btn">Manual Request</button>
+      </div>
+    </div>
+    <div class="page-sub">Items below minimum stock detected. Review and submit.</div>
+
+    <div class="stats-row">
+      <div class="stat-card problem"><div class="v">2</div><div class="l">Out of Stock</div></div>
+      <div class="stat-card caution"><div class="v">1</div><div class="l">Low Stock</div></div>
+      <div class="stat-card"><div class="v">1</div><div class="l">Adequate</div></div>
+      <div class="stat-card"><div class="v">3</div><div class="l">Suggested</div></div>
+    </div>
+
+    <div class="context-row">
+      <div class="source-card">
+        <div><span class="name">Kala Bahia Central</span><span class="tag">Direct Parent</span></div>
+        <select><option>Change source</option></select>
+      </div>
+      <div class="alert-card">⚠ <strong>2 pending requests</strong> with this source <a href="#">View</a></div>
+    </div>
+
+    <div class="items-card">
+      <div class="items-head">
+        <h2>Suggested Items</h2>
+        <span class="badge">Auto-detected</span>
+      </div>
+      <table class="item-table">
+        <thead>
+          <tr>
+            <th style="width:30px"></th>
+            <th>Item</th>
+            <th>Category</th>
+            <th>Your Stock</th>
+            <th>Source</th>
+            <th>Order Qty</th>
+            <th>Suggestion</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Category group: Non Veg -->
+          <tr class="cat-row"><td colspan="7"><span class="cat-label">Non Veg</span><span class="cat-count">2 items</span></td></tr>
+          <tr>
+            <td><input type="checkbox" class="check" checked /></td>
+            <td><span class="item-name">Red Meat</span><span class="item-unit">gm</span></td>
+            <td><span class="cat-tag">Non Veg</span></td>
+            <td>
+              <div class="stock-val out"><span class="dot"></span><strong>0 gm</strong></div>
+              <div class="stock-label">Out of stock</div>
+            </td>
+            <td>
+              <div class="stock-val ok"><span class="dot"></span>1,250 gm</div>
+              <div class="stock-label">Available</div>
+            </td>
+            <td>
+              <input type="number" class="qty-input" value="500" />
+              <span class="unit-label">gm</span>
+            </td>
+            <td>
+              <div class="sug">
+                <span class="tag">Gap to min: 500</span>
+                <span class="tag">~3 days cover</span>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td><input type="checkbox" class="check" checked /></td>
+            <td><span class="item-name">Patri</span><span class="item-unit">gm</span></td>
+            <td><span class="cat-tag">Non Veg</span></td>
+            <td>
+              <div class="stock-val out"><span class="dot"></span><strong>0 gm</strong></div>
+              <div class="stock-label">Out of stock</div>
+            </td>
+            <td>
+              <div class="stock-val ok"><span class="dot"></span>3,950 gm</div>
+              <div class="stock-label">Available</div>
+            </td>
+            <td>
+              <input type="number" class="qty-input" value="800" />
+              <span class="unit-label">gm</span>
+            </td>
+            <td>
+              <div class="sug"><span class="tag">Gap to min: 800</span></div>
+            </td>
+          </tr>
+          <!-- Category group: Veggies -->
+          <tr class="cat-row"><td colspan="7"><span class="cat-label">Veggies</span><span class="cat-count">1 item</span></td></tr>
+          <tr>
+            <td><input type="checkbox" class="check" checked /></td>
+            <td><span class="item-name">Maida</span><span class="item-unit">kg</span></td>
+            <td><span class="cat-tag">Veggies</span></td>
+            <td>
+              <div class="stock-val low"><span class="dot"></span><strong>0.5 kg</strong></div>
+              <div class="stock-label">Low stock</div>
+            </td>
+            <td>
+              <div class="stock-val ok"><span class="dot"></span>3.2 kg</div>
+              <div class="stock-label">Available</div>
+            </td>
+            <td>
+              <input type="number" class="qty-input warn" value="10" />
+              <span class="unit-label">kg</span>
+              <div class="note warn">⚠ Source has only 3.2</div>
+            </td>
+            <td>
+              <div class="sug">
+                <span class="tag">Gap to min: 9.5</span>
+                <span class="tag warn">Exceeds source</span>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <button class="add-btn">+ Add item manually</button>
+    </div>
+
+    <div class="footer-area">
+      <div class="footer-left">
+        <div class="val-box">
+          <strong>Note:</strong> Maida qty (10 kg) exceeds source availability (3.2 kg)
+        </div>
+      </div>
+      <div class="footer-right">
+        <div class="summary-box">
+          <div class="line"><span>Red Meat</span><span>500 gm</span></div>
+          <div class="line"><span>Patri</span><span>800 gm</span></div>
+          <div class="line"><span>Maida</span><span>10 kg</span></div>
+          <div class="line total"><span>3 items</span></div>
+        </div>
+        <button class="submit-btn">Submit Request (3 items)</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+</body>
+</html>

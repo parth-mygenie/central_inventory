@@ -1,0 +1,25 @@
+{
+  "summary": "Tested all 5 bug-fix scenarios on CR-047_MOCK_DESIGN_REAL_DATA.html. Both bug fixes are verified working correctly.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": { "backend": "N/A", "frontend": "100%" },
+  "test_results": {
+    "TEST1_grand_total_excl_fare": "PASS - qty=2, rate=50 → Grand Total = ₹100.00. After setting fare=100, Grand Total stays ₹100.00 (does NOT jump to ₹200.00)",
+    "TEST2_combobox_position": "PASS - Dropdown opens at (316, 287) directly below item cell at (316, 255). Not at bottom-left corner.",
+    "TEST3_combobox_search": "PASS - Typing 'tom' filters list to show Cherry Tomato and Tomato",
+    "TEST4_combobox_selection": "PASS - Selecting 'Tomato' populates item input with 'Tomato' and closes dropdown",
+    "TEST5_payment_balance_full_total": "PASS - Balance shows '₹50.00 entered of ₹200.00 — ₹150.00 remaining' (items=100 + fare=100 = 200)"
+  },
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All 5 scenarios from CR-047 bug fixes verified. Page URL: https://central-inventory-11.preview.emergentagent.com/CR-047_MOCK_DESIGN_REAL_DATA.html. Uses vanilla JS (not Alpine.js). Key selectors: #qty0, #rate0, #fareInput, #grandTotalValue, #comboInput0, #comboDrop0, #comboSearch0, #comboList0, #addPayBtn, #paymentBalance."
+}

@@ -1,0 +1,26 @@
+{
+  "summary": "Frontend-only testing of CR-047 mock design at https://central-inventory-11.preview.emergentagent.com/CR-047_MOCK_DESIGN_REAL_DATA.html. Tested all 6 specified features related to payment section layout and dynamic ref sub-row behavior.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": { "backend": "N/A", "frontend": "100%" },
+  "seed_data_creation": "",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All 6 CR-047 features verified on mock HTML page. Vendor/Date/Fare/Payment header in single row, dynamic ref sub-row appears only for UPI/Bank Transfer, Cash+UPI split shows correct per-leg behavior, Cash+Cash split shows side-by-side layout without ref rows.",
+  "test_results": {
+    "header_row_no_wrap": "PASS - Vendor, Purchase Date, Fare, Payment all visible in single header row",
+    "cash_no_ref_row": "PASS - Cash mode shows no ref sub-row (#payRef0 not visible)",
+    "bank_transfer_ref_row": "PASS - Bank Transfer mode shows ref sub-row (#payRef0 visible)",
+    "upi_ref_row": "PASS - UPI mode shows ref sub-row (#payRef0 visible with placeholder 'Ref / Transaction ID (optional)')",
+    "cash_plus_upi_split": "PASS - Cash leg: no ref row; UPI leg: ref sub-row present",
+    "cash_plus_cash_split": "PASS - Both Cash legs side-by-side on same row, no ref rows shown"
+  }
+}

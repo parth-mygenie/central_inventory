@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CR-051 Mock — Purchase Report (Real Data: RID 828)</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;background:#f5f5f5;color:#111}
+  .shell{display:flex;height:100vh;overflow:hidden}
+
+  /* Sidebar */
+  .sidebar{width:200px;background:#fff;border-right:1px solid #e5e7eb;padding:12px 0;flex-shrink:0;overflow-y:auto}
+  .sidebar-logo{padding:0 14px 12px;border-bottom:1px solid #e5e7eb;margin-bottom:6px;font-weight:700;font-size:13px;display:flex;align-items:center;gap:7px}
+  .logo-icon{width:26px;height:26px;background:#111;border-radius:5px;display:flex;align-items:center;justify-content:center}
+  .logo-icon svg{width:14px;height:14px;fill:#fff}
+  .nav-section{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;padding:8px 12px 3px}
+  .nav-item{display:flex;align-items:center;gap:7px;padding:6px 10px;border-radius:5px;margin:1px 6px;cursor:pointer;color:#374151;font-size:12px}
+  .nav-item:hover{background:#f3f4f6}
+  .nav-item.active{background:#eff6ff;color:#2563eb;font-weight:600}
+  .nav-item svg{width:14px;height:14px;flex-shrink:0;opacity:.65}
+
+  /* Main */
+  .main{flex:1;overflow:auto;background:#f9fafb;min-width:0}
+  .page{padding:14px 16px 40px}
+
+  /* Page header */
+  .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+  .page-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:7px}
+  .export-btn{height:30px;padding:0 14px;border-radius:6px;border:1px solid #d1d5db;background:#fff;font-size:11.5px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;transition:all .12s}
+  .export-btn:hover{background:#f3f4f6}
+  .export-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
+
+  /* Filters bar */
+  .filters-bar{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px}
+  .filter-group{display:flex;align-items:center;gap:6px;flex-shrink:0}
+  .filter-label{font-size:10.5px;color:#6b7280;white-space:nowrap}
+  .date-input{height:28px;border:1px solid #d1d5db;border-radius:5px;padding:0 8px;font-size:11.5px;background:#fff;font-family:inherit;cursor:pointer}
+  .date-sep{font-size:11px;color:#9ca3af}
+  .filter-select{height:28px;border:1px solid #d1d5db;border-radius:5px;padding:0 8px;font-size:11.5px;background:#fff;font-family:inherit;min-width:120px}
+  .search-input{height:28px;border:1px solid #d1d5db;border-radius:5px;padding:0 8px 0 28px;font-size:11.5px;background:#fff;font-family:inherit;min-width:140px;position:relative}
+  .search-wrap{position:relative;display:inline-block}
+  .search-wrap svg{position:absolute;left:7px;top:50%;transform:translateY(-50%);width:12px;height:12px;stroke:#9ca3af;fill:none;stroke-width:2;pointer-events:none}
+  .filter-sep{width:1px;height:20px;background:#e5e7eb;flex-shrink:0;margin:0 2px}
+
+  /* Payment pills */
+  .pill-wrap{display:flex;gap:3px;flex-shrink:0}
+  .pay-pill{height:24px;padding:0 9px;border-radius:20px;border:1px solid #e5e7eb;background:#fff;font-size:11px;cursor:pointer;font-family:inherit;transition:all .12s;color:#374151}
+  .pay-pill:hover{background:#f3f4f6}
+  .pay-pill.active{background:#111;color:#fff;border-color:#111;font-weight:600}
+
+  /* Summary bar */
+  .summary-bar{display:flex;align-items:center;gap:12px;padding:9px 14px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:10px;flex-wrap:wrap}
+  .sum-stat{display:flex;flex-direction:column;gap:1px}
+  .sum-val{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
+  .sum-lbl{font-size:9.5px;color:#6b7280;text-transform:uppercase;letter-spacing:.04em}
+  .sum-sep{width:1px;height:28px;background:#e5e7eb}
+
+  /* By-store accordion */
+  .accordion{background:#fff;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:10px;overflow:hidden}
+  .accordion-header{display:flex;align-items:center;gap:7px;padding:9px 12px;cursor:pointer;user-select:none;font-size:11.5px;font-weight:600}
+  .accordion-header:hover{background:#f8fafc}
+  .accordion-chevron{font-size:9px;color:#9ca3af;transition:transform .15s}
+  .accordion-chevron.open{transform:rotate(90deg)}
+  .accordion-body{border-top:1px solid #f3f4f6;padding:8px 12px;display:none}
+  .accordion-body.open{display:block}
+  .store-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;font-size:11.5px;border-bottom:1px solid #f9fafb}
+  .store-row:last-child{border-bottom:none}
+  .store-badge{font-size:9px;padding:1px 5px;border-radius:3px;background:#eff6ff;color:#2563eb;font-weight:600}
+
+  /* Table */
+  .table-wrap{background:#fff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden}
+  .table-inner{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;table-layout:auto}
+  thead tr{background:#f8fafc}
+  th{padding:7px 10px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#9ca3af;border-bottom:1px solid #e5e7eb;white-space:nowrap}
+  td{padding:7px 10px;border-bottom:1px solid #f3f4f6;font-size:12px;vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:#fafafa}
+  .td-date{white-space:nowrap;font-variant-numeric:tabular-nums;color:#374151}
+  .td-store{white-space:nowrap}
+  .td-ingredient{font-weight:500}
+  .td-vendor{color:#6b7280;white-space:nowrap}
+  .td-qty{text-align:right;font-variant-numeric:tabular-nums}
+  .td-price{text-align:right;font-variant-numeric:tabular-nums;color:#6b7280}
+  .td-amount{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+  .td-payment{}
+  .td-txn{font-size:11px;color:#6b7280;font-family:monospace}
+  .tag-real{display:inline-block;font-size:8.5px;background:#dcfce7;color:#15803d;border-radius:3px;padding:1px 4px;font-weight:700;margin-left:4px;vertical-align:middle}
+  .pay-type{display:inline-block;font-size:10.5px;padding:2px 7px;border-radius:4px;font-weight:500}
+  .pay-cash{background:#f0fdf4;color:#15803d}
+  .pay-upi{background:#eff6ff;color:#2563eb}
+  .pay-card{background:#fdf4ff;color:#7c3aed}
+  .pay-bank{background:#fff7ed;color:#c2410c}
+  .pay-others{background:#f8fafc;color:#475569}
+  .pay-partial{background:#fef3c7;color:#b45309}
+  .pay-split-leg{font-size:9.5px;color:#6b7280;margin-top:2px;display:flex;align-items:center;gap:3px}
+  .pay-split-leg span{padding:1px 5px;border-radius:3px;font-size:9px;font-weight:500}
+  .pay-gap-note{font-size:9px;color:#9ca3af;font-style:italic;margin-top:1px}
+  .empty-state{padding:32px;text-align:center;color:#9ca3af;font-size:12px}
+
+  /* Footer */
+  .table-footer{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-top:1px solid #f3f4f6;font-size:11px;color:#6b7280}
+
+  /* Toast */
+  .toast{position:fixed;bottom:20px;right:20px;background:#111;color:#fff;padding:10px 16px;border-radius:7px;font-size:12px;display:none;z-index:9999}
+  .toast.show{display:block}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2zm-9 8H7v-2h4v2zm6 0h-4v-2h4v2zM4 7V5a2 2 0 012-2h12a2 2 0 012 2v2H4z"/></svg></div>
+      Central Inventory
+    </div>
+    <div class="nav-section">Inward</div>
+    <div class="nav-item">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      Purchase
+    </div>
+    <div class="nav-section">Reports</div>
+    <div class="nav-item">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      Consumption Report
+    </div>
+    <div class="nav-item">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 17h8m0 0l-4-4m4 4l-4 4M3 3h2l.4 2M7 13h10l4-9H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17"/></svg>
+      Wastage Report
+    </div>
+    <div class="nav-item active">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      Purchase Report
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="page">
+
+      <!-- Page header -->
+      <div class="page-header">
+        <div class="page-title">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Purchase Report
+          <span style="font-size:11px;font-weight:400;color:#9ca3af;margin-left:4px">owner@mygenietest002.com · Central Store</span>
+        </div>
+        <button class="export-btn" onclick="doExport()">
+          <svg viewBox="0 0 24 24"><path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Export Excel
+        </button>
+      </div>
+
+      <!-- Filters bar -->
+      <div class="filters-bar">
+        <div class="filter-group">
+          <span class="filter-label">From</span>
+          <input type="date" class="date-input" id="fromDate" value="2026-10-01" onchange="applyFilters()" />
+          <span class="date-sep">→</span>
+          <input type="date" class="date-input" id="toDate" value="2026-10-19" onchange="applyFilters()" />
+        </div>
+        <div class="filter-sep"></div>
+        <div class="filter-group">
+          <span class="filter-label">Vendor</span>
+          <select class="filter-select" id="vendorFilter" onchange="applyFilters()">
+            <option value="">All Vendors</option>
+            <option value="282">masala dairy</option>
+            <option value="999">Green Farms (demo)</option>
+          </select>
+        </div>
+        <div class="filter-sep"></div>
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          <input type="text" class="search-input" id="searchInput" placeholder="Search ingredient…" oninput="applyFilters()" />
+        </div>
+        <div class="filter-sep"></div>
+        <div class="pill-wrap" id="payPills">
+          <button class="pay-pill active" data-val="" onclick="setPayFilter(this)">All</button>
+          <button class="pay-pill" data-val="Cash" onclick="setPayFilter(this)">Cash</button>
+          <button class="pay-pill" data-val="Card" onclick="setPayFilter(this)">Card</button>
+          <button class="pay-pill" data-val="UPI" onclick="setPayFilter(this)">UPI</button>
+          <button class="pay-pill" data-val="Bank Transfer" onclick="setPayFilter(this)">Bank Transfer</button>
+          <button class="pay-pill" data-val="Others" onclick="setPayFilter(this)">Others</button>
+        </div>
+      </div>
+
+      <!-- Summary bar -->
+      <div class="summary-bar" id="summaryBar">
+        <div class="sum-stat">
+          <span class="sum-val" id="sumTotal">₹2,460.00</span>
+          <span class="sum-lbl">Invoice Total</span>
+          <span id="sumFare" style="font-size:10px;color:#b45309;margin-top:1px"></span>
+        </div>
+        <div class="sum-sep"></div>
+        <div class="sum-stat">
+          <span class="sum-val" id="sumRecords">10</span>
+          <span class="sum-lbl">Purchase Records</span>
+        </div>
+        <div class="sum-sep"></div>
+        <div class="sum-stat">
+          <span class="sum-val" id="sumStores">2</span>
+          <span class="sum-lbl">Stores</span>
+        </div>
+        <div class="sum-sep"></div>
+        <div class="sum-stat">
+          <span class="sum-val" id="sumVendors">2</span>
+          <span class="sum-lbl">Vendors</span>
+        </div>
+      </div>
+
+      <!-- By-store breakdown (master/central only) -->
+      <div class="accordion" id="storeAccordion">
+        <div class="accordion-header" onclick="toggleAccordion()">
+          <span class="accordion-chevron" id="accChevron">▶</span>
+          <span>By Store</span>
+          <span style="font-size:10.5px;font-weight:400;color:#6b7280;margin-left:4px">· 2 stores</span>
+        </div>
+        <div class="accordion-body" id="accBody">
+          <div class="store-row">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-weight:500">Mygenietest002</span>
+              <span class="store-badge">Central Store</span>
+            </div>
+            <div style="text-align:right">
+              <div style="font-weight:600;font-variant-numeric:tabular-nums">₹2,160.00</div>
+              <div style="font-size:10.5px;color:#9ca3af">8 purchases</div>
+            </div>
+          </div>
+          <div class="store-row">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-weight:500">Mygenietest001</span>
+              <span class="store-badge" style="background:#f0fdf4;color:#15803d">Outlet</span>
+            </div>
+            <div style="text-align:right">
+              <div style="font-weight:600;font-variant-numeric:tabular-nums">₹3,240.00</div>
+              <div style="font-size:10.5px;color:#9ca3af">2 purchases</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-wrap">
+        <div class="table-inner">
+          <table>
+            <thead>
+              <tr>
+                <th>Purchase Date</th>
+                <th>Store</th>
+                <th>Ingredient</th>
+                <th>Vendor</th>
+                <th style="text-align:right">Qty</th>
+                <th style="text-align:right">Unit Price</th>
+                <th style="text-align:right">Items Amt</th>
+                <th style="text-align:right">Fare</th>
+                <th style="text-align:right">Invoice Total</th>
+                <th>Payment Type</th>
+                <th>Transaction ID</th>
+              </tr>
+            </thead>
+            <tbody id="reportBody"></tbody>
+          </table>
+        </div>
+        <div class="table-footer" id="tableFooter"></div>
+        <div class="empty-state" id="emptyState" style="display:none">No purchase records match the selected filters.</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Real data from RID 828 (re-probed 2026-10-19 after backend fix) ──
+// Backend now returns tot_fair + tot_amount per row ✅
+// unit_price fix: display = line_total / stock_quantity_raw (API stores per-gram, not per-kg)
+const ALL_DATA = [
+  // ── REAL RECORDS — all fields confirmed via live API probe 2026-10-19 ──────────────
+  // PUR-828-20261019-8007: Avocado | 2kg | items=200 | fare=100 | total=300 | partial
+  //   unit_price display = 200/2 = ₹100/kg
+  //   partial_payments LIVE (G-039 CLOSED): [{Cash,100},{UPI,200}]
+  { id:13788, date:"2026-10-19", store:"Mygenietest002", store_type:"master", ingredient:"Avocado",      vendor:"masala dairy", vendor_id:282, qty:"2 kg",  qty_raw:2,  line_total:200,  tot_fair:100,  tot_amount:300,  pay:"partial", pay_legs:[{mode:"Cash",amount:100},{mode:"UPI",amount:200}], txn:"PUR-828-20261019-8007", real:true },
+  // PUR-828-20261019-8006: American Corn | 10kg | items=2000 | fare=300 | total=2300 | Cash
+  { id:13787, date:"2026-10-19", store:"Mygenietest002", store_type:"master", ingredient:"American Corn", vendor:"masala dairy", vendor_id:282, qty:"10 kg", qty_raw:10, line_total:2000, tot_fair:300,  tot_amount:2300, pay:"Cash",    pay_legs:[], txn:"PUR-828-20261019-8006", real:true },
+  // PUR-828-20261018-8005: makkhan | 2kg | items=160 | fare=0 | total=160 | Cash
+  { id:13786, date:"2026-10-18", store:"Mygenietest002", store_type:"master", ingredient:"makkhan",       vendor:"masala dairy", vendor_id:282, qty:"2 kg",  qty_raw:2,  line_total:160,  tot_fair:0,    tot_amount:160,  pay:"Cash",    pay_legs:[], txn:"PUR-828-20261018-8005", real:true },
+  // ── DEMO RECORDS (representative — varied payment types, vendors, stores) ────────
+  { id:20001, date:"2026-10-17", store:"Mygenietest002", store_type:"master", ingredient:"Tomato",        vendor:"masala dairy", vendor_id:282, qty:"25 kg", qty_raw:25, line_total:1125, tot_fair:50,   tot_amount:1175, pay:"UPI",           pay_legs:[], txn:"PUR-828-20261017-7990", real:false },
+  { id:20002, date:"2026-10-16", store:"Mygenietest002", store_type:"master", ingredient:"Onion",         vendor:"masala dairy", vendor_id:282, qty:"50 kg", qty_raw:50, line_total:1400, tot_fair:100,  tot_amount:1500, pay:"Bank Transfer",  pay_legs:[], txn:"PUR-828-20261016-7985", real:false },
+  { id:20003, date:"2026-10-15", store:"Mygenietest002", store_type:"master", ingredient:"Garlic Peeled", vendor:"Green Farms",  vendor_id:999, qty:"10 kg", qty_raw:10, line_total:1200, tot_fair:0,    tot_amount:1200, pay:"Cash",           pay_legs:[], txn:"PUR-828-20261015-7980", real:false },
+  { id:20004, date:"2026-10-14", store:"Mygenietest002", store_type:"master", ingredient:"Potato Big",    vendor:"Green Farms",  vendor_id:999, qty:"100 kg",qty_raw:100,line_total:2200, tot_fair:200,  tot_amount:2400, pay:"partial",        pay_legs:[{mode:"Card",amount:1200},{mode:"Cash",amount:1200}], txn:"PUR-828-20261014-7975", real:false },
+  { id:20005, date:"2026-10-13", store:"Mygenietest002", store_type:"master", ingredient:"Carrot",        vendor:"masala dairy", vendor_id:282, qty:"15 kg", qty_raw:15, line_total:825,  tot_fair:0,    tot_amount:825,  pay:"UPI",            pay_legs:[], txn:"PUR-828-20261013-7970", real:false },
+  { id:20006, date:"2026-10-12", store:"Mygenietest002", store_type:"master", ingredient:"Eggs",          vendor:"Green Farms",  vendor_id:999, qty:"200 pc",qty_raw:200,line_total:1700, tot_fair:0,    tot_amount:1700, pay:"Cash",           pay_legs:[], txn:"PUR-828-20261012-7965", real:false },
+  { id:20007, date:"2026-10-10", store:"Mygenietest001", store_type:"central",ingredient:"Tomato",        vendor:"masala dairy", vendor_id:282, qty:"30 kg", qty_raw:30, line_total:1320, tot_fair:80,   tot_amount:1400, pay:"Others",         pay_legs:[], txn:"PUR-827-20261010-6800", real:false },
+  { id:20008, date:"2026-10-08", store:"Mygenietest001", store_type:"central",ingredient:"Onion",         vendor:"masala dairy", vendor_id:282, qty:"45 kg", qty_raw:45, line_total:1215, tot_fair:0,    tot_amount:1215, pay:"Bank Transfer",  pay_legs:[], txn:"PUR-827-20261008-6790", real:false },
+  { id:20009, date:"2026-10-05", store:"Mygenietest002", store_type:"master", ingredient:"Green Chilli",  vendor:"Green Farms",  vendor_id:999, qty:"5 kg",  qty_raw:5,  line_total:900,  tot_fair:0,    tot_amount:900,  pay:"UPI",            pay_legs:[], txn:"PUR-828-20261005-7950", real:false },
+];
+
+let activePayFilter = "";
+let displayRows = [...ALL_DATA];
+
+function fmtDate(d) {
+  const [y,m,day] = d.split("-");
+  const months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return `${parseInt(day)} ${months[parseInt(m)-1]} ${y}`;
+}
+function fmtCurrency(n) {
+  return "₹" + Number(n).toLocaleString("en-IN", {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function buildSplitLegs(r) {
+  // G-039 CLOSED — partial_payments[] now returned by API
+  // Real shape: [{payment_mode, amount, transaction_id}]
+  if (r.pay_legs && r.pay_legs.length > 0) {
+    return '<div style="margin-top:3px">' +
+      r.pay_legs.map(l =>
+        `<span class="pay-split-leg">
+          <span class="${payClass(l.mode)}">${l.mode}</span>
+          <span style="color:#374151;font-weight:500">${fmtCurrency(l.amount)}</span>
+        </span>`
+      ).join('') +
+    '</div>';
+  }
+  // Single payment tagged as partial (no legs stored) — shouldn't happen
+  return '<div class="pay-gap-note">no legs</div>';
+}
+
+function payClass(p) {
+  const m={"Cash":"pay-cash","UPI":"pay-upi","Card":"pay-card","Bank Transfer":"pay-bank","Others":"pay-others"};
+  return m[p]||"pay-others";
+}
+
+function setPayFilter(btn) {
+  document.querySelectorAll('.pay-pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  activePayFilter = btn.dataset.val;
+  applyFilters();
+}
+
+function applyFilters() {
+  const from = document.getElementById('fromDate').value;
+  const to   = document.getElementById('toDate').value;
+  const vid  = document.getElementById('vendorFilter').value;
+  const q    = (document.getElementById('searchInput').value||'').toLowerCase();
+
+  displayRows = ALL_DATA.filter(r => {
+    if (from && r.date < from) return false;
+    if (to   && r.date > to)   return false;
+    if (vid  && String(r.vendor_id) !== vid) return false;
+    if (q    && !r.ingredient.toLowerCase().includes(q)) return false;
+    if (activePayFilter && r.pay !== activePayFilter) return false;
+    return true;
+  });
+  renderTable();
+}
+
+function renderTable() {
+  const body = document.getElementById('reportBody');
+  body.innerHTML = '';
+
+  // Summary recalc — use tot_amount (items + fare) for true invoice total
+  const invoiceTotal = displayRows.reduce((s,r)=>s+r.tot_amount,0);
+  const itemsTotal   = displayRows.reduce((s,r)=>s+r.line_total,0);
+  const fareTotal    = displayRows.reduce((s,r)=>s+r.tot_fair,0);
+  const stores  = new Set(displayRows.map(r=>r.store)).size;
+  const vendors = new Set(displayRows.map(r=>r.vendor)).size;
+  document.getElementById('sumTotal').textContent   = fmtCurrency(invoiceTotal);
+  document.getElementById('sumRecords').textContent = displayRows.length;
+  document.getElementById('sumStores').textContent  = stores;
+  document.getElementById('sumVendors').textContent = vendors;
+  // Fare sub-note
+  const fareEl = document.getElementById('sumFare');
+  if (fareEl) fareEl.textContent = fareTotal > 0 ? `incl. ${fmtCurrency(fareTotal)} fare` : '';
+
+  if (displayRows.length === 0) {
+    document.getElementById('emptyState').style.display='block';
+    document.getElementById('tableFooter').textContent='';
+    return;
+  }
+  document.getElementById('emptyState').style.display='none';
+
+  displayRows.forEach(r => {
+    const tr = document.createElement('tr');
+    // unit price fix: API stores per-gram → display as per-display-unit
+    const displayUnitPrice = r.qty_raw > 0 ? r.line_total / r.qty_raw : 0;
+    tr.innerHTML = `
+      <td class="td-date">${fmtDate(r.date)}</td>
+      <td class="td-store">
+        <span style="font-size:11.5px">${r.store}</span>
+        <span style="font-size:9px;margin-left:4px;padding:1px 4px;border-radius:3px;background:${r.store_type==='master'?'#eff6ff':'#f0fdf4'};color:${r.store_type==='master'?'#2563eb':'#15803d'}">${r.store_type==='master'?'Central':'Master'}</span>
+      </td>
+      <td class="td-ingredient">
+        ${r.ingredient}
+        ${r.real ? '<span class="tag-real">REAL</span>' : ''}
+      </td>
+      <td class="td-vendor">${r.vendor}</td>
+      <td class="td-qty">${r.qty}</td>
+      <td class="td-price">${displayUnitPrice > 0 ? fmtCurrency(displayUnitPrice) : '—'}</td>
+      <td class="td-amount">${fmtCurrency(r.line_total)}</td>
+      <td class="td-price" style="color:${r.tot_fair>0?'#b45309':'#9ca3af'}">${r.tot_fair > 0 ? fmtCurrency(r.tot_fair) : '—'}</td>
+      <td class="td-amount" style="font-weight:700">${fmtCurrency(r.tot_amount)}</td>
+      <td><span class="pay-type ${payClass(r.pay)}">${r.pay||'—'}</span>
+        ${r.pay==='partial' ? buildSplitLegs(r) : ''}
+      </td>
+      <td class="td-txn">${r.txn}</td>
+    `;
+    body.appendChild(tr);
+  });
+
+  const realCount = displayRows.filter(r=>r.real).length;
+  document.getElementById('tableFooter').innerHTML =
+    `<span>${displayRows.length} record${displayRows.length!==1?'s':''}</span>` +
+    (realCount > 0 ? `<span style="color:#15803d;font-weight:500">${realCount} live record${realCount!==1?'s':''} from RID 828</span>` : '') +
+    `<span>Items: <strong>${fmtCurrency(itemsTotal)}</strong>` +
+    (fareTotal > 0 ? ` + Fare: <strong style="color:#b45309">${fmtCurrency(fareTotal)}</strong>` : '') +
+    ` = Invoice: <strong>${fmtCurrency(invoiceTotal)}</strong></span>`;
+}
+
+function toggleAccordion() {
+  const body = document.getElementById('accBody');
+  const chev = document.getElementById('accChevron');
+  const open = body.classList.toggle('open');
+  chev.classList.toggle('open', open);
+}
+
+function doExport() {
+  // Simulates GET /inventory/export-inventory-master → download_url
+  showToast('Generating Excel… download_url received. Opening file.');
+  setTimeout(() => {
+    window.open('https://preprod.mygenie.online/storage/stock_report_1792388347.xlsx','_blank');
+  }, 800);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Init
+renderTable();
+</script>
+</body>
+</html>

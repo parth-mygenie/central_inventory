@@ -1,0 +1,31 @@
+{
+  "summary": "CR-GST Gate 5 frontend verification (re-implementation). No crash: validRows is declared before the auto-sync useEffect and there were zero page errors. Login worked. On /purchase Manual Entry the header fields are Vendor, Purchase Date, Invoice #, Fare, Total GST, Payment. Item table columns are #, Item, Qty, Unit, Unit Price, Amount, GST, Batch, Expiry, with GST between Amount and Batch. Negative values are clamped to 0 (Total GST -5 -> 0, row GST -3 -> 0). Tab goes Rate -> gst-0 -> batch-0. Auto-sync works: one row with GST 18 -> Total GST 18.00. A second valid row with GST left empty keeps Total GST at 18.00; entering 9 makes it 27.00. Manually overriding to 30 works. The 'Row GST Total' blue bar appears. The payment amount auto-fills with the GST included (200 + 18 = 218.00). The Review/Confirm screen shows Total GST in the header, a GST column, and an items subtotal + Total GST = Grand Total breakdown. Reset clears Total GST and row GST and removes extra rows. Vendor select, invoice #, item search, qty/rate/amount, auto-batch, expiry and the add-split-leg button all still work. /reports/purchase has a GST header between Item Amt and Fare; existing purchases show '—' in both header and sub-rows. No purchase was actually submitted, so the end-to-end save of gst/tot_tax was not checked.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {"flow": "PurchaseReport bill-level GST", "issue": "The report GST cell only reads row-level r.gst (multi-item) or m.gst (single-item). It never reads m.tot_tax. If a user enters Total GST manually without row GSTs, the report will show '—' even though tot_tax was sent. Whether this matters depends on what the backend returns; not verified because no purchase was submitted.", "affected_selectors": ["[data-testid^='pr-gst-']"]}
+    ],
+    "design_issues": [
+      {"screen": "Purchase form totals", "issues": ["The 'Grand Total (excl. fare)' bar shows items only, but the Payment amount now includes GST (218 vs 200). This mismatch could confuse users. Consider a label like 'excl. fare & GST'."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Optional: in PurchaseReport, fall back to m.tot_tax for the bill-level GST cell when row GSTs are absent",
+    "Optional: clarify the Grand Total label, since the payment now includes GST",
+    "Submit one real purchase with gst/tot_tax and confirm the API saves and returns them (not done by the testing agent, to avoid creating data)"
+  ],
+  "critical_code_review_comments": [
+    "The auto-sync useEffect only overwrites totTax when gstTotal > 0. If the user clears all row GSTs, totTax keeps the last synced value (stale). Acceptable as a manual-override design, but worth noting.",
+    "The payload always sends tot_tax (0 when empty). Fine.",
+    "AddStockPurchaseForm.jsx is 975 lines (more than 700), so it should be split into smaller modules.",
+    "The Fare input has no data-testid."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped)", "frontend": "100% of requested checks (13/13)"},
+  "seed_data_creation": "None. No purchases submitted.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Login with the credentials in /app/memory/test_credentials.md. Purchase form selectors: tab-manual-entry, vendor-select, tot-tax-input, gst-input-{i}, qty-input-{i}, rate-input-{i}, batch-input-{i}, item-select-{i} (cmdk options), add-line-btn, add-leg-btn, review-purchase-btn, procurement-confirm. Report selector: pr-gst-{txn}. The end-to-end submit with GST is still untested."
+}

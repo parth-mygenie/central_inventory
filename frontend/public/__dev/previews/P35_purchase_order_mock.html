@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P35 — Purchase Order Module — UX Mock (Real Data)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f8f9fa; }
+  .tab-active { background: #111; color: #fff; }
+  .tab-inactive { background: #f1f1f1; color: #666; }
+  .tab-inactive:hover { background: #e5e5e5; }
+  .status-draft { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; }
+  .status-sent { background: #dbeafe; color: #1d4ed8; border: 1px solid #93c5fd; }
+  .status-partial { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+  .status-received { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+  .status-closed { background: #e5e7eb; color: #374151; border: 1px solid #9ca3af; }
+  .status-cancelled { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+  .variance-warn { background: #fef3c7; border-left: 3px solid #f59e0b; }
+  .variance-flag { background: #fee2e2; border-left: 3px solid #ef4444; }
+  .screen-section { display: none; }
+  .screen-section.active { display: block; }
+  .nav-btn { cursor: pointer; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; transition: all 0.15s; }
+  .nav-btn.active { background: #111; color: #fff; }
+  .nav-btn:not(.active) { background: #f1f1f1; color: #555; }
+  .nav-btn:not(.active):hover { background: #e0e0e0; }
+  .card { background: white; border: 1px solid #e5e7eb; border-radius: 10px; }
+  .badge { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 9999px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; padding: 8px 12px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+  td { font-size: 12px; padding: 10px 12px; border-bottom: 1px solid #f3f4f6; }
+  tr:hover { background: #f9fafb; }
+  input, select, textarea { font-size: 12px; padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; }
+  input:focus, select:focus { border-color: #111; box-shadow: 0 0 0 1px #111; }
+  .btn-primary { background: #111; color: white; font-size: 12px; font-weight: 600; padding: 7px 16px; border-radius: 6px; border: none; cursor: pointer; }
+  .btn-primary:hover { background: #333; }
+  .btn-outline { background: white; color: #374151; font-size: 12px; font-weight: 600; padding: 7px 16px; border-radius: 6px; border: 1px solid #d1d5db; cursor: pointer; }
+  .btn-outline:hover { background: #f9fafb; }
+  .btn-danger { background: #ef4444; color: white; font-size: 12px; font-weight: 600; padding: 7px 16px; border-radius: 6px; border: none; cursor: pointer; }
+  .btn-green { background: #059669; color: white; font-size: 12px; font-weight: 600; padding: 7px 16px; border-radius: 6px; border: none; cursor: pointer; }
+  .btn-amber { background: #d97706; color: white; font-size: 12px; font-weight: 600; padding: 7px 16px; border-radius: 6px; border: none; cursor: pointer; }
+  .kpi-card { text-align: center; padding: 14px 8px; }
+  .kpi-card .kpi-val { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .kpi-card .kpi-label { font-size: 10px; color: #6b7280; margin-top: 2px; }
+  .mono { font-variant-numeric: tabular-nums; font-family: "SF Mono", "Menlo", monospace; }
+  .price-bar { height: 14px; border-radius: 3px; min-width: 20px; }
+  .timeline-dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid; }
+  .timeline-line { height: 2px; flex: 1; }
+</style>
+</head>
+<body class="p-0 m-0">
+
+<!-- Screen Navigation -->
+<div class="sticky top-0 z-50 bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-3">
+  <span class="text-xs font-bold text-gray-400 mr-2">P35 MOCK SCREENS:</span>
+  <button class="nav-btn active" onclick="showScreen('list')">1. PO List</button>
+  <button class="nav-btn" onclick="showScreen('create')">2. Create PO</button>
+  <button class="nav-btn" onclick="showScreen('detail-sent')">3. PO Detail (Sent)</button>
+  <button class="nav-btn" onclick="showScreen('detail-partial')">4. PO Detail (Receiving)</button>
+  <button class="nav-btn" onclick="showScreen('gate')">5. Add-Stock Gate</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SCREEN 1: PO LIST                                              -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="screen-list" class="screen-section active max-w-5xl mx-auto py-6 px-4">
+  <div class="flex items-center justify-between mb-5">
+    <div>
+      <h1 class="text-lg font-bold flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        Purchase Orders
+      </h1>
+      <p class="text-xs text-gray-400 mt-0.5">german fluid · Manage vendor purchase orders</p>
+    </div>
+    <button class="btn-primary flex items-center gap-1.5">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Create PO
+    </button>
+  </div>
+
+  <!-- Status Tabs -->
+  <div class="flex gap-1.5 mb-4 flex-wrap">
+    <span class="badge tab-active">All (6)</span>
+    <span class="badge tab-inactive">Draft (1)</span>
+    <span class="badge tab-inactive">Sent (2)</span>
+    <span class="badge tab-inactive" style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d">Partial (1)</span>
+    <span class="badge tab-inactive">Closed (1)</span>
+    <span class="badge tab-inactive">Cancelled (1)</span>
+  </div>
+
+  <!-- Filters -->
+  <div class="flex gap-3 mb-4 items-center">
+    <select class="w-44"><option>All Vendors</option><option>Premium Organics Ltd</option><option>Budget Ingredients Co</option><option>bakery raw wala</option></select>
+    <input type="date" value="2026-06-01" class="w-36" />
+    <span class="text-xs text-gray-400">to</span>
+    <input type="date" value="2026-06-30" class="w-36" />
+    <input type="text" placeholder="Search PO#..." class="w-44 pl-3" />
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="grid grid-cols-4 gap-3 mb-4">
+    <div class="card kpi-card">
+      <div class="kpi-val">6</div>
+      <div class="kpi-label">Total POs</div>
+    </div>
+    <div class="card kpi-card">
+      <div class="kpi-val text-amber-600">2</div>
+      <div class="kpi-label">Awaiting Delivery</div>
+    </div>
+    <div class="card kpi-card">
+      <div class="kpi-val text-blue-600">1</div>
+      <div class="kpi-label">Partially Received</div>
+    </div>
+    <div class="card kpi-card">
+      <div class="kpi-val mono">₹18,705</div>
+      <div class="kpi-label">Total Value (this month)</div>
+    </div>
+  </div>
+
+  <!-- PO Table -->
+  <div class="card overflow-hidden">
+    <table>
+      <thead><tr>
+        <th>PO Reference</th>
+        <th>Vendor</th>
+        <th>Items</th>
+        <th>Total</th>
+        <th>Expected</th>
+        <th>Status</th>
+        <th>Created</th>
+        <th></th>
+      </tr></thead>
+      <tbody>
+        <tr style="cursor:pointer">
+          <td class="font-semibold mono">PO-806-2026-0006</td>
+          <td>Premium Organics Ltd</td>
+          <td class="mono">5</td>
+          <td class="mono font-semibold">₹8,200</td>
+          <td class="text-gray-500">20 Jun</td>
+          <td><span class="badge status-draft">Draft</span></td>
+          <td class="text-gray-500">14 Jun</td>
+          <td><button class="btn-outline text-xs py-1 px-2">View</button></td>
+        </tr>
+        <tr style="cursor:pointer">
+          <td class="font-semibold mono">PO-806-2026-0005</td>
+          <td>Budget Ingredients Co</td>
+          <td class="mono">3</td>
+          <td class="mono font-semibold">₹4,500</td>
+          <td class="text-gray-500">18 Jun</td>
+          <td><span class="badge status-sent">Sent</span></td>
+          <td class="text-gray-500">13 Jun</td>
+          <td><button class="btn-outline text-xs py-1 px-2">View</button></td>
+        </tr>
+        <tr style="cursor:pointer;background:#fffbeb">
+          <td class="font-semibold mono">PO-806-2026-0004</td>
+          <td>Premium Organics Ltd</td>
+          <td class="mono">2</td>
+          <td class="mono font-semibold">₹4,580</td>
+          <td class="text-gray-500">15 Jun</td>
+          <td><span class="badge status-partial">Partially Received</span></td>
+          <td class="text-gray-500">12 Jun</td>
+          <td><button class="btn-outline text-xs py-1 px-2">View</button></td>
+        </tr>
+        <tr style="cursor:pointer">
+          <td class="font-semibold mono">PO-806-2026-0003</td>
+          <td>bakery raw wala</td>
+          <td class="mono">4</td>
+          <td class="mono font-semibold">₹3,625</td>
+          <td class="text-gray-500">—</td>
+          <td><span class="badge status-sent">Sent</span></td>
+          <td class="text-gray-500">10 Jun</td>
+          <td><button class="btn-outline text-xs py-1 px-2">View</button></td>
+        </tr>
+        <tr style="cursor:pointer;opacity:0.7">
+          <td class="font-semibold mono">PO-806-2026-0002</td>
+          <td>Premium Organics Ltd</td>
+          <td class="mono">2</td>
+          <td class="mono font-semibold">₹4,580</td>
+          <td class="text-gray-500">—</td>
+          <td><span class="badge status-closed">Closed</span></td>
+          <td class="text-gray-500">8 Jun</td>
+          <td><button class="btn-outline text-xs py-1 px-2">View</button></td>
+        </tr>
+        <tr style="cursor:pointer;opacity:0.5">
+          <td class="font-semibold mono">PO-806-2026-0001</td>
+          <td>Budget Ingredients Co</td>
+          <td class="mono">1</td>
+          <td class="mono font-semibold">₹500</td>
+          <td class="text-gray-500">—</td>
+          <td><span class="badge status-cancelled">Cancelled</span></td>
+          <td class="text-gray-500">5 Jun</td>
+          <td><button class="btn-outline text-xs py-1 px-2">View</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="text-[10px] text-gray-400 mt-2">Showing 6 of 6 purchase orders</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SCREEN 2: CREATE PO                                            -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="screen-create" class="screen-section max-w-4xl mx-auto py-6 px-4">
+  <div class="flex items-center gap-3 mb-5">
+    <button class="btn-outline text-xs py-1 px-2">&larr; Back to POs</button>
+    <h1 class="text-lg font-bold">New Purchase Order</h1>
+  </div>
+
+  <!-- PO Header -->
+  <div class="card p-5 mb-4">
+    <div class="grid grid-cols-2 gap-4 mb-4">
+      <div>
+        <label class="text-[10px] font-semibold text-gray-500 block mb-1">VENDOR</label>
+        <select class="w-full">
+          <option>Select vendor...</option>
+          <option selected>Premium Organics Ltd</option>
+          <option>Budget Ingredients Co</option>
+          <option>bakery raw wala</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-[10px] font-semibold text-gray-500 block mb-1">EXPECTED DELIVERY</label>
+        <input type="date" value="2026-06-20" class="w-full" />
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="text-[10px] font-semibold text-gray-500 block mb-1">PAYMENT TYPE</label>
+        <select class="w-full"><option>Cash</option><option>Credit</option><option>UPI</option></select>
+      </div>
+      <div>
+        <label class="text-[10px] font-semibold text-gray-500 block mb-1">NOTES</label>
+        <input type="text" placeholder="e.g. Monthly flour order" class="w-full" value="Monthly cookie ingredients" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Line Items -->
+  <div class="card p-5 mb-4">
+    <h3 class="text-xs font-bold mb-3 flex items-center gap-2">
+      LINE ITEMS
+      <span class="text-[10px] font-normal text-gray-400">(3 items · ₹8,200 total)</span>
+    </h3>
+    <table>
+      <thead><tr>
+        <th>Item</th>
+        <th>Qty</th>
+        <th>Unit</th>
+        <th>Expected Rate</th>
+        <th>Line Total</th>
+        <th></th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td>
+            <select class="w-full"><option selected>Wheat Flour (Atta)</option></select>
+          </td>
+          <td><input type="number" value="50" class="w-20 mono" /></td>
+          <td><select class="w-20"><option selected>kg</option></select></td>
+          <td><input type="number" value="45" class="w-24 mono" placeholder="₹/unit" /></td>
+          <td class="mono font-semibold">₹2,250</td>
+          <td><button class="text-red-400 text-xs">&times;</button></td>
+        </tr>
+        <tr>
+          <td><select class="w-full"><option selected>Jaggery Powder</option></select></td>
+          <td><input type="number" value="30" class="w-20 mono" /></td>
+          <td><select class="w-20"><option selected>kg</option></select></td>
+          <td><input type="number" value="120" class="w-24 mono" /></td>
+          <td class="mono font-semibold">₹3,600</td>
+          <td><button class="text-red-400 text-xs">&times;</button></td>
+        </tr>
+        <tr>
+          <td><select class="w-full"><option selected>Almonds</option></select></td>
+          <td><input type="number" value="5" class="w-20 mono" /></td>
+          <td><select class="w-20"><option selected>kg</option></select></td>
+          <td><input type="number" value="470" class="w-24 mono" /></td>
+          <td class="mono font-semibold">₹2,350</td>
+          <td><button class="text-red-400 text-xs">&times;</button></td>
+        </tr>
+      </tbody>
+    </table>
+    <button class="text-xs text-gray-500 mt-2 hover:text-gray-800 flex items-center gap-1">
+      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Add Line
+    </button>
+  </div>
+
+  <!-- Price Intelligence -->
+  <div class="card p-5 mb-4" style="border-left: 3px solid #3b82f6;">
+    <h3 class="text-xs font-bold mb-3 text-blue-700">PRICE INTELLIGENCE (from purchase history)</h3>
+    <div class="space-y-3">
+      <div>
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs font-medium">Wheat Flour (Atta) — ₹45/kg entered</span>
+          <span class="text-[10px] badge" style="background:#d1fae5;color:#065f46">Below avg (₹52/kg)</span>
+        </div>
+        <div class="flex items-center gap-2 text-[10px] text-gray-500">
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>Budget ₹40/kg</span>
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500 inline-block"></span>Premium ₹55/kg</span>
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red-500 inline-block"></span>bakery ₹60/kg</span>
+        </div>
+        <div class="flex gap-1 mt-1">
+          <div class="price-bar bg-emerald-400" style="width:67%"></div>
+          <div class="price-bar bg-amber-400" style="width:92%"></div>
+          <div class="price-bar bg-red-400" style="width:100%"></div>
+        </div>
+      </div>
+      <div>
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs font-medium">Almonds — ₹470/kg entered</span>
+          <span class="text-[10px] badge" style="background:#fee2e2;color:#991b1b">Above best (₹400/kg Budget)</span>
+        </div>
+        <div class="flex items-center gap-2 text-[10px] text-gray-500">
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>Budget ₹400/kg</span>
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500 inline-block"></span>Premium ₹470/kg</span>
+        </div>
+        <div class="flex gap-1 mt-1">
+          <div class="price-bar bg-emerald-400" style="width:85%"></div>
+          <div class="price-bar bg-amber-400" style="width:100%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary + Actions -->
+  <div class="card p-5">
+    <div class="flex items-center justify-between">
+      <div>
+        <span class="text-xs text-gray-500">3 line items</span>
+        <span class="text-lg font-bold ml-3 mono">₹8,200</span>
+        <span class="text-xs text-gray-400 ml-1">total</span>
+      </div>
+      <div class="flex gap-2">
+        <button class="btn-outline">Save as Draft</button>
+        <button class="btn-primary">Create &amp; Send to Vendor</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SCREEN 3: PO DETAIL (Sent — awaiting delivery)                 -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="screen-detail-sent" class="screen-section max-w-4xl mx-auto py-6 px-4">
+  <div class="flex items-center gap-3 mb-1">
+    <button class="btn-outline text-xs py-1 px-2">&larr; Back</button>
+    <h1 class="text-lg font-bold mono">PO-806-2026-0005</h1>
+    <span class="badge status-sent">Sent</span>
+  </div>
+  <p class="text-xs text-gray-400 mb-5 ml-16">Created 13 Jun 2026 · Budget Ingredients Co</p>
+
+  <!-- Header Info -->
+  <div class="card p-4 mb-4">
+    <div class="grid grid-cols-4 gap-4 text-xs">
+      <div><span class="text-[10px] text-gray-400 block">Vendor</span><span class="font-semibold">Budget Ingredients Co</span></div>
+      <div><span class="text-[10px] text-gray-400 block">Expected Delivery</span><span class="font-semibold">18 Jun 2026</span></div>
+      <div><span class="text-[10px] text-gray-400 block">Payment</span><span>Cash</span></div>
+      <div><span class="text-[10px] text-gray-400 block">Notes</span><span>Monthly flour order</span></div>
+    </div>
+  </div>
+
+  <!-- Status Timeline -->
+  <div class="card p-4 mb-4">
+    <h3 class="text-[10px] font-bold text-gray-400 mb-3">STATUS TIMELINE</h3>
+    <div class="flex items-center gap-0">
+      <div class="flex flex-col items-center">
+        <div class="timeline-dot bg-emerald-500 border-emerald-500"></div>
+        <span class="text-[9px] text-gray-500 mt-1">Created</span>
+        <span class="text-[9px] text-gray-400">13 Jun 2:05pm</span>
+      </div>
+      <div class="timeline-line bg-emerald-300 mx-2"></div>
+      <div class="flex flex-col items-center">
+        <div class="timeline-dot bg-emerald-500 border-emerald-500"></div>
+        <span class="text-[9px] text-gray-500 mt-1">Sent</span>
+        <span class="text-[9px] text-gray-400">13 Jun 2:07pm</span>
+      </div>
+      <div class="timeline-line bg-gray-200 mx-2"></div>
+      <div class="flex flex-col items-center">
+        <div class="timeline-dot bg-white border-gray-300"></div>
+        <span class="text-[9px] text-gray-400 mt-1">Received</span>
+        <span class="text-[9px] text-gray-300">Pending</span>
+      </div>
+      <div class="timeline-line bg-gray-200 mx-2"></div>
+      <div class="flex flex-col items-center">
+        <div class="timeline-dot bg-white border-gray-300"></div>
+        <span class="text-[9px] text-gray-400 mt-1">Closed</span>
+        <span class="text-[9px] text-gray-300">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Line Items -->
+  <div class="card p-4 mb-4">
+    <h3 class="text-[10px] font-bold text-gray-400 mb-3">ORDER LINES (3 items · ₹4,500)</h3>
+    <table>
+      <thead><tr><th>Item</th><th>Ordered</th><th>Unit</th><th>Exp. Rate</th><th>Line Total</th><th>Received</th><th>Remaining</th><th>Line Status</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="font-medium">Baking Powder</td>
+          <td class="mono">30</td><td>kg</td>
+          <td class="mono">₹100</td><td class="mono font-semibold">₹3,000</td>
+          <td class="mono text-gray-400">0</td><td class="mono">30 kg</td>
+          <td><span class="badge" style="background:#fef3c7;color:#92400e">Open</span></td>
+        </tr>
+        <tr>
+          <td class="font-medium">Milk</td>
+          <td class="mono">10</td><td>ltr</td>
+          <td class="mono">₹40</td><td class="mono font-semibold">₹400</td>
+          <td class="mono text-gray-400">0</td><td class="mono">10 ltr</td>
+          <td><span class="badge" style="background:#fef3c7;color:#92400e">Open</span></td>
+        </tr>
+        <tr>
+          <td class="font-medium">Baking Soda</td>
+          <td class="mono">10</td><td>kg</td>
+          <td class="mono">₹110</td><td class="mono font-semibold">₹1,100</td>
+          <td class="mono text-gray-400">0</td><td class="mono">10 kg</td>
+          <td><span class="badge" style="background:#fef3c7;color:#92400e">Open</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Actions -->
+  <div class="card p-4 flex items-center gap-3">
+    <button class="btn-green flex items-center gap-1.5">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8 8-4-4"/></svg>
+      Receive Goods
+    </button>
+    <button class="btn-danger flex items-center gap-1.5">Cancel PO</button>
+    <span class="text-[10px] text-gray-400 ml-auto">Awaiting vendor delivery · Expected 18 Jun</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SCREEN 4: PO DETAIL (Partially Received + Receive Form)        -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="screen-detail-partial" class="screen-section max-w-4xl mx-auto py-6 px-4">
+  <div class="flex items-center gap-3 mb-1">
+    <button class="btn-outline text-xs py-1 px-2">&larr; Back</button>
+    <h1 class="text-lg font-bold mono">PO-806-2026-0004</h1>
+    <span class="badge status-partial">Partially Received</span>
+  </div>
+  <p class="text-xs text-gray-400 mb-5 ml-16">Created 12 Jun 2026 · Premium Organics Ltd</p>
+
+  <!-- Line Items with partial progress -->
+  <div class="card p-4 mb-4">
+    <h3 class="text-[10px] font-bold text-gray-400 mb-3">ORDER LINES (2 items · ₹4,580)</h3>
+    <table>
+      <thead><tr><th>Item</th><th>Ordered</th><th>Exp Rate</th><th>Received</th><th>Remaining</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="font-medium">GSM</td>
+          <td class="mono">30 kg</td><td class="mono">₹150</td>
+          <td class="mono font-semibold text-emerald-600">15 kg</td>
+          <td class="mono text-amber-600">15 kg</td>
+          <td><span class="badge status-partial">Partial</span></td>
+        </tr>
+        <tr>
+          <td class="font-medium">Milk</td>
+          <td class="mono">2 ltr</td><td class="mono">₹40</td>
+          <td class="mono text-gray-400">0</td>
+          <td class="mono text-red-500">2 ltr</td>
+          <td><span class="badge" style="background:#fef3c7;color:#92400e">Open</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Previous Receipts (GRN History) -->
+  <div class="card p-4 mb-4">
+    <h3 class="text-[10px] font-bold text-gray-400 mb-3">RECEIPTS (GRN History)</h3>
+    <div class="p-3 rounded-lg bg-gray-50 border border-gray-100 text-xs space-y-1">
+      <div class="flex items-center justify-between">
+        <span class="font-semibold">GRN #1 — 15 Jun 2026</span>
+        <span class="text-gray-400">purchase_id: 6023</span>
+      </div>
+      <div class="grid grid-cols-5 gap-2 text-[10px] mt-2">
+        <span class="text-gray-400">Item</span><span class="text-gray-400">Qty</span><span class="text-gray-400">Rate</span><span class="text-gray-400">Batch</span><span class="text-gray-400">Variance</span>
+        <span>GSM</span><span class="mono">15 kg</span><span class="mono">₹155</span><span class="mono">BATCH-A</span>
+        <span class="text-emerald-600">+3.3% <span class="text-gray-400">(OK)</span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECEIVE FORM (expanded) -->
+  <div class="card p-5 mb-4" style="border-left: 4px solid #059669;">
+    <h3 class="text-xs font-bold text-emerald-700 mb-4 flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8 8-4-4"/></svg>
+      Receive Remaining Goods
+    </h3>
+    <div class="grid grid-cols-2 gap-4 mb-4">
+      <div>
+        <label class="text-[10px] font-semibold text-gray-500 block mb-1">PURCHASE DATE</label>
+        <input type="date" value="2026-06-16" class="w-full" />
+      </div>
+      <div>
+        <label class="text-[10px] font-semibold text-gray-500 block mb-1">PAYMENT TYPE</label>
+        <select class="w-full"><option>Cash</option></select>
+      </div>
+    </div>
+
+    <table class="mb-3">
+      <thead><tr>
+        <th>Item</th><th>Remaining</th><th>Receive Qty</th><th>Actual Rate</th><th>Batch</th><th>Expiry</th><th>Variance</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td class="font-medium">GSM</td>
+          <td class="mono text-gray-500">15 kg</td>
+          <td><input type="number" value="15" class="w-20 mono" /></td>
+          <td><input type="number" value="155" class="w-24 mono" /></td>
+          <td><input type="text" value="BATCH-A" class="w-28 mono" /></td>
+          <td><input type="date" value="2026-12-31" class="w-32" /></td>
+          <td class="text-emerald-600 text-xs mono">+3.3%</td>
+        </tr>
+        <tr>
+          <td class="font-medium">Milk</td>
+          <td class="mono text-gray-500">2 ltr</td>
+          <td><input type="number" value="2" class="w-20 mono" /></td>
+          <td><input type="number" value="42" class="w-24 mono" /></td>
+          <td><input type="text" value="MILK-A" class="w-28 mono" /></td>
+          <td><input type="date" value="2026-08-31" class="w-32" /></td>
+          <td class="text-amber-600 text-xs mono">+5.0%</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Variance Warnings -->
+    <div class="variance-warn p-2 rounded text-xs mb-3">
+      Milk: actual rate ₹42 vs expected ₹40 (+5.0%) — within threshold (10%)
+    </div>
+
+    <div class="flex items-center justify-between mt-4">
+      <span class="text-xs text-gray-500">This will create stock entries (segments) for received items</span>
+      <div class="flex gap-2">
+        <button class="btn-outline">Cancel</button>
+        <button class="btn-green">Confirm &amp; Receive</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="card p-4 flex items-center gap-3">
+    <button class="btn-outline">Close PO (accept partial)</button>
+    <button class="btn-danger">Cancel PO</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SCREEN 5: ADD-STOCK GATE (Redirect)                            -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="screen-gate" class="screen-section max-w-2xl mx-auto py-16 px-4">
+  <div class="card p-8 text-center">
+    <div class="w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-4">
+      <svg class="w-7 h-7 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+    </div>
+    <h2 class="text-base font-bold mb-2">Direct Stock Entry Disabled</h2>
+    <p class="text-xs text-gray-500 mb-6 max-w-sm mx-auto">
+      Your store requires purchase orders for vendor stock intake. Create a PO, send it to your vendor, and receive goods against it.
+    </p>
+    <button class="btn-primary">Go to Purchase Orders &rarr;</button>
+    <p class="text-[10px] text-gray-400 mt-4">This setting can be changed in Operational Settings by your Central Store administrator.</p>
+  </div>
+</div>
+
+<script>
+function showScreen(id) {
+  document.querySelectorAll('.screen-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+</script>
+
+</body>
+</html>
