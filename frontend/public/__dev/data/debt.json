@@ -1111,5 +1111,20 @@
     ],
     "missing_count": 2,
     "pending_count": 0
+  },
+  {
+    "type": "CR",
+    "id": "CR-MODPUSH",
+    "title": "Forward Push by Module — Module-Level Selection Screen",
+    "status": "IMPLEMENTED",
+    "severity": "P2",
+    "sprint_key": null,
+    "sprint_name": "Unassigned",
+    "debt_reasons": [
+      "undefined: PENDING",
+      "undefined: PENDING"
+    ],
+    "missing_count": 0,
+    "pending_count": 2
   }
 ]

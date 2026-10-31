@@ -4191,5 +4191,70 @@
       "Owner-Signoff: MISSING"
     ],
     "sprint_name": "Unassigned"
+  },
+  {
+    "type": "CR",
+    "id": "CR-MODPUSH",
+    "title": "Forward Push by Module — Module-Level Selection Screen",
+    "status": "IMPLEMENTED",
+    "severity": "P2",
+    "sprint_key": null,
+    "phase": null,
+    "files": [
+      "frontend/src/services/api.js",
+      "frontend/src/hooks/useHierarchyManagement.js",
+      "frontend/src/components/central-inventory/ModulePushWizardDialog.jsx",
+      "frontend/src/components/central-inventory/StoreManagement.jsx"
+    ],
+    "notes": "New dialog for module-scoped push (6 core modules) with optional category filter. Mirrors Pull wizard pattern. pushBundle extended with modules param + cache invalidation. No backend changes.",
+    "artifact_refs": [
+      {
+        "gate": 1,
+        "path": "control/sessions/INVESTIGATION_20261031_MODULE_PUSH_SCREEN.md",
+        "status": "DONE"
+      },
+      {
+        "gate": 2,
+        "path": "control/sessions/CR-MODPUSH_ARTIFACT_2_IMPACT_ANALYSIS.md",
+        "status": "DONE"
+      },
+      {
+        "gate": 3,
+        "path": "control/sessions/CR-MODPUSH_ARTIFACT_3_IMPLEMENTATION_PLAN.md",
+        "status": "DONE"
+      },
+      {
+        "gate": 4,
+        "path": "control/sessions/CR-MODPUSH_ARTIFACT_4_CODE_GATE.md",
+        "status": "DONE"
+      },
+      {
+        "gate": 5,
+        "path": null,
+        "status": "DONE"
+      },
+      {
+        "gate": 6,
+        "path": null,
+        "status": "PENDING"
+      },
+      {
+        "gate": 7,
+        "path": null,
+        "status": "PENDING"
+      }
+    ],
+    "completeness": {
+      "done": 5,
+      "total": 7,
+      "pct": 71
+    },
+    "doc_count": 0,
+    "is_debt": true,
+    "debt_reasons": [
+      "undefined: PENDING",
+      "undefined: PENDING"
+    ],
+    "sprint_name": "Unassigned"
   }
 ]

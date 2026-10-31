@@ -17,6 +17,16 @@ Deploy the existing React frontend repo directly into `/app` and run it as-is, w
 
 ## Deployment History
 
+### 2026-10-31 — Gate 5 Implementation: Forward Push "Push by Module" Screen
+- **IMPLEMENTATION role** — Gate 5 (Code) complete
+- 4 files: `api.js` (FORWARD_PUSH_MODULES + pushBundle modules + cache invalidation), `useHierarchyManagement.js` (forward modules), NEW `ModulePushWizardDialog.jsx` (493 lines, 5-step wizard), `StoreManagement.jsx` (button + dialog mount)
+- Self-test: 11/11 edits verified, 0 new webpack warnings
+- Browser verified: button visible, dialog opens with 6 module checkboxes, confirm step works
+- Testing agent: 8/8 test cases PASS (iteration_83), regression clean (Push + Pull still work)
+- EXIT GATE: all 5 checks PASS (registry, L3, L7, markers, compile)
+- Artifacts: QA handover + session handover filed
+- Next: QA agent for Gate 6
+
 ### 2026-10-31 — Gate 4 Code-Gate: Forward Push "Push by Module" Screen
 - **IMPLEMENTATION role** — Gate 4 (Entry Verification) only, no code
 - Environment check: PASS (frontend compiled, backend healthy, login works)

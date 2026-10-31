@@ -80,6 +80,15 @@ Gate 1 intake artifacts: `control/sessions/CR-047_ARTIFACT_1_INTAKE.md` / `CR-04
 Mockups: `purchase_form_mockup.html` + `po_flow_mockup.html` (interactive)
 Master investigation: `INVESTIGATION_MASTER_PURCHASE_UX_OVERHAUL.md`
 
+## CR-MODPUSH — Forward Push by Module (Registered 2026-10-31)
+
+| ID | Title | Status | Severity | Files |
+|----|-------|:------:|:--------:|-------|
+| **CR-MODPUSH** | Forward Push by Module — Module-Level Selection Screen | **IMPLEMENTED** | P2 | `api.js`, `useHierarchyManagement.js`, `ModulePushWizardDialog.jsx` (NEW), `StoreManagement.jsx` |
+
+Artifacts: Investigation → Impact Analysis → Implementation Plan → Code-Gate → Code (all DONE). QA + Smoke PENDING.
+
+
 ## Artifact Statuses
 
 | Status | Meaning |

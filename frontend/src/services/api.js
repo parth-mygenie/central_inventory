@@ -974,13 +974,28 @@ function getPushForm(childId, { categoryIds } = {}) {
   return client.get(`/proxy/v2/franchise/push-form/${childId}`, { params });
 }
 
-// CR-047 — category_ids mandatory for category-scoped push; G-031 timeout kept
-function pushBundle(childId, { categoryIds } = {}) {
+// CR-MODPUSH — Valid module labels for forward push (same whitelist as reverse push).
+const FORWARD_PUSH_MODULES = [
+  "categories", "stock_item_categories", "addons", "sub_recipes",
+  "ingredients", "stock_items", "foods", "recipes",
+];
+
+// CR-047 — category_ids for category-scoped push; CR-MODPUSH — modules for module-scoped push; G-031 timeout kept
+function pushBundle(childId, { categoryIds, modules } = {}) {
   const body = { push_food_bundle: true };
   if (Array.isArray(categoryIds) && categoryIds.length > 0) {
     body.category_ids = categoryIds;
   }
-  return client.post(`/proxy/v2/franchise/push/${childId}`, body, { timeout: 100000 });
+  // CR-MODPUSH — optional module scoping (same pattern as reversePushFromChild)
+  if (Array.isArray(modules) && modules.length > 0) {
+    const filtered = modules.filter((m) => FORWARD_PUSH_MODULES.includes(m));
+    if (filtered.length > 0 && filtered.length < FORWARD_PUSH_MODULES.length) {
+      body.modules = filtered;
+    }
+  }
+  return client
+    .post(`/proxy/v2/franchise/push/${childId}`, body, { timeout: 100000 })
+    .then((r) => { _invalidateCatalogCaches(); return r; });
 }
 
 // CR-045 — Reverse push (master pulls catalogue upward from a legacy outlet).
@@ -1318,6 +1333,7 @@ const api = {
   createHierarchyChild,
   getPushForm,
   pushBundle,
+  FORWARD_PUSH_MODULES, // CR-MODPUSH
   getHierarchyHistory,
   // CR-045 — Reverse push (master pulls catalogue upward from a legacy outlet)
   getReversePushFromChild,

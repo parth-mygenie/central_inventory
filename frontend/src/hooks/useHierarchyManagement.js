@@ -104,12 +104,12 @@ export default function useHierarchyManagement() {
     }
   }, []);
 
-  // CR-047 — category-scoped push; G-031 409 handling kept
-  const executePush = useCallback(async (childId, { categoryIds } = {}) => {
+  // CR-047 — category-scoped push; CR-MODPUSH — module-scoped push; G-031 409 handling kept
+  const executePush = useCallback(async (childId, { categoryIds, modules } = {}) => {
     setPushLoading(true);
     setPushError(null);
     try {
-      const resp = await api.pushBundle(childId, { categoryIds });
+      const resp = await api.pushBundle(childId, { categoryIds, modules });
       const d = resp.data?.data || resp.data;
       setPushResults(d.results || d);
       return d;

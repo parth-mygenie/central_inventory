@@ -19,10 +19,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import {
   GitBranch, Search, Plus, ChevronDown, ChevronRight, RefreshCw, Loader2,
   Upload, Mail, Phone, MapPin, Calendar, Check, ArrowRight, ArrowLeft, Shield, Save,
-  ArrowDownToLine, Package, CheckSquare, Square, Eye,
+  ArrowDownToLine, Package, CheckSquare, Square, Eye, Layers,
 } from "lucide-react";
 import { friendlyCatalogError } from "@/lib/apiErrors"; // CR-043 — G-029
 import ReversePushWizardDialog from "./ReversePushWizardDialog"; // CR-045
+import ModulePushWizardDialog from "./ModulePushWizardDialog"; // CR-MODPUSH
 
 /**
  * Store Management — CR-032 unified view
@@ -50,6 +51,7 @@ export default function StoreManagement() {
   const [reversePullTarget, setReversePullTarget] = useState(null); // CR-045
   const [pushDialogTarget, setPushDialogTarget] = useState(null); // CR-047 — category push dialog
   const [pushDialogCategoryData, setPushDialogCategoryData] = useState(null); // CR-047 — cached push-form for category badges
+  const [modulePushTarget, setModulePushTarget] = useState(null); // CR-MODPUSH — module push dialog
 
   // G-031 — track elapsed time during forward push
   useEffect(() => {
@@ -214,6 +216,20 @@ export default function StoreManagement() {
           sourceCategories,
         },
       }));
+      if (summary) {
+        setPushStatusMap(prev => ({ ...prev, [childId]: { behind: summary.total_behind, status: summary.status === "synced" ? "synced" : "stale" } }));
+      }
+    } catch {}
+  };
+
+  // CR-MODPUSH — called after successful module push from ModulePushWizardDialog
+  const handleModulePushComplete = async (childId) => {
+    setModulePushTarget(null);
+    fetchList();
+    try {
+      const resp = await api.getPushForm(childId);
+      const data = resp?.data?.data || resp?.data;
+      const summary = data?.push_summary;
       if (summary) {
         setPushStatusMap(prev => ({ ...prev, [childId]: { behind: summary.total_behind, status: summary.status === "synced" ? "synced" : "stale" } }));
       }
@@ -472,6 +488,19 @@ export default function StoreManagement() {
                               Push
                             </Button>
                           )}
+                          {/* CR-MODPUSH — Push by Module: module-scoped push with optional category filter */}
+                          {ps && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 text-[10px] px-2 gap-1"
+                              onClick={(e) => { e.stopPropagation(); setModulePushTarget(child); }}
+                              data-testid={`module-push-btn-${child.id}`}
+                              title="Push specific modules to this outlet"
+                            >
+                              <Layers className="h-3 w-3" /> Push by Module
+                            </Button>
+                          )}
                           {/* CR-045 — Pull from Outlet: master persona + franchise row (two-gate) */}
                           {isTopLevel && child.restaurantTypeFlag === "franchise" && (
                             <Button
@@ -515,6 +544,14 @@ export default function StoreManagement() {
         childId={pushDialogTarget?.id}
         childName={pushDialogTarget?.name}
         onPushComplete={handlePushComplete}
+      />
+
+      {/* CR-MODPUSH — Module Push Wizard Dialog */}
+      <ModulePushWizardDialog
+        open={!!modulePushTarget}
+        onClose={() => setModulePushTarget(null)}
+        target={modulePushTarget}
+        onPushComplete={handleModulePushComplete}
       />
 
       {/* G-031 — Forward push loading overlay */}

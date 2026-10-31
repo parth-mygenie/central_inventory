@@ -211,3 +211,11 @@
 | File | Change | Item |
 |------|--------|------|
 | `frontend/src/components/central-inventory/PurchaseReport.jsx` | MODIFIED — Fragment import; totalAmount state removed; txnGroups + correctTotal useMemos added; summary bar uses correctTotal; tbody replaced with transaction-grouped render (header rows + ingredient sub-rows) | BUG-061 |
+
+### CR-MODPUSH: Forward Push by Module (session 2026-10-31)
+| File | Change | Item |
+|------|--------|------|
+| `frontend/src/services/api.js` | MODIFIED — FORWARD_PUSH_MODULES constant + pushBundle accepts modules param + _invalidateCatalogCaches chain + export | CR-MODPUSH |
+| `frontend/src/hooks/useHierarchyManagement.js` | MODIFIED — executePush accepts and forwards modules | CR-MODPUSH |
+| `frontend/src/components/central-inventory/ModulePushWizardDialog.jsx` | **NEW** — 5-step wizard (modules → categories → confirm → pushing → results), 493 lines | CR-MODPUSH |
+| `frontend/src/components/central-inventory/StoreManagement.jsx` | MODIFIED — import + Layers icon + modulePushTarget state + handleModulePushComplete callback + "Push by Module" button + dialog mount | CR-MODPUSH |
