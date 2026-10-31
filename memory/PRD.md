@@ -17,6 +17,15 @@ Deploy the existing React frontend repo directly into `/app` and run it as-is, w
 
 ## Deployment History
 
+### 2026-10-31 — Gate 3 Implementation Plan: Forward Push "Push by Module" Screen
+- **PLANNING role** — Gate 3 (Implementation Plan) only, no code
+- Owner decisions locked: Module + optional category filter, 6 core modules, no Roles, button next to Push, label "Push by Module"
+- 4 files scoped: `api.js` (FORWARD_PUSH_MODULES + pushBundle modules param + cache invalidation), `useHierarchyManagement.js` (forward modules), `StoreManagement.jsx` (import + state + button + dialog mount), NEW `ModulePushWizardDialog.jsx` (~350-400 lines, 5-step wizard)
+- Execution sequence: api.js → hook → new dialog → StoreManagement integration
+- 11-check verification matrix, 5-item risk register
+- Artifact: `control/sessions/CR-MODPUSH_ARTIFACT_3_IMPLEMENTATION_PLAN.md`
+- Next: Gate 4 (Owner GO) → IMPLEMENTATION
+
 ### 2026-10-31 — Gate 2 Impact Analysis: Forward Push Module-Level Selection Screen
 - **PLANNING role** — Gate 2 (Impact Analysis) only, no code
 - Code Reality: NONE — no module push wizard code exists
