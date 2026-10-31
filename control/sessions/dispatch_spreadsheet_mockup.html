@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Direct Dispatch — Spreadsheet UX Mockup</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f1f5f9; min-height: 100vh; }
+
+    /* ── Screen nav ── */
+    .screen-nav { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+    .snav { padding: 5px 14px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer;
+            border: 1px solid #e2e8f0; background: white; color: #64748b; transition: all 0.15s; }
+    .snav.active { background: #1e293b; color: white; border-color: #1e293b; }
+
+    /* ── Table shell ── */
+    .dk-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .dk-table thead th {
+      background: #f8fafc; padding: 7px 10px; text-align: left;
+      font-size: 10px; font-weight: 600; color: #94a3b8; text-transform: uppercase;
+      letter-spacing: 0.06em; border-bottom: 2px solid #e2e8f0; white-space: nowrap;
+    }
+    .dk-table thead th.r { text-align: right; }
+
+    /* ── Row states ── */
+    .dk-row td { border-bottom: 1px solid #f1f5f9; background: white; vertical-align: middle; }
+    .dk-row.out td      { background: #fff5f5; }
+    .dk-row.out td:first-child   { border-left: 3px solid #ef4444; }
+    .dk-row.low td      { background: #fffbf0; }
+    .dk-row.low td:first-child   { border-left: 3px solid #f59e0b; }
+    .dk-row.complete td { background: #f0fdf4; }
+    .dk-row.complete td:first-child { border-left: 3px solid #4ade80; }
+    .dk-row.active td   { background: #fafffe; }
+    .dk-row.active td:first-child   { border-left: 3px solid #818cf8; }
+    .dk-row.manual td   { background: white; }
+    .dk-row.manual td:first-child   { border-left: 3px solid #c7d2fe; }
+    .dk-row.excluded td { background: #fafafa; opacity: 0.55; }
+    .dk-row.excluded td:first-child { border-left: 3px solid #e2e8f0; }
+
+    /* ── Cells ── */
+    td.c { padding: 5px 8px; }
+    .ci {
+      width: 100%; border: 1px solid transparent; border-radius: 5px;
+      padding: 4px 7px; font-size: 12px; background: transparent; outline: none;
+      height: 28px; color: #1e293b;
+    }
+    .ci:focus { border-color: #818cf8; background: white; box-shadow: 0 0 0 2px rgba(129,140,248,.15); }
+    .ci::placeholder { color: #cbd5e1; }
+    .ci.ro { color: #64748b; font-style: normal; cursor: default; }
+
+    /* Item col */
+    .item-name { font-size: 12px; font-weight: 600; color: #1e293b; }
+    .item-hint { font-size: 10px; color: #94a3b8; margin-top: 1px; }
+    .item-hint strong { color: #1e293b; }
+
+    /* Badges */
+    .bv { display: inline-flex; align-items: center; border-radius: 4px; padding: 1px 5px; font-size: 9px; font-weight: 700; margin-left: 4px; }
+    .bv.oos { background: #fee2e2; color: #dc2626; }
+    .bv.low { background: #fef3c7; color: #d97706; }
+
+    /* Stock after */
+    .after-pos { font-size: 12px; font-weight: 600; color: #16a34a; font-family: monospace; }
+    .after-warn { font-size: 12px; font-weight: 700; color: #dc2626; font-family: monospace; }
+    .after-hint { font-size: 10px; color: #94a3b8; }
+
+    /* Source segment cell */
+    .src-cell { min-width: 160px; }
+    .src-select {
+      width: 100%; border: 1px solid #e2e8f0; border-radius: 5px;
+      padding: 3px 7px; font-size: 11px; background: white; height: 28px; outline: none;
+      color: #1e293b; cursor: pointer;
+    }
+    .src-select:focus { border-color: #818cf8; }
+    .src-loading { font-size: 10px; color: #94a3b8; display: flex; align-items: center; gap: 4px; }
+
+    /* Grand total bar */
+    .gt-bar {
+      background: #1e293b; color: white;
+      border-radius: 0 0 10px 10px; padding: 11px 16px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+
+    /* Coverage pills */
+    .cpill {
+      padding: 4px 11px; border-radius: 20px; font-size: 11px; font-weight: 600;
+      cursor: pointer; border: 1px solid #e2e8f0; background: white; color: #64748b;
+      transition: all 0.12s;
+    }
+    .cpill.active { background: #1e293b; color: white; border-color: #1e293b; }
+
+    /* Header card */
+    .hdr { background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px;
+           display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; }
+    select.hs, input.hs {
+      border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 10px;
+      font-size: 12px; height: 32px; background: white; color: #1e293b; outline: none;
+    }
+    select.hs:focus, input.hs:focus { border-color: #818cf8; }
+
+    /* KPI cards */
+    .kpi { background: white; border: 1px solid #e2e8f0; border-radius: 8px;
+           padding: 10px 12px; text-align: center; }
+    .kpi.urgent { border-left: 3px solid #ef4444; }
+
+    /* Screen toggle */
+    [data-screen] { display: none; }
+    [data-screen].active { display: block; }
+
+    /* Kbd hint */
+    .kbd { display: inline-block; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 3px;
+           padding: 1px 5px; font-size: 10px; font-family: monospace; color: #475569; }
+
+    /* Dest search */
+    .dest-wrap { position: relative; max-width: 340px; }
+    .dest-drop { position: absolute; top: calc(100% + 2px); left: 0; right: 0;
+                 background: white; border: 1px solid #e2e8f0; border-radius: 8px;
+                 box-shadow: 0 8px 24px rgba(0,0,0,0.1); z-index: 100; }
+    .dest-item { display: flex; align-items: center; justify-content: space-between;
+                 padding: 8px 12px; font-size: 12px; cursor: pointer; }
+    .dest-item:hover { background: #f8fafc; }
+
+    /* Manual section separator */
+    .manual-sep td { background: #f8fafc !important; padding: 0 !important; height: 4px; border-top: 2px dashed #e2e8f0 !important; border-bottom: none !important; }
+
+    /* Item search in manual row */
+    .isrc-wrap { position: relative; }
+    .isrc-drop { position: absolute; top: calc(100% + 2px); left: 0; right: 0; max-height: 160px;
+                 overflow-y: auto; background: white; border: 1px solid #e2e8f0;
+                 border-radius: 8px; box-shadow: 0 6px 20px rgba(0,0,0,.1); z-index: 100; display: none; }
+    .isrc-item { display: flex; align-items: center; justify-content: space-between;
+                 padding: 6px 12px; font-size: 12px; cursor: pointer; }
+    .isrc-item:hover { background: #f8fafc; }
+
+    @keyframes rowIn { from { opacity:0; transform:translateY(-3px); } to { opacity:1; transform:translateY(0); } }
+    .row-in { animation: rowIn .16s ease-out; }
+
+    /* Annotation box */
+    .ann { font-size: 11px; color: #64748b; background: #f8fafc; border: 1px solid #e2e8f0;
+           border-radius: 8px; padding: 10px 14px; margin-top: 10px; line-height: 1.7; }
+    .ann strong { color: #1e293b; }
+
+    /* Health strip */
+    .health-strip { display:flex; gap:10px; align-items:center; font-size:10px; background:#f8fafc;
+                    border:1px solid #e2e8f0; border-radius:6px; padding:6px 10px; margin-top:6px; }
+  </style>
+</head>
+<body class="p-4 md:p-8">
+<div class="max-w-5xl mx-auto">
+
+  <!-- Title -->
+  <div class="flex items-center gap-3 mb-4">
+    <div style="width:32px;height:32px;background:#1e293b;border-radius:8px;display:flex;align-items:center;justify-content:center;">
+      <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </div>
+    <div>
+      <h1 style="font-size:15px;font-weight:700;color:#1e293b;">Direct Dispatch — Spreadsheet UX Mockup</h1>
+      <p style="font-size:11px;color:#94a3b8;">Investigation — Applying CR-047/048/049 spreadsheet pattern to dispatch</p>
+    </div>
+  </div>
+
+  <!-- Screen nav -->
+  <div class="screen-nav">
+    <button class="snav active" onclick="showScreen('current')">Current State</button>
+    <button class="snav" onclick="showScreen('new')">New Spreadsheet UX ★</button>
+    <button class="snav" onclick="showScreen('diff')">Key Differences</button>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN A — CURRENT STATE (for reference)
+  ══════════════════════════════════════ -->
+  <div data-screen="current" class="active">
+
+    <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:10px 14px;font-size:11px;color:#92400e;margin-bottom:12px;">
+      <strong>Current state (as-is)</strong> — Table exists but has the same pain points as CR-048 PO Create: checkboxes, full-width SourceSelector widget per row, no keyboard flow, manual items are card-per-item.
+    </div>
+
+    <!-- Coverage + KPIs (current) -->
+    <div style="background:white;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;gap:8px;font-size:12px;">
+        <span style="font-size:10px;color:#94a3b8;">Dispatch for:</span>
+        <button class="cpill">3 days</button>
+        <button class="cpill active">7 days</button>
+        <button class="cpill">10 days</button>
+        <button class="cpill">30 days</button>
+      </div>
+    </div>
+
+    <div style="background:white;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;margin-bottom:10px;">
+      <label style="font-size:10px;color:#94a3b8;font-weight:600;">DESTINATION STORE *</label>
+      <select class="hs" style="width:100%;margin-top:4px;"><option>Sutraa (Outlet)</option></select>
+      <div class="health-strip"><span>Sutraa health:</span> <span style="color:#94a3b8;">0 adequate</span></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px;">
+      <div class="kpi urgent"><p style="font-size:22px;font-weight:700;color:#dc2626;">257</p><p style="font-size:9px;color:#94a3b8;">NEED DISPATCHING</p></div>
+      <div class="kpi"><p style="font-size:22px;font-weight:700;">0</p><p style="font-size:9px;color:#94a3b8;">PARTIALLY COVERED</p></div>
+      <div class="kpi"><p style="font-size:22px;font-weight:700;">0</p><p style="font-size:9px;color:#94a3b8;">FULLY COVERED</p></div>
+      <div class="kpi"><p style="font-size:22px;font-weight:700;">0</p><p style="font-size:9px;color:#94a3b8;">IN THIS DISPATCH</p></div>
+    </div>
+
+    <!-- Current table -->
+    <div style="background:white;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin-bottom:10px;">
+      <div style="padding:8px 14px;border-bottom:1px solid #f1f5f9;display:flex;gap:8px;align-items:center;">
+        <span style="font-size:10px;font-weight:700;color:#d97706;">⚡ ITEMS BELOW THRESHOLD (257)</span>
+        <button style="padding:2px 8px;border-radius:4px;font-size:10px;border:1px solid #e2e8f0;background:white;">Select All</button>
+        <button style="padding:2px 8px;border-radius:4px;font-size:10px;border:1px solid #e2e8f0;background:white;">Unselect All</button>
+        <span style="font-size:10px;color:#94a3b8;margin-left:auto;">0/257 selected</span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;min-width:600px;">
+          <thead><tr style="background:#f8fafc;">
+            <th style="padding:6px 8px;font-size:10px;font-weight:600;color:#94a3b8;text-align:left;width:30px;"></th>
+            <th style="padding:6px 8px;font-size:10px;font-weight:600;color:#94a3b8;text-align:left;">Item</th>
+            <th style="padding:6px 8px;font-size:10px;font-weight:600;color:#94a3b8;text-align:right;">Their Stock</th>
+            <th style="padding:6px 8px;font-size:10px;font-weight:600;color:#94a3b8;text-align:right;">Gap</th>
+            <th style="padding:6px 8px;font-size:10px;font-weight:600;color:#94a3b8;text-align:right;width:110px;">Qty to Send</th>
+            <th style="padding:6px 8px;font-size:10px;font-weight:600;color:#94a3b8;">Source Segment</th>
+            <th style="padding:6px 8px;font-size:10px;font-weight:600;color:#94a3b8;text-align:right;">Your Stock After</th>
+            <th style="padding:6px 8px;font-size:10px;font-weight:600;color:#94a3b8;">Suggestion</th>
+          </tr></thead>
+          <tbody>
+            <!-- Row A -->
+            <tr style="border-bottom:1px solid #f1f5f9;background:#fff5f5;">
+              <td style="padding:8px;text-align:center;"><input type="checkbox" /></td>
+              <td style="padding:8px;font-size:12px;font-weight:600;">Ajwain <span style="color:#94a3b8;font-weight:400;font-size:11px;">kg</span>
+                <span style="display:inline-flex;align-items:center;background:#fee2e2;color:#dc2626;border-radius:3px;padding:1px 5px;font-size:9px;font-weight:700;margin-left:4px;">OUT</span>
+              </td>
+              <td style="padding:8px;text-align:right;font-size:12px;color:#dc2626;font-weight:600;">0 kg</td>
+              <td style="padding:8px;text-align:right;font-size:12px;font-weight:600;color:#d97706;">1 kg</td>
+              <td style="padding:8px;text-align:right;">
+                <div style="display:flex;align-items:center;gap:4px;justify-content:flex-end;">
+                  <input type="number" value="0" style="width:52px;height:26px;border:1px solid #e2e8f0;border-radius:4px;text-align:right;font-size:12px;padding:0 6px;" />
+                  <span style="font-size:10px;color:#94a3b8;">kg</span>
+                </div>
+                <p style="font-size:10px;color:#dc2626;text-align:right;margin-top:2px;">You only have 0 kg</p>
+              </td>
+              <td style="padding:8px;">
+                <!-- Current SourceSelector — takes up a lot of space -->
+                <div style="display:flex;gap:3px;margin-bottom:4px;">
+                  <button style="background:#1e293b;color:white;border:none;border-radius:3px;padding:2px 7px;font-size:9px;font-weight:600;">Segment</button>
+                  <button style="background:#f1f5f9;color:#64748b;border:none;border-radius:3px;padding:2px 7px;font-size:9px;font-weight:600;">Bucket</button>
+                </div>
+                <select style="width:100%;height:26px;font-size:11px;border:1px solid #e2e8f0;border-radius:4px;"><option>Select segment...</option><option>SEG #42 — 0 avail</option></select>
+                <p style="font-size:9px;color:#94a3b8;margin-top:2px;">No stock segments available</p>
+              </td>
+              <td style="padding:8px;text-align:right;font-size:12px;color:#94a3b8;">0 kg</td>
+              <td style="padding:8px;font-size:11px;color:#94a3b8;">Gap to min: 1 kg</td>
+            </tr>
+            <!-- Row B -->
+            <tr style="border-bottom:1px solid #f1f5f9;background:#fff5f5;">
+              <td style="padding:8px;text-align:center;"><input type="checkbox" /></td>
+              <td style="padding:8px;font-size:12px;font-weight:600;">Almond <span style="color:#94a3b8;font-weight:400;font-size:11px;">kg</span>
+                <span style="display:inline-flex;align-items:center;background:#fee2e2;color:#dc2626;border-radius:3px;padding:1px 5px;font-size:9px;font-weight:700;margin-left:4px;">OUT</span>
+              </td>
+              <td style="padding:8px;text-align:right;font-size:12px;color:#dc2626;font-weight:600;">0 kg</td>
+              <td style="padding:8px;text-align:right;font-size:12px;font-weight:600;color:#d97706;">1 kg</td>
+              <td style="padding:8px;text-align:right;">
+                <div style="display:flex;align-items:center;gap:4px;justify-content:flex-end;">
+                  <input type="number" value="0" style="width:52px;height:26px;border:1px solid #e2e8f0;border-radius:4px;text-align:right;font-size:12px;padding:0 6px;" />
+                  <span style="font-size:10px;color:#94a3b8;">kg</span>
+                </div>
+                <p style="font-size:10px;color:#dc2626;text-align:right;margin-top:2px;">You only have 0 kg</p>
+              </td>
+              <td style="padding:8px;">
+                <div style="display:flex;gap:3px;margin-bottom:4px;">
+                  <button style="background:#1e293b;color:white;border:none;border-radius:3px;padding:2px 7px;font-size:9px;font-weight:600;">Segment</button>
+                  <button style="background:#f1f5f9;color:#64748b;border:none;border-radius:3px;padding:2px 7px;font-size:9px;font-weight:600;">Bucket</button>
+                </div>
+                <select style="width:100%;height:26px;font-size:11px;border:1px solid #e2e8f0;border-radius:4px;"><option>Select segment...</option></select>
+              </td>
+              <td style="padding:8px;text-align:right;font-size:12px;color:#94a3b8;">0 kg</td>
+              <td style="padding:8px;font-size:11px;color:#94a3b8;">Gap to min: 1 kg</td>
+            </tr>
+            <tr><td colspan="8" style="padding:8px 14px;font-size:11px;color:#94a3b8;text-align:center;">... 255 more rows ...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Current: manual add is a separate card -->
+      <div style="padding:8px 14px;border-top:1px solid #f1f5f9;">
+        <button style="font-size:11px;color:#64748b;background:transparent;border:none;cursor:pointer;">+ Add item manually</button>
+      </div>
+    </div>
+
+    <!-- Manual card (current) -->
+    <div style="background:white;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;margin-bottom:10px;">
+      <p style="font-size:10px;color:#94a3b8;font-weight:600;margin-bottom:8px;">ADDITIONAL ITEMS</p>
+      <div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px;background:#fafafa;">
+        <p style="font-size:10px;color:#94a3b8;margin-bottom:6px;">Manual Item 1</p>
+        <select class="hs" style="width:100%;margin-bottom:8px;"><option>Select item</option><option>Rice (kg)</option></select>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+          <div><label style="font-size:10px;color:#94a3b8;">Quantity *</label><input type="number" class="hs" style="width:100%;margin-top:2px;" /></div>
+          <div><label style="font-size:10px;color:#94a3b8;">Unit</label><input class="hs" value="—" style="width:100%;margin-top:2px;background:#f1f5f9;" readonly /></div>
+        </div>
+        <div>
+          <label style="font-size:10px;color:#94a3b8;">Source *</label>
+          <div style="margin-top:2px;font-size:10px;color:#94a3b8;">Select an item first</div>
+        </div>
+      </div>
+    </div>
+
+    <button style="width:100%;padding:10px;background:#e2e8f0;color:#94a3b8;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:not-allowed;">
+      Dispatch Stock (0 items)
+    </button>
+
+    <div class="ann" style="margin-top:12px;">
+      <strong>Pain points in current form:</strong>
+      <ul style="margin-top:4px;list-style:disc;padding-left:16px;">
+        <li>SourceSelector renders as a full multi-step widget (Segment/Bucket tabs + select + hint text) in every row — dominates the table and forces horizontal scroll on 8-column layout</li>
+        <li>No keyboard flow — storekeeper must mouse-click each qty field for 257 rows</li>
+        <li>Manual item section is a separate card (card-per-item pattern, same issue as PO Create pre-CR-048)</li>
+        <li>Row state has no visual hierarchy — OUT and LOW rows look identical at a glance</li>
+        <li>Checkboxes + "Select All / Unselect All" adds a 9th effective interaction per row</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN B — NEW SPREADSHEET UX
+  ══════════════════════════════════════ -->
+  <div data-screen="new">
+
+    <!-- Sub-nav -->
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
+      <button class="snav active" onclick="showSub('form')">Form</button>
+      <button class="snav" onclick="showSub('confirm')">Confirm</button>
+    </div>
+
+    <!-- ── FORM ── -->
+    <div data-sub="form" class="active">
+
+      <!-- Header: Coverage + Destination -->
+      <div class="hdr" style="border-radius:10px;margin-bottom:10px;">
+        <div>
+          <label style="display:block;font-size:10px;font-weight:600;color:#94a3b8;margin-bottom:4px;">DESTINATION STORE *</label>
+          <div class="dest-wrap">
+            <input class="hs" type="text" value="Sutraa (Outlet)" style="min-width:220px;padding-right:28px;" />
+            <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:10px;pointer-events:none;">▾</span>
+          </div>
+        </div>
+
+        <div>
+          <label style="display:block;font-size:10px;font-weight:600;color:#94a3b8;margin-bottom:4px;">DISPATCH FOR</label>
+          <div style="display:flex;gap:3px;" id="coverPills">
+            <button class="cpill" data-d="3" onclick="setCover(3)">3d</button>
+            <button class="cpill active" data-d="7" onclick="setCover(7)">7d</button>
+            <button class="cpill" data-d="10" onclick="setCover(10)">10d</button>
+            <button class="cpill" data-d="30" onclick="setCover(30)">30d</button>
+            <input id="customDays" type="number" placeholder="Custom" class="hs" style="width:60px;height:28px;font-size:11px;" oninput="setCustomCover(this.value)" />
+          </div>
+          <div style="font-size:9px;color:#94a3b8;margin-top:2px;" id="coverHint">Ordering for <strong>7-day</strong> cover</div>
+        </div>
+
+        <div style="margin-left:auto;display:flex;align-items:flex-end;gap:6px;font-size:10px;color:#94a3b8;">
+          <span class="kbd">Tab</span> next field &nbsp;
+          <span class="kbd">Enter</span> next row
+        </div>
+      </div>
+
+      <!-- Health strip -->
+      <div class="health-strip" style="margin-bottom:10px;border-radius:8px;">
+        <span style="font-weight:600;color:#1e293b;">Sutraa</span>
+        <span style="background:#fee2e2;color:#dc2626;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;">5 OUT</span>
+        <span style="background:#fef3c7;color:#d97706;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;">18 LOW</span>
+        <span style="background:#dcfce7;color:#16a34a;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;">234 OK</span>
+        <span style="font-size:10px;color:#94a3b8;margin-left:auto;">Based on min stock thresholds</span>
+      </div>
+
+      <!-- KPI bar -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px;">
+        <div class="kpi urgent">
+          <p style="font-size:22px;font-weight:700;color:#dc2626;" id="kpiNeeds">23</p>
+          <p style="font-size:9px;color:#94a3b8;">NEED DISPATCHING</p>
+        </div>
+        <div class="kpi">
+          <p style="font-size:22px;font-weight:700;color:#d97706;" id="kpiPartial">0</p>
+          <p style="font-size:9px;color:#94a3b8;">PARTIALLY COVERED</p>
+        </div>
+        <div class="kpi">
+          <p style="font-size:22px;font-weight:700;" id="kpiFull">0</p>
+          <p style="font-size:9px;color:#94a3b8;">FULLY COVERED</p>
+        </div>
+        <div class="kpi">
+          <p style="font-size:22px;font-weight:700;" id="kpiIn">0</p>
+          <p style="font-size:9px;color:#94a3b8;">IN THIS DISPATCH</p>
+        </div>
+      </div>
+
+      <!-- ── MAIN DISPATCH TABLE ── -->
+      <div style="background:white;border:1px solid #e2e8f0;margin-bottom:0;">
+        <table class="dk-table" id="dispatchTable">
+          <colgroup>
+            <col style="width:26%">  <!-- Item -->
+            <col style="width:9%">   <!-- Their Stock -->
+            <col style="width:8%">   <!-- Gap -->
+            <col style="width:9%">   <!-- Send Qty -->
+            <col style="width:6%">   <!-- Unit -->
+            <col style="width:22%">  <!-- Source -->
+            <col style="width:12%">  <!-- Stock After -->
+            <col style="width:4%">   <!-- × -->
+          </colgroup>
+          <thead><tr>
+            <th>Item</th>
+            <th class="r">Their Stock</th>
+            <th class="r">Gap</th>
+            <th class="r">Send Qty</th>
+            <th>Unit</th>
+            <th>Source Segment</th>
+            <th class="r">Your Stock After</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="dispatchBody">
+
+            <!-- ── ROW 1: OUT — complete ── -->
+            <tr class="dk-row out" id="r1">
+              <td class="c">
+                <div class="item-name">Ajwain <span class="bv oos">OUT</span></div>
+                <div class="item-hint">0 kg at dest · min 1 kg · <strong>gap: 1 kg</strong></div>
+              </td>
+              <td class="c r" style="font-size:12px;color:#dc2626;font-weight:600;text-align:right;padding:5px 8px;">0 kg</td>
+              <td class="c r" style="font-size:12px;font-weight:700;color:#d97706;text-align:right;padding:5px 8px;">1 kg</td>
+              <td class="c"><input class="ci" type="number" id="qty1" value="1" style="text-align:right;" oninput="updateAfter(1,7,1)" onkeydown="handleKey(event,1,'qty')" /></td>
+              <td class="c" style="text-align:center;"><div style="background:#f1f5f9;border-radius:4px;padding:2px 6px;font-size:11px;color:#64748b;font-weight:500;text-align:center;">kg</div></td>
+              <td class="c src-cell">
+                <!-- Compact source: auto-selected, expand on click -->
+                <select class="src-select" id="src1" onchange="updateComplete(1)" onkeydown="handleKey(event,1,'src')">
+                  <option value="">Select segment…</option>
+                  <option value="seg42" selected>AJWAIN-OCT-10 · 5 kg</option>
+                  <option value="seg43">AJWAIN-SEP-01 · 2 kg (32d left)</option>
+                </select>
+                <div style="font-size:9px;color:#16a34a;margin-top:2px;" id="srcHint1">✓ FEFO — 5 kg avail</div>
+              </td>
+              <td class="c" style="text-align:right;padding:5px 8px;">
+                <div class="after-pos" id="after1">6 kg</div>
+                <div class="after-hint">You retain 86%</div>
+              </td>
+              <td class="c" style="text-align:center;color:#94a3b8;cursor:pointer;font-size:13px;" onclick="toggleRow(1)">✕</td>
+            </tr>
+
+            <!-- ── ROW 2: OUT — active (current focus) ── -->
+            <tr class="dk-row out active" id="r2">
+              <td class="c">
+                <div class="item-name">Almond <span class="bv oos">OUT</span></div>
+                <div class="item-hint">0 kg at dest · min 1 kg · <strong>gap: 1 kg</strong></div>
+              </td>
+              <td class="c r" style="font-size:12px;color:#dc2626;font-weight:600;text-align:right;padding:5px 8px;">0 kg</td>
+              <td class="c r" style="font-size:12px;font-weight:700;color:#d97706;text-align:right;padding:5px 8px;">1 kg</td>
+              <td class="c"><input class="ci" type="number" id="qty2" placeholder="0" style="text-align:right;border-color:#818cf8;background:white;" oninput="updateAfter(2,8,1)" onkeydown="handleKey(event,2,'qty')" /></td>
+              <td class="c" style="text-align:center;"><div style="background:#f1f5f9;border-radius:4px;padding:2px 6px;font-size:11px;color:#64748b;font-weight:500;text-align:center;">kg</div></td>
+              <td class="c src-cell">
+                <select class="src-select" id="src2" onchange="updateComplete(2)" onkeydown="handleKey(event,2,'src')">
+                  <option value="">Select segment…</option>
+                  <option value="seg55">ALMOND-OCT-08 · 8 kg</option>
+                  <option value="seg56">ALMOND-AUG-15 · 3 kg (14d left ⚠)</option>
+                </select>
+                <div style="font-size:9px;color:#94a3b8;margin-top:2px;" id="srcHint2">← Select source</div>
+              </td>
+              <td class="c" style="text-align:right;padding:5px 8px;">
+                <div style="font-size:12px;font-family:monospace;color:#94a3b8;" id="after2">—</div>
+              </td>
+              <td class="c" style="text-align:center;color:#94a3b8;cursor:pointer;font-size:13px;" onclick="toggleRow(2)">✕</td>
+            </tr>
+
+            <!-- ── ROW 3: LOW ── -->
+            <tr class="dk-row low" id="r3">
+              <td class="c">
+                <div class="item-name">Base Cream <span class="bv low">3d left</span></div>
+                <div class="item-hint">1.2 kg at dest · <strong id="r3hint">4.1 kg/day · needs 27.5 kg for 7d</strong></div>
+              </td>
+              <td class="c r" style="font-size:12px;color:#d97706;text-align:right;padding:5px 8px;">1.2 kg</td>
+              <td class="c r" style="font-size:12px;font-weight:700;color:#d97706;text-align:right;padding:5px 8px;" id="r3gap">27.5 kg</td>
+              <td class="c"><input class="ci" type="number" id="qty3" value="27.5" style="text-align:right;" oninput="updateAfter(3,30,1.2)" onkeydown="handleKey(event,3,'qty')" /></td>
+              <td class="c" style="text-align:center;"><div style="background:#f1f5f9;border-radius:4px;padding:2px 6px;font-size:11px;color:#64748b;font-weight:500;text-align:center;">kg</div></td>
+              <td class="c src-cell">
+                <select class="src-select" id="src3" onchange="updateComplete(3)" onkeydown="handleKey(event,3,'src')">
+                  <option value="">Select segment…</option>
+                  <option value="seg77">BCREAM-OCT-12 · 30 kg</option>
+                </select>
+                <div style="font-size:9px;color:#94a3b8;margin-top:2px;" id="srcHint3">← Select source</div>
+              </td>
+              <td class="c" style="text-align:right;padding:5px 8px;">
+                <div style="font-size:12px;font-family:monospace;color:#94a3b8;" id="after3">—</div>
+              </td>
+              <td class="c" style="text-align:center;color:#94a3b8;cursor:pointer;font-size:13px;" onclick="toggleRow(3)">✕</td>
+            </tr>
+
+            <!-- ── ROW 4: excluded (deselected) ── -->
+            <tr class="dk-row excluded" id="r4">
+              <td class="c">
+                <div class="item-name">Biryani Masala <span class="bv low">5d left</span></div>
+                <div class="item-hint" style="color:#c4c4c4;">2 kg at dest · below threshold</div>
+              </td>
+              <td class="c r" style="font-size:12px;color:#94a3b8;text-align:right;padding:5px 8px;">2 kg</td>
+              <td class="c r" style="font-size:12px;color:#94a3b8;text-align:right;padding:5px 8px;">1 kg</td>
+              <td class="c" style="text-align:right;padding:5px 8px;"><span style="font-size:11px;color:#94a3b8;">excluded</span></td>
+              <td class="c"></td>
+              <td class="c"></td>
+              <td class="c"></td>
+              <td class="c" style="text-align:center;cursor:pointer;" onclick="includeRow(4)" title="Re-include">
+                <span style="font-size:11px;color:#818cf8;">+</span>
+              </td>
+            </tr>
+
+            <!-- ── MANUAL SEPARATOR ── -->
+            <tr class="manual-sep"><td colspan="8"></td></tr>
+
+            <!-- ── MANUAL ROW (item search) ── -->
+            <tr class="dk-row manual row-in" id="r5">
+              <td class="c">
+                <div class="isrc-wrap">
+                  <input class="ci" type="text" id="mSearch1" placeholder="Type item name…" autocomplete="off"
+                    style="border-color:#818cf8;background:white;"
+                    onfocus="openIsrc('mDrop1')"
+                    onblur="closeIsrc('mDrop1')"
+                    oninput="filterIsrc(this,'mDrop1')"
+                  />
+                  <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:10px;pointer-events:none;">▾</span>
+                  <div class="isrc-drop" id="mDrop1">
+                    <div class="isrc-item" onmousedown="pickManualItem('mSearch1','Rice','kg','mUnit1')">
+                      <span>Rice <span style="color:#94a3b8;">(kg)</span></span>
+                      <span style="font-size:10px;color:#16a34a;font-weight:600;">80 kg</span>
+                    </div>
+                    <div class="isrc-item" onmousedown="pickManualItem('mSearch1','Rice Flour','kg','mUnit1')">
+                      <span>Rice Flour <span style="color:#94a3b8;">(kg)</span></span>
+                      <span style="font-size:10px;color:#d97706;font-weight:600;">5 kg</span>
+                    </div>
+                    <div class="isrc-item" onmousedown="pickManualItem('mSearch1','Saffron','g','mUnit1')">
+                      <span>Saffron <span style="color:#94a3b8;">(g)</span></span>
+                      <span style="font-size:10px;color:#16a34a;font-weight:600;">120 g</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="item-hint" style="color:#a5b4fc;">manually added</div>
+              </td>
+              <td class="c" colspan="2" style="text-align:right;padding:5px 8px;"><span style="font-size:10px;color:#94a3b8;">—</span></td>
+              <td class="c"><input class="ci" id="mQty1" type="number" placeholder="0" style="text-align:right;" /></td>
+              <td class="c" style="text-align:center;"><div style="background:#f1f5f9;border-radius:4px;padding:2px 6px;font-size:11px;color:#64748b;font-weight:500;text-align:center;" id="mUnit1">—</div></td>
+              <td class="c src-cell">
+                <select class="src-select" id="mSrc1">
+                  <option value="">Select item first…</option>
+                </select>
+              </td>
+              <td class="c" style="text-align:right;padding:5px 8px;"><span style="font-size:11px;color:#94a3b8;">—</span></td>
+              <td class="c" style="text-align:center;color:#94a3b8;cursor:pointer;font-size:13px;" onclick="removeManualRow('r5')">✕</td>
+            </tr>
+
+          </tbody>
+        </table>
+
+        <!-- Grand total bar -->
+        <div class="gt-bar" id="grandBar">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span style="font-size:11px;color:#94a3b8;" id="infoLabel">1 complete · 2 in progress · 1 excluded</span>
+            <button onclick="addManualRow()" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:white;border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer;">+ Add item</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:16px;">
+            <div style="text-align:right;">
+              <span style="font-size:10px;color:#94a3b8;display:block;">ITEMS SELECTED</span>
+              <span style="font-size:20px;font-weight:700;" id="selectedCount">1</span>
+            </div>
+            <button onclick="showSub('confirm')" style="background:#4ade80;color:#14532d;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;" id="reviewBtn">
+              Review Dispatch →
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Keyboard hint -->
+      <div style="margin-top:7px;font-size:10px;color:#94a3b8;display:flex;gap:14px;padding:0 4px;">
+        <span><span class="kbd">Tab</span> Qty → Source → next row</span>
+        <span><span class="kbd">Enter</span> confirm row → advance</span>
+        <span><span class="kbd">✕</span> exclude row</span>
+        <span><span class="kbd">+</span> re-include row</span>
+      </div>
+
+      <!-- Source Segment UX note -->
+      <div class="ann">
+        <strong>Source Segment — spreadsheet adaptation:</strong>
+        <ul style="margin-top:4px;list-style:disc;padding-left:16px;">
+          <li><strong>Auto-selected to FEFO segment</strong> when row first loads (if only 1 segment, no action needed). Storekeeper just hits Tab to advance.</li>
+          <li>If multiple segments exist: compact dropdown showing <code>BATCH-NAME · qty avail</code>. Expiry warnings inline (<em>14d left ⚠</em>).</li>
+          <li>If source-options returns 403 (cross-store unauthorized): dropdown switches to bucket options — same 4 values, same compact shape.</li>
+          <li><strong>No mode toggle buttons in the row</strong> — mode switches automatically based on API response. Keeps Source column narrow.</li>
+          <li>When a row is excluded, Source cell is cleared and not loaded (saves N API calls for excluded rows).</li>
+        </ul>
+      </div>
+    </div><!-- /form -->
+
+    <!-- ── CONFIRM VIEW ── -->
+    <div data-sub="confirm">
+      <div style="background:white;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin-bottom:12px;">
+        <div style="padding:14px 16px;border-bottom:1px solid #f1f5f9;display:flex;gap:20px;flex-wrap:wrap;">
+          <div><p style="font-size:10px;color:#94a3b8;">TO</p><p style="font-size:13px;font-weight:600;">Sutraa (Outlet)</p></div>
+          <div><p style="font-size:10px;color:#94a3b8;">COVERAGE</p><p style="font-size:13px;font-weight:600;" id="confCover">7 days</p></div>
+          <div><p style="font-size:10px;color:#94a3b8;">ITEMS</p><p style="font-size:13px;font-weight:600;" id="confItems">1 item</p></div>
+          <div style="margin-left:auto;text-align:right;">
+            <p style="font-size:10px;color:#94a3b8;">A PO will be auto-generated on dispatch</p>
+          </div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead><tr style="background:#f8fafc;">
+            <th style="padding:7px 16px;text-align:left;font-size:10px;font-weight:600;color:#94a3b8;border-bottom:1px solid #f1f5f9;">Item</th>
+            <th style="padding:7px 8px;text-align:center;font-size:10px;font-weight:600;color:#94a3b8;border-bottom:1px solid #f1f5f9;">Send Qty</th>
+            <th style="padding:7px 8px;text-align:left;font-size:10px;font-weight:600;color:#94a3b8;border-bottom:1px solid #f1f5f9;">Source Batch</th>
+            <th style="padding:7px 16px;text-align:right;font-size:10px;font-weight:600;color:#94a3b8;border-bottom:1px solid #f1f5f9;">Your Stock After</th>
+          </tr></thead>
+          <tbody>
+            <tr style="border-bottom:1px solid #f8fafc;">
+              <td style="padding:10px 16px;">
+                <p style="font-weight:600;">Ajwain <span class="bv oos" style="vertical-align:middle;">OUT→OK</span></p>
+                <p style="font-size:10px;color:#94a3b8;">Dest: 0 kg → 1 kg after</p>
+              </td>
+              <td style="padding:10px 8px;text-align:center;font-weight:600;">1 kg</td>
+              <td style="padding:10px 8px;color:#64748b;">AJWAIN-OCT-10</td>
+              <td style="padding:10px 16px;text-align:right;font-weight:700;color:#16a34a;">6 kg</td>
+            </tr>
+          </tbody>
+          <tfoot><tr style="background:#f8fafc;">
+            <td colspan="3" style="padding:10px 16px;font-size:11px;color:#64748b;font-style:italic;">
+              Stock moves from your store to Sutraa immediately on confirm.
+            </td>
+            <td style="padding:10px 16px;text-align:right;">
+              <p style="font-size:10px;color:#94a3b8;margin-bottom:2px;">ITEMS</p>
+              <p style="font-size:18px;font-weight:800;color:#1e293b;">1 item</p>
+            </td>
+          </tr></tfoot>
+        </table>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="showSub('form')" style="padding:9px 18px;border-radius:7px;font-size:12px;border:1px solid #e2e8f0;background:white;cursor:pointer;">← Back to Edit</button>
+        <button style="padding:9px 22px;border-radius:7px;font-size:13px;font-weight:700;background:#1e293b;color:white;border:none;cursor:pointer;">✓ Confirm Dispatch</button>
+      </div>
+    </div><!-- /confirm -->
+
+  </div><!-- /new -->
+
+  <!-- ══════════════════════════════════════
+       SCREEN C — KEY DIFFERENCES
+  ══════════════════════════════════════ -->
+  <div data-screen="diff">
+    <h2 style="font-size:14px;font-weight:700;color:#1e293b;margin-bottom:12px;">How Dispatch Spreadsheet Differs from CR-047/048/049</h2>
+
+    <div style="background:white;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin-bottom:12px;">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="background:#f8fafc;">
+          <th style="padding:8px 14px;text-align:left;font-size:10px;font-weight:600;color:#94a3b8;border-bottom:1px solid #f1f5f9;">Aspect</th>
+          <th style="padding:8px 14px;text-align:left;font-size:10px;font-weight:600;color:#94a3b8;border-bottom:1px solid #f1f5f9;">CR-047 Add Stock</th>
+          <th style="padding:8px 14px;text-align:left;font-size:10px;font-weight:600;color:#94a3b8;border-bottom:1px solid #f1f5f9;">CR-048 PO Create</th>
+          <th style="padding:8px 14px;text-align:left;font-size:10px;font-weight:600;color:#94a3b8;border-bottom:1px solid #f1f5f9;">CR-049 PO Receive</th>
+          <th style="padding:8px 14px;text-align:left;font-size:10px;font-weight:600;color:#1e293b;border-bottom:1px solid #f1f5f9;background:#eff6ff;">Direct Dispatch (this CR)</th>
+        </tr></thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #f8fafc;">
+            <td style="padding:8px 14px;font-weight:600;">Shared table CSS</td>
+            <td style="padding:8px 14px;color:#16a34a;">✓ defines it</td>
+            <td style="padding:8px 14px;color:#16a34a;">✓ reuses</td>
+            <td style="padding:8px 14px;color:#16a34a;">✓ reuses</td>
+            <td style="padding:8px 14px;color:#16a34a;background:#eff6ff;">✓ reuses</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f8fafc;">
+            <td style="padding:8px 14px;font-weight:600;">autoBatch()</td>
+            <td style="padding:8px 14px;color:#16a34a;">✓ defines it</td>
+            <td style="padding:8px 14px;color:#16a34a;">✓ reuses</td>
+            <td style="padding:8px 14px;color:#16a34a;">✓ reuses</td>
+            <td style="padding:8px 14px;color:#dc2626;background:#eff6ff;"><strong>NOT needed</strong> — no batch input; batch is on source segment</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f8fafc;">
+            <td style="padding:8px 14px;font-weight:600;">KeyboardRowHandler</td>
+            <td style="padding:8px 14px;color:#16a34a;">✓ defines it</td>
+            <td style="padding:8px 14px;color:#16a34a;">✓ reuses</td>
+            <td style="padding:8px 14px;color:#16a34a;">✓ reuses</td>
+            <td style="padding:8px 14px;color:#16a34a;background:#eff6ff;">✓ reuses — Tab order: <strong>Send Qty → Source → next row</strong></td>
+          </tr>
+          <tr style="border-bottom:1px solid #f8fafc;">
+            <td style="padding:8px 14px;font-weight:600;">ItemSearchCombobox</td>
+            <td style="padding:8px 14px;color:#16a34a;">✓ defines it</td>
+            <td style="padding:8px 14px;color:#16a34a;">✓ reuses</td>
+            <td style="padding:8px 14px;color:#94a3b8;">not needed (items pre-set by PO)</td>
+            <td style="padding:8px 14px;color:#16a34a;background:#eff6ff;">✓ reuses — <strong>manual rows only</strong> (suggested rows are pre-loaded)</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f8fafc;">
+            <td style="padding:8px 14px;font-weight:600;">Price / Total</td>
+            <td style="padding:8px 14px;">Qty × Rate → Total</td>
+            <td style="padding:8px 14px;">Qty × Rate → Total</td>
+            <td style="padding:8px 14px;">Rcv Qty × Rate → Total</td>
+            <td style="padding:8px 14px;color:#dc2626;background:#eff6ff;"><strong>NOT present</strong> — dispatch is qty-only, no pricing</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f8fafc;">
+            <td style="padding:8px 14px;font-weight:600;">Source Segment</td>
+            <td style="padding:8px 14px;color:#94a3b8;">not applicable</td>
+            <td style="padding:8px 14px;color:#94a3b8;">not applicable</td>
+            <td style="padding:8px 14px;color:#94a3b8;">not applicable</td>
+            <td style="padding:8px 14px;background:#eff6ff;"><strong>UNIQUE to dispatch</strong> — compact select in table cell; auto-FEFO; bucket fallback on 403</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f8fafc;">
+            <td style="padding:8px 14px;font-weight:600;">Their Stock + Gap</td>
+            <td style="padding:8px 14px;color:#94a3b8;">not applicable</td>
+            <td style="padding:8px 14px;color:#94a3b8;">not applicable</td>
+            <td style="padding:8px 14px;color:#94a3b8;">not applicable</td>
+            <td style="padding:8px 14px;background:#eff6ff;"><strong>UNIQUE</strong> — read-only context columns (destination's current stock + gap to threshold/coverage)</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f8fafc;">
+            <td style="padding:8px 14px;font-weight:600;">Your Stock After</td>
+            <td style="padding:8px 14px;color:#94a3b8;">not applicable</td>
+            <td style="padding:8px 14px;color:#94a3b8;">not applicable</td>
+            <td style="padding:8px 14px;color:#94a3b8;">not applicable</td>
+            <td style="padding:8px 14px;background:#eff6ff;"><strong>UNIQUE</strong> — live: <code>ownQty − sendQty</code>; red if negative; <em>retain %</em> shown below</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f8fafc;">
+            <td style="padding:8px 14px;font-weight:600;">Row pre-loading</td>
+            <td style="padding:8px 14px;">Empty table, storekeeper adds items</td>
+            <td style="padding:8px 14px;">Empty + suggested OOS/low rows pre-loaded</td>
+            <td style="padding:8px 14px;">All PO lines pre-loaded (locked)</td>
+            <td style="padding:8px 14px;background:#eff6ff;">Suggested rows pre-loaded with computed qty (same as CR-048). Manual rows added at bottom via combobox.</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f8fafc;">
+            <td style="padding:8px 14px;font-weight:600;">Grand total bar</td>
+            <td style="padding:8px 14px;">₹ amount</td>
+            <td style="padding:8px 14px;">₹ estimated amount</td>
+            <td style="padding:8px 14px;">₹ invoice vs PO delta</td>
+            <td style="padding:8px 14px;background:#eff6ff;"><strong>Item count</strong> (no money) — "N items selected · Dispatch →"</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 14px;font-weight:600;">Confirm screen</td>
+            <td style="padding:8px 14px;">Vendor · Date · Payment · Items + totals</td>
+            <td style="padding:8px 14px;">PO summary · Items + est. rates</td>
+            <td style="padding:8px 14px;">Invoice total · Variance flags</td>
+            <td style="padding:8px 14px;background:#eff6ff;">Dest store · Coverage days · Items + source batch · Stock after. No payment/invoice fields.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Shared components applicability -->
+    <div style="background:white;border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;margin-bottom:12px;">
+      <p style="font-size:12px;font-weight:700;color:#1e293b;margin-bottom:8px;">Shared component reuse from CR-047</p>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:11px;">
+        <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:8px 10px;">
+          <p style="font-weight:700;color:#16a34a;margin-bottom:3px;">✓ Reuse as-is</p>
+          <p>KeyboardRowHandler — Tab/Enter row flow</p>
+          <p>ItemSearchCombobox — for manual rows</p>
+          <p>Table CSS (row states, cell inputs, grand-total bar)</p>
+          <p>computeTotal() — repurposed as computeAfter()</p>
+        </div>
+        <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;padding:8px 10px;">
+          <p style="font-weight:700;color:#ea580c;margin-bottom:3px;">✗ Not needed / replaced</p>
+          <p>autoBatch() — batch is on source segment</p>
+          <p>Price column / Total column — no pricing in dispatch</p>
+          <p>Expiry input — comes from SourceSelector</p>
+          <p>Payment / Vendor header fields — replaced by Destination + Coverage</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Source Segment adaptation detail -->
+    <div class="ann">
+      <strong>Source Segment compact adaptation (key design decision):</strong>
+      <ul style="margin-top:4px;list-style:disc;padding-left:16px;">
+        <li><strong>Auto-FEFO:</strong> When SourceSelector loads, auto-select the segment with earliest expiry that has enough stock. No action needed from storekeeper if they agree. Tab advances immediately.</li>
+        <li><strong>Compact select:</strong> Instead of Segment/Bucket toggle buttons + separate select, a single <code>&lt;select&gt;</code> element. Mode is inferred from API response — no UI toggle in the row.</li>
+        <li><strong>Deferred loading:</strong> Source options load on row focus (not on page load), avoiding 257 simultaneous API calls.</li>
+        <li><strong>Excluded rows:</strong> Source not loaded at all — saves API calls for rows the storekeeper won't dispatch.</li>
+        <li><strong>Bucket fallback:</strong> If source-options returns 403, dropdown auto-switches to bucket options (same 4 values). A small shield icon indicates bucket mode.</li>
+        <li><strong>One caveat:</strong> SourceSelector is an async component with its own loading/error states. The compact version still needs to show a spinner inside the cell while fetching. This is the only cell that is asynchronous in the table.</li>
+      </ul>
+    </div>
+  </div><!-- /diff -->
+
+</div><!-- /max-w -->
+
+<script>
+  let coverDays = 7;
+
+  function showScreen(id) {
+    document.querySelectorAll('[data-screen]').forEach(el => el.classList.remove('active'));
+    document.querySelector(`[data-screen="${id}"]`).classList.add('active');
+    document.querySelectorAll('.snav').forEach(b => {
+      const map = {current:0,new:1,diff:2};
+      b.classList.toggle('active', map[id] === [...document.querySelectorAll('.snav')].indexOf(b));
+    });
+  }
+
+  function showSub(id) {
+    document.querySelectorAll('[data-sub]').forEach(el => el.classList.remove('active'));
+    const el = document.querySelector(`[data-sub="${id}"]`);
+    if (el) el.classList.add('active');
+  }
+
+  function setCover(d) {
+    coverDays = d;
+    document.querySelectorAll('.cpill').forEach(p => p.classList.toggle('active', Number(p.dataset.d) === d));
+    document.getElementById('coverHint').innerHTML = `Ordering for <strong>${d}-day</strong> cover`;
+    document.getElementById('customDays').value = '';
+    recalcRows();
+  }
+
+  function setCustomCover(v) {
+    const d = parseInt(v);
+    if (!d || d < 1) return;
+    coverDays = d;
+    document.querySelectorAll('.cpill').forEach(p => p.classList.remove('active'));
+    document.getElementById('coverHint').innerHTML = `Ordering for <strong>${d}-day</strong> cover`;
+    recalcRows();
+  }
+
+  function recalcRows() {
+    // Row 3: Base Cream — 4.1 kg/day, 1.2 kg at dest
+    const needed = Math.max(0, Math.ceil(4.1 * coverDays - 1.2));
+    const qty3 = document.getElementById('qty3');
+    if (qty3) {
+      qty3.value = needed;
+      document.getElementById('r3hint').textContent = `4.1 kg/day · needs ${needed} kg for ${coverDays}d`;
+      document.getElementById('r3gap').textContent = `${needed} kg`;
+      updateAfter(3, 30, 1.2);
+    }
+  }
+
+  function updateAfter(rowId, ownQty, destQty) {
+    const qty = parseFloat(document.getElementById('qty' + rowId)?.value) || 0;
+    const after = Math.round((ownQty - qty) * 100) / 100;
+    const afterEl = document.getElementById('after' + rowId);
+    if (!afterEl) return;
+    if (qty <= 0) { afterEl.innerHTML = '<span style="color:#94a3b8;">—</span>'; afterEl.className = ''; return; }
+    if (after < 0) {
+      afterEl.textContent = after + ' kg';
+      afterEl.className = 'after-warn';
+      afterEl.nextElementSibling && (afterEl.nextElementSibling.textContent = 'Insufficient stock');
+    } else {
+      afterEl.textContent = after + ' kg';
+      afterEl.className = 'after-pos';
+      const pct = ownQty > 0 ? Math.round(after / ownQty * 100) : 0;
+      const hint = afterEl.nextElementSibling;
+      if (hint) hint.textContent = 'You retain ' + pct + '%';
+    }
+    updateBar();
+  }
+
+  function updateComplete(rowId) {
+    const qty = parseFloat(document.getElementById('qty' + rowId)?.value) || 0;
+    const src = document.getElementById('src' + rowId)?.value;
+    const row = document.getElementById('r' + rowId);
+    if (!row) return;
+    // Update hint
+    const hint = document.getElementById('srcHint' + rowId);
+    if (hint && src) {
+      const sel = document.getElementById('src' + rowId);
+      const txt = sel.options[sel.selectedIndex].text;
+      hint.textContent = '✓ ' + txt;
+      hint.style.color = '#16a34a';
+    }
+    // State
+    const isOut = row.classList.contains('out');
+    const isLow = row.classList.contains('low');
+    if (qty > 0 && src) {
+      row.classList.remove('out','low','active');
+      row.classList.add('complete');
+      if (isOut) row.classList.add('out');
+      if (isLow) row.classList.add('low');
+    }
+    updateBar();
+  }
+
+  function updateBar() {
+    let complete = 0, inProgress = 0;
+    for (let i = 1; i <= 4; i++) {
+      const row = document.getElementById('r' + i);
+      if (!row || row.classList.contains('excluded') || row.classList.contains('manual')) continue;
+      const qty = parseFloat(document.getElementById('qty' + i)?.value) || 0;
+      const src = document.getElementById('src' + i)?.value;
+      if (qty > 0 && src) complete++;
+      else if (qty > 0 || src) inProgress++;
+    }
+    const infoLabel = document.getElementById('infoLabel');
+    if (infoLabel) infoLabel.textContent = `${complete} complete · ${inProgress} in progress`;
+    const cnt = document.getElementById('selectedCount');
+    if (cnt) cnt.textContent = complete;
+    document.getElementById('confItems').textContent = `${complete} item${complete !== 1 ? 's' : ''}`;
+  }
+
+  function handleKey(e, rowId, field) {
+    if (field === 'src' && (e.key === 'Tab' || e.key === 'Enter')) {
+      const qty = parseFloat(document.getElementById('qty' + rowId)?.value) || 0;
+      const src = document.getElementById('src' + rowId)?.value;
+      if (qty > 0 && src) {
+        e.preventDefault();
+        updateComplete(rowId);
+        // Focus next row's qty
+        const nextQty = document.getElementById('qty' + (rowId + 1));
+        if (nextQty) nextQty.focus();
+      }
+    }
+    if (field === 'qty' && e.key === 'Tab') {
+      // Allow normal Tab to go to src
+    }
+  }
+
+  function toggleRow(rowId) {
+    const row = document.getElementById('r' + rowId);
+    if (!row) return;
+    row.classList.toggle('excluded');
+    row.querySelectorAll('input,select').forEach(el => el.disabled = row.classList.contains('excluded'));
+    updateBar();
+  }
+
+  function includeRow(rowId) {
+    const row = document.getElementById('r' + rowId);
+    if (!row) return;
+    row.classList.remove('excluded');
+    row.querySelectorAll('input,select').forEach(el => el.disabled = false);
+    updateBar();
+  }
+
+  let manualCount = 1;
+  function addManualRow() {
+    manualCount++;
+    const tbody = document.getElementById('dispatchBody');
+    const tr = document.createElement('tr');
+    tr.className = 'dk-row manual row-in';
+    tr.id = 'mr' + manualCount;
+    tr.innerHTML = `
+      <td class="c">
+        <div class="isrc-wrap">
+          <input class="ci" type="text" id="mSearch${manualCount}" placeholder="Type item name…"
+            style="border-color:#818cf8;background:white;"
+            onfocus="openIsrc('mDrop${manualCount}')"
+            onblur="closeIsrc('mDrop${manualCount}')"
+            oninput="filterIsrc(this,'mDrop${manualCount}')"
+          />
+          <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:10px;pointer-events:none;">▾</span>
+          <div class="isrc-drop" id="mDrop${manualCount}">
+            <div class="isrc-item" onmousedown="pickManualItem('mSearch${manualCount}','Rice','kg','mUnit${manualCount}')">Rice <span style="color:#94a3b8;font-size:10px;">(kg)</span></div>
+            <div class="isrc-item" onmousedown="pickManualItem('mSearch${manualCount}','Saffron','g','mUnit${manualCount}')">Saffron <span style="color:#94a3b8;font-size:10px;">(g)</span></div>
+          </div>
+        </div>
+        <div class="item-hint" style="color:#a5b4fc;">manually added</div>
+      </td>
+      <td class="c" colspan="2" style="text-align:right;padding:5px 8px;"><span style="font-size:10px;color:#94a3b8;">—</span></td>
+      <td class="c"><input class="ci" id="mQty${manualCount}" type="number" placeholder="0" style="text-align:right;" /></td>
+      <td class="c" style="text-align:center;"><div style="background:#f1f5f9;border-radius:4px;padding:2px 6px;font-size:11px;color:#64748b;font-weight:500;text-align:center;" id="mUnit${manualCount}">—</div></td>
+      <td class="c src-cell"><select class="src-select" id="mSrc${manualCount}"><option>Select item first…</option></select></td>
+      <td class="c" style="text-align:right;padding:5px 8px;"><span style="font-size:11px;color:#94a3b8;">—</span></td>
+      <td class="c" style="text-align:center;color:#94a3b8;cursor:pointer;font-size:13px;" onclick="this.closest('tr').remove()">✕</td>
+    `;
+    // Insert before the separator row
+    const sep = tbody.querySelector('.manual-sep');
+    if (sep) tbody.insertBefore(tr, sep.nextSibling);
+    else tbody.appendChild(tr);
+    setTimeout(() => document.getElementById('mSearch' + manualCount)?.focus(), 80);
+  }
+
+  function removeManualRow(id) {
+    document.getElementById(id)?.remove();
+  }
+
+  function openIsrc(dropId) {
+    document.getElementById(dropId).style.display = 'block';
+  }
+  function closeIsrc(dropId) {
+    setTimeout(() => {
+      const d = document.getElementById(dropId);
+      if (d) d.style.display = 'none';
+    }, 200);
+  }
+  function filterIsrc(input, dropId) {
+    document.getElementById(dropId).style.display = 'block';
+  }
+  function pickManualItem(inputId, name, unit, unitId) {
+    const inp = document.getElementById(inputId);
+    if (inp) inp.value = `${name} (${unit})`;
+    const u = document.getElementById(unitId);
+    if (u) u.textContent = unit;
+    // Simulate source loading
+    const parts = inputId.replace('mSearch','');
+    const src = document.getElementById('mSrc' + parts);
+    if (src) {
+      src.innerHTML = `<option value="">Loading…</option>`;
+      setTimeout(() => {
+        src.innerHTML = `<option value="">Select segment…</option><option value="auto">${name.toUpperCase().slice(0,6)}-OCT-15 · 50 ${unit} avail</option>`;
+      }, 400);
+    }
+  }
+
+  // Auto-advance to source when qty filled
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Tab') {
+      const active = document.activeElement;
+      if (active && active.id && active.id.startsWith('qty')) {
+        const rowId = active.id.replace('qty', '');
+        const src = document.getElementById('src' + rowId);
+        if (src) {
+          e.preventDefault();
+          src.focus();
+        }
+      }
+    }
+  });
+</script>
+</body>
+</html>

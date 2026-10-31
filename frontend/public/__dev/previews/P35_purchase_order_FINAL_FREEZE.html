@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P35 — Purchase Order Module — FINAL FREEZE</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f8f9fa; }
+  .card { background: white; border: 1px solid #e5e7eb; border-radius: 10px; }
+  .badge { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 9999px; }
+  .mono { font-variant-numeric: tabular-nums; font-family: "SF Mono", "Menlo", monospace; }
+  table { width: 100%; border-collapse: collapse; }
+  th { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; padding: 8px 12px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+  td { font-size: 12px; padding: 10px 12px; border-bottom: 1px solid #f3f4f6; vertical-align: top; }
+  tr:hover td { background: #f9fafb; }
+  input, select, textarea { font-size: 12px; padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; }
+  input:focus, select:focus { border-color: #111; box-shadow: 0 0 0 1px #111; }
+  .btn-primary { background: #111; color: white; font-size: 12px; font-weight: 600; padding: 7px 16px; border-radius: 6px; border: none; cursor: pointer; }
+  .btn-outline { background: white; color: #374151; font-size: 12px; font-weight: 600; padding: 7px 16px; border-radius: 6px; border: 1px solid #d1d5db; cursor: pointer; }
+  .btn-green { background: #059669; color: white; font-size: 12px; font-weight: 600; padding: 7px 16px; border-radius: 6px; border: none; cursor: pointer; }
+  .btn-danger { background: #ef4444; color: white; font-size: 12px; font-weight: 600; padding: 7px 14px; border-radius: 6px; border: none; cursor: pointer; font-size: 11px; }
+  .nav-btn { cursor: pointer; padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 600; transition: all 0.15s; }
+  .nav-btn.active { background: #111; color: #fff; }
+  .nav-btn:not(.active) { background: #f1f1f1; color: #555; }
+  .screen-section { display: none; }
+  .screen-section.active { display: block; }
+  .tab-pill { padding: 5px 14px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; }
+  .tab-pill.active { background: #111; color: #fff; }
+  .tab-pill:not(.active) { background: #f3f4f6; color: #6b7280; }
+  .price-bar { height: 10px; border-radius: 3px; min-width: 8px; }
+  .stock-bar { height: 6px; border-radius: 3px; background: #e5e7eb; overflow: hidden; }
+  .stock-bar-fill { height: 100%; border-radius: 3px; }
+  .kpi-card { text-align: center; padding: 12px 8px; }
+  .kpi-card .kpi-val { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .kpi-card .kpi-label { font-size: 10px; color: #6b7280; margin-top: 2px; }
+  .vendor-card { border: 1.5px solid #e5e7eb; border-radius: 8px; padding: 14px; cursor: pointer; transition: all 0.15s; }
+  .vendor-card:hover { border-color: #111; }
+  .vendor-card.selected { border-color: #111; background: #f9fafb; box-shadow: 0 0 0 1px #111; }
+  .check-circle { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #d1d5db; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; }
+  .check-circle.checked { background: #111; border-color: #111; color: white; }
+  .variance-ok { color: #059669; }
+  .variance-warn { color: #d97706; }
+  .variance-flag { color: #dc2626; }
+  .timeline-dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid; display: inline-block; }
+  .timeline-line { height: 2px; flex: 1; }
+  .po-group-card { border: 1.5px solid; border-radius: 10px; padding: 16px; }
+</style>
+</head>
+<body class="p-0 m-0">
+
+<div class="sticky top-0 z-50 bg-white border-b border-gray-200 px-4 py-2.5 flex items-center gap-2 flex-wrap">
+  <span class="text-[10px] font-bold text-gray-400 mr-1">P35 FINAL:</span>
+  <button class="nav-btn active" onclick="showScreen('list')">1. PO List</button>
+  <button class="nav-btn" onclick="showScreen('create-vendor')">2. Create — By Vendor</button>
+  <button class="nav-btn" onclick="showScreen('create-item')">3. Create — By Item Need</button>
+  <button class="nav-btn" onclick="showScreen('review-multi')">4. Review (Multi-PO)</button>
+  <button class="nav-btn" onclick="showScreen('detail')">5. PO Detail</button>
+  <button class="nav-btn" onclick="showScreen('receive')">6. Receive + Invoice</button>
+  <button class="nav-btn" onclick="showScreen('post-receive')">7. Post-Receive</button>
+  <button class="nav-btn" onclick="showScreen('grn')">8. GRN History</button>
+  <button class="nav-btn" onclick="showScreen('gate')">9. Add-Stock Gate</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 1. PO LIST                                                     -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="screen-list" class="screen-section active max-w-5xl mx-auto py-6 px-4">
+  <div class="flex items-center justify-between mb-5">
+    <div>
+      <h1 class="text-lg font-bold flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        Purchase Orders
+      </h1>
+      <p class="text-xs text-gray-400 mt-0.5">german fluid · Manage vendor purchase orders</p>
+    </div>
+    <button class="btn-primary flex items-center gap-1.5">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Create PO
+    </button>
+  </div>
+
+  <div class="flex gap-1.5 mb-4 flex-wrap">
+    <span class="badge tab-pill active" style="font-size:10px">All (7)</span>
+    <span class="badge tab-pill" style="font-size:10px">Draft (1)</span>
+    <span class="badge tab-pill" style="font-size:10px">Sent (2)</span>
+    <span class="badge tab-pill" style="font-size:10px;background:#fef3c7;color:#92400e">Partial (1)</span>
+    <span class="badge tab-pill" style="font-size:10px">Received (1)</span>
+    <span class="badge tab-pill" style="font-size:10px">Closed (1)</span>
+    <span class="badge tab-pill" style="font-size:10px">Cancelled (1)</span>
+  </div>
+
+  <div class="flex gap-3 mb-4 items-center">
+    <select class="w-44"><option>All Vendors</option><option>Premium Organics Ltd</option><option>Budget Ingredients Co</option><option>bakery raw wala</option></select>
+    <input type="date" value="2026-06-01" class="w-36" />
+    <span class="text-xs text-gray-400">to</span>
+    <input type="date" value="2026-06-30" class="w-36" />
+    <input type="text" placeholder="Search PO#..." class="w-44" />
+  </div>
+
+  <div class="grid grid-cols-4 gap-3 mb-4">
+    <div class="card kpi-card"><div class="kpi-val">7</div><div class="kpi-label">Total POs</div></div>
+    <div class="card kpi-card"><div class="kpi-val text-amber-600">3</div><div class="kpi-label">Awaiting Delivery</div></div>
+    <div class="card kpi-card"><div class="kpi-val text-blue-600">1</div><div class="kpi-label">Partially Received</div></div>
+    <div class="card kpi-card"><div class="kpi-val mono">₹24,615</div><div class="kpi-label">Total Value (month)</div></div>
+  </div>
+
+  <div class="card overflow-hidden">
+    <table>
+      <thead><tr><th>PO Reference</th><th>Vendor</th><th>Items</th><th>Total</th><th>Expected</th><th>Status</th><th>Created</th><th></th></tr></thead>
+      <tbody>
+        <tr><td class="font-semibold mono">PO-806-2026-0008</td><td>Premium Organics Ltd</td><td class="mono">2</td><td class="mono font-semibold">₹3,530</td><td>22 Jun</td><td><span class="badge" style="background:#f3f4f6;color:#374151;border:1px solid #d1d5db">Draft</span></td><td class="text-gray-500">14 Jun</td><td><button class="btn-outline text-xs py-1 px-2">View</button></td></tr>
+        <tr><td class="font-semibold mono">PO-806-2026-0007</td><td>Budget Ingredients Co</td><td class="mono">4</td><td class="mono font-semibold">₹6,900</td><td>20 Jun</td><td><span class="badge" style="background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd">Sent</span></td><td class="text-gray-500">14 Jun</td><td><button class="btn-outline text-xs py-1 px-2">View</button></td></tr>
+        <tr><td class="font-semibold mono">PO-806-2026-0006</td><td>Premium Organics Ltd</td><td class="mono">5</td><td class="mono font-semibold">₹8,200</td><td>20 Jun</td><td><span class="badge" style="background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd">Sent</span></td><td class="text-gray-500">14 Jun</td><td><button class="btn-outline text-xs py-1 px-2">View</button></td></tr>
+        <tr style="background:#fffbeb"><td class="font-semibold mono">PO-806-2026-0005</td><td>Budget Ingredients Co</td><td class="mono">3</td><td class="mono font-semibold">₹4,500</td><td>18 Jun</td><td><span class="badge" style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d">Partially Received</span></td><td class="text-gray-500">13 Jun</td><td><button class="btn-outline text-xs py-1 px-2">View</button></td></tr>
+        <tr><td class="font-semibold mono">PO-806-2026-0004</td><td>Premium Organics Ltd</td><td class="mono">2</td><td class="mono font-semibold">₹4,580</td><td>—</td><td><span class="badge" style="background:#d1fae5;color:#065f46;border:1px solid #6ee7b7">Received</span></td><td class="text-gray-500">12 Jun</td><td><button class="btn-outline text-xs py-1 px-2">View</button></td></tr>
+        <tr style="opacity:0.6"><td class="font-semibold mono">PO-806-2026-0003</td><td>Premium Organics</td><td class="mono">2</td><td class="mono font-semibold">₹4,580</td><td>—</td><td><span class="badge" style="background:#e5e7eb;color:#374151">Closed</span></td><td class="text-gray-500">8 Jun</td><td><button class="btn-outline text-xs py-1 px-2">View</button></td></tr>
+        <tr style="opacity:0.4"><td class="font-semibold mono">PO-806-2026-0001</td><td>Budget Ingredients</td><td class="mono">1</td><td class="mono font-semibold">₹500</td><td>—</td><td><span class="badge" style="background:#fee2e2;color:#991b1b">Cancelled</span></td><td class="text-gray-500">5 Jun</td><td><button class="btn-outline text-xs py-1 px-2">View</button></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 2. CREATE — BY VENDOR                                          -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="screen-create-vendor" class="screen-section max-w-5xl mx-auto py-6 px-4">
+  <div class="flex items-center gap-3 mb-1">
+    <button class="btn-outline text-xs py-1 px-2">&larr; Back</button>
+    <h1 class="text-lg font-bold">New Purchase Order</h1>
+  </div>
+  <p class="text-xs text-gray-400 mb-5 ml-16">german fluid · Select a mode to build your order</p>
+
+  <div class="flex gap-2 mb-5">
+    <span class="tab-pill active">By Vendor</span>
+    <span class="tab-pill">By Item Need</span>
+  </div>
+
+  <!-- Vendor Selection -->
+  <div class="card p-5 mb-4">
+    <h3 class="text-xs font-bold mb-1">Step 1 — Select Vendor</h3>
+    <p class="text-[10px] text-gray-400 mb-4">Choose a supplier. We'll show your purchase history and suggest a repeat order.</p>
+    <div class="grid grid-cols-3 gap-3">
+      <div class="vendor-card selected">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm font-bold">Premium Organics Ltd</span>
+          <span class="badge" style="background:#d1fae5;color:#065f46">Active</span>
+        </div>
+        <div class="grid grid-cols-3 gap-2 text-[10px]">
+          <div><span class="text-gray-400 block">Last Order</span><span class="font-semibold">2 days ago</span></div>
+          <div><span class="text-gray-400 block">Orders (30d)</span><span class="font-semibold">28</span></div>
+          <div><span class="text-gray-400 block">Avg Order</span><span class="font-semibold mono">₹4,200</span></div>
+        </div>
+        <div class="text-[10px] text-gray-400 mt-2">15 items · ₹117K total (30d)</div>
+      </div>
+      <div class="vendor-card">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm font-bold">Budget Ingredients Co</span>
+          <span class="badge" style="background:#d1fae5;color:#065f46">Active</span>
+        </div>
+        <div class="grid grid-cols-3 gap-2 text-[10px]">
+          <div><span class="text-gray-400 block">Last Order</span><span class="font-semibold">2 days ago</span></div>
+          <div><span class="text-gray-400 block">Orders (30d)</span><span class="font-semibold">22</span></div>
+          <div><span class="text-gray-400 block">Avg Order</span><span class="font-semibold mono">₹2,800</span></div>
+        </div>
+        <div class="text-[10px] text-gray-400 mt-2">12 items · ₹61K total (30d)</div>
+        <div class="mt-1.5"><span class="badge" style="background:#dbeafe;color:#1d4ed8">Cheapest for 8 items</span></div>
+      </div>
+      <div class="vendor-card">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm font-bold">bakery raw wala</span>
+          <span class="badge" style="background:#fef3c7;color:#92400e">Inactive 45d</span>
+        </div>
+        <div class="grid grid-cols-3 gap-2 text-[10px]">
+          <div><span class="text-gray-400 block">Last Order</span><span class="font-semibold text-amber-600">45d ago</span></div>
+          <div><span class="text-gray-400 block">Orders (30d)</span><span class="font-semibold">20</span></div>
+          <div><span class="text-gray-400 block">Avg Order</span><span class="font-semibold mono">₹3,100</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- History Table -->
+  <div class="card p-5 mb-4" style="border-left: 3px solid #111;">
+    <div class="flex items-center justify-between mb-1">
+      <h3 class="text-xs font-bold">Step 2 — Your History with Premium Organics Ltd</h3>
+      <span class="text-[10px] text-gray-400">15 items · Last 30 days</span>
+    </div>
+    <p class="text-[10px] text-gray-400 mb-4">Check items to add to PO. Sorted by urgency.</p>
+    <table>
+      <thead><tr><th style="width:30px"></th><th>Item</th><th>Last Rate</th><th>Avg Rate</th><th>Cheapest Vendor</th><th>Your Stock</th><th>Days Cover</th><th>Suggested Qty</th><th>Freq</th></tr></thead>
+      <tbody>
+        <tr style="border-left:3px solid #ef4444;background:#fef2f2">
+          <td><span class="check-circle checked">✓</span></td>
+          <td class="font-medium">Sesame Till<br><span class="text-[10px] text-red-500">Low stock</span></td>
+          <td class="mono">₹190/kg</td><td class="mono">₹185/kg</td>
+          <td class="text-[10px]"><span class="text-emerald-600 font-semibold">Budget ₹160/kg</span><br>You pay 18% more</td>
+          <td><span class="mono text-red-600">3.97 kg</span><div class="stock-bar w-16 mt-1"><div class="stock-bar-fill bg-red-500" style="width:8%"></div></div></td>
+          <td class="mono text-red-600">5d</td>
+          <td><input type="number" value="20" class="w-16 mono text-sm" /></td>
+          <td class="text-[10px] text-gray-400">8×</td>
+        </tr>
+        <tr style="border-left:3px solid #f59e0b;background:#fffbeb">
+          <td><span class="check-circle checked">✓</span></td>
+          <td class="font-medium">Jaggery Powder<br><span class="text-[10px] text-amber-600">Moderate</span></td>
+          <td class="mono">₹140/kg</td><td class="mono">₹135/kg</td>
+          <td class="text-[10px]"><span class="text-emerald-600 font-semibold">Budget ₹120/kg</span><br>You pay 17% more</td>
+          <td><span class="mono">3.85 kg</span><div class="stock-bar w-16 mt-1"><div class="stock-bar-fill bg-amber-400" style="width:35%"></div></div></td>
+          <td class="mono text-amber-600">12d</td>
+          <td><input type="number" value="15" class="w-16 mono text-sm" /></td>
+          <td class="text-[10px] text-gray-400">6×</td>
+        </tr>
+        <tr style="border-left:3px solid #10b981;background:#f0fdf4">
+          <td><span class="check-circle checked">✓</span></td>
+          <td class="font-medium">Wheat Flour (Atta)</td>
+          <td class="mono">₹55/kg</td><td class="mono">₹52/kg</td>
+          <td class="text-[10px]"><span class="text-emerald-600 font-semibold">✓ This vendor is cheapest</span></td>
+          <td><span class="mono">8.83 kg</span><div class="stock-bar w-16 mt-1"><div class="stock-bar-fill bg-emerald-500" style="width:65%"></div></div></td>
+          <td class="mono">32d</td>
+          <td><input type="number" value="30" class="w-16 mono text-sm" /></td>
+          <td class="text-[10px] text-gray-400">7×</td>
+        </tr>
+        <tr><td><span class="check-circle">+</span></td><td class="font-medium text-gray-500">Almonds</td><td class="mono">₹1,400/kg</td><td class="mono">₹1,200/kg</td><td class="text-[10px]">Budget ₹1,000/kg</td><td class="mono">2 kg</td><td class="mono">—</td><td><input type="number" placeholder="—" class="w-16 mono text-sm" disabled /></td><td class="text-[10px] text-gray-400">4×</td></tr>
+      </tbody>
+    </table>
+    <div class="mt-3 p-2 rounded bg-blue-50 border border-blue-100 text-xs text-blue-800">
+      <strong>Tip:</strong> Sesame &amp; Jaggery are cheaper from Budget Ingredients. Consider splitting.
+    </div>
+  </div>
+
+  <!-- Order Details -->
+  <div class="card p-5 mb-4">
+    <h3 class="text-xs font-bold mb-3">Step 3 — Order Details</h3>
+    <div class="grid grid-cols-3 gap-4">
+      <div><label class="text-[10px] font-semibold text-gray-500 block mb-1">EXPECTED DELIVERY</label><input type="date" value="2026-06-22" class="w-full" /></div>
+      <div><label class="text-[10px] font-semibold text-gray-500 block mb-1">PAYMENT TYPE</label><select class="w-full"><option>Cash</option></select></div>
+      <div><label class="text-[10px] font-semibold text-gray-500 block mb-1">NOTES</label><input type="text" class="w-full" value="Monthly cookie ingredients" /></div>
+    </div>
+  </div>
+
+  <div class="card p-5">
+    <div class="flex items-center justify-between">
+      <div><span class="text-xs text-gray-500">3 items</span><span class="text-lg font-bold ml-3 mono">₹6,550</span></div>
+      <div class="flex gap-2"><button class="btn-outline">Save Draft</button><button class="btn-primary">Review &rarr;</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 3. CREATE — BY ITEM NEED                                       -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="screen-create-item" class="screen-section max-w-5xl mx-auto py-6 px-4">
+  <div class="flex items-center gap-3 mb-1">
+    <button class="btn-outline text-xs py-1 px-2">&larr; Back</button>
+    <h1 class="text-lg font-bold">New Purchase Order</h1>
+  </div>
+  <p class="text-xs text-gray-400 mb-5 ml-16">german fluid · Items that need restocking</p>
+
+  <div class="flex gap-2 mb-5"><span class="tab-pill">By Vendor</span><span class="tab-pill active">By Item Need</span></div>
+
+  <div class="grid grid-cols-4 gap-3 mb-4">
+    <div class="card kpi-card" style="border-bottom:3px solid #ef4444"><div class="kpi-val text-red-600">3</div><div class="kpi-label">Out of Stock</div></div>
+    <div class="card kpi-card" style="border-bottom:3px solid #f59e0b"><div class="kpi-val text-amber-600">5</div><div class="kpi-label">Low Stock (&lt;7d)</div></div>
+    <div class="card kpi-card" style="border-bottom:3px solid #3b82f6"><div class="kpi-val text-blue-600">12</div><div class="kpi-label">Below Reorder</div></div>
+    <div class="card kpi-card"><div class="kpi-val">48</div><div class="kpi-label">Total Items</div></div>
+  </div>
+
+  <div class="card p-5 mb-4" style="border-left:3px solid #ef4444">
+    <h3 class="text-xs font-bold text-red-700 mb-1">Items Needing Purchase</h3>
+    <p class="text-[10px] text-gray-400 mb-4">Select items and best vendor per item. Multiple vendors = multiple POs.</p>
+    <table>
+      <thead><tr><th style="width:30px"></th><th>Item</th><th>Stock</th><th>Daily Use</th><th>Days Left</th><th>Best Vendor</th><th>Best Rate</th><th>Other Vendors</th><th>Qty</th></tr></thead>
+      <tbody>
+        <tr style="border-left:3px solid #ef4444;background:#fef2f2">
+          <td><span class="check-circle checked">✓</span></td>
+          <td class="font-medium">Carrot<br><span class="text-[10px] text-red-600 font-bold">OUT OF STOCK</span></td>
+          <td class="mono text-red-600 font-bold">0 kg</td><td class="mono">—</td><td class="mono text-red-600 font-bold">0d</td>
+          <td><select class="text-xs w-36"><option selected>Budget ✓ cheapest</option><option>Premium Organics</option></select></td>
+          <td class="mono font-semibold text-emerald-700">₹80/kg</td>
+          <td class="text-[10px]">Premium ₹120</td>
+          <td><input type="number" value="10" class="w-16 mono text-sm" /></td>
+        </tr>
+        <tr style="border-left:3px solid #ef4444;background:#fef2f2">
+          <td><span class="check-circle checked">✓</span></td>
+          <td class="font-medium">Coconut Powder<br><span class="text-[10px] text-red-600 font-bold">OUT OF STOCK</span></td>
+          <td class="mono text-red-600 font-bold">0 kg</td><td class="mono">—</td><td class="mono text-red-600 font-bold">0d</td>
+          <td><select class="text-xs w-36"><option selected>Budget ✓ cheapest</option><option>Premium Organics</option></select></td>
+          <td class="mono font-semibold text-emerald-700">₹220/kg</td>
+          <td class="text-[10px]">Premium ₹300</td>
+          <td><input type="number" value="5" class="w-16 mono text-sm" /></td>
+        </tr>
+        <tr style="border-left:3px solid #ef4444;background:#fef2f2">
+          <td><span class="check-circle checked">✓</span></td>
+          <td class="font-medium">Sesame Till<br><span class="text-[10px] text-red-600">LOW — 5d</span></td>
+          <td class="mono text-red-600">3.97 kg</td><td class="mono">0.8 kg/d</td><td class="mono text-red-600">5d</td>
+          <td><select class="text-xs w-36"><option selected>Budget ✓ cheapest</option><option>Premium ₹190</option></select></td>
+          <td class="mono font-semibold text-emerald-700">₹160/kg</td>
+          <td class="text-[10px]">Premium ₹190, bakery ₹200</td>
+          <td><input type="number" value="20" class="w-16 mono text-sm" /></td>
+        </tr>
+        <tr style="border-left:3px solid #f59e0b;background:#fffbeb">
+          <td><span class="check-circle checked">✓</span></td>
+          <td class="font-medium">Jaggery Powder<br><span class="text-[10px] text-amber-600">12d left</span></td>
+          <td class="mono">3.85 kg</td><td class="mono">0.32 kg/d</td><td class="mono text-amber-600">12d</td>
+          <td><select class="text-xs w-36"><option selected>Budget ✓ cheapest</option><option>Premium ₹140</option></select></td>
+          <td class="mono font-semibold text-emerald-700">₹120/kg</td>
+          <td class="text-[10px]">Premium ₹140</td>
+          <td><input type="number" value="15" class="w-16 mono text-sm" /></td>
+        </tr>
+        <tr style="border-left:3px solid #f59e0b;background:#fffbeb">
+          <td><span class="check-circle checked">✓</span></td>
+          <td class="font-medium">Raisins<br><span class="text-[10px] text-amber-600">14d left</span></td>
+          <td class="mono">1.5 kg</td><td class="mono">0.1 kg/d</td><td class="mono text-amber-600">14d</td>
+          <td><select class="text-xs w-36"><option selected>Premium ₹180 ✓</option><option>Budget ₹200</option></select></td>
+          <td class="mono font-semibold text-emerald-700">₹180/kg</td>
+          <td class="text-[10px]">Budget ₹200</td>
+          <td><input type="number" value="5" class="w-16 mono text-sm" /></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Auto-group: MULTIPLE POs -->
+  <div class="card p-5 mb-4" style="border-left:3px solid #3b82f6">
+    <h3 class="text-xs font-bold text-blue-700 mb-3">Auto-Group by Vendor (5 items → 2 POs)</h3>
+    <p class="text-[10px] text-gray-400 mb-3">Items split by your vendor selection. Each vendor gets a separate PO.</p>
+    <div class="grid grid-cols-2 gap-4">
+      <div class="po-group-card" style="border-color:#059669;background:#f0fdf4">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold">Budget Ingredients Co</span>
+          <span class="badge" style="background:#d1fae5;color:#065f46">PO #1 — 4 items</span>
+        </div>
+        <div class="text-[10px] space-y-1">
+          <div class="flex justify-between"><span>Carrot 10 kg @ ₹80</span><span class="mono">₹800</span></div>
+          <div class="flex justify-between"><span>Coconut Powder 5 kg @ ₹220</span><span class="mono">₹1,100</span></div>
+          <div class="flex justify-between"><span>Sesame Till 20 kg @ ₹160</span><span class="mono">₹3,200</span></div>
+          <div class="flex justify-between"><span>Jaggery Powder 15 kg @ ₹120</span><span class="mono">₹1,800</span></div>
+          <div class="flex justify-between border-t pt-1 mt-1 font-bold"><span>Subtotal</span><span class="mono">₹6,900</span></div>
+        </div>
+        <div class="text-[10px] text-emerald-600 mt-2 font-semibold">Savings vs Premium: ₹2,350 (25%)</div>
+      </div>
+      <div class="po-group-card" style="border-color:#6366f1;background:#eef2ff">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold">Premium Organics Ltd</span>
+          <span class="badge" style="background:#e0e7ff;color:#4338ca">PO #2 — 1 item</span>
+        </div>
+        <div class="text-[10px] space-y-1">
+          <div class="flex justify-between"><span>Raisins 5 kg @ ₹180</span><span class="mono">₹900</span></div>
+          <div class="flex justify-between border-t pt-1 mt-1 font-bold"><span>Subtotal</span><span class="mono">₹900</span></div>
+        </div>
+        <div class="text-[10px] text-indigo-600 mt-2 font-semibold">Cheapest option for Raisins</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card p-5">
+    <div class="flex items-center justify-between">
+      <div><span class="text-xs text-gray-500">5 items → 2 POs</span><span class="text-lg font-bold ml-3 mono">₹7,800</span><span class="text-xs text-gray-400 ml-1">combined</span></div>
+      <div class="flex gap-2"><button class="btn-outline">Save All as Draft</button><button class="btn-primary">Review 2 POs &rarr;</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 4. REVIEW — MULTI PO                                           -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="screen-review-multi" class="screen-section max-w-4xl mx-auto py-6 px-4">
+  <div class="flex items-center gap-3 mb-5">
+    <button class="btn-outline text-xs py-1 px-2">&larr; Edit</button>
+    <h1 class="text-lg font-bold">Review — 2 Purchase Orders</h1>
+  </div>
+
+  <!-- PO #1 -->
+  <div class="card p-5 mb-4" style="border-left:4px solid #059669">
+    <div class="flex items-center justify-between mb-3">
+      <div>
+        <span class="text-xs font-bold">PO #1 — Budget Ingredients Co</span>
+        <span class="text-[10px] text-gray-400 ml-2">4 items · ₹6,900</span>
+      </div>
+      <span class="badge" style="background:#d1fae5;color:#065f46">Will be PO-806-2026-0009</span>
+    </div>
+    <table>
+      <thead><tr><th>Item</th><th>Qty</th><th>Unit</th><th>Exp Rate</th><th>Total</th><th>Stock Impact</th></tr></thead>
+      <tbody>
+        <tr><td class="font-medium">Carrot</td><td class="mono">10</td><td>kg</td><td class="mono">₹80</td><td class="mono font-semibold">₹800</td><td class="text-[10px]">0 → <span class="text-emerald-600 font-semibold">10 kg</span> (restores)</td></tr>
+        <tr><td class="font-medium">Coconut Powder</td><td class="mono">5</td><td>kg</td><td class="mono">₹220</td><td class="mono font-semibold">₹1,100</td><td class="text-[10px]">0 → <span class="text-emerald-600 font-semibold">5 kg</span></td></tr>
+        <tr><td class="font-medium">Sesame Till</td><td class="mono">20</td><td>kg</td><td class="mono">₹160</td><td class="mono font-semibold">₹3,200</td><td class="text-[10px]">3.97 → <span class="text-emerald-600 font-semibold">23.97 kg</span> (+25d)</td></tr>
+        <tr><td class="font-medium">Jaggery Powder</td><td class="mono">15</td><td>kg</td><td class="mono">₹120</td><td class="mono font-semibold">₹1,800</td><td class="text-[10px]">3.85 → <span class="text-emerald-600 font-semibold">18.85 kg</span> (+47d)</td></tr>
+      </tbody>
+      <tfoot><tr class="border-t-2"><td class="font-bold" colspan="4">Subtotal</td><td class="mono font-bold">₹6,900</td><td></td></tr></tfoot>
+    </table>
+    <div class="mt-3 p-2 rounded bg-emerald-50 text-xs text-emerald-800"><strong>Savings:</strong> ₹2,350 (25%) vs Premium Organics</div>
+  </div>
+
+  <!-- PO #2 -->
+  <div class="card p-5 mb-4" style="border-left:4px solid #6366f1">
+    <div class="flex items-center justify-between mb-3">
+      <div>
+        <span class="text-xs font-bold">PO #2 — Premium Organics Ltd</span>
+        <span class="text-[10px] text-gray-400 ml-2">1 item · ₹900</span>
+      </div>
+      <span class="badge" style="background:#e0e7ff;color:#4338ca">Will be PO-806-2026-0010</span>
+    </div>
+    <table>
+      <thead><tr><th>Item</th><th>Qty</th><th>Unit</th><th>Exp Rate</th><th>Total</th><th>Stock Impact</th></tr></thead>
+      <tbody>
+        <tr><td class="font-medium">Raisins</td><td class="mono">5</td><td>kg</td><td class="mono">₹180</td><td class="mono font-semibold">₹900</td><td class="text-[10px]">1.5 → <span class="text-emerald-600 font-semibold">6.5 kg</span> (+50d)</td></tr>
+      </tbody>
+      <tfoot><tr class="border-t-2"><td class="font-bold" colspan="4">Subtotal</td><td class="mono font-bold">₹900</td><td></td></tr></tfoot>
+    </table>
+  </div>
+
+  <!-- Grand total + actions -->
+  <div class="card p-5">
+    <div class="grid grid-cols-3 gap-4 mb-4 text-center">
+      <div><span class="text-[10px] text-gray-400 block">Combined Total</span><span class="text-xl font-bold mono">₹7,800</span></div>
+      <div><span class="text-[10px] text-gray-400 block">POs Created</span><span class="text-xl font-bold">2</span></div>
+      <div><span class="text-[10px] text-gray-400 block">Items Ordered</span><span class="text-xl font-bold">5</span></div>
+    </div>
+    <div class="flex items-center justify-between">
+      <div class="flex gap-4 text-[10px] text-gray-400">
+        <label class="flex items-center gap-1.5"><input type="checkbox" checked /> Send both POs immediately</label>
+        <span>Delivery: 22 Jun 2026</span>
+      </div>
+      <div class="flex gap-2">
+        <button class="btn-outline">Save All as Drafts</button>
+        <button class="btn-green">Create &amp; Send 2 POs</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 5. PO DETAIL (Sent)                                            -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="screen-detail" class="screen-section max-w-4xl mx-auto py-6 px-4">
+  <div class="flex items-center gap-3 mb-1">
+    <button class="btn-outline text-xs py-1 px-2">&larr; Back</button>
+    <h1 class="text-lg font-bold mono">PO-806-2026-0007</h1>
+    <span class="badge" style="background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd">Sent</span>
+  </div>
+  <p class="text-xs text-gray-400 mb-5 ml-16">Budget Ingredients Co · Sent 14 Jun · Expected 20 Jun (6 days)</p>
+
+  <div class="card p-4 mb-4">
+    <div class="grid grid-cols-5 gap-4 text-xs">
+      <div><span class="text-[10px] text-gray-400 block">Vendor</span><span class="font-bold">Budget Ingredients Co</span></div>
+      <div><span class="text-[10px] text-gray-400 block">Expected</span><span class="font-semibold">20 Jun 2026</span></div>
+      <div><span class="text-[10px] text-gray-400 block">Payment</span><span>Cash</span></div>
+      <div><span class="text-[10px] text-gray-400 block">Total</span><span class="font-bold mono">₹6,900</span></div>
+      <div><span class="text-[10px] text-gray-400 block">Notes</span><span>Monthly cookie ingredients</span></div>
+    </div>
+  </div>
+
+  <div class="card p-4 mb-4">
+    <h3 class="text-[10px] font-bold text-gray-400 mb-3">ORDER LINES (4 items)</h3>
+    <table>
+      <thead><tr><th>Item</th><th>Ordered</th><th>Exp Rate</th><th>Total</th><th>Your Stock</th><th>Days Left</th><th>After Receive</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr style="background:#fef2f2"><td class="font-medium">Carrot<br><span class="text-[10px] text-red-600">OUT OF STOCK</span></td><td class="mono">10 kg</td><td class="mono">₹80</td><td class="mono">₹800</td><td class="mono text-red-600 font-bold">0 kg</td><td class="mono text-red-600">0d</td><td class="text-emerald-600 font-semibold mono">10 kg</td><td><span class="badge" style="background:#fef3c7;color:#92400e">Open</span></td></tr>
+        <tr style="background:#fef2f2"><td class="font-medium">Coconut Powder<br><span class="text-[10px] text-red-600">OUT OF STOCK</span></td><td class="mono">5 kg</td><td class="mono">₹220</td><td class="mono">₹1,100</td><td class="mono text-red-600 font-bold">0 kg</td><td class="mono text-red-600">0d</td><td class="text-emerald-600 font-semibold mono">5 kg</td><td><span class="badge" style="background:#fef3c7;color:#92400e">Open</span></td></tr>
+        <tr><td class="font-medium">Sesame Till</td><td class="mono">20 kg</td><td class="mono">₹160</td><td class="mono">₹3,200</td><td class="mono text-amber-600">3.97 kg</td><td class="mono text-amber-600">5d</td><td class="text-emerald-600 font-semibold mono">23.97 kg</td><td><span class="badge" style="background:#fef3c7;color:#92400e">Open</span></td></tr>
+        <tr><td class="font-medium">Jaggery Powder</td><td class="mono">15 kg</td><td class="mono">₹120</td><td class="mono">₹1,800</td><td class="mono">3.85 kg</td><td class="mono text-amber-600">12d</td><td class="text-emerald-600 font-semibold mono">18.85 kg</td><td><span class="badge" style="background:#fef3c7;color:#92400e">Open</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card p-4 flex items-center gap-3">
+    <button class="btn-green flex items-center gap-1.5"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8 8-4-4"/></svg> Receive Goods</button>
+    <button class="btn-danger">Cancel PO</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 6. RECEIVE + INVOICE TAB                                       -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="screen-receive" class="screen-section max-w-5xl mx-auto py-6 px-4">
+  <div class="flex items-center gap-3 mb-1">
+    <button class="btn-outline text-xs py-1 px-2">&larr; Back to PO</button>
+    <h1 class="text-lg font-bold">Receive Goods — PO-806-2026-0007</h1>
+    <span class="badge" style="background:#dbeafe;color:#1d4ed8">Budget Ingredients Co</span>
+  </div>
+  <p class="text-xs text-gray-400 mb-5 ml-16">Match the vendor invoice against PO lines. Record actual delivery.</p>
+
+  <!-- INVOICE TABS -->
+  <div class="flex gap-2 mb-5">
+    <span class="tab-pill active">Manual Entry (Match Physical Invoice)</span>
+    <span class="tab-pill" style="opacity:0.5;cursor:not-allowed;position:relative">
+      Upload Invoice
+      <span class="badge" style="background:#fef3c7;color:#92400e;position:absolute;top:-8px;right:-12px;font-size:8px">Coming Soon</span>
+    </span>
+  </div>
+
+  <!-- Invoice matching explanation -->
+  <div class="card p-4 mb-4" style="border-left:3px solid #3b82f6;">
+    <div class="flex items-center gap-3">
+      <svg class="w-5 h-5 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      <div>
+        <span class="text-xs font-bold text-blue-700">Matching vendor invoice to PO</span>
+        <p class="text-[10px] text-gray-500 mt-0.5">Enter the quantities and rates from the vendor's physical invoice/challan. The system compares against your PO expected rates and flags variances.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card p-4 mb-4">
+    <div class="grid grid-cols-3 gap-4">
+      <div><label class="text-[10px] font-semibold text-gray-500 block mb-1">PURCHASE / INVOICE DATE</label><input type="date" value="2026-06-20" class="w-full" /></div>
+      <div><label class="text-[10px] font-semibold text-gray-500 block mb-1">VENDOR INVOICE #</label><input type="text" placeholder="e.g. INV-2026-1234" class="w-full" value="INV-BUD-0456" /></div>
+      <div><label class="text-[10px] font-semibold text-gray-500 block mb-1">PAYMENT TYPE</label><select class="w-full"><option selected>Cash</option></select></div>
+    </div>
+  </div>
+
+  <!-- Per-line receive -->
+  <div class="card p-5 mb-4" style="border-left:4px solid #059669">
+    <h3 class="text-xs font-bold text-emerald-700 mb-4">Invoice Lines vs PO Lines</h3>
+
+    <!-- Line 1 -->
+    <div class="mb-4 p-4 rounded-lg border border-gray-200">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-sm font-bold">Carrot <span class="text-[10px] text-gray-400 font-normal">· PO: 10 kg @ ₹80/kg = ₹800</span></span>
+        <span class="badge" style="background:#fef2f2;color:#991b1b">OUT OF STOCK</span>
+      </div>
+      <div class="grid grid-cols-5 gap-3 mb-3">
+        <div><label class="text-[10px] text-gray-500 block mb-1">Invoice Qty</label><input type="number" value="10" class="w-full mono" /><span class="text-[10px] text-emerald-600">Matches PO</span></div>
+        <div><label class="text-[10px] text-gray-500 block mb-1">Invoice Rate (₹/kg)</label><input type="number" value="82" class="w-full mono" /></div>
+        <div><label class="text-[10px] text-gray-500 block mb-1">Batch</label><input type="text" value="CARROT-JUN-001" class="w-full mono" /></div>
+        <div><label class="text-[10px] text-gray-500 block mb-1">Expiry</label><input type="date" value="2026-07-15" class="w-full" /></div>
+        <div><label class="text-[10px] text-gray-500 block mb-1">Invoice Total</label><div class="text-base font-bold mono mt-1">₹820</div><span class="text-[10px] text-gray-400">PO: ₹800</span></div>
+      </div>
+      <div class="grid grid-cols-3 gap-3 p-3 rounded bg-gray-50 border border-gray-100">
+        <div><span class="text-[10px] font-semibold text-gray-500 block">RATE VARIANCE</span><span class="mono variance-ok font-bold">+2.5%</span><span class="text-[10px] text-emerald-600 ml-1">OK</span></div>
+        <div><span class="text-[10px] font-semibold text-gray-500 block">RATE HISTORY (Budget)</span><span class="text-[10px]">Last ₹80 · Avg ₹78 · Best <span class="text-emerald-600">₹75</span></span></div>
+        <div><span class="text-[10px] font-semibold text-gray-500 block">STOCK IMPACT</span><span class="mono text-red-500">0</span> → <span class="mono text-emerald-600 font-bold">10 kg</span><span class="text-[10px] text-gray-400 ml-1">Restores</span></div>
+      </div>
+    </div>
+
+    <!-- Line 2 — variance flagged -->
+    <div class="mb-4 p-4 rounded-lg border border-red-200 bg-red-50/30">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-sm font-bold">Sesame Till <span class="text-[10px] text-gray-400 font-normal">· PO: 20 kg @ ₹160/kg = ₹3,200</span></span>
+        <span class="badge" style="background:#fee2e2;color:#991b1b">⚠ VARIANCE FLAGGED</span>
+      </div>
+      <div class="grid grid-cols-5 gap-3 mb-3">
+        <div><label class="text-[10px] text-gray-500 block mb-1">Invoice Qty</label><input type="number" value="20" class="w-full mono" /><span class="text-[10px] text-emerald-600">Matches PO</span></div>
+        <div><label class="text-[10px] text-gray-500 block mb-1">Invoice Rate (₹/kg)</label><input type="number" value="185" class="w-full mono" style="border-color:#ef4444" /></div>
+        <div><label class="text-[10px] text-gray-500 block mb-1">Batch</label><input type="text" value="SES-JUN-001" class="w-full mono" /></div>
+        <div><label class="text-[10px] text-gray-500 block mb-1">Expiry</label><input type="date" value="2026-12-31" class="w-full" /></div>
+        <div><label class="text-[10px] text-gray-500 block mb-1">Invoice Total</label><div class="text-base font-bold mono mt-1 text-red-600">₹3,700</div><span class="text-[10px] text-gray-400">PO: ₹3,200</span></div>
+      </div>
+      <div class="grid grid-cols-3 gap-3 p-3 rounded bg-red-50 border border-red-200">
+        <div><span class="text-[10px] font-semibold text-gray-500 block">RATE VARIANCE</span><span class="mono text-lg variance-flag font-bold">+15.6%</span><span class="badge ml-1" style="background:#fee2e2;color:#991b1b;font-size:9px">EXCEEDS 10%</span><div class="text-[10px] text-red-600 mt-0.5">₹185 vs PO ₹160 — Highest rate ever</div></div>
+        <div><span class="text-[10px] font-semibold text-gray-500 block">RATE HISTORY (Budget)</span><span class="text-[10px]">Last ₹160 · Avg ₹155 · Best <span class="text-emerald-600">₹150</span></span><div class="flex gap-0.5 mt-1"><div class="price-bar bg-emerald-300" style="width:81%"></div><div class="price-bar bg-emerald-400" style="width:84%"></div><div class="price-bar bg-red-400" style="width:100%"></div></div></div>
+        <div><span class="text-[10px] font-semibold text-gray-500 block">STOCK IMPACT</span><span class="mono text-amber-600">3.97</span> → <span class="mono text-emerald-600 font-bold">23.97 kg</span><span class="text-[10px] text-gray-400 ml-1">5d → +30d cover</span></div>
+      </div>
+    </div>
+
+    <!-- Line 3 — good deal -->
+    <div class="mb-4 p-4 rounded-lg border border-gray-200">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-sm font-bold">Jaggery Powder <span class="text-[10px] text-gray-400 font-normal">· PO: 15 kg @ ₹120/kg = ₹1,800</span></span>
+        <span class="badge" style="background:#d1fae5;color:#065f46">Good deal</span>
+      </div>
+      <div class="grid grid-cols-5 gap-3 mb-3">
+        <div><label class="text-[10px] text-gray-500 block mb-1">Invoice Qty</label><input type="number" value="15" class="w-full mono" /></div>
+        <div><label class="text-[10px] text-gray-500 block mb-1">Invoice Rate</label><input type="number" value="118" class="w-full mono" /></div>
+        <div><label class="text-[10px] text-gray-500 block mb-1">Batch</label><input type="text" value="JAG-JUN-001" class="w-full mono" /></div>
+        <div><label class="text-[10px] text-gray-500 block mb-1">Expiry</label><input type="date" value="2027-06-30" class="w-full" /></div>
+        <div><label class="text-[10px] text-gray-500 block mb-1">Invoice Total</label><div class="text-base font-bold mono mt-1">₹1,770</div><span class="text-[10px] text-emerald-600">₹30 below PO</span></div>
+      </div>
+      <div class="grid grid-cols-3 gap-3 p-3 rounded bg-gray-50 border border-gray-100">
+        <div><span class="text-[10px] font-semibold text-gray-500 block">VARIANCE</span><span class="mono variance-ok font-bold">-1.7%</span><span class="text-[10px] text-emerald-600 ml-1">Below expected</span></div>
+        <div><span class="text-[10px] font-semibold text-gray-500 block">HISTORY</span><span class="text-[10px]">At avg rate — consistent pricing</span></div>
+        <div><span class="text-[10px] font-semibold text-gray-500 block">STOCK</span><span class="mono">3.85 → <span class="text-emerald-600 font-bold">18.85 kg</span></span><span class="text-[10px] text-gray-400 ml-1">+47d</span></div>
+      </div>
+    </div>
+
+    <!-- Line 4 — skipped -->
+    <div class="mb-3 p-4 rounded-lg border border-dashed border-gray-300 bg-gray-50 opacity-60">
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-bold text-gray-500">Coconut Powder <span class="text-[10px] text-gray-400 font-normal">· PO: 5 kg @ ₹220/kg</span></span>
+        <label class="flex items-center gap-2 text-[10px] text-gray-500 cursor-pointer"><input type="checkbox" checked /> Not on this invoice — skip</label>
+      </div>
+      <div class="text-[10px] text-gray-400 mt-1">Vendor didn't include in this delivery. Will remain as open on PO.</div>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="card p-5 mb-4">
+    <h3 class="text-xs font-bold mb-3">Receive Summary</h3>
+    <div class="grid grid-cols-5 gap-3 mb-3">
+      <div class="card kpi-card" style="border-bottom:3px solid #059669"><div class="kpi-val">3</div><div class="kpi-label">Lines Matched</div></div>
+      <div class="card kpi-card" style="border-bottom:3px solid #6b7280"><div class="kpi-val text-gray-400">1</div><div class="kpi-label">Skipped</div></div>
+      <div class="card kpi-card" style="border-bottom:3px solid #059669"><div class="kpi-val mono">₹6,290</div><div class="kpi-label">Invoice Total</div></div>
+      <div class="card kpi-card"><div class="kpi-val mono text-gray-400">₹5,800</div><div class="kpi-label">PO Expected</div></div>
+      <div class="card kpi-card" style="border-bottom:3px solid #f59e0b"><div class="kpi-val text-amber-600">1</div><div class="kpi-label">Variance Flag</div></div>
+    </div>
+
+    <div class="p-3 rounded border border-red-200 bg-red-50 text-xs mb-3">
+      <strong class="text-red-700">⚠ Sesame Till:</strong> Invoice rate ₹185/kg exceeds PO rate ₹160/kg by 15.6% (threshold: 10%). This will be flagged on the GRN record.
+    </div>
+
+    <div class="p-2 rounded bg-blue-50 border border-blue-100 text-[10px] text-blue-800 mb-4">
+      <strong>FEFO:</strong> New batches enter the segment queue after existing stock. Existing Sesame (exp Sep 2026) will be consumed first.
+    </div>
+
+    <div class="flex items-center justify-between">
+      <span class="text-xs text-gray-500">PO will move to <strong>Partially Received</strong> (Coconut Powder pending)</span>
+      <div class="flex gap-2">
+        <button class="btn-outline">Cancel</button>
+        <button class="btn-green">Confirm &amp; Receive 3 Lines</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 7. POST-RECEIVE CONFIRMATION                                   -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="screen-post-receive" class="screen-section max-w-3xl mx-auto py-10 px-4">
+  <div class="card p-8 text-center">
+    <div class="w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-4">
+      <svg class="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    </div>
+    <h2 class="text-lg font-bold mb-1">Goods Received Successfully</h2>
+    <p class="text-xs text-gray-500 mb-6">PO-806-2026-0007 · Budget Ingredients Co · GRN #1</p>
+    <div class="grid grid-cols-3 gap-4 mb-6 max-w-sm mx-auto">
+      <div class="card kpi-card"><div class="kpi-val text-emerald-600">3</div><div class="kpi-label">Received</div></div>
+      <div class="card kpi-card"><div class="kpi-val mono">₹6,290</div><div class="kpi-label">GRN Total</div></div>
+      <div class="card kpi-card"><div class="kpi-val text-amber-600">1</div><div class="kpi-label">Flagged</div></div>
+    </div>
+    <div class="text-left max-w-sm mx-auto mb-6 text-xs space-y-2">
+      <div class="flex justify-between p-2 rounded bg-emerald-50"><span class="font-medium">Carrot</span><span class="mono">0 → <span class="text-emerald-600 font-bold">10 kg</span></span></div>
+      <div class="flex justify-between p-2 rounded bg-emerald-50"><span class="font-medium">Sesame Till</span><span class="mono">3.97 → <span class="text-emerald-600 font-bold">23.97 kg</span></span></div>
+      <div class="flex justify-between p-2 rounded bg-emerald-50"><span class="font-medium">Jaggery Powder</span><span class="mono">3.85 → <span class="text-emerald-600 font-bold">18.85 kg</span></span></div>
+      <div class="flex justify-between p-2 rounded bg-gray-50 text-gray-400"><span>Coconut Powder</span><span>Still on PO (pending)</span></div>
+    </div>
+    <div class="flex gap-3 justify-center">
+      <button class="btn-outline">View PO</button>
+      <button class="btn-outline">Stock Inventory</button>
+      <button class="btn-primary">Back to PO List</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 8. GRN HISTORY                                                 -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="screen-grn" class="screen-section max-w-4xl mx-auto py-6 px-4">
+  <div class="flex items-center gap-3 mb-1">
+    <button class="btn-outline text-xs py-1 px-2">&larr; Back</button>
+    <h1 class="text-lg font-bold mono">PO-806-2026-0005</h1>
+    <span class="badge" style="background:#e5e7eb;color:#374151">Closed</span>
+  </div>
+  <p class="text-xs text-gray-400 mb-5 ml-16">Budget Ingredients Co · 2 GRN events · Auto-closed</p>
+
+  <div class="card p-4 mb-4">
+    <h3 class="text-[10px] font-bold text-gray-400 mb-3">FINAL LINE STATUS</h3>
+    <table>
+      <thead><tr><th>Item</th><th>Ordered</th><th>Received</th><th>Avg Rate</th><th>Cost</th><th>Variance</th><th>GRNs</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td class="font-medium">Carrot</td><td class="mono">10 kg</td><td class="mono font-semibold">10 kg</td><td class="mono">₹82</td><td class="mono">₹820</td><td class="variance-ok mono">+2.5%</td><td>1</td><td><span class="badge" style="background:#d1fae5;color:#065f46">Done</span></td></tr>
+        <tr style="background:#fef2f2"><td class="font-medium">Sesame Till</td><td class="mono">20 kg</td><td class="mono font-semibold">20 kg</td><td class="mono">₹180</td><td class="mono">₹3,600</td><td class="variance-flag mono">+12.5% ⚠</td><td>2</td><td><span class="badge" style="background:#d1fae5;color:#065f46">Done</span></td></tr>
+        <tr><td class="font-medium">Jaggery</td><td class="mono">15 kg</td><td class="mono font-semibold">15 kg</td><td class="mono">₹118</td><td class="mono">₹1,770</td><td class="variance-ok mono">-1.7%</td><td>1</td><td><span class="badge" style="background:#d1fae5;color:#065f46">Done</span></td></tr>
+        <tr><td class="font-medium">Coconut</td><td class="mono">5 kg</td><td class="mono font-semibold">5 kg</td><td class="mono">₹225</td><td class="mono">₹1,125</td><td class="variance-ok mono">+2.3%</td><td>1</td><td><span class="badge" style="background:#d1fae5;color:#065f46">Done</span></td></tr>
+      </tbody>
+      <tfoot><tr class="border-t-2"><td class="font-bold" colspan="4">Grand Total</td><td class="mono font-bold">₹7,315</td><td class="text-[10px] text-gray-400" colspan="3">Expected ₹6,900 · Over ₹415 (+6%)</td></tr></tfoot>
+    </table>
+  </div>
+
+  <div class="card p-4 mb-4">
+    <h3 class="text-[10px] font-bold text-gray-400 mb-3">GRN EVENTS</h3>
+    <div class="p-3 rounded border border-gray-200 mb-3">
+      <div class="flex justify-between mb-2"><span class="text-xs font-bold">GRN #1 — 18 Jun · 3 lines · ₹5,365</span><span class="text-[10px] text-gray-400">Invoice: INV-BUD-0456</span></div>
+      <div class="text-[10px] space-y-0.5">
+        <div class="flex gap-6"><span>Carrot 10kg @ ₹82</span><span>CARROT-JUN-001</span><span class="variance-ok">+2.5%</span></div>
+        <div class="flex gap-6 text-red-600"><span>Sesame 15kg @ ₹185</span><span>SES-JUN-001</span><span class="variance-flag font-bold">+15.6% ⚠</span></div>
+        <div class="flex gap-6"><span>Jaggery 15kg @ ₹118</span><span>JAG-JUN-001</span><span class="variance-ok">-1.7%</span></div>
+      </div>
+    </div>
+    <div class="p-3 rounded border border-gray-200">
+      <div class="flex justify-between mb-2"><span class="text-xs font-bold">GRN #2 — 22 Jun · 2 lines · ₹1,950 · Final</span><span class="text-[10px] text-gray-400">Invoice: INV-BUD-0461</span></div>
+      <div class="text-[10px] space-y-0.5">
+        <div class="flex gap-6"><span>Sesame 5kg @ ₹165</span><span>SES-JUN-002</span><span class="variance-ok">+3.1%</span></div>
+        <div class="flex gap-6"><span>Coconut 5kg @ ₹225</span><span>COCO-JUN-001</span><span class="variance-ok">+2.3%</span></div>
+      </div>
+      <div class="mt-2 p-1.5 rounded bg-emerald-50 text-[10px] text-emerald-700">All lines complete → PO auto-closed</div>
+    </div>
+  </div>
+
+  <div class="card p-4" style="border-left:3px solid #3b82f6">
+    <h3 class="text-[10px] font-bold text-blue-700 mb-2">COST ANALYSIS</h3>
+    <div class="grid grid-cols-3 gap-4 text-xs">
+      <div><span class="text-[10px] text-gray-400 block">Expected</span><span class="mono font-bold text-base">₹6,900</span></div>
+      <div><span class="text-[10px] text-gray-400 block">Actual</span><span class="mono font-bold text-base">₹7,315</span></div>
+      <div><span class="text-[10px] text-gray-400 block">Variance</span><span class="mono font-bold text-base text-amber-600">+₹415 (+6%)</span></div>
+    </div>
+    <div class="text-[10px] text-gray-500 mt-2">Sesame accounted for 89% of overrun. 2nd delivery came in at ₹165 — closer to expected. Negotiate rate before next PO.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 9. ADD-STOCK GATE                                              -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="screen-gate" class="screen-section max-w-2xl mx-auto py-16 px-4">
+  <div class="card p-8 text-center">
+    <div class="w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-4">
+      <svg class="w-7 h-7 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+    </div>
+    <h2 class="text-base font-bold mb-2">Direct Stock Entry Disabled</h2>
+    <p class="text-xs text-gray-500 mb-6 max-w-sm mx-auto">Your store requires purchase orders for vendor stock intake. Create a PO, send it to your vendor, and receive goods against it.</p>
+    <button class="btn-primary">Go to Purchase Orders &rarr;</button>
+    <p class="text-[10px] text-gray-400 mt-4">Admin can change this in Operational Settings (<code>require_po_for_purchase</code>)</p>
+  </div>
+</div>
+
+<script>
+function showScreen(id) {
+  document.querySelectorAll('.screen-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>

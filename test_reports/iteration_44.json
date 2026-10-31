@@ -1,0 +1,83 @@
+{
+  "iteration": 44,
+  "test_date": "2026-06-13",
+  "test_type": "Frontend QA - CR-016 Stock Inventory Hierarchy Toggle",
+  "overall_status": "PASS",
+  "summary": "QA re-test for CR-016 Stock Inventory Hierarchy Toggle. All 7 test cases passed. The hierarchy toggle is correctly visible for Central Store (TOP/master) and Master Store (MID/central) users, and correctly hidden for Outlet (BOTTOM/franchise) users. Toggle ON shows 4th KPI 'Stores in Scope', low-stock alert banner, and Store Heatmap grid. Toggle OFF removes hierarchy elements while preserving own-store inventory table. CR-029 tabs (All/FG/Raw) work correctly with hierarchy toggle.",
+  "tests": [
+    {
+      "id": "T1",
+      "feature": "Central Store - Hierarchy Toggle Visible, Default OFF",
+      "status": "PASS",
+      "details": "Logged in as Central Store (manager@germanfluid.com). Hierarchy toggle (data-testid='hierarchy-toggle') is visible. Default state is OFF (data-state='unchecked'). Label shows 'My store'. 4th KPI and heatmap NOT visible when OFF."
+    },
+    {
+      "id": "T2",
+      "feature": "Central Store - Toggle ON Shows Hierarchy Elements",
+      "status": "PASS",
+      "details": "Toggle ON: (a) Label changed to 'All stores', (b) 4th KPI 'Stores in Scope' appeared showing '7', (c) Low-stock alert banner appeared: '52 low stock items across 7 stores', (d) Store Heatmap grid appeared with 7 StoreHeatmapCard components."
+    },
+    {
+      "id": "T3",
+      "feature": "Central Store - Toggle OFF Removes Hierarchy Elements",
+      "status": "PASS",
+      "details": "Toggle OFF: Label changed back to 'My store'. 4th KPI removed. Store heatmap removed. Own-store inventory table still present."
+    },
+    {
+      "id": "T4",
+      "feature": "Master Store - Hierarchy Toggle Visible",
+      "status": "PASS",
+      "details": "Logged in as Master Store (manager@centralkitchenalpha.com). Hierarchy toggle is visible. User level shows 'Master Store — Store #807'."
+    },
+    {
+      "id": "T5",
+      "feature": "Outlet - Hierarchy Toggle NOT Visible",
+      "status": "PASS",
+      "details": "Logged in as Outlet (manager@outletdirectone.com). Hierarchy toggle container and switch are NOT visible (as expected). User level shows 'Outlet — Store #809'. Own-store inventory table is visible."
+    },
+    {
+      "id": "T6",
+      "feature": "Heatmap Card Details Verification",
+      "status": "PASS",
+      "details": "Heatmap cards show: (a) Store name (e.g., 'Central Kitchen Beta'), (b) Type label correctly mapped via terminology (master→Central Store, central→Master Store, franchise→Outlet), (c) Low-stock/total ratio badge (e.g., '11/11'), (d) Progress bar. Cards sorted worst-first."
+    },
+    {
+      "id": "T7",
+      "feature": "CR-029 Tabs Work With Hierarchy Toggle",
+      "status": "PASS",
+      "details": "With hierarchy toggle ON: FG tab shows 4 rows, Raw tab shows 43 rows, All tab shows 47 rows. 4th KPI and heatmap remain visible after tab switching. Tabs filter own-store inventory table independent of hierarchy."
+    }
+  ],
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/test_reports/iteration_44.json"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "StockInventorySummary.jsx: canToggleHierarchy correctly gates toggle visibility based on isTopLevel || isMiddleLevel",
+    "useStockInventory.js: showHierarchy state correctly triggers API call with ?include_hierarchy=true",
+    "StoreHeatmapCard: Correctly uses mapRestaurantType() for terminology mapping (master→Central Store, central→Master Store, franchise→Outlet)",
+    "Heatmap cards correctly sorted worst-first by low_stock_rows/stock_rows ratio",
+    "CR-029 tabs (stockType state) work independently of hierarchy toggle"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (frontend-only test)",
+    "frontend": "100% (7/7 test cases passed)"
+  },
+  "test_credentials": {
+    "central_store_806_master": "manager@germanfluid.com / Qplazm@10",
+    "master_store_807_central": "manager@centralkitchenalpha.com / Qplazm@10",
+    "outlet_809_franchise": "manager@outletdirectone.com / Qplazm@10"
+  },
+  "seed_data_creation": "None - used existing POS API data via proxy",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "CR-016 Stock Inventory Hierarchy Toggle fully verified. Toggle visible for Central Store (TOP) and Master Store (MID), hidden for Outlet (BOTTOM). When ON: 4th KPI shows store count, alert banner shows low-stock summary, heatmap shows 7 stores with health cards sorted worst-first. Terminology mapping working correctly. CR-029 tabs work independently of hierarchy toggle."
+}

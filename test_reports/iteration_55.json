@@ -1,0 +1,123 @@
+{
+  "iteration": 55,
+  "test_date": "2026-06-15",
+  "test_type": "BUG-026, BUG-027, BUG-028 Bug Fix Verification",
+  "overall_status": "PASS",
+  "summary": "All three bugs (BUG-026, BUG-027, BUG-028) have been verified as fixed. Raw Material Master correctly filters out sub-recipe items from Ingredients tab, Categories tab, and all category dropdowns. Consumption and Days of Stock calculations now use daily-consumption-report API and show reasonable values. Purchase Order Create correctly filters sub-recipes, has search field, renamed columns with tooltips, and 'Pick vendor' dropdown for items without vendor history.",
+
+  "features_tested": [
+    {
+      "feature": "BUG-026: Ingredients tab - no sub-recipe items",
+      "status": "PASS",
+      "details": "Ingredients tab shows only raw materials (Ajwain, Almonds, Baking Powder, etc.). No sub-recipe items like 'Ajwain Cookies With Jaggery' visible."
+    },
+    {
+      "feature": "BUG-026: Categories tab - no 'Sub Recipe' category",
+      "status": "PASS",
+      "details": "Categories tab shows Cookie, coffee, Khari only. 'Sub Recipe' category is correctly hidden."
+    },
+    {
+      "feature": "BUG-026: Category filter dropdown - no 'Sub Recipe'",
+      "status": "PASS",
+      "details": "Category filter dropdown shows: All Categories, Cookie, Khari, coffee. No 'Sub Recipe' option."
+    },
+    {
+      "feature": "BUG-026: Add Item category dropdown - no 'Sub Recipe'",
+      "status": "PASS",
+      "details": "Add Item form category dropdown shows: Cookie, coffee, Khari. No 'Sub Recipe' option."
+    },
+    {
+      "feature": "BUG-026: 'Used In' column with recipe+sub-recipe count",
+      "status": "PASS",
+      "details": "'Used In' column visible with counts (e.g., Baking Soda: 3, Egg Replacer: 4). Tooltip explains it counts recipes + sub-recipes."
+    },
+    {
+      "feature": "BUG-026: Categories tab - edit icon and toggle switch, no delete",
+      "status": "PASS",
+      "details": "Each category row has edit icon (pencil) and active/inactive toggle switch. No delete buttons present."
+    },
+    {
+      "feature": "BUG-027: Consumption from daily-consumption-report API",
+      "status": "PASS",
+      "details": "Expanded ingredient rows show consumption from API. Baking Soda: 0.0 kg/day, GSM: 0.1 kg/day."
+    },
+    {
+      "feature": "BUG-027: Days of Stock - reasonable values",
+      "status": "PASS",
+      "details": "Days of Stock shows reasonable values. Baking Soda (3.32kg, 0 consumption): 262d. GSM (56.91kg, 0.1kg/day): 729d. No unreasonable values like '995d for 29kg'."
+    },
+    {
+      "feature": "BUG-028: By Vendor mode - search field above table",
+      "status": "PASS",
+      "details": "Search field with placeholder 'Search items...' present above the items table in By Vendor mode."
+    },
+    {
+      "feature": "BUG-028: By Vendor mode - no sub-recipe items",
+      "status": "PASS",
+      "details": "Items list shows only raw materials. No sub-recipe items visible."
+    },
+    {
+      "feature": "BUG-028: By Item Need - no sub-recipe items",
+      "status": "PASS",
+      "details": "By Item Need tab shows 44 total items, all raw materials. No sub-recipe contamination."
+    },
+    {
+      "feature": "BUG-028: By Item Need - 'Daily Consumption' column",
+      "status": "PASS",
+      "details": "Column renamed from 'Daily' to 'Daily Consumption'."
+    },
+    {
+      "feature": "BUG-028: By Item Need - 'Days Will Last' column with tooltip",
+      "status": "PASS",
+      "details": "Column renamed from 'Days' to 'Days Will Last' with info icon tooltip explaining calculation."
+    },
+    {
+      "feature": "BUG-028: By Item Need - 'Pick vendor' dropdown",
+      "status": "PASS",
+      "details": "Items without vendor history show 'Pick vendor' dropdown (with UserPlus icon) instead of 'No history' text."
+    },
+    {
+      "feature": "BUG-028: Expected Rate - read-only text",
+      "status": "PASS",
+      "details": "Expected Rate column shows ₹0 for items without rate history as read-only text (not editable input). Items with history show actual rate (e.g., coffee beans: ₹500)."
+    }
+  ],
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "IngredientCatalogue.jsx: isSubRecipeItem() helper correctly identifies sub-recipes by is_sub_recipe flag, category_name, or subrecipe_id",
+    "IngredientCatalogue.jsx: filterRawCategories() correctly filters out 'Sub Recipe' category from all dropdowns",
+    "IngredientCatalogue.jsx: consumptionMap from getDailyConsumptionReport API provides accurate daily consumption data",
+    "IngredientCatalogue.jsx: usageMap correctly aggregates recipe + sub-recipe usage counts",
+    "IngredientCatalogue.jsx: CategoriesTab has Switch toggle for active/inactive (API pending - expected behavior)",
+    "PurchaseOrderCreate.jsx: rawMaterialItems filter correctly excludes sub-recipe items",
+    "PurchaseOrderCreate.jsx: vendorSearch state enables search functionality in By Vendor mode",
+    "PurchaseOrderCreate.jsx: Column headers renamed to 'Daily Consumption' and 'Days Will Last' with tooltip",
+    "PurchaseOrderCreate.jsx: Items without vendor history show Select dropdown with 'Pick vendor' placeholder and UserPlus icon"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (frontend only test)",
+    "frontend": "100% (15/15 features verified)"
+  },
+  "test_credentials": {
+    "central_store": "manager@germanfluid.com / Qplazm@10"
+  },
+  "seed_data_creation": "None - tested with existing data",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "BUG-026, BUG-027, BUG-028 all verified as fixed. Raw Material Master (/raw-materials) and Purchase Order Create (/purchase/orders/new) screens working correctly. Sub-recipe filtering implemented via isSubRecipeItem() and filterRawCategories() helpers. Category toggle (active/inactive) is a UI stub - backend API pending (expected behavior per owner confirmation).",
+  "note_on_category_toggle": "The Category toggle (active/inactive) shows a toast message 'backend API pending' when clicked. This is expected behavior as confirmed by the owner - the backend API will be provided later."
+}

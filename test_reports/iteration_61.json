@@ -1,0 +1,77 @@
+{
+  "summary": "BUG-047 Addon Recipe CRUD fixes verified. All 4 sub-issues fixed and working: (1) Recipe Name auto-fills when selecting Linked Addon, (2) Payload includes preparation_time/serves_people/serve_time, (3) Ingredient keys are correct (id/qty/unit), (4) deleteAddonRecipe sends reason body. Full CRUD flow tested: Create, Read, Delete all working with success toasts.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_results": {
+    "addon_recipes_tab_loads": {
+      "status": "PASS",
+      "evidence": "Addon Recipes tab accessible via Product Catalog page, data-testid='addon-recipe-catalogue' found"
+    },
+    "add_addon_recipe_button": {
+      "status": "PASS",
+      "evidence": "data-testid='add-addon-recipe-btn' clickable, opens 'New Addon Recipe' form"
+    },
+    "recipe_name_auto_fill_BUG047_fix1": {
+      "status": "PASS",
+      "evidence": "Selected '2 eggs boiled' addon, Recipe Name auto-filled with '2 eggs boiled' - Line 200-202 fix working"
+    },
+    "ingredient_selection_and_unit_auto_fill": {
+      "status": "PASS",
+      "evidence": "Selected 'Abocus water (ltr)', unit auto-filled with 'ml', qty entered as 100"
+    },
+    "create_addon_recipe_BUG047_fix2_fix3": {
+      "status": "PASS",
+      "evidence": "Recipe created successfully with toast 'Addon recipe created'. Payload includes preparation_time/serves_people/serve_time (fix2) and ingredient keys id/qty/unit (fix3)"
+    },
+    "recipe_appears_in_list": {
+      "status": "PASS",
+      "evidence": "Created recipe '2 eggs boiled' with '1 ingredients' appeared in left panel list"
+    },
+    "view_recipe_detail": {
+      "status": "PASS",
+      "evidence": "Clicked recipe card, detail view shows name '2 eggs boiled' and 1 ingredient row"
+    },
+    "delete_addon_recipe_BUG047_fix4": {
+      "status": "PASS",
+      "evidence": "Delete button opens confirmation dialog, deletion successful with toast 'Addon recipe deleted'. API sends reason body (fix4)"
+    },
+    "recipe_removed_from_list": {
+      "status": "PASS",
+      "evidence": "'No addon recipes found' message displayed after deletion, Addons without recipe count back to 41"
+    }
+  },
+  "test_report_links": [
+    "/app/.screenshots/bug047_01_after_login.png",
+    "/app/.screenshots/bug047_02_product_catalog.png",
+    "/app/.screenshots/bug047_03_addon_recipes_tab.png",
+    "/app/.screenshots/bug047_04_add_form.png",
+    "/app/.screenshots/bug047_05_addon_selected.png",
+    "/app/.screenshots/bug047_06_ingredient_added.png",
+    "/app/.screenshots/bug047_07_after_create.png",
+    "/app/.screenshots/bug047_08_recipe_detail.png",
+    "/app/.screenshots/bug047_11_delete_dialog.png",
+    "/app/.screenshots/bug047_12_after_delete.png"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "100% (API endpoints responding correctly)",
+    "frontend": "100% (9/9 test cases passed)"
+  },
+  "test_credentials": {
+    "used": "owner@palmcentral.com / Qplazm@10 (master account, RID 813)",
+    "note": "abhishek@kalabahia.com has restaurant_type_flag='normal' which doesn't have access to Product Catalog. Used master account instead."
+  },
+  "seed_data_creation": "Created and deleted test addon recipe '2 eggs boiled' during testing",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "BUG-047 Addon Recipe CRUD is fully fixed and working. The 4 sub-issues were: (1) Recipe Name auto-fill from Linked Addon - fixed in AddonRecipeCatalogue.jsx line 200-202, (2) Payload missing preparation_time/serves_people/serve_time - fixed in line 164-170, (3) Ingredient keys wrong - fixed to use id/qty/unit instead of ingredient_id/ingredient_qty/ingredient_unit, (4) deleteAddonRecipe missing reason body - fixed in api.js line 920-924. Note: The user abhishek@kalabahia.com mentioned in the review request has restaurant_type_flag='normal' which doesn't have access to Product Catalog (only 'master' type has access). Used owner@palmcentral.com for testing."
+}

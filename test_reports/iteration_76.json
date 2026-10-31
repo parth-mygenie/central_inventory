@@ -1,0 +1,35 @@
+{
+  "summary": "Tested BUG-058 (review screen Fare/Invoice# header and subtotal breakdown) and BUG-059 (batch Enter → expiry focus stay) — all 6 test cases PASS.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/test_reports/iteration_76.json"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Fare input has no data-testid attribute — testing required JS evaluation to set React state. Minor but worth adding data-testid='fare-input' for future test automation."
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A",
+    "frontend": "100% (6/6 test cases pass)"
+  },
+  "test_credentials": "owner@mygenietest002.com / Qplazm@10",
+  "seed_data_creation": "",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "BUG-058 and BUG-059 both verified working. Review screen (data-testid='procurement-confirm') correctly shows Fare+Invoice# when non-empty (V1), hides them when empty (V2), shows items subtotal+fare breakdown rows when fare>0 (V3), shows only Grand Total when fare=0 (V4). BUG-059: batch-input-0 Enter focuses expiry-input-0 and it stays focused (V5); expiry Enter adds new row and opens item search popover (V6). Item selection uses a Radix Popover portal — after clicking item-select-{idx}, wait 800ms then fill input[placeholder='Search items…'] and click [cmdk-item].",
+  "test_cases_detail": {
+    "V1_fare_invoice_in_header": "PASS - Fare ₹100.00 and Invoice # INV-TEST both appear in review header",
+    "V2_no_fare_no_invoice": "PASS - No Fare row, no Invoice # row when fare=0 and invoice empty",
+    "V3_subtotal_fare_breakdown": "PASS - Items subtotal ₹100.00 + Fare ₹100.00 + Grand Total ₹200.00",
+    "V4_no_breakdown_when_fare_zero": "PASS - Only Grand Total ₹100.00 shown, no subtotal/fare rows",
+    "V5_batch_enter_stays_on_expiry": "PASS - expiry-input-0 focused after batch Enter, remains focused 500ms later",
+    "V6_expiry_enter_opens_next_row": "PASS - New row 2 added, item search popover opened for row 2"
+  }
+}

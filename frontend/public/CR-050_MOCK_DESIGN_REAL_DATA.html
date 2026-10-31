@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CR-050 Mock — Direct Dispatch Spreadsheet UX (Real Data: RID 828)</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 13px; background: #f5f5f5; color: #111; }
+  .shell { display: flex; height: 100vh; overflow: hidden; }
+  .sidebar { width: 200px; background: #fff; border-right: 1px solid #e5e7eb; padding: 12px 0; flex-shrink: 0; }
+  .sidebar-logo { padding: 0 14px 12px; border-bottom: 1px solid #e5e7eb; margin-bottom: 6px; font-weight: 700; font-size: 13px; display: flex; align-items: center; gap: 7px; }
+  .logo-icon { width: 26px; height: 26px; background: #111; border-radius: 5px; display: flex; align-items: center; justify-content: center; }
+  .logo-icon svg { width: 14px; height: 14px; fill: #fff; }
+  .nav-item { display: flex; align-items: center; gap: 7px; padding: 6px 10px; border-radius: 5px; margin: 1px 6px; cursor: pointer; color: #374151; font-size: 12px; }
+  .nav-item:hover { background: #f3f4f6; }
+  .nav-item.active { background: #f0fdf4; color: #16a34a; font-weight: 600; }
+  .nav-item svg { width: 14px; height: 14px; flex-shrink: 0; opacity: .65; }
+  .nav-section { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #9ca3af; padding: 8px 12px 3px; }
+
+  .main { flex: 1; overflow: auto; background: #f9fafb; min-width: 0; }
+  .page { padding: 12px 14px 40px; }
+
+  /* Page header */
+  .page-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+  .page-title { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 7px; }
+  .dest-select { height: 30px; border: 1px solid #d1d5db; border-radius: 6px; padding: 0 8px; font-size: 12px; background: #fff; font-family: inherit; }
+  .cov-pill { height: 26px; padding: 0 10px; border-radius: 5px; border: 1px solid #e5e7eb; background: #fff; font-size: 11px; cursor: pointer; font-family: inherit; color: #374151; transition: all .12s; }
+  .cov-pill:hover { background: #f3f4f6; }
+  .cov-pill.active { background: #111; color: #fff; border-color: #111; font-weight: 600; }
+
+  /* Compact health strip (replaces 4 KPI tiles) */
+  .health-strip { display: flex; align-items: center; gap: 8px; padding: 7px 12px; background: #fff; border: 1px solid #e5e7eb; border-radius: 7px; margin-bottom: 10px; font-size: 11.5px; flex-wrap: wrap; }
+  .hs-stat { display: flex; align-items: center; gap: 4px; }
+  .hs-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .hs-dot.out { background: #ef4444; }
+  .hs-dot.low { background: #f59e0b; }
+  .hs-dot.ok  { background: #22c55e; }
+  .hs-num { font-weight: 700; }
+  .hs-label { color: #6b7280; }
+  .hs-sep { color: #d1d5db; }
+
+  /* Toolbar */
+  .toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .filter-pill { height: 26px; padding: 0 10px; border-radius: 20px; border: 1px solid #e5e7eb; background: #fff; font-size: 11px; cursor: pointer; font-family: inherit; transition: all .12s; }
+  .filter-pill.active { background: #111; color: #fff; border-color: #111; font-weight: 600; }
+  .filter-pill.out.active { background: #ef4444; border-color: #ef4444; }
+  .filter-pill.low.active { background: #f59e0b; border-color: #f59e0b; }
+  .search-input { height: 28px; border: 1px solid #d1d5db; border-radius: 6px; padding: 0 8px; font-size: 11.5px; background: #fff; font-family: inherit; min-width: 140px; }
+  .search-input:focus { border-color: #6366f1; outline: none; }
+  .cat-combo-wrap { position: relative; display: inline-block; }
+  .cat-combo-btn { height: 28px; min-width: 140px; border: 1px solid #d1d5db; border-radius: 6px; padding: 0 26px 0 8px; font-size: 11.5px; background: #fff; font-family: inherit; cursor: pointer; text-align: left; position: relative; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cat-combo-btn::after { content: '▾'; position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 10px; color: #6b7280; pointer-events: none; }
+  .cat-combo-drop { position: fixed; z-index: 9999; background: #fff; border: 1px solid #d1d5db; border-radius: 7px; box-shadow: 0 6px 20px rgba(0,0,0,.12); width: 200px; display: none; }
+  .cat-combo-drop.open { display: block; }
+  .cat-combo-search-wrap { padding: 6px 8px 4px; border-bottom: 1px solid #f3f4f6; }
+  .cat-combo-search { width: 100%; height: 26px; border: 1px solid #e5e7eb; border-radius: 5px; padding: 0 7px; font-size: 11.5px; font-family: inherit; }
+  .cat-combo-search:focus { border-color: #6366f1; outline: none; }
+  .cat-combo-list { max-height: 180px; overflow-y: auto; padding: 4px 0; }
+  .cat-combo-item { padding: 5px 10px; font-size: 11.5px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .cat-combo-item:hover { background: #f5f3ff; color: #6366f1; }
+  .cat-combo-item.selected { background: #eef2ff; color: #4338ca; font-weight: 600; }
+  .cat-combo-item .item-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .toolbar-spacer { flex: 1; }
+  .action-btn { height: 28px; padding: 0 12px; border-radius: 6px; font-size: 11.5px; cursor: pointer; border: 1px solid; font-family: inherit; transition: all .12s; }
+  .btn-primary { background: #111; color: #fff; border-color: #111; }
+  .btn-primary:hover { background: #222; }
+  .btn-primary:disabled { background: #d1d5db; color: #9ca3af; border-color: #d1d5db; cursor: not-allowed; }
+  .btn-outline { background: #fff; color: #374151; border-color: #d1d5db; }
+  .btn-outline:hover { background: #f3f4f6; }
+
+  /* Category section */
+  .cat-section { margin-bottom: 4px; }
+  .cat-header { display: flex; align-items: center; gap: 6px; padding: 5px 10px; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 6px; cursor: pointer; margin-bottom: 2px; user-select: none; }
+  .cat-header:hover { background: #f1f5f9; }
+  .cat-chevron { font-size: 10px; color: #9ca3af; transition: transform .15s; }
+  .cat-chevron.open { transform: rotate(90deg); }
+  .cat-name { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #374151; }
+  .cat-count { font-size: 10px; color: #6b7280; }
+  .cat-badge { padding: 1px 5px; border-radius: 3px; font-size: 9.5px; font-weight: 600; }
+  .cat-badge.out { background: #fee2e2; color: #b91c1c; }
+  .cat-badge.low { background: #fef3c7; color: #b45309; }
+  .cat-actions { display: flex; gap: 4px; margin-left: auto; }
+  .cat-btn { height: 20px; padding: 0 7px; border-radius: 4px; font-size: 10px; cursor: pointer; border: 1px solid #e5e7eb; background: #fff; font-family: inherit; color: #374151; }
+  .cat-btn:hover { background: #f3f4f6; }
+
+  /* Table */
+  .dispatch-table-wrap { overflow-x: auto; }
+  table.dispatch-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .col-chk { width: 30px; }
+  .col-item { width: 20%; }
+  .col-destqty { width: 70px; }
+  .col-cover { width: 65px; }
+  .col-sendqty { width: 85px; }
+  .col-source { width: 200px; }
+  .col-after { width: 90px; }
+  .col-note { width: 110px; }
+
+  thead tr { background: #f8fafc; }
+  th { padding: 6px 6px; text-align: left; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #9ca3af; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
+  td { padding: 3px 4px; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+  tr:last-child td { border-bottom: 1px solid #e5e7eb; }
+  tr.row-out { background: #fff8f8; }
+  tr.row-low { background: #fffbeb; }
+  tr.row-unchecked td { opacity: .45; }
+
+  /* Inputs */
+  input[type=number] { -moz-appearance: textfield; }
+  input[type=number]::-webkit-outer-spin-button,
+  input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .qty-input { height: 26px; width: 70px; border: 1px solid #d1d5db; border-radius: 5px; padding: 0 6px; font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
+  .qty-input:focus { border-color: #6366f1; outline: none; }
+  .qty-input.exceeds { border-color: #fca5a5; background: #fff1f1; }
+
+  /* Source selector (compact) */
+  .source-select-wrap { display: flex; flex-direction: column; gap: 2px; }
+  .source-row { display: flex; align-items: center; gap: 4px; }
+  .source-select { height: 26px; border: 1px solid #d1d5db; border-radius: 5px; padding: 0 4px; font-size: 11px; background: #fff; flex: 1; min-width: 0; font-family: inherit; }
+  .source-select.fefo { border-color: #86efac; background: #f0fdf4; color: #15803d; }
+  .fefo-badge { font-size: 9px; font-weight: 700; background: #dcfce7; color: #15803d; border-radius: 3px; padding: 1px 4px; white-space: nowrap; }
+  .source-qty-input { height: 22px; width: 45px; border: 1px solid #e5e7eb; border-radius: 4px; padding: 0 4px; font-size: 10.5px; text-align: right; }
+  .add-split-btn { font-size: 9px; color: #6366f1; cursor: pointer; background: none; border: none; padding: 0; }
+  .add-split-btn:hover { text-decoration: underline; }
+  .alloc-status { font-size: 9px; margin-top: 1px; }
+  .alloc-ok { color: #15803d; }
+  .alloc-short { color: #b45309; }
+
+  /* Item cell */
+  .item-name { font-weight: 500; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .item-sub { font-size: 9.5px; color: #6b7280; margin-top: 0.5px; }
+
+  /* Badges */
+  .badge { display: inline-flex; align-items: center; padding: 1px 5px; border-radius: 3px; font-size: 9.5px; font-weight: 600; }
+  .badge-out { background: #fee2e2; color: #b91c1c; }
+  .badge-low { background: #fef3c7; color: #b45309; }
+  .badge-info { background: #eff6ff; color: #1d4ed8; font-weight: 400; font-size: 9px; max-width: 140px; white-space: normal; line-height: 1.3; }
+
+  /* After-dispatch cell */
+  .after-ok { color: #374151; font-size: 11.5px; tabular-nums; }
+  .after-warn { color: #b45309; font-size: 11.5px; font-weight: 600; }
+  .retain-pct { font-size: 9.5px; color: #9ca3af; }
+
+  /* Bottom bar */
+  .bottom-bar { display: flex; align-items: center; gap: 10px; padding: 10px 0; flex-wrap: wrap; }
+  .summary-text { font-size: 11.5px; color: #6b7280; }
+  .summary-text strong { color: #111; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2zm-9 8H7v-2h4v2zm6 0h-4v-2h4v2zM4 7V5a2 2 0 012-2h12a2 2 0 012 2v2H4z"/></svg></div>
+      Central Inventory
+    </div>
+    <div class="nav-section">Operations</div>
+    <div class="nav-item active">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h11a2 2 0 012 2v3m-3 8h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+      Dispatch Stock
+    </div>
+    <div class="nav-item">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 7h12M8 12h12M8 17h12M4 7h.01M4 12h.01M4 17h.01"/></svg>
+      Pending Queues
+    </div>
+    <div class="nav-section">Inward</div>
+    <div class="nav-item">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      Purchase Orders
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="page">
+
+      <!-- Compact page header: title + dest + coverage all inline -->
+      <div class="page-header" style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:8px 12px;margin-bottom:10px;gap:10px;flex-wrap:wrap">
+        <div class="page-title" style="font-size:13px;font-weight:700;flex-shrink:0">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h11a2 2 0 012 2v3m-3 8h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          Direct Dispatch
+        </div>
+        <div style="width:1px;height:20px;background:#e5e7eb;flex-shrink:0"></div>
+        <select class="dest-select" id="destSelect" onchange="onDestChange()" style="flex:1;min-width:160px;max-width:260px">
+          <option value="">Select destination store…</option>
+          <option value="809" selected>Outlet Direct One (Outlet)</option>
+          <option value="807">Central Kitchen Alpha (Master)</option>
+        </select>
+        <div style="width:1px;height:20px;background:#e5e7eb;flex-shrink:0"></div>
+        <span style="font-size:11px;color:#6b7280;white-space:nowrap;flex-shrink:0">Dispatch for:</span>
+        <div style="display:flex;gap:4px;flex-shrink:0">
+          <button onclick="setCoverage(3,this)" class="cov-pill active" data-val="3">3d</button>
+          <button onclick="setCoverage(7,this)" class="cov-pill" data-val="7">7d</button>
+          <button onclick="setCoverage(10,this)" class="cov-pill" data-val="10">10d</button>
+          <button onclick="setCoverage(30,this)" class="cov-pill" data-val="30">30d</button>
+        </div>
+        <div id="dupWarning" style="display:none;font-size:10.5px;color:#b45309;background:#fef3c7;border-radius:4px;padding:3px 8px;flex-shrink:0">
+          ⚠ Already dispatched today (1 transfer)
+        </div>
+      </div>
+
+      <!-- Compact health strip (CR-050: replaces 4 KPI tiles) -->
+      <div class="health-strip" id="healthStrip">
+        <div class="hs-stat"><div class="hs-dot out"></div><span class="hs-num" id="hOut">5</span><span class="hs-label">OUT</span></div>
+        <div class="hs-sep">·</div>
+        <div class="hs-stat"><div class="hs-dot low"></div><span class="hs-num" id="hLow">12</span><span class="hs-label">LOW</span></div>
+        <div class="hs-sep">·</div>
+        <div class="hs-stat"><div class="hs-dot ok"></div><span class="hs-num" id="hOk">58</span><span class="hs-label">OK</span></div>
+        <div class="hs-sep" style="margin-left:8px">·</div>
+        <div style="font-size:10.5px;color:#6b7280;margin-left:4px" id="ownNote">Segments loaded from stock-inventory (0 API calls on mount)</div>
+      </div>
+
+      <!-- Toolbar: filters + search -->
+      <div class="toolbar">
+        <button class="filter-pill active" id="pillAll" onclick="setFilter('all')">All</button>
+        <button class="filter-pill out" id="pillOut" onclick="setFilter('out')">OUT</button>
+        <button class="filter-pill low" id="pillLow" onclick="setFilter('low')">LOW</button>
+        <div class="hs-sep" style="margin:0 2px">|</div>
+        <div class="cat-combo-wrap">
+          <button class="cat-combo-btn" id="catComboBtn" onclick="toggleCatCombo(event)">All Categories</button>
+          <div class="cat-combo-drop" id="catComboDrop">
+            <div class="cat-combo-search-wrap">
+              <input class="cat-combo-search" id="catComboSearch" placeholder="Search category…"
+                oninput="filterCatCombo()" onclick="event.stopPropagation()"
+                onkeydown="onCatSearchKey(event)" />
+            </div>
+            <div class="cat-combo-list" id="catComboList"></div>
+          </div>
+        </div>
+        <input class="search-input" id="searchInput" placeholder="Search item…" oninput="render()" />
+        <button class="action-btn btn-outline" onclick="masterSelect(true)" tabindex="-1" style="font-size:11px">Select All</button>
+        <button class="action-btn btn-outline" onclick="masterSelect(false)" tabindex="-1" style="font-size:11px">Unselect All</button>
+        <div class="toolbar-spacer"></div>
+        <button class="action-btn btn-outline" onclick="resetAll()">Reset</button>
+        <button class="action-btn btn-primary" id="submitBtn" onclick="simulateDispatch()" disabled>
+          Dispatch (<span id="activeCount">0</span> items)
+        </button>
+      </div>
+
+      <!-- Category-grouped dispatch table -->
+      <div id="dispatchArea"></div>
+
+      <!-- Bottom summary -->
+      <div class="bottom-bar">
+        <div class="summary-text" id="summaryText">Select a destination to see dispatch suggestions.</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Real data: RID 828 inventory items (75, probed 2026-10-18) ──
+// Simulated destination stock + consumption for demo (no live POs on test account)
+const ITEMS = [
+  // Vegetables & Herbs (subset for demo — 15 items showing all statuses)
+  { id:20807, title:"American Corn",    unit:"kg",    cat:"Vegetables & Herbs", destQty:0,   minQty:5,  avgDaily:1.2,  ownQty:50,  segments:[{seg:201,batch:"AME-18OCT26-1423",expiry:"2027-02-01",qty:50}]},
+  { id:20808, title:"Apple",            unit:"kg",    cat:"Vegetables & Herbs", destQty:0,   minQty:3,  avgDaily:0.8,  ownQty:30,  segments:[{seg:202,batch:"APP-18OCT26-1423",expiry:"2026-12-15",qty:30}]},
+  { id:20809, title:"Avocado",          unit:"kg",    cat:"Vegetables & Herbs", destQty:2,   minQty:4,  avgDaily:0.5,  ownQty:20,  segments:[{seg:203,batch:"AVO-18OCT26-1423",expiry:"2026-11-20",qty:20}]},
+  { id:20810, title:"Baby Corn",        unit:"kg",    cat:"Vegetables & Herbs", destQty:0,   minQty:2,  avgDaily:0.3,  ownQty:0,   segments:[]},
+  { id:20826, title:"Carrot",           unit:"kg",    cat:"Vegetables & Herbs", destQty:1.5, minQty:5,  avgDaily:2.1,  ownQty:80,  segments:[{seg:204,batch:"CAR-18OCT26-1423",expiry:"2027-01-10",qty:40},{seg:205,batch:"CAR-12OCT26-1200",expiry:"2026-11-30",qty:40}]},
+  { id:20832, title:"Coriander Leaf",   unit:"kg",    cat:"Vegetables & Herbs", destQty:0,   minQty:1,  avgDaily:0.4,  ownQty:15,  segments:[{seg:206,batch:"COR-18OCT26-1423",expiry:"2026-11-01",qty:15}]},
+  { id:20838, title:"Garlic Peeled",    unit:"kg",    cat:"Vegetables & Herbs", destQty:3,   minQty:5,  avgDaily:1.8,  ownQty:60,  segments:[{seg:207,batch:"GAR-18OCT26-1423",expiry:"2027-03-01",qty:60}]},
+  { id:20840, title:"Ginger",           unit:"kg",    cat:"Vegetables & Herbs", destQty:0,   minQty:2,  avgDaily:0.6,  ownQty:25,  segments:[]}, // un-batched
+  { id:20842, title:"Green Chilli",     unit:"kg",    cat:"Vegetables & Herbs", destQty:0.5, minQty:1,  avgDaily:0.2,  ownQty:10,  segments:[{seg:208,batch:"GRE-18OCT26-1423",expiry:"2026-11-05",qty:10}]},
+  { id:20862, title:"Onion",            unit:"kg",    cat:"Vegetables & Herbs", destQty:5,   minQty:10, avgDaily:3.5,  ownQty:200, segments:[{seg:209,batch:"ONI-18OCT26-1423",expiry:"2027-04-01",qty:120},{seg:210,batch:"ONI-10OCT26-0900",expiry:"2026-12-20",qty:80}]},
+  { id:20870, title:"Potato Big",       unit:"kg",    cat:"Vegetables & Herbs", destQty:8,   minQty:15, avgDaily:4.2,  ownQty:150, segments:[{seg:211,batch:"POT-18OCT26-1423",expiry:"2027-05-01",qty:150}]},
+  { id:20873, title:"Spinach",          unit:"kg",    cat:"Vegetables & Herbs", destQty:0,   minQty:2,  avgDaily:0.7,  ownQty:30,  segments:[{seg:212,batch:"SPI-18OCT26-1423",expiry:"2026-11-10",qty:30}]},
+  { id:20878, title:"Tomato",           unit:"kg",    cat:"Vegetables & Herbs", destQty:2,   minQty:10, avgDaily:5.0,  ownQty:180, segments:[{seg:213,batch:"TOM-18OCT26-1423",expiry:"2027-01-15",qty:100},{seg:214,batch:"TOM-12OCT26-0800",expiry:"2026-12-01",qty:80}]},
+  { id:20835, title:"Eggs",             unit:"piece", cat:"Vegetables & Herbs", destQty:12,  minQty:30, avgDaily:8.0,  ownQty:300, segments:[{seg:215,batch:"EGG-18OCT26-1423",expiry:"2026-11-15",qty:300}]},
+  // desi dairy
+  { id:20856, title:"makkhan",          unit:"kg",    cat:"desi dairy",         destQty:0,   minQty:1,  avgDaily:0.3,  ownQty:2,   segments:[{seg:241,batch:"MAK-18OCT26-1423",expiry:"2027-01-01",qty:2}]},
+  // OK items — sufficient stock at destination (no dispatch needed)
+  { id:20815, title:"Beetroot",         unit:"kg",    cat:"Vegetables & Herbs", destQty:18,  minQty:5,  avgDaily:1.0,  ownQty:40,  segments:[{seg:220,batch:"BEE-18OCT26-1423",expiry:"2027-06-01",qty:40}]},
+  { id:20820, title:"Black Pepper",     unit:"kg",    cat:"Vegetables & Herbs", destQty:12,  minQty:2,  avgDaily:0.5,  ownQty:20,  segments:[{seg:221,batch:"BLA-18OCT26-1423",expiry:"2027-08-01",qty:20}]},
+  { id:20825, title:"Capsicum Yellow",  unit:"kg",    cat:"Vegetables & Herbs", destQty:22,  minQty:5,  avgDaily:1.5,  ownQty:60,  segments:[{seg:222,batch:"CAY-18OCT26-1423",expiry:"2027-03-15",qty:60}]},
+  { id:20830, title:"Coconut",          unit:"piece", cat:"Vegetables & Herbs", destQty:30,  minQty:10, avgDaily:2.0,  ownQty:80,  segments:[{seg:223,batch:"COC-18OCT26-1423",expiry:"2027-05-01",qty:80}]},
+  { id:20845, title:"Lemon",            unit:"kg",    cat:"Vegetables & Herbs", destQty:9,   minQty:3,  avgDaily:0.8,  ownQty:35,  segments:[{seg:224,batch:"LEM-18OCT26-1423",expiry:"2027-02-20",qty:35}]},
+];
+
+const COVERAGE_DAYS_DEFAULT = 3;
+let filter = 'all';
+let selectedCat = 'all';
+let collapsedCats = {};
+window._coverage = 3;
+
+function setCoverage(val, btn) {
+  window._coverage = val;
+  document.querySelectorAll('.cov-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+let rows = [];
+
+function computeRows() {
+  const coverage = Number(window._coverage || 3);
+  rows = ITEMS.map(item => {
+    const destQty = item.destQty;
+    const avgDaily = item.avgDaily;
+    const ownQty = item.ownQty;
+
+    let qtyToSend = 0, suggestion = '', urgency = 0;
+    let daysOfCover = null;
+
+    if (avgDaily > 0) {
+      daysOfCover = destQty / avgDaily;
+      const projected = avgDaily * coverage;
+      qtyToSend = Math.max(0, Math.ceil(projected - destQty));
+      if (qtyToSend > 0) {
+        suggestion = daysOfCover < 1
+          ? `<1d cover, sending ${coverage}d`
+          : `~${Math.round(daysOfCover)}d cover, sending ${coverage}d`;
+        urgency = daysOfCover < 1 ? 100 : 50 + (coverage - daysOfCover);
+      }
+    } else if (item.minQty > 0 && destQty < item.minQty) {
+      qtyToSend = Math.ceil(item.minQty - destQty);
+      suggestion = `Gap to min: ${qtyToSend} ${item.unit}`;
+      urgency = destQty === 0 ? 80 : 40;
+    }
+
+    // CR-050: show ALL items — capped qty may be 0 for OK items
+    const capped = Math.min(qtyToSend, ownQty);
+    const afterDispatch = ownQty - capped;
+    const retainPct = ownQty > 0 ? Math.round((afterDispatch / ownQty) * 100) : 0;
+    const isOut = destQty === 0 && (avgDaily > 0 || item.minQty > 0);
+    const isLow = !isOut && daysOfCover !== null && daysOfCover < coverage && qtyToSend > 0;
+    const exceedsOwn = qtyToSend > ownQty;
+
+    const { allocations, short } = fefoAutoSelect(item, capped);
+    const isUnbatched = item.segments.length > 0 && item.segments.every(s => s.seg === null);
+
+    const existing = rows.find(r => r.id === item.id);
+    return {
+      ...item,
+      qtyToSend: capped,
+      idealQty: qtyToSend,
+      qty: capped > 0 ? String(capped) : '',
+      afterDispatch,
+      retainPct,
+      isOut,
+      isLow,
+      exceedsOwn,
+      daysOfCover,
+      urgency,
+      suggestion,
+      included: existing ? existing.included : false,
+      fefoAllocations: allocations,
+      fefoShort: short,
+      isUnbatched,
+    };
+  });
+
+  // Sort: OUT → LOW → OK, then by days of cover asc
+  rows.sort((a,b) => {
+    if (a.isOut && !b.isOut) return -1;
+    if (!a.isOut && b.isOut) return 1;
+    if (a.isLow && !b.isLow) return -1;
+    if (!a.isLow && b.isLow) return 1;
+    return (a.daysOfCover||99) - (b.daysOfCover||99);
+  });
+}
+
+function fefoAutoSelect(item, sendQty) {
+  const segs = item.segments
+    .filter(s => s.seg !== null)
+    .filter(s => !s.expiry || new Date(s.expiry) > new Date())
+    .sort((a,b) => new Date(a.expiry||'9999') - new Date(b.expiry||'9999'));
+  let remaining = sendQty;
+  const allocations = [];
+  for (const seg of segs) {
+    if (remaining <= 0) break;
+    const take = Math.min(remaining, seg.qty);
+    allocations.push({ seg: seg.seg, batch: seg.batch, expiry: seg.expiry, qty: take, available: seg.qty });
+    remaining -= take;
+  }
+  return { allocations, short: remaining > 0 };
+}
+
+function getFilteredRows() {
+  const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
+  return rows.filter(r => {
+    if (filter === 'out' && !r.isOut) return false;
+    if (filter === 'low' && !r.isLow) return false;
+    if (selectedCat !== 'all' && r.cat !== selectedCat) return false;
+    if (search && !r.title.toLowerCase().includes(search)) return false;
+    return true;
+  });
+}
+
+const CAT_OPTIONS = [
+  { value: 'all', label: 'All Categories', color: '#6b7280' },
+  { value: 'Vegetables & Herbs', label: 'Vegetables & Herbs', color: '#22c55e' },
+  { value: 'desi dairy', label: 'desi dairy', color: '#f59e0b' },
+];
+
+function buildCatList(search) {
+  const list = document.getElementById('catComboList');
+  if (!list) return;
+  const q = (search || '').toLowerCase();
+  const filtered = CAT_OPTIONS.filter(o => !q || o.label.toLowerCase().includes(q));
+  list.innerHTML = filtered.map(o => `
+    <div class="cat-combo-item ${selectedCat===o.value?'selected':''}"
+      tabindex="0" data-val="${o.value}" data-label="${o.label}">
+      <span class="item-dot" style="background:${o.color}"></span>
+      ${o.label}
+    </div>
+  `).join('') || '<div style="padding:6px 10px;font-size:11px;color:#9ca3af">No match</div>';
+
+  // Delegated click + keyboard on the list
+  list.onclick = e => {
+    const item = e.target.closest('.cat-combo-item');
+    if (item) selectCatOption(item.dataset.val, item.dataset.label);
+  };
+  list.onkeydown = e => {
+    const item = e.target.closest('.cat-combo-item');
+    if (!item) return;
+    if (e.key === 'Enter') { selectCatOption(item.dataset.val, item.dataset.label); }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); item.nextElementSibling?.focus(); }
+    else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      item.previousElementSibling ? item.previousElementSibling.focus() : document.getElementById('catComboSearch')?.focus();
+    } else if (e.key === 'Escape') { document.getElementById('catComboDrop').classList.remove('open'); }
+  };
+}
+
+function onCatSearchKey(event) {
+  if (event.key === 'Enter') {
+    const first = document.querySelector('#catComboList .cat-combo-item');
+    if (first) first.click();
+  } else if (event.key === 'ArrowDown') {
+    event.preventDefault();
+    document.querySelector('#catComboList .cat-combo-item')?.focus();
+  } else if (event.key === 'Escape') {
+    document.getElementById('catComboDrop').classList.remove('open');
+  }
+}
+
+function onCatItemKey(event, value, label) {
+  if (event.key === 'Enter') {
+    selectCatOption(value, label);
+  } else if (event.key === 'ArrowDown') {
+    event.preventDefault();
+    event.target.nextElementSibling?.focus();
+  } else if (event.key === 'ArrowUp') {
+    event.preventDefault();
+    const prev = event.target.previousElementSibling;
+    prev ? prev.focus() : document.getElementById('catComboSearch')?.focus();
+  } else if (event.key === 'Escape') {
+    document.getElementById('catComboDrop').classList.remove('open');
+    document.getElementById('catComboBtn')?.focus();
+  }
+}
+
+function toggleCatCombo(event) {
+  event.stopPropagation();
+  const drop = document.getElementById('catComboDrop');
+  const btn  = document.getElementById('catComboBtn');
+  const rect = btn.getBoundingClientRect();
+  if (drop.classList.contains('open')) { drop.classList.remove('open'); return; }
+  drop.style.top  = (rect.bottom + 3) + 'px';
+  drop.style.left = rect.left + 'px';
+  drop.classList.add('open');
+  const inp = document.getElementById('catComboSearch');
+  inp.value = '';
+  buildCatList('');
+  setTimeout(() => inp.focus(), 50);
+}
+
+function filterCatCombo() {
+  buildCatList(document.getElementById('catComboSearch')?.value || '');
+}
+
+function selectCatOption(value, label) {
+  selectedCat = value;
+  document.getElementById('catComboBtn').textContent = label;
+  document.getElementById('catComboDrop').classList.remove('open');
+  render();
+}
+
+// Close on outside click
+document.addEventListener('click', () => {
+  document.getElementById('catComboDrop')?.classList.remove('open');
+});
+
+// Init cat list
+buildCatList('');
+
+function render() {
+  computeRows();
+  const filtered = getFilteredRows();
+
+  // Group by category
+  const groups = {};
+  filtered.forEach(r => { (groups[r.cat] = groups[r.cat]||[]).push(r); });
+
+  const outCount = rows.filter(r=>r.isOut).length;
+  const lowCount = rows.filter(r=>r.isLow&&!r.isOut).length;
+  const okCount  = rows.filter(r=>!r.isOut&&!r.isLow).length;
+  document.getElementById('hOut').textContent = outCount;
+  document.getElementById('hLow').textContent = lowCount;
+  document.getElementById('hOk').textContent = okCount;
+
+  const included = rows.filter(r=>r.included);
+  document.getElementById('activeCount').textContent = included.length;
+  document.getElementById('submitBtn').disabled = included.length === 0;
+  document.getElementById('summaryText').innerHTML =
+    `<strong>${included.length}</strong> items to dispatch · <strong>${filtered.length}</strong> shown · 0 source-options API calls`;
+
+  const area = document.getElementById('dispatchArea');
+  area.innerHTML = '';
+
+  // Auto-expand categories that have matching items when search is active
+  const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
+  if (search) {
+    Object.entries(groups).forEach(([cat]) => { delete collapsedCats[cat]; });
+  }
+
+  Object.entries(groups).forEach(([cat, catRows]) => {
+    const collapsed = collapsedCats[cat] === true;
+    const outN = catRows.filter(r=>r.isOut).length;
+    const lowN = catRows.filter(r=>r.isLow&&!r.isOut).length;
+
+    const section = document.createElement('div');
+    section.className = 'cat-section';
+
+    section.innerHTML = `
+      <div class="cat-header" onclick="toggleCat('${cat.replace(/'/g,"\\'")}');" tabindex="-1">
+        <span class="cat-chevron ${collapsed?'':'open'}">▶</span>
+        <span class="cat-name">${cat}</span>
+        <span class="cat-count">${catRows.length} items</span>
+        ${outN>0?`<span class="cat-badge out">${outN} OUT</span>`:''}
+        ${lowN>0?`<span class="cat-badge low">${lowN} LOW</span>`:''}
+        <div class="cat-actions" onclick="event.stopPropagation()">
+          <button class="cat-btn" tabindex="-1" onclick="selectAll('${cat.replace(/'/g,"\\'")}', true)">Select All</button>
+          <button class="cat-btn" tabindex="-1" onclick="selectAll('${cat.replace(/'/g,"\\'")}', false)">Unselect All</button>
+        </div>
+      </div>
+    `;
+
+    if (!collapsed) {
+      const tableWrap = document.createElement('div');
+      tableWrap.className = 'dispatch-table-wrap';
+      tableWrap.innerHTML = `
+        <table class="dispatch-table">
+          <colgroup>
+            <col class="col-chk"/><col class="col-item"/><col class="col-destqty"/>
+            <col class="col-cover"/><col class="col-sendqty"/><col class="col-source"/>
+            <col class="col-after"/><col class="col-note"/>
+          </colgroup>
+          <thead><tr>
+            <th>☐</th><th>Item</th><th>At Dest</th><th>Cover</th>
+            <th>Send Qty</th><th>Source (FEFO)</th><th>After Dispatch</th><th>Note</th>
+          </tr></thead>
+          <tbody id="tbody-${cat.replace(/\s/g,'_')}"></tbody>
+        </table>
+      `;
+      section.appendChild(tableWrap);
+      area.appendChild(section);
+      renderCatRows(catRows, cat);
+    } else {
+      area.appendChild(section);
+    }
+  });
+}
+
+function renderCatRows(catRows, cat) {
+  const tbody = document.getElementById(`tbody-${cat.replace(/\s/g,'_')}`);
+  if (!tbody) return;
+  catRows.forEach(row => {
+    const tr = document.createElement('tr');
+    tr.setAttribute('onclick', `onRowClick(event, ${row.id})`);
+    tr.style.cursor = 'pointer';
+    if (row.isOut) tr.className = 'row-out';
+    else if (row.isLow) tr.className = 'row-low';
+    if (!row.included) tr.classList.add('row-unchecked');
+
+    const coverText = row.daysOfCover !== null
+      ? (row.daysOfCover < 1 ? '<1d' : `~${Math.round(row.daysOfCover)}d`)
+      : '—';
+    const coverColor = row.isOut ? 'color:#ef4444;font-weight:700' : row.isLow ? 'color:#b45309;font-weight:600' : 'color:#6b7280';
+
+    const statusBadge = row.isOut
+      ? '<span class="badge badge-out">OUT</span>'
+      : row.isLow
+        ? '<span class="badge badge-low">LOW</span>'
+        : '';
+
+    const sourceHtml = buildSourceHtml(row);
+    const afterClass = row.afterDispatch < 0 ? 'after-warn' : 'after-ok';
+
+    tr.innerHTML = `
+      <td style="text-align:center">
+        <input type="checkbox" ${row.included?'checked':''} onchange="onInclude(${row.id},this.checked)" style="accent-color:#6366f1" />
+      </td>
+      <td>
+        <div class="item-name">${row.title} ${statusBadge}</div>
+        <div class="item-sub">${row.ownQty} ${row.unit} available</div>
+      </td>
+      <td style="font-size:11.5px;font-variant-numeric:tabular-nums;${coverColor}">${row.destQty} ${row.unit}</td>
+      <td style="font-size:11.5px;${coverColor}">${coverText}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:3px">
+          <input type="number" class="qty-input ${row.exceedsOwn?'exceeds':''}" value="${row.qty}"
+            oninput="onQty(${row.id},this.value)" id="qty-${row.id}" />
+          <span style="font-size:10px;color:#9ca3af">${row.unit}</span>
+        </div>
+        ${row.exceedsOwn?`<div style="font-size:9px;color:#ef4444">max: ${row.ownQty}</div>`:''}
+      </td>
+      <td>${sourceHtml}</td>
+      <td>
+        <div class="${afterClass}">${row.afterDispatch.toFixed(1)} ${row.unit}</div>
+        <div class="retain-pct">${row.retainPct}% retained</div>
+      </td>
+      <td>${row.isUnbatched?`<span class="badge badge-info">No batch tracking — bucket dispatch. <a href="#" style="color:#6366f1;font-size:9px">Add purchase</a></span>`:`<span style="font-size:9.5px;color:#9ca3af">${row.fefoShort?'⚠ Short on stock':''}</span>`}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function buildSourceHtml(row) {
+  if (row.isUnbatched) {
+    return `<div style="font-size:10.5px;color:#6b7280">Bucket (legacy)</div>`;
+  }
+  if (row.fefoAllocations.length === 0) {
+    return `<div style="font-size:10.5px;color:#9ca3af">—</div>`;
+  }
+  // Show FEFO allocations
+  const lines = row.fefoAllocations.map((a, i) => `
+    <div class="source-row">
+      <select class="source-select fefo">
+        <option>${a.batch} (${a.qty} ${row.unit})</option>
+      </select>
+      <span class="fefo-badge">FEFO</span>
+      ${row.fefoAllocations.length > 1 ? `<input class="source-qty-input" type="number" value="${a.qty}" />` : ''}
+    </div>
+  `).join('');
+  const allocTotal = row.fefoAllocations.reduce((s,a)=>s+a.qty,0);
+  const need = Number(row.qty);
+  const allocStatus = Math.abs(allocTotal - need) < 0.01
+    ? `<div class="alloc-status alloc-ok">✓ Exact</div>`
+    : allocTotal < need
+      ? `<div class="alloc-status alloc-short">⚠ Short ${(need-allocTotal).toFixed(1)} ${row.unit}</div>`
+      : '';
+  return `<div class="source-select-wrap">${lines}${allocStatus}<button class="add-split-btn" tabindex="-1" onclick="addSplit(${row.id})">+ split across another batch</button></div>`;
+}
+
+function onRowClick(event, id) {
+  // Toggle checkbox unless clicking an interactive element
+  const tag = event.target.tagName;
+  if (['INPUT','SELECT','BUTTON','A','OPTION'].includes(tag)) return;
+  const r = rows.find(r => r.id === id);
+  if (r) { r.included = !r.included; render(); }
+}
+
+function onInclude(id, checked) {
+  const r = rows.find(r=>r.id===id);
+  if (r) r.included = checked;
+  render(); // full re-render so row-unchecked class is removed/added
+}
+
+function onQty(id, val) {
+  const r = rows.find(r=>r.id===id);
+  if (!r) return;
+  r.qty = val;
+  r.fefoAllocations = fefoAutoSelect(r, Number(val)).allocations;
+  // Re-render that row's source cell only
+  const td = document.getElementById(`qty-${id}`)?.closest('tr')?.cells[5];
+  if (td) td.innerHTML = buildSourceHtml(r);
+  updateCounts();
+}
+
+function addSplit(id) { /* demo only */ alert('Split allocation added for demo.'); }
+
+function updateCounts() {
+  const included = rows.filter(r=>r.included);
+  document.getElementById('activeCount').textContent = included.length;
+  document.getElementById('submitBtn').disabled = included.length === 0;
+  document.getElementById('summaryText').innerHTML =
+    `<strong>${included.length}</strong> items to dispatch · 0 source-options API calls`;
+}
+
+function toggleCat(cat) {
+  collapsedCats[cat] = !collapsedCats[cat];
+  render();
+}
+
+function selectAll(cat, select) {
+  rows.filter(r => r.cat === cat).forEach(r => r.included = select);
+  if (!select) collapsedCats[cat] = true;
+  else delete collapsedCats[cat];
+  render();
+}
+
+function setFilter(f) {
+  filter = f;
+  document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+  document.getElementById('pill' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active');
+  render();
+}
+
+function onDestChange() { render(); }
+
+function masterSelect(select) {
+  // Select/unselect ALL rows across ALL categories — NO collapse side-effect
+  rows.forEach(r => r.included = select);
+  render();
+}
+
+function resetAll() {
+  rows.forEach(r => r.included = false);
+  filter = 'all';
+  selectedCat = 'all';
+  collapsedCats = {};
+  window._coverage = 3;
+  document.getElementById('searchInput').value = '';
+  document.getElementById('catComboBtn').textContent = 'All Categories';
+  document.querySelectorAll('.cov-pill').forEach(b => { b.classList.remove('active'); if (b.dataset.val==='3') b.classList.add('active'); });
+  setFilter('all');
+}
+
+function simulateDispatch() {
+  const included = rows.filter(r=>r.included);
+  alert(`Dispatching ${included.length} items to Outlet Direct One.\nPOST /inventory-transfer/initiate → items[] with FEFO source_selector.`);
+}
+
+// Init
+render();
+</script>
+</body>
+</html>

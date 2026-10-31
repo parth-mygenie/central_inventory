@@ -1,0 +1,77 @@
+{
+  "iteration": 51,
+  "test_date": "2026-01-14",
+  "test_type": "Bug Batch: BUG-023, BUG-021, BUG-020, BUG-022",
+  "overall_status": "PASS",
+  "summary": "All 4 bugs verified as fixed. BUG-023 (₹ icon), BUG-021 (Adjust Stock removed), BUG-020 (store names in transactions), BUG-022 (PO redirect) all working correctly.",
+
+  "features_tested": [
+    {
+      "feature": "BUG-023: Production Run Form shows ₹ icon for cost",
+      "status": "PASS",
+      "details": "Estimated Material Cost shows '₹7.00 (₹1.40/piece)'. IndianRupee icon from lucide-react renders correctly."
+    },
+    {
+      "feature": "BUG-023: Production History shows ₹ icon for Unit Cost and Total Cost",
+      "status": "PASS",
+      "details": "KPI cards show '₹4.9K TOTAL MATERIAL COST', 'Avg ₹2.57/unit'. All runs table shows ₹ symbols (₹2.48, ₹2,607.85, etc.). Expanded detail shows 'Unit Cost: ₹2.48 Total: ₹2.48'."
+    },
+    {
+      "feature": "BUG-023: Sub-Recipe Master shows ₹ icon for Material Cost",
+      "status": "PASS",
+      "details": "Intelligence section shows ₹ symbol for 'Material Cost/batch'. Value shows '—' when no cost data available, but icon is correct."
+    },
+    {
+      "feature": "BUG-021: Operations Hub Quick Actions does NOT show 'Adjust Stock' card",
+      "status": "PASS",
+      "details": "Quick Actions shows: Dispatch Stock, Purchase, Run Production, Record Wastage, Wastage Report. No 'Adjust Stock' card present."
+    },
+    {
+      "feature": "BUG-020: Store Detail transactions show real store names",
+      "status": "PASS",
+      "details": "History & Ledger shows Source/Destination with real names: 'german fluid', 'Cost Test Outlet', 'Central Kitchen Alpha', 'Outlet Direct One'. Transfer Detail shows 'FROM: german fluid Central Store' and 'TO: Cost Test Outlet Outlet'. No 'Unknown: —' found."
+    },
+    {
+      "feature": "BUG-022: /purchase auto-redirects to /purchase/orders when PO required",
+      "status": "PASS",
+      "details": "Navigating to /purchase redirects to /purchase/orders. Purchase Orders page loads with existing POs. Note: /add-stock route doesn't exist (falls through to catch-all redirect to /), but /purchase correctly redirects."
+    }
+  ],
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Store Detail header",
+        "issues": ["Store type badge shows 'Unknown' for some stores (e.g., Store #806, #807, #809). This is a minor display issue - the store type is not being resolved from the API response."]
+      }
+    ]
+  },
+
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "BUG-023: IndianRupee icon correctly imported from lucide-react in ProductionRunForm.jsx (line 22), ProductionHistory.jsx (line 11), SubRecipeMaster.jsx (line 13)",
+    "BUG-021: canDo('adjust-stock') card block removed from OperationsHub.jsx Quick Actions section",
+    "BUG-020: useRestaurantMap hook added to StoreDetail.jsx, restaurantMap lookup used for From/To columns in transactions table",
+    "BUG-022: AddStockPurchaseForm.jsx uses <Navigate to='/purchase/orders' replace /> when poRequired is true"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (frontend only test)",
+    "frontend": "100% (6/6 features verified)"
+  },
+  "test_credentials": {
+    "central_store": "manager@germanfluid.com / Qplazm@10"
+  },
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Bug batch BUG-023, BUG-021, BUG-020, BUG-022 all verified. IndianRupee (₹) icon displays correctly in Production Run Form, Production History, and Sub-Recipe Master. Adjust Stock card removed from Operations Hub Quick Actions. Store Detail transactions show real store names via restaurantMap lookup. /purchase redirects to /purchase/orders when PO is required. Minor note: Store Detail header shows 'Unknown' badge for store type - this is a pre-existing display issue, not related to the current bug fixes."
+}

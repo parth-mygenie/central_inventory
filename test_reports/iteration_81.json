@@ -1,0 +1,33 @@
+{
+  "summary": "Frontend-only test of GST additions (per-row gst + bill-level tot_tax) on AddStockPurchaseForm and PurchaseReport. Login OK, Manual Entry form shows Vendor/Purchase Date/Invoice #/Fare/Total GST/Payment; items table headers #, Item, Qty, Unit, Unit Price, Amount, GST, Batch, Expiry. tot-tax-input and gst-input-0 present and accept numeric input. Row GST Total strip, confirm screen (GST column + Total GST line) and Grand Total (items+fare+tot_tax) correct. Submit payload verified by intercepting POST /api/proxy/v2/inventory/add-purchase (blocked, no real purchase created): contains tot_tax:18 and purchase_items[].gst:18, tot_amount 118. Keyboard Tab order qty->rate->gst->batch works. Split payment, vendor select, item search, batch auto-gen, expiry, Reset (clears gst & tot_tax) all still work. /reports/purchase shows GST column between Item Amt and Fare; existing row shows '—'.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "AddStockPurchaseForm Total GST / GST inputs", "issue": "Negative values accepted (min=0 is not enforced on typing). Entering -5 in Total GST reduced payable from 100 to 95 and would be sent as tot_tax:-5.", "selector": "[data-testid='tot-tax-input'], [data-testid^='gst-input-']", "priority": "LOW"}
+    ],
+    "integration_issues": [
+      {"flow": "Purchase Report bill-level GST", "issue": "Report never displays bill-level tot_tax. The transaction header row renders m.gst (line-level gst of the FIRST line) rather than tot_tax. For multi-item purchases the header GST shows only the first item's gst, which is misleading. vendor-item-list API response currently has no tot_tax key (keys: ..., tot_fair, tot_amount, gst, partial_payments) so backend/upstream may need to return it.", "affected_selectors": ["[data-testid^='pr-gst-']"]},
+      {"flow": "Row GST vs Total GST", "issue": "Per-row GST values and Total GST are independent. If user enters row GST (e.g. 5) and leaves Total GST empty, payable/tot_amount excludes GST (stays 100) and tot_tax:0 is sent while items carry gst. Consider auto-filling Total GST from Row GST Total (editable) or warning on mismatch.", "affected_selectors": ["[data-testid='tot-tax-input']", "[data-testid='gst-input-0']"]}
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "PurchaseReport: show bill-level tot_tax in transaction header row (fallback to sum of line gst), keep line gst in sub-rows; confirm upstream vendor-item-list returns tot_tax",
+    "Decide/implement relationship between Row GST Total and Total GST (auto-sync or mismatch warning) so tot_amount includes GST consistently",
+    "Clamp/validate negative values for gst and tot_tax inputs"
+  ],
+  "critical_code_review_comments": [
+    "AddStockPurchaseForm.jsx is 968 lines - should be split (SpreadsheetRow, PaymentLegs, confirm screen into separate files)",
+    "PurchaseReport.jsx line ~295-300: ternary 'isMulti ? — : —' both branches identical - dead logic",
+    "Fare input lacks data-testid (pre-existing)",
+    "Pre-existing: existing report row shows Item Amt ₹0 and Payment '—' (unrelated to this change)"
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped)", "frontend": "100% of requested checks pass; 3 non-blocking issues"},
+  "test_credentials": "manager@mygenietest002.com / Qplazm@10 (from /app/memory/test_credentials.md)",
+  "seed_data_creation": "None - add-purchase request was intercepted and blocked; no purchase created on preprod",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Login testids: login-email-input, login-password-input, login-submit-button. Purchase form at /purchase -> tab-manual-entry. Vendor via shadcn select (role=option), items via [cmdk-item]. Payment leg inputs under [data-testid='pay-leg-N']. Report API: /api/proxy/v2/inventory/vendor-item-list. Use page.route to intercept add-purchase to avoid creating real data."
+}

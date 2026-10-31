@@ -1,0 +1,71 @@
+{
+  "summary": "BUG-036 Testing Complete - App-Wide Consumption Unit Mismatch Fix VERIFIED. All critical tests PASSED. The fix correctly normalizes consumption from base unit (gm) to display unit (kg) and uses Option A fallback (show gm when kg < 0.05).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_results": {
+    "BUG-036_PO_CREATE_WHOLE_WHEAT": {
+      "status": "PASS",
+      "description": "PO Create (By Item Need) - Whole Wheat Flour consumption unit fix",
+      "evidence": "Daily Consumption shows '9.584 gm/day' (Option A fallback working - not 9.6 kg/day). Days Will Last shows '3116d' (not 3d). Suggested qty is 0 (not 258). KPIs: Out of Stock=2, Low Stock=0, Below 14D Cover=1, Total Items=44."
+    },
+    "BUG-036_PO_CREATE_OTHER_ITEMS": {
+      "status": "PASS",
+      "description": "PO Create (By Item Need) - Other items show correct consumption",
+      "evidence": "Below 14D Cover KPI shows 1 (reasonable count). Items sorted by urgency correctly."
+    },
+    "BUG-036_RAW_MATERIAL_WHOLE_WHEAT": {
+      "status": "PASS",
+      "description": "Raw Material Master - Whole Wheat Flour expanded row",
+      "evidence": "Consumption shows '9.584 gm/day' (Option A fallback). Days of Stock shows '3116d'. Avg Rate shows ₹46.17/kg. Vendor Price Comparison shows Farmfresh Organics ₹45/kg (best) and Dairy & Fats Co ₹52/kg."
+    },
+    "BUG-036_RAW_MATERIAL_BAKING_POWDER": {
+      "status": "PASS",
+      "description": "Raw Material Master - Baking Powder (another low-consumption item)",
+      "evidence": "Consumption shows '0.281 gm/day' (Option A fallback working). Days of Stock shows '10687d'. Avg Rate shows ₹250/kg."
+    },
+    "WEBPACK_COMPILATION": {
+      "status": "PASS",
+      "description": "Frontend compiles without new errors",
+      "evidence": "Webpack compiled with 1 warning (pre-existing Sidebar.jsx useEffect dependency warning). No new errors introduced by BUG-036 fix."
+    },
+    "REGRESSION_LOGIN_LOGOUT": {
+      "status": "PASS",
+      "description": "Login/Logout works for all accounts",
+      "evidence": "owner@chai.com (RID 813) - login/logout successful. manager@germanfluid.com (RID 806) - login/logout successful."
+    },
+    "REGRESSION_DASHBOARD": {
+      "status": "PASS",
+      "description": "Operations Hub dashboard loads correctly",
+      "evidence": "Both chai and germanfluid dashboards load with KPIs, Stock Health, Store Health Across Hierarchy, Quick Actions, and Today's Activity sections."
+    }
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "BUG-036 fix correctly implemented across 8 files as specified",
+    "normalizeToDisplayUnit() in formatters.js handles gm→kg and ml→ltr conversions",
+    "smartConsumptionDisplay() implements Option A fallback: shows gm when kg value < 0.05",
+    "3 decimal precision maintained for consumption display",
+    "Pre-existing eslint warnings in Sidebar.jsx, PendingQueues.jsx, WastageReport.jsx are unrelated to BUG-036"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "100%",
+    "frontend": "100%"
+  },
+  "test_credentials": {
+    "chai_central": "owner@chai.com / Qplazm@10 (RID 813) - PRIMARY for BUG-036 testing",
+    "central_store": "manager@germanfluid.com / Qplazm@10 (RID 806) - regression"
+  },
+  "seed_data_creation": "None - all data from real POS API proxy at preprod.mygenie.online",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "BUG-036 fix verified. Key test data: Whole Wheat Flour (id=17772) has 134.18 gm consumed over 14 days = 9.584 gm/day. With 29.87 kg in stock, Days of Stock = 3116d. The smartConsumptionDisplay uses Option A: if converted value < 0.05 in display unit (kg), fall back to consumption unit (gm). All consumption values from API are in base unit (gm) and must be normalized via normalizeToDisplayUnit() before calculations."
+}

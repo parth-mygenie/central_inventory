@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CR-047 Mock — Add Stock Spreadsheet UX (Real Data: RID 828)</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 13px; background: #f5f5f5; color: #111; }
+
+  .shell { display: flex; height: 100vh; overflow: hidden; }
+  .sidebar { width: 220px; background: #fff; border-right: 1px solid #e5e7eb; padding: 16px 0; flex-shrink: 0; }
+  .sidebar-logo { padding: 0 16px 16px; border-bottom: 1px solid #e5e7eb; margin-bottom: 8px; }
+  .sidebar-logo-icon { width: 28px; height: 28px; background: #111; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; margin-right: 8px; vertical-align: middle; }
+  .sidebar-logo-icon svg { width: 16px; height: 16px; fill: #fff; }
+  .sidebar-logo-text { font-weight: 700; font-size: 14px; vertical-align: middle; }
+  .nav-section { padding: 4px 8px; margin-bottom: 2px; }
+  .nav-section-label { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: #9ca3af; padding: 6px 8px 4px; font-weight: 600; }
+  .nav-item { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 6px; cursor: pointer; color: #374151; transition: background .12s; font-size: 12.5px; }
+  .nav-item:hover { background: #f3f4f6; }
+  .nav-item.active { background: #f0fdf4; color: #16a34a; font-weight: 600; }
+  .nav-item svg { width: 15px; height: 15px; flex-shrink: 0; opacity: .65; }
+  .nav-item.active svg { opacity: 1; }
+
+  .main { flex: 1; overflow: auto; background: #f9fafb; min-width: 0; }
+  .page { padding: 12px 14px 32px 14px; }
+
+  /* Page header */
+  .page-header { display: flex; align-items: center; gap-10px; margin-bottom: 20px; }
+  .page-title { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 7px; }
+  .page-title svg { width: 15px; height: 15px; }
+  .page-subtitle { font-size: 11px; color: #6b7280; margin-top: 1px; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 2px; background: #f3f4f6; border-radius: 7px; padding: 2px; width: fit-content; margin-bottom: 10px; }
+  .tab { padding: 4px 12px; border-radius: 5px; font-size: 11.5px; cursor: pointer; color: #6b7280; transition: all .12s; }
+  .tab.active { background: #fff; color: #111; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+
+  /* Card */
+  .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 8px; }
+  .card-header { padding: 8px 14px 0; border-bottom: 1px solid #f3f4f6; }
+  .card-header-title { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: #9ca3af; padding-bottom: 7px; }
+  .card-body { padding: 10px 12px; }
+
+  /* Vendor/date row */
+  .header-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .field-label { font-size: 10.5px; font-weight: 500; color: #374151; margin-bottom: 3px; }
+  .field-label .req { color: #ef4444; }
+  select, input[type=text], input[type=number], input[type=date] {
+    width: 100%; height: 30px; border: 1px solid #d1d5db; border-radius: 6px; padding: 0 8px;
+    font-size: 12px; color: #111; background: #fff; outline: none; transition: border .12s;
+    font-family: inherit;
+  }
+  /* Remove spinner arrows on all number inputs */
+  input[type=number]::-webkit-outer-spin-button,
+  input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type=number] { -moz-appearance: textfield; }
+  select:focus, input:focus { border-color: #6366f1; box-shadow: 0 0 0 2px rgba(99,102,241,.1); }
+  .vendor-context { display: flex; align-items: center; gap: 5px; margin-top: 6px; padding: 5px 8px; background: #f8fafc; border-radius: 5px; font-size: 10.5px; color: #6b7280; }
+  .vendor-context svg { width: 11px; height: 11px; flex-shrink: 0; }
+
+  /* Spreadsheet table */
+  /* spreadsheet-wrap defined below with full rules */
+  .spreadsheet { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .spreadsheet thead tr { background: #f8fafc; }
+  .spreadsheet th { padding: 7px 8px; text-align: left; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #9ca3af; border-bottom: 1px solid #e5e7eb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .spreadsheet th.required::after { content: " *"; color: #ef4444; }
+  .spreadsheet td { padding: 3px 4px; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+  .spreadsheet tr:last-child td { border-bottom: none; }
+  .spreadsheet tr:hover td { background: #fafafa; }
+  .spreadsheet input, .spreadsheet select { height: 28px; font-size: 11.5px; border-radius: 5px; }
+  .spreadsheet input.auto-filled { background: #f0fdf4; border-color: #86efac; color: #15803d; }
+  .spreadsheet input.error { border-color: #fca5a5; background: #fff1f1; }
+  .col-idx { width: 28px; }
+  .col-item { min-width: 160px; width: 22%; }
+  .col-qty { width: 70px; }
+  .col-unit { width: 48px; }
+  .col-rate { width: 80px; }
+  .col-amount { width: 80px; }
+  .col-batch { width: 110px; }
+  .col-expiry { width: 108px; }
+  .col-del { width: 28px; }
+  .row-num { font-size: 10px; color: #9ca3af; font-weight: 600; text-align: center; }
+  .del-btn { width: 22px; height: 22px; border: none; background: none; cursor: pointer; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; color: #9ca3af; }
+  .del-btn:hover { background: #fee2e2; color: #ef4444; }
+  .del-btn svg { width: 12px; height: 12px; }
+  .unit-badge { font-size: 11px; color: #6b7280; background: #f3f4f6; border-radius: 4px; padding: 4px 7px; text-align: center; white-space: nowrap; }
+
+  /* Add row button */
+  .add-row-btn { width: 100%; padding: 5px; border: 1.5px dashed #d1d5db; border-radius: 5px; background: none; cursor: pointer; font-size: 11px; color: #9ca3af; display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 5px; transition: all .12s; }
+  .add-row-btn:hover { border-color: #6366f1; color: #6366f1; background: #f5f3ff; }
+  .add-row-btn svg { width: 12px; height: 12px; }
+
+  /* Grand total bar */
+  .grand-total-bar { display: flex; align-items: center; justify-content: space-between; padding: 7px 12px; background: #f0fdf4; border-radius: 6px; border: 1px solid #bbf7d0; margin-top: 5px; }
+  .grand-total-label { font-size: 11px; font-weight: 500; color: #15803d; }
+  .grand-total-value { font-size: 14px; font-weight: 700; color: #15803d; font-variant-numeric: tabular-nums; }
+
+  /* Payment section */
+  .payment-section { display: flex; flex-direction: column; gap: 6px; }
+  .payment-row { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; }
+  .payment-mode-select { width: 150px !important; flex: 0 0 150px; }
+  .payment-amount-input { width: 100px !important; flex: 0 0 100px; }
+  .payment-ref-input { flex: 1; min-width: 0; }
+  .payment-remove-btn { width: 26px; height: 26px; border: none; background: none; cursor: pointer; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; color: #9ca3af; }
+  .payment-remove-btn:hover { background: #fee2e2; color: #ef4444; }
+  .payment-remove-btn svg { width: 12px; height: 12px; }
+  .add-payment-btn { border: 1px dashed #d1d5db; border-radius: 6px; background: none; padding: 5px 12px; font-size: 11.5px; color: #6b7280; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+  .add-payment-btn:hover { border-color: #6366f1; color: #6366f1; }
+  .add-payment-btn svg { width: 12px; height: 12px; }
+  .payment-balance { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 7px; font-size: 11.5px; font-weight: 500; }
+  .payment-balance.ok { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+  .payment-balance.warn { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+  .payment-balance svg { width: 13px; height: 13px; }
+
+  .btn { height: 30px; padding: 0 14px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 5px; transition: all .12s; font-family: inherit; }
+  .btn svg { width: 13px; height: 13px; }
+  .btn-primary { background: #111; color: #fff; }
+  .btn-primary:hover { background: #222; }
+  .btn-primary:disabled { background: #d1d5db; color: #9ca3af; cursor: not-allowed; }
+  .btn-outline { background: #fff; color: #374151; border: 1px solid #d1d5db; }
+  .btn-outline:hover { background: #f9fafb; }
+  .btn-ghost { background: none; color: #374151; border: 1px solid transparent; }
+  .btn-ghost:hover { background: #f3f4f6; }
+  .btn-row { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+
+  /* Incomplete warning */
+  .incomplete-warn { font-size: 10.5px; color: #ef4444; display: flex; align-items: center; gap: 4px; }
+  .incomplete-warn svg { width: 11px; height: 11px; }
+
+  /* Item combobox dropdown */
+  .spreadsheet-wrap { overflow-x: auto; width: 100%; }
+  .spreadsheet input { width: 100%; min-width: 0; box-sizing: border-box; }
+  .combobox-input-wrap { position: relative; }
+  .combobox-input { width: 100%; height: 28px; padding: 0 8px; border: 1px solid #d1d5db; border-radius: 5px; font-size: 11.5px; outline: none; cursor: pointer; }
+  .combobox-input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.1); }
+  .combobox-dropdown { position: fixed; width: 280px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.12); z-index: 9999; display: none; }
+  .combobox-dropdown.open { display: block; }
+  .combobox-search { padding: 8px 10px; border-bottom: 1px solid #f3f4f6; }
+  .combobox-search input { width: 100%; height: 28px; border: 1px solid #d1d5db; border-radius: 5px; padding: 0 8px; font-size: 12px; outline: none; }
+  .combobox-search input:focus { border-color: #6366f1; }
+  .combobox-list { max-height: 220px; overflow-y: auto; }
+  .combobox-group-label { padding: 6px 10px 2px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #9ca3af; }
+  .combobox-item { padding: 6px 10px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-size: 12px; }
+  .combobox-item:hover { background: #f5f3ff; color: #6366f1; }
+  .combobox-item:focus { background: #eef2ff; color: #4338ca; outline: none; }
+  .combobox-item.selected { background: #eef2ff; color: #4338ca; font-weight: 500; }
+  .combobox-item.used { color: #9ca3af; background: #fafafa; }
+  .combobox-item-unit { font-size: 10.5px; color: #9ca3af; }
+  .combobox-empty { padding: 16px 10px; text-align: center; color: #9ca3af; font-size: 11.5px; }
+
+  /* Confirm view */
+  .confirm-view { display: none; }
+  .confirm-table { width: 100%; border-collapse: collapse; }
+  .confirm-table th { font-size: 10.5px; font-weight: 600; color: #9ca3af; text-transform: uppercase; padding: 8px 12px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+  .confirm-table td { padding: 9px 12px; font-size: 12px; border-bottom: 1px solid #f3f4f6; }
+  .confirm-table td.mono { font-variant-numeric: tabular-nums; font-size: 12px; }
+  .confirm-table tr:last-child td { border-bottom: none; }
+  .confirm-total-row td { font-weight: 700; font-size: 13px; background: #f8fafc; }
+  .meta-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .meta-item { }
+  .meta-label { font-size: 10px; color: #9ca3af; font-weight: 500; text-transform: uppercase; margin-bottom: 2px; }
+  .meta-value { font-size: 12.5px; font-weight: 500; }
+
+  /* Success view */
+  .success-view { display: none; }
+  .success-box { text-align: center; padding: 32px 20px; }
+  .success-icon { width: 52px; height: 52px; background: #dcfce7; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+  .success-icon svg { width: 26px; height: 26px; color: #16a34a; }
+  .success-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .success-subtitle { font-size: 12px; color: #6b7280; margin-bottom: 14px; }
+  .txn-badge { display: inline-flex; align-items: center; gap: 6px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 20px; padding: 5px 14px; font-size: 11.5px; font-weight: 600; color: #15803d; font-variant-numeric: tabular-nums; margin-bottom: 20px; }
+
+  /* Badge */
+  .badge { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 20px; font-size: 10.5px; font-weight: 500; }
+  .badge-green { background: #dcfce7; color: #15803d; }
+  .badge-amber { background: #fef3c7; color: #b45309; }
+  .badge-purple { background: #ede9fe; color: #6d28d9; }
+
+  /* Notice banner */
+  .notice { display: flex; gap: 8px; padding: 10px 12px; border-radius: 7px; font-size: 11.5px; align-items: flex-start; }
+  .notice-info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8; }
+  .notice svg { width: 13px; height: 13px; flex-shrink: 0; margin-top: 1px; }
+
+  /* Section divider */
+  .section-divider { height: 1px; background: #f3f4f6; margin: 6px 0; }
+  .section-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: #9ca3af; margin-bottom: 8px; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <span class="sidebar-logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2zm-9 8H7v-2h4v2zm6 0h-4v-2h4v2zM4 7V5a2 2 0 012-2h12a2 2 0 012 2v2H4z"/></svg>
+      </span>
+      <span class="sidebar-logo-text">Central Inventory</span>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Procurement</div>
+      <div class="nav-item active">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+        Add Stock
+      </div>
+      <div class="nav-item">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        Purchase Orders
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Operations</div>
+      <div class="nav-item">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6l9-4 9 4v12l-9 4-9-4V6z"/></svg>
+        Stock Inventory
+      </div>
+      <div class="nav-item">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 7h12M8 12h12M8 17h12M4 7h.01M4 12h.01M4 17h.01"/></svg>
+        Pending Queues
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Catalogue</div>
+      <div class="nav-item">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+        Raw Materials
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="main">
+    <div class="page">
+
+      <!-- FORM VIEW -->
+      <div id="formView">
+        <div style="margin-bottom:10px">
+          <div class="page-title">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M20 7H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2zm-9 8H7v-2h4v2zm6 0h-4v-2h4v2zM4 7V5a2 2 0 012-2h12a2 2 0 012 2v2H4z"/></svg>
+            Procurement — Add Stock
+          </div>
+          <div class="page-subtitle">Purchase stock from vendors. Enter items in the table below — Tab or Enter to move between cells.</div>
+        </div>
+
+        <div class="tabs">
+          <div class="tab" onclick="switchTab('upload')">Upload Invoice</div>
+          <div class="tab active" id="tabManual" onclick="switchTab('manual')">Manual Entry</div>
+        </div>
+
+        <!-- Manual Entry -->
+        <div id="manualTab">
+
+          <!-- Single unified header row: Vendor | Date | Fare || Payment -->
+          <div class="card" style="margin-bottom:8px">
+            <div class="card-body" style="padding:10px 12px">
+
+              <!-- One row: left fields + divider + payment -->
+              <div style="display:flex;gap:10px;align-items:flex-start">
+
+                <!-- Vendor -->
+                <div style="flex:1.2;min-width:0">
+                  <div class="field-label">Vendor <span class="req">*</span></div>
+                  <select id="vendorSelect" onchange="onVendorChange()">
+                    <option value="">Select vendor</option>
+                    <option value="282">masala dairy</option>
+                  </select>
+                </div>
+
+                <!-- Purchase Date -->
+                <div style="flex:1.0;min-width:0">
+                  <div class="field-label">Purchase Date</div>
+                  <input type="date" id="purchaseDateInput" value="2026-10-18" />
+                </div>
+
+                <!-- Fare -->
+                <div style="flex:0.55;min-width:0">
+                  <div class="field-label">Fare</div>
+                  <input type="number" id="fareInput" value="0" min="0" step="0.01" placeholder="0" oninput="updateGrandTotal()" />
+                </div>
+
+                <!-- Visual divider -->
+                <div style="width:1px;background:#e5e7eb;align-self:stretch;margin:0 2px;flex-shrink:0"></div>
+
+                <!-- Payment section (right side) -->
+                <div style="flex:1.8;min-width:0">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+                    <div class="field-label" style="margin:0">Payment</div>
+                    <button class="add-payment-btn" onclick="addPaymentRow()" id="addPayBtn" style="padding:2px 8px;font-size:10.5px;height:20px;border-radius:4px">
+                      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:10px;height:10px"><path d="M12 4v16m8-8H4"/></svg>
+                      Split
+                    </button>
+                  </div>
+                  <div class="payment-section" id="paymentSection" style="gap:5px"></div>
+                  <div id="paymentBalance" style="margin-top:5px;display:none"></div>
+                </div>
+
+              </div><!-- /flex row -->
+
+              <!-- Vendor context strip (below the row) -->
+              <div class="vendor-context" id="vendorContext" style="display:none;margin-top:7px">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                <span id="vendorContextText"></span>
+              </div>
+
+            </div>
+          </div><!-- /header card -->
+
+          <!-- Spreadsheet Table (full width) -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-header-title">Items — use Tab / Enter to navigate rows</div>
+            </div>
+            <div class="card-body" style="padding-top:10px">
+              <div class="spreadsheet-wrap">
+                <table class="spreadsheet" id="spreadsheet">
+                  <thead>
+                    <tr>
+                      <th class="col-idx">#</th>
+                      <th class="col-item required">Item</th>
+                      <th class="col-qty required">Qty</th>
+                      <th class="col-unit">Unit</th>
+                      <th class="col-rate">Unit Price</th>
+                      <th class="col-amount">Amount</th>
+                      <th class="col-batch required">Batch Label</th>
+                      <th class="col-expiry">Expiry</th>
+                      <th class="col-del"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="rowsBody">
+                  </tbody>
+                </table>
+              </div>
+              <button class="add-row-btn" onclick="addRow()">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+                Add Another Item
+              </button>
+              <div class="grand-total-bar" id="grandTotalBar" style="margin-top:12px">
+                <div class="grand-total-label">Grand Total (excl. fare)</div>
+                <div class="grand-total-value" id="grandTotalValue">₹ 0.00</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action bar -->
+          <div class="btn-row">
+            <button class="btn btn-outline" onclick="resetForm()">Reset</button>
+            <button class="btn btn-primary" id="reviewBtn" onclick="showConfirm()" disabled>
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Review &amp; Confirm (<span id="validCount">0</span> items)
+            </button>
+            <span class="incomplete-warn" id="incompleteWarn" style="display:none">
+              <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+              Fill batch &amp; expiry for all items
+            </span>
+          </div>
+        </div>
+
+        <!-- Upload Tab placeholder -->
+        <div id="uploadTab" style="display:none">
+          <div class="card">
+            <div class="card-body">
+              <div class="notice notice-info">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                Upload Invoice (OCR) and Excel Import tabs are unchanged — CR-039 scope preserved.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONFIRM VIEW -->
+      <div id="confirmView" class="confirm-view">
+        <div style="margin-bottom:16px">
+          <div class="page-title">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:17px;height:17px"><path d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Confirm Stock Purchase
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-header-title">Purchase Summary</div>
+          </div>
+          <div class="card-body">
+            <div class="meta-grid" id="confirmMeta"></div>
+            <div class="section-divider"></div>
+            <table class="confirm-table" id="confirmTable">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Qty</th>
+                  <th>Unit</th>
+                  <th>Unit Price</th>
+                  <th>Amount</th>
+                  <th>Batch</th>
+                  <th>Expiry</th>
+                </tr>
+              </thead>
+              <tbody id="confirmRows"></tbody>
+            </table>
+            <div class="grand-total-bar" style="margin-top:12px">
+              <div class="grand-total-label">Grand Total</div>
+              <div class="grand-total-value" id="confirmTotal">₹ 0.00</div>
+            </div>
+            <div id="confirmPaymentInfo" style="margin-top:12px;font-size:11.5px;color:#374151"></div>
+          </div>
+        </div>
+
+        <div class="notice notice-info" style="margin-bottom:14px">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          This will increase stock at your store. This is a vendor purchase — not a transfer receive. Stock will be updated immediately.
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-outline" onclick="showForm()">Back to Edit</button>
+          <button class="btn btn-primary" id="submitBtn" onclick="simulateSubmit()">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Confirm &amp; Add Stock
+          </button>
+        </div>
+      </div>
+
+      <!-- SUCCESS VIEW -->
+      <div id="successView" class="success-view">
+        <div class="card">
+          <div class="card-body">
+            <div class="success-box">
+              <div class="success-icon">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:#16a34a"><path d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              </div>
+              <div class="success-title" id="successTitle">Stock added successfully</div>
+              <div class="success-subtitle" id="successSubtitle"></div>
+              <div class="txn-badge" id="successTxn">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                PUR-828-20261018-8005
+              </div>
+              <div style="display:flex;gap:10px;justify-content:center">
+                <button class="btn btn-outline" onclick="resetForm()">New Purchase</button>
+                <button class="btn btn-ghost">View Stock Inventory →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /page -->
+  </div><!-- /main -->
+</div><!-- /shell -->
+
+<script>
+// ─── Real data from RID 828 (owner@mygenietest002.com, probed 2026-10-18) ───
+const REAL_ITEMS = [{"id":20807,"title":"American Corn","unit":"kg","cat":"Vegetables & Herbs"},{"id":20808,"title":"Apple","unit":"kg","cat":"Vegetables & Herbs"},{"id":20809,"title":"Avocado","unit":"kg","cat":"Vegetables & Herbs"},{"id":20810,"title":"Baby Corn","unit":"kg","cat":"Vegetables & Herbs"},{"id":20811,"title":"Baby Potato","unit":"kg","cat":"Vegetables & Herbs"},{"id":20812,"title":"Banana Leaf","unit":"piece","cat":"Vegetables & Herbs"},{"id":20813,"title":"Banana Ripe","unit":"kg","cat":"Vegetables & Herbs"},{"id":20814,"title":"Basil","unit":"kg","cat":"Vegetables & Herbs"},{"id":20815,"title":"Beans","unit":"kg","cat":"Vegetables & Herbs"},{"id":20816,"title":"Beet Root","unit":"kg","cat":"Vegetables & Herbs"},{"id":20817,"title":"Bharwa Mirch","unit":"kg","cat":"Vegetables & Herbs"},{"id":20818,"title":"Bhindi","unit":"kg","cat":"Vegetables & Herbs"},{"id":20819,"title":"Brinjal Big","unit":"kg","cat":"Vegetables & Herbs"},{"id":20820,"title":"Brinjal Small","unit":"kg","cat":"Vegetables & Herbs"},{"id":20821,"title":"Broccoli","unit":"kg","cat":"Vegetables & Herbs"},{"id":20822,"title":"Cabbage","unit":"kg","cat":"Vegetables & Herbs"},{"id":20823,"title":"Capsicum Green","unit":"kg","cat":"Vegetables & Herbs"},{"id":20824,"title":"Capsicum Red","unit":"kg","cat":"Vegetables & Herbs"},{"id":20825,"title":"Capsicum Yellow","unit":"kg","cat":"Vegetables & Herbs"},{"id":20826,"title":"Carrot","unit":"kg","cat":"Vegetables & Herbs"},{"id":20827,"title":"Cauliflower","unit":"kg","cat":"Vegetables & Herbs"},{"id":20828,"title":"Celery","unit":"kg","cat":"Vegetables & Herbs"},{"id":20829,"title":"Cherry Tomato","unit":"kg","cat":"Vegetables & Herbs"},{"id":20830,"title":"Chinese Cabbage","unit":"kg","cat":"Vegetables & Herbs"},{"id":20831,"title":"Coconut Whole","unit":"piece","cat":"Vegetables & Herbs"},{"id":20832,"title":"Coriander Leaf","unit":"kg","cat":"Vegetables & Herbs"},{"id":20833,"title":"Cucumber","unit":"kg","cat":"Vegetables & Herbs"},{"id":20834,"title":"Curry Leaf","unit":"kg","cat":"Vegetables & Herbs"},{"id":20835,"title":"Eggs","unit":"piece","cat":"Vegetables & Herbs"},{"id":20836,"title":"Fresh Red Chilli","unit":"kg","cat":"Vegetables & Herbs"},{"id":20837,"title":"Galangal","unit":"kg","cat":"Vegetables & Herbs"},{"id":20838,"title":"Garlic Peeled","unit":"kg","cat":"Vegetables & Herbs"},{"id":20839,"title":"Garlic Whole","unit":"kg","cat":"Vegetables & Herbs"},{"id":20840,"title":"Ginger","unit":"kg","cat":"Vegetables & Herbs"},{"id":20841,"title":"Grapes","unit":"kg","cat":"Vegetables & Herbs"},{"id":20842,"title":"Green Chilli","unit":"kg","cat":"Vegetables & Herbs"},{"id":20843,"title":"Green Pea Frozen","unit":"kg","cat":"Vegetables & Herbs"},{"id":20844,"title":"Iceberg Lettuce","unit":"kg","cat":"Vegetables & Herbs"},{"id":20845,"title":"Imli","unit":"kg","cat":"Vegetables & Herbs"},{"id":20846,"title":"Karala","unit":"kg","cat":"Vegetables & Herbs"},{"id":20847,"title":"Kiwi Fresh","unit":"kg","cat":"Vegetables & Herbs"},{"id":20848,"title":"Lauki","unit":"kg","cat":"Vegetables & Herbs"},{"id":20849,"title":"Leek","unit":"kg","cat":"Vegetables & Herbs"},{"id":20850,"title":"Lemon","unit":"piece","cat":"Vegetables & Herbs"},{"id":20851,"title":"Lemon Gondury","unit":"kg","cat":"Vegetables & Herbs"},{"id":20852,"title":"Lemon Grass","unit":"kg","cat":"Vegetables & Herbs"},{"id":20853,"title":"Lemon Leaf","unit":"kg","cat":"Vegetables & Herbs"},{"id":20854,"title":"Lettuce Green","unit":"kg","cat":"Vegetables & Herbs"},{"id":20855,"title":"Lotus Stem","unit":"kg","cat":"Vegetables & Herbs"},{"id":20856,"title":"makkhan","unit":"kg","cat":"desi dairy"},{"id":20857,"title":"Malta","unit":"kg","cat":"Vegetables & Herbs"},{"id":20858,"title":"Mango Ripe","unit":"kg","cat":"Vegetables & Herbs"},{"id":20859,"title":"Mint Leaf","unit":"kg","cat":"Vegetables & Herbs"},{"id":20860,"title":"Mushroom","unit":"kg","cat":"Vegetables & Herbs"},{"id":20861,"title":"Musk Mellon","unit":"kg","cat":"Vegetables & Herbs"},{"id":20862,"title":"Onion","unit":"kg","cat":"Vegetables & Herbs"},{"id":20863,"title":"Orange","unit":"kg","cat":"Vegetables & Herbs"},{"id":20864,"title":"Pak Choy","unit":"kg","cat":"Vegetables & Herbs"},{"id":20865,"title":"Papaya Ripe","unit":"kg","cat":"Vegetables & Herbs"},{"id":20866,"title":"Parsely","unit":"kg","cat":"Vegetables & Herbs"},{"id":20867,"title":"Patal","unit":"kg","cat":"Vegetables & Herbs"},{"id":20868,"title":"Pineapple Fresh","unit":"kg","cat":"Vegetables & Herbs"},{"id":20869,"title":"Pomegranate","unit":"kg","cat":"Vegetables & Herbs"},{"id":20870,"title":"Potato Big","unit":"kg","cat":"Vegetables & Herbs"},{"id":20871,"title":"Radish","unit":"kg","cat":"Vegetables & Herbs"},{"id":20872,"title":"Red Cabbage","unit":"kg","cat":"Vegetables & Herbs"},{"id":20873,"title":"Spinach","unit":"kg","cat":"Vegetables & Herbs"},{"id":20874,"title":"Spring Onion","unit":"kg","cat":"Vegetables & Herbs"},{"id":20875,"title":"Strawberry Fresh","unit":"kg","cat":"Vegetables & Herbs"},{"id":20876,"title":"Tamarind Emli","unit":"kg","cat":"Vegetables & Herbs"},{"id":20877,"title":"Thyme","unit":"kg","cat":"Vegetables & Herbs"},{"id":20878,"title":"Tomato","unit":"kg","cat":"Vegetables & Herbs"},{"id":20879,"title":"Watermelon","unit":"kg","cat":"Vegetables & Herbs"},{"id":20880,"title":"Zucchini Green","unit":"kg","cat":"Vegetables & Herbs"},{"id":20881,"title":"Zucchini Yellow","unit":"kg","cat":"Vegetables & Herbs"}];
+
+const VENDOR = { id: 282, name: "masala dairy", contact: "masala man" };
+const PAYMENT_MODES = ["Cash","Card","UPI","Bank Transfer","Others"];
+
+// Row state
+let rows = [newRow()];
+let paymentRows = [{ mode: 'Cash', amount: '', ref: '' }];
+let activeComboboxIdx = null;
+
+function newRow() {
+  return { id: Date.now() + Math.random(), itemId: '', title: '', unit: '', qty: '', rate: '', amount: '', batch: '', expiry: '' };
+}
+
+function autoBatch(title, idx) {
+  if (!title) return '';
+  const abbrev = title.slice(0,3).toUpperCase().replace(/\s/g,'');
+  const now = new Date();
+  const dd  = String(now.getDate()).padStart(2,'0');
+  const mon = now.toLocaleString('en',{month:'short'}).toUpperCase();
+  const yy  = String(now.getFullYear()).slice(2);
+  const hh  = String(now.getHours()).padStart(2,'0');
+  const mm  = String(now.getMinutes()).padStart(2,'0');
+  // Format: AME-18OCT26-0924 → unique across days AND same-day purchases at different times
+  const base = `${abbrev}-${dd}${mon}${yy}-${hh}${mm}`;
+  // Same-minute counter for multiple items in one session
+  const prevCount = rows.slice(0, idx).filter(r => r.batch && r.batch.startsWith(base)).length;
+  return prevCount > 0 ? `${base}-${prevCount + 1}` : base;
+}
+
+function computeTotal(qty, rate) {
+  const q = Number(qty), r = Number(rate);
+  return (!isNaN(q) && !isNaN(r) && q > 0 && r > 0) ? (q * r) : 0;
+}
+
+function grandTotal() {
+  // Items total only — label says "excl. fare", fare is shown separately
+  return rows.reduce((s,r) => s + computeTotal(r.qty, r.rate), 0);
+}
+
+function fullPayableTotal() {
+  // Items + fare — used for payment balance check and API tot_amount
+  const fare = Number(document.getElementById('fareInput')?.value) || 0;
+  return grandTotal() + fare;
+}
+
+function renderRows() {
+  const tbody = document.getElementById('rowsBody');
+  tbody.innerHTML = '';
+
+  // Build duplicate itemId map across all rows
+  const itemIdCount = {};
+  rows.forEach(r => { if (r.itemId) itemIdCount[r.itemId] = (itemIdCount[r.itemId]||0) + 1; });
+
+  rows.forEach((row, idx) => {
+    const tr = document.createElement('tr');
+    tr.id = `row-${idx}`;
+    const isComplete = row.itemId && Number(row.qty) > 0 && row.batch.trim();
+    const missingBatch = row.itemId && Number(row.qty) > 0 && !row.batch.trim();
+    const amount = computeTotal(row.qty, row.rate);
+    const isDuplicate = row.itemId && itemIdCount[row.itemId] > 1;
+
+    tr.innerHTML = `
+      <td class="row-num">${idx+1}</td>
+      <td class="col-item">
+        <div class="combobox-wrap" id="comboWrap${idx}" style="position:relative">
+          <input class="combobox-input" id="comboInput${idx}" readonly
+            value="${row.title || ''}"
+            placeholder="Search item…"
+            style="${isDuplicate?'border-color:#fbbf24;background:#fffbeb;':''}"
+            onclick="openCombobox(${idx})"
+            onkeydown="onComboKeydown(event,${idx})" />
+          ${isDuplicate ? `<span style="position:absolute;right:5px;top:50%;transform:translateY(-50%);font-size:9px;font-weight:600;background:#fef3c7;color:#92400e;border-radius:3px;padding:1px 5px;pointer-events:none;white-space:nowrap">⚠ dup</span>` : ''}
+          <div class="combobox-dropdown" id="comboDrop${idx}">
+            <div class="combobox-search">
+              <input type="text" id="comboSearch${idx}" placeholder="Search…" oninput="filterCombo(${idx})" onkeydown="onComboSearchKey(event,${idx})" />
+            </div>
+            <div class="combobox-list" id="comboList${idx}"></div>
+          </div>
+        </div>
+      </td>
+      <td class="col-qty">
+        <input type="number" min="0" step="any" id="qty${idx}" value="${row.qty}"
+          placeholder="0" class="${missingBatch?'error':''}"
+          oninput="onQtyChange(${idx}, this.value)"
+          onkeydown="onCellKeydown(event,'qty',${idx})" />
+      </td>
+      <td class="col-unit">
+        <div class="unit-badge">${row.unit || '—'}</div>
+      </td>
+      <td class="col-rate">
+        <input type="number" min="0" step="0.01" id="rate${idx}" value="${row.rate}"
+          placeholder="0.00"
+          oninput="onRateChange(${idx}, this.value)"
+          onkeydown="onCellKeydown(event,'rate',${idx})" />
+      </td>
+      <td class="col-amount">
+        <input type="number" id="amount${idx}" value="${amount>0?amount.toFixed(2):''}"
+          placeholder="0.00" class="${amount>0?'auto-filled':''}" readonly tabindex="-1" />
+      </td>
+      <td class="col-batch">
+        <input type="text" id="batch${idx}" value="${row.batch}"
+          placeholder="AUTO" class="${row.batch?'auto-filled':''}${missingBatch?' error':''}"
+          oninput="onBatchChange(${idx},this.value)"
+          onkeydown="onCellKeydown(event,'batch',${idx})" />
+      </td>
+      <td class="col-expiry">
+        <input type="date" id="expiry${idx}" value="${row.expiry}"
+          autocomplete="off"
+          oninput="onExpiryChange(${idx},this.value)"
+          onkeydown="onCellKeydown(event,'expiry',${idx})" />
+      </td>
+      <td class="col-del">
+        ${rows.length>1?`<button class="del-btn" onclick="deleteRow(${idx})" title="Remove row">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+        </button>`:''}
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+  updateGrandTotal();
+  updateReviewBtn();
+}
+
+function filterCombo(idx) {
+  const search = document.getElementById(`comboSearch${idx}`)?.value.toLowerCase().trim() || '';
+  const list = document.getElementById(`comboList${idx}`);
+  if (!list) return;
+
+  // Build map of itemId → row number (other rows only)
+  const usedInRow = {};
+  rows.forEach((r, i) => { if (r.itemId && i !== idx) usedInRow[r.itemId] = i + 1; });
+
+  const groups = {};
+  REAL_ITEMS.filter(i => !search || i.title.toLowerCase().includes(search)).forEach(i => {
+    (groups[i.cat] = groups[i.cat]||[]).push(i);
+  });
+
+  if (Object.keys(groups).length === 0) {
+    list.innerHTML = '<div class="combobox-empty">No items found</div>';
+    return;
+  }
+
+  list.innerHTML = Object.entries(groups).map(([cat, items]) => `
+    <div class="combobox-group-label">${cat}</div>
+    ${items.map(i => {
+      const alreadyInRow = usedInRow[String(i.id)];
+      const isSelected = rows[idx]?.itemId === String(i.id);
+      return `
+      <div class="combobox-item ${isSelected?'selected':''} ${alreadyInRow?'used':''}"
+        tabindex="0"
+        onclick="selectItem(${idx},${i.id},'${i.title.replace(/'/g,"\\'")}','${i.unit}')"
+        onkeydown="onListItemKey(event,${idx},${i.id},'${i.title.replace(/'/g,"\\'")}','${i.unit}')">
+        <span>${highlightMatch(i.title, search)}${alreadyInRow ? ` <span style="font-size:9px;color:#f59e0b;font-weight:600">↑ row ${alreadyInRow}</span>` : ''}</span>
+        <span class="combobox-item-unit">${i.unit}</span>
+      </div>`;
+    }).join('')}
+  `).join('');
+}
+
+function highlightMatch(text, search) {
+  if (!search) return text;
+  const idx2 = text.toLowerCase().indexOf(search);
+  if (idx2 < 0) return text;
+  return text.slice(0,idx2) + `<strong>${text.slice(idx2,idx2+search.length)}</strong>` + text.slice(idx2+search.length);
+}
+
+function openCombobox(idx) {
+  // Close all others
+  document.querySelectorAll('.combobox-dropdown').forEach(d => d.classList.remove('open'));
+  const drop = document.getElementById(`comboDrop${idx}`);
+  const input = document.getElementById(`comboInput${idx}`);
+
+  // Position fixed relative to viewport — fixes overflow:hidden clipping
+  if (input) {
+    const rect = input.getBoundingClientRect();
+    drop.style.top  = (rect.bottom + 4) + 'px';
+    drop.style.left = rect.left + 'px';
+    drop.style.width = Math.max(280, rect.width) + 'px';
+    // Flip upward if not enough room below
+    const spaceBelow = window.innerHeight - rect.bottom;
+    if (spaceBelow < 260 && rect.top > 260) {
+      drop.style.top  = (rect.top - 4) + 'px';
+      drop.style.transform = 'translateY(-100%)';
+    } else {
+      drop.style.transform = '';
+    }
+  }
+
+  drop.classList.add('open');
+  activeComboboxIdx = idx;
+  const searchInput = document.getElementById(`comboSearch${idx}`);
+  if (searchInput) { searchInput.value = ''; searchInput.focus(); }
+  filterCombo(idx);
+
+  // Close on outside click
+  setTimeout(() => {
+    document.addEventListener('click', function closeDropdown(e) {
+      const wrap = document.getElementById(`comboWrap${idx}`);
+      if (!wrap?.contains(e.target) && !drop.contains(e.target)) {
+        drop.classList.remove('open');
+        document.removeEventListener('click', closeDropdown);
+      }
+    });
+  }, 0);
+}
+
+function onComboKeydown(e, idx) {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openCombobox(idx); }
+}
+function onComboSearchKey(e, idx) {
+  if (e.key === 'Escape') {
+    document.getElementById(`comboDrop${idx}`)?.classList.remove('open');
+    document.getElementById(`comboInput${idx}`)?.focus();
+  }
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    const first = document.querySelector(`#comboList${idx} .combobox-item`);
+    if (first) first.focus();
+  }
+  if (e.key === 'Enter') {
+    const first = document.querySelector(`#comboList${idx} .combobox-item`);
+    if (first) first.click();
+  }
+}
+
+function onListItemKey(e, idx, itemId, title, unit) {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    selectItem(idx, itemId, title, unit);
+  } else if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    let el = e.currentTarget.nextElementSibling;
+    while (el && !el.classList.contains('combobox-item')) el = el.nextElementSibling;
+    if (el) el.focus();
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    let el = e.currentTarget.previousElementSibling;
+    while (el && !el.classList.contains('combobox-item')) el = el.previousElementSibling;
+    if (el) el.focus();
+    else document.getElementById(`comboSearch${idx}`)?.focus();
+  } else if (e.key === 'Escape') {
+    document.getElementById(`comboDrop${idx}`)?.classList.remove('open');
+    document.getElementById(`comboInput${idx}`)?.focus();
+  }
+}
+
+function selectItem(idx, itemId, title, unit) {
+  rows[idx].itemId = String(itemId);
+  rows[idx].title = title;
+  rows[idx].unit = unit;
+  // Auto-batch if qty already set
+  if (Number(rows[idx].qty) > 0 && !rows[idx].batch) {
+    rows[idx].batch = autoBatch(title, idx);
+  }
+  document.getElementById(`comboDrop${idx}`)?.classList.remove('open');
+  renderRows();
+  // Focus qty
+  setTimeout(() => document.getElementById(`qty${idx}`)?.focus(), 50);
+}
+
+function onQtyChange(idx, val) {
+  rows[idx].qty = val;
+  const amt = computeTotal(val, rows[idx].rate);
+  rows[idx].amount = amt > 0 ? amt.toFixed(2) : '';
+
+  // Auto-batch: update DOM directly without re-render
+  if (rows[idx].title && Number(val) > 0 && !rows[idx].batch) {
+    rows[idx].batch = autoBatch(rows[idx].title, idx);
+    const batchEl = document.getElementById(`batch${idx}`);
+    if (batchEl) { batchEl.value = rows[idx].batch; batchEl.className = 'auto-filled'; }
+  }
+
+  // Update amount cell in-place (readonly, safe to overwrite)
+  const amtEl = document.getElementById(`amount${idx}`);
+  if (amtEl) { amtEl.value = rows[idx].amount; amtEl.className = rows[idx].amount ? 'auto-filled' : ''; }
+
+  updateGrandTotal();
+  updateReviewBtn();
+  // No renderRows() — cursor stays in place
+}
+
+function onRateChange(idx, val) {
+  rows[idx].rate = val;
+  const amt = computeTotal(rows[idx].qty, val);
+  rows[idx].amount = amt > 0 ? amt.toFixed(2) : '';
+
+  // Update amount cell in-place (readonly, safe to overwrite)
+  const amtEl = document.getElementById(`amount${idx}`);
+  if (amtEl) { amtEl.value = rows[idx].amount; amtEl.className = rows[idx].amount ? 'auto-filled' : ''; }
+
+  updateGrandTotal();
+  updateReviewBtn();
+  // No renderRows() — cursor stays in place
+}
+
+function onBatchChange(idx, val) {
+  rows[idx].batch = val;
+  updateReviewBtn();
+}
+
+function onExpiryChange(idx, val) {
+  rows[idx].expiry = val;
+  updateReviewBtn();
+  // Auto-open next row if last field of last row complete
+  if (idx === rows.length - 1 && rows[idx].itemId && Number(rows[idx].qty)>0 && rows[idx].batch && val) {
+    addRow();
+  }
+}
+
+function onCellKeydown(e, field, idx) {
+  const order = ['qty','rate','batch','expiry'];
+  if (e.key === 'Tab' || e.key === 'Enter') {
+    const ci = order.indexOf(field);
+    if (ci < order.length - 1) {
+      e.preventDefault();
+      const next = order[ci+1];
+      document.getElementById(`${next}${idx}`)?.focus();
+    } else if (e.key === 'Enter' || (e.key === 'Tab' && !e.shiftKey)) {
+      e.preventDefault();
+      // Move to next row or add row — expiry not required to advance
+      if (idx < rows.length-1) {
+        document.getElementById(`qty${idx+1}`)?.focus();
+      } else if (rows[idx].itemId && Number(rows[idx].qty)>0 && rows[idx].batch) {
+        addRow();
+        setTimeout(()=>openCombobox(idx+1),50);
+      }
+    }
+  }
+}
+
+function addRow() {
+  rows.push(newRow());
+  renderRows();
+  setTimeout(()=>openCombobox(rows.length-1),80);
+}
+
+function deleteRow(idx) {
+  rows.splice(idx, 1);
+  if (rows.length === 0) rows.push(newRow());
+  renderRows();
+}
+
+function updateGrandTotal() {
+  const total = grandTotal();
+  const el = document.getElementById('grandTotalValue');
+  if (el) el.textContent = '₹ ' + total.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+  updatePaymentBalance();
+}
+
+function updateReviewBtn() {
+  const valid = rows.filter(r => r.itemId && Number(r.qty)>0 && r.batch.trim());
+  const hasIncomplete = rows.some(r => r.itemId && Number(r.qty)>0 && !r.batch.trim());
+  const hasVendor = !!document.getElementById('vendorSelect')?.value;
+  document.getElementById('reviewBtn').disabled = valid.length===0 || !hasVendor;
+  document.getElementById('validCount').textContent = valid.length;
+  document.getElementById('incompleteWarn').style.display = hasIncomplete ? 'flex' : 'none';
+}
+
+// Payment rows
+function addPaymentRow() {
+  paymentRows.push({ mode: '', amount: '', ref: '' });
+  renderPaymentRows();
+}
+
+function renderPaymentRows() {
+  const section = document.getElementById('paymentSection');
+  const anyRef = paymentRows.some(p => p.mode==='UPI' || p.mode==='Bank Transfer');
+  const twoUp = paymentRows.length === 2 && !anyRef;
+  section.style.display = 'grid';
+  section.style.gridTemplateColumns = twoUp ? '1fr 1fr' : '1fr';
+  section.style.gap = '4px';
+
+  let html = '';
+  paymentRows.forEach((p, i) => {
+    const needsRef = p.mode==='UPI' || p.mode==='Bank Transfer';
+    html += `
+      <div class="payment-row" id="payRow${i}" style="gap:4px;min-width:0">
+        <select class="payment-mode-select" id="payMode${i}" onchange="onModeChange(${i})"
+          style="width:90px!important;flex:0 0 90px;font-size:11.5px;height:28px">
+          <option value="">Mode</option>
+          ${PAYMENT_MODES.map(m => `<option value="${m}" ${p.mode===m?'selected':''}>${m}</option>`).join('')}
+        </select>
+        <input type="number" class="payment-amount-input" id="payAmt${i}"
+          value="${p.amount}" placeholder="₹ amount" oninput="onPaymentChange()"
+          style="width:100px!important;flex:0 0 100px;height:28px;font-size:11.5px" />
+        ${paymentRows.length>1?`<button class="payment-remove-btn" onclick="removePayRow(${i})"
+          style="flex-shrink:0;width:18px;height:18px">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:10px;height:10px"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>`:''}
+      </div>
+      ${needsRef ? `
+      <div style="display:flex;align-items:center;gap:5px;padding-left:6px">
+        <span style="color:#9ca3af;font-size:10px;flex-shrink:0">└</span>
+        <input type="text" id="payRef${i}" value="${p.ref}"
+          placeholder="Ref / Transaction ID (optional)"
+          style="flex:0 0 auto;max-width:220px;height:26px;font-size:11px;border:1px solid #d1d5db;border-radius:5px;padding:0 8px;background:#fff;outline:none;color:#111"
+          oninput="onPaymentChange()" />
+      </div>` : `<div style="display:none"><input type="text" id="payRef${i}" value="${p.ref}" style="display:none"/></div>`}
+    `;
+  });
+  section.innerHTML = html;
+  // Sync state without re-render loop
+  _syncPaymentState();
+  updatePaymentBalance();
+  document.getElementById('addPayBtn').style.display = paymentRows.length >= 4 ? 'none' : '';
+}
+
+function onModeChange(idx) {
+  // Sync all current values then re-render so ref sub-row template matches new mode
+  _syncPaymentState();
+  renderPaymentRows();
+}
+
+function _syncPaymentState() {
+  paymentRows.forEach((p,i) => {
+    p.mode   = document.getElementById(`payMode${i}`)?.value  || p.mode;
+    p.amount = document.getElementById(`payAmt${i}`)?.value   || p.amount;
+    p.ref    = document.getElementById(`payRef${i}`)?.value   || p.ref;
+  });
+}
+
+function removePayRow(i) {
+  paymentRows.splice(i,1);
+  renderPaymentRows();
+}
+
+function onPaymentChange() {
+  _syncPaymentState();
+  updatePaymentBalance();
+  document.getElementById('addPayBtn').style.display = paymentRows.length >= 4 ? 'none' : '';
+}
+
+function updatePaymentBalance() {
+  if (paymentRows.length <= 1) {
+    document.getElementById('paymentBalance').style.display = 'none';
+    return;
+  }
+  const total = fullPayableTotal();
+  const entered = paymentRows.reduce((s,p) => s + (Number(p.amount)||0), 0);
+  const el = document.getElementById('paymentBalance');
+  el.style.display = '';
+  const balanced = Math.abs(entered - total) < 0.01;
+  el.className = 'payment-balance ' + (balanced ? 'ok' : 'warn');
+  el.style.padding = '4px 8px';
+  el.style.fontSize = '11px';
+  el.innerHTML = balanced
+    ? `<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/></svg> ₹${entered.toFixed(2)} / ₹${total.toFixed(2)} — Balanced ✓`
+    : `<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg> ₹${entered.toFixed(2)} entered of ₹${total.toFixed(2)} — ₹${(total-entered).toFixed(2)} remaining`;
+}
+
+// Vendor context
+function onVendorChange() {
+  const val = document.getElementById('vendorSelect').value;
+  const ctx = document.getElementById('vendorContext');
+  const txt = document.getElementById('vendorContextText');
+  if (val === '282') {
+    ctx.style.display = 'flex';
+    txt.innerHTML = 'Vendor: <strong>masala dairy</strong> · Contact: masala man · Phone: —';
+  } else {
+    ctx.style.display = 'none';
+  }
+  updateReviewBtn();
+}
+
+function switchTab(tab) {
+  document.getElementById('manualTab').style.display = tab==='manual'?'':'none';
+  document.getElementById('uploadTab').style.display = tab==='upload'?'':'none';
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', (i===1&&tab==='manual')||(i===0&&tab==='upload')));
+}
+
+function showConfirm() {
+  const validRows = rows.filter(r => r.itemId && Number(r.qty)>0 && r.batch.trim());
+  if (!validRows.length) return;
+
+  // Sync payment rows from DOM before reading — prevents stale state
+  onPaymentChange();
+
+  // Build payment breakdown string
+  const activePayRows = paymentRows.filter(p => p.mode && Number(p.amount) > 0);
+  const payBreakdown = activePayRows.length
+    ? activePayRows.map(p => `${p.mode}: ₹${Number(p.amount).toFixed(2)}`).join(' + ')
+    : (paymentRows[0]?.mode || '—');
+
+  // Meta
+  const vendor = document.getElementById('vendorSelect').value === '282' ? 'masala dairy' : '—';
+  const date = document.getElementById('purchaseDateInput').value || '—';
+  const total = fullPayableTotal();
+  const fare = Number(document.getElementById('fareInput')?.value)||0;
+
+  document.getElementById('confirmMeta').innerHTML = `
+    <div class="meta-item"><div class="meta-label">Vendor</div><div class="meta-value">${vendor}</div></div>
+    <div class="meta-item"><div class="meta-label">Purchase Date</div><div class="meta-value">${date}</div></div>
+    <div class="meta-item"><div class="meta-label">Payment</div><div class="meta-value" style="font-size:11.5px">${payBreakdown}</div></div>
+  `;
+
+  // Rows
+  const tbody = document.getElementById('confirmRows');
+  tbody.innerHTML = validRows.map(r => `
+    <tr>
+      <td><strong>${r.title}</strong></td>
+      <td class="mono">${r.qty}</td>
+      <td>${r.unit}</td>
+      <td class="mono">${r.rate ? '₹'+Number(r.rate).toFixed(2) : '—'}</td>
+      <td class="mono">${r.amount ? '₹'+Number(r.amount).toLocaleString('en-IN',{minimumFractionDigits:2}) : '—'}</td>
+      <td><span class="badge badge-purple">${r.batch}</span></td>
+      <td>${r.expiry || '—'}</td>
+    </tr>
+  `).join('') + (fare > 0 ? `<tr class="confirm-total-row"><td colspan="4">Fare / Shipping</td><td class="mono">₹${fare.toFixed(2)}</td><td colspan="2"></td></tr>` : '');
+
+  document.getElementById('confirmTotal').textContent = '₹ ' + total.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+  // Payment breakdown below table — show each leg on its own line
+  let payInfo = '';
+  if (activePayRows.length > 1) {
+    payInfo = activePayRows.map(p =>
+      `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f3f4f6;font-size:12px">
+        <span style="color:#374151">${p.mode}${p.ref ? ' <span style="color:#9ca3af;font-size:10.5px">· '+p.ref+'</span>' : ''}</span>
+        <span style="font-weight:600;font-variant-numeric:tabular-nums">₹${Number(p.amount).toFixed(2)}</span>
+      </div>`
+    ).join('') +
+    `<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px;font-weight:700;color:#15803d">
+      <span>Total Paid</span><span>₹${activePayRows.reduce((s,p)=>s+Number(p.amount),0).toFixed(2)}</span>
+    </div>`;
+  } else if (paymentRows[0]?.mode) {
+    payInfo = `<span style="font-size:12px;color:#374151">Payment: <strong>${paymentRows[0].mode}</strong></span>`;
+  }
+  document.getElementById('confirmPaymentInfo').innerHTML = payInfo;
+
+  document.getElementById('formView').style.display = 'none';
+  document.getElementById('confirmView').style.display = 'block';
+  document.getElementById('successView').style.display = 'none';
+}
+
+function showForm() {
+  document.getElementById('formView').style.display = 'block';
+  document.getElementById('confirmView').style.display = 'none';
+  document.getElementById('successView').style.display = 'none';
+}
+
+function simulateSubmit() {
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<svg style="animation:spin .8s linear infinite;width:14px;height:14px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Submitting…';
+
+  // Simulate real API response (mirrors actual PUR-828-20261018-8005)
+  setTimeout(() => {
+    const validRows = rows.filter(r => r.itemId && Number(r.qty)>0 && r.batch.trim());
+    const fakeId = 8000 + Math.floor(Math.random()*100);
+    const today = new Date().toISOString().slice(0,10).replace(/-/g,'');
+    const txnId = `PUR-828-${today}-${fakeId}`;
+
+    document.getElementById('successTitle').textContent = `${validRows.length} item${validRows.length>1?'s':''} added to stock`;
+    document.getElementById('successSubtitle').textContent = `Vendor: masala dairy · Purchase: ${document.getElementById('purchaseDateInput').value||'today'}`;
+    document.getElementById('successTxn').innerHTML = `<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> ${txnId}`;
+
+    document.getElementById('formView').style.display = 'none';
+    document.getElementById('confirmView').style.display = 'none';
+    document.getElementById('successView').style.display = 'block';
+  }, 1200);
+}
+
+function resetForm() {
+  rows = [newRow()];
+  paymentRows = [{ mode: 'Cash', amount: '', ref: '' }];
+  document.getElementById('vendorSelect').value = '';
+  document.getElementById('purchaseDateInput').value = new Date().toISOString().split('T')[0];
+  document.getElementById('fareInput').value = '0';
+  document.getElementById('vendorContext').style.display = 'none';
+  renderRows();
+  renderPaymentRows();
+  document.getElementById('formView').style.display = 'block';
+  document.getElementById('confirmView').style.display = 'none';
+  document.getElementById('successView').style.display = 'none';
+  document.getElementById('submitBtn').disabled = false;
+}
+
+// Spin animation
+const style = document.createElement('style');
+style.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+document.head.appendChild(style);
+
+// Init
+renderRows();
+renderPaymentRows();
+
+// Demo: pre-fill 2 rows to show the spreadsheet
+setTimeout(()=>{
+  // Row 0: makkhan
+  selectItem(0, 20856, 'makkhan', 'kg');
+  setTimeout(()=>{
+    rows[0].qty='2'; rows[0].rate='80'; rows[0].amount='160';
+    rows[0].batch=autoBatch('makkhan', 0);
+    // Row 1: Tomato
+    selectItem(1, 20878, 'Tomato', 'kg');
+    setTimeout(()=>{
+      rows[1].qty='10'; rows[1].rate='25'; rows[1].amount='250';
+      rows[1].batch=autoBatch('Tomato', 1);
+      // Row 2: empty (for user to fill)
+      if (rows.length<3) rows.push(newRow());
+      renderRows();
+    },100);
+  },100);
+  // Set vendor
+  document.getElementById('vendorSelect').value='282';
+  onVendorChange();
+},200);
+</script>
+</body>
+</html>

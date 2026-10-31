@@ -1,0 +1,86 @@
+{
+  "iteration": 50,
+  "test_date": "2026-01-14",
+  "test_type": "CR-035: Store Creation 2-Step Flow + Outlet Visibility",
+  "overall_status": "PASS",
+  "summary": "CR-035 implementation verified. Part A (2-step wizard) and Part B (outlet visibility) both working correctly. Fixed a bug where catalog counts showed 0 due to key mismatch and type checking issue.",
+
+  "features_tested": [
+    {
+      "feature": "Part A Q1: Create Store button opens Step 1 with 6 fields + step indicator",
+      "status": "PASS",
+      "details": "Step 1 shows Store Name, Store Type, Email, Phone, Password, Address fields. Step indicator shows '1 Store Details' and '2 Review & Push'."
+    },
+    {
+      "feature": "Part A Q2: Next without required fields shows toast error",
+      "status": "PASS",
+      "details": "Toast error 'Please fill all required fields' appears, form stays on Step 1."
+    },
+    {
+      "feature": "Part A Q3: Fill required fields, click Next shows Step 2 with summary + catalog counts",
+      "status": "PASS",
+      "details": "Step 2 shows summary banner ('Creating: Test Store ABC as Master Store') and 7 catalog count cards (Categories: 2, Ingredients: 49, Products: 2, Recipes: 2, Sub-Recipes: 5, Addons: 0, Roles: 13)."
+    },
+    {
+      "feature": "Part A Q4: Back button returns to Step 1 with fields preserved",
+      "status": "PASS",
+      "details": "After clicking Back, Step 1 shows with Store Name and Email values preserved."
+    },
+    {
+      "feature": "Part A Q6: Cancel closes the form on Step 1",
+      "status": "PASS",
+      "details": "Cancel button closes the create store form."
+    },
+    {
+      "feature": "Part B Q7: All tab shows correct total count",
+      "status": "PASS",
+      "details": "All tab shows 'All (6)' - more than just 2 direct children, confirming outlets are merged."
+    },
+    {
+      "feature": "Part B Q8: Outlet filter shows outlets with nested indicator",
+      "status": "PASS",
+      "details": "Outlet tab shows 'Outlet (3)' with 3 outlets. Alpha Outlet One shows with nested indicator (↳)."
+    },
+    {
+      "feature": "Part B Q9: Master filter shows Master stores",
+      "status": "PASS",
+      "details": "Master tab shows 'Master (3)' - test 1, Central Kitchen Beta, Central Kitchen Alpha."
+    }
+  ],
+
+  "bugs_fixed": [
+    {
+      "file": "/app/frontend/src/components/central-inventory/StoreManagement.jsx",
+      "issue": "Catalog count cards showing 0 for all categories in Step 2",
+      "root_cause": "1) Key mismatch: code used 'stock_item_categories', 'inventory_items', 'addon_recipes' but API returns 'categories', 'ingredients', 'addons', etc. 2) Type mismatch: code expected arrays but API returns numbers.",
+      "fix": "Updated keys to match API response (categories, ingredients, foods, recipes, sub_recipes, addons, roles) and added type check: typeof entities[key] === 'number' ? entities[key] : (Array.isArray(entities[key]) ? entities[key].length : 0)"
+    }
+  ],
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": ["/app/frontend/src/components/central-inventory/StoreManagement.jsx"],
+  "success_rate": {
+    "backend": "N/A (frontend only test)",
+    "frontend": "100% (8/8 features verified)"
+  },
+  "test_credentials": {
+    "central_store": "manager@germanfluid.com / Qplazm@10"
+  },
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "CR-035 2-step wizard and outlet visibility verified. Fixed catalog count display bug in StoreManagement.jsx. The displayChildren memo correctly merges outlets from allStores (fetched via hierarchy-detail API). Filter pills (All/Master/Outlet) work correctly. Nested outlet indicator (↳) displays for outlets that are children of Master stores."
+}

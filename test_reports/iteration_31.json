@@ -1,0 +1,94 @@
+{
+  "iteration": 31,
+  "test_date": "2026-06-01",
+  "test_type": "CR-023 Batches 1-3 Regression — Frontend Only",
+  "overall_status": "PASS",
+  "summary": "All CR-023 Batches 1-3 verified end-to-end. Store Health Grid, Pending Queues names, History & Ledger names, Transfer Detail FROM/TO names, Requester Store Snapshot and Approval Impact sections, and visibility gating for non-Central users all working as expected.",
+  "tests": [
+    {
+      "batch": "1",
+      "name": "Operations Hub — Store Health Grid",
+      "status": "PASS",
+      "details": "STORE HEALTH ACROSS HIERARCHY section visible to Central user (abhishek@kalabahia.com). Found 6 store cards with real names: DemoFranchise1 (2 out of stock, 2 out, 2 ok, 4 items), DemoFranchise2 (2 out of stock, 2 out, 2 low, 4 items), DemoFranchise3 (1 out of stock, 1 out, 3 ok, 4 items), DemoFranchise4 (Healthy badge, 4 ok, 4 items), TestFranchise_P23_Central (Healthy, Outlet), TestFranchise_P23_Probe (164 out of stock, 164 out, 164 items). Cards have data-testid=store-health-<rid> and are clickable (navigate to /store/<rid>).",
+      "data_testid": "store-health-{restaurant_id}"
+    },
+    {
+      "batch": "1",
+      "name": "Store Health badges — red 'X out of stock' vs green 'Healthy'",
+      "status": "PASS",
+      "details": "Cards with outCount>0 show destructive (red) badge 'X out of stock'. Cards with outCount=0 show emerald 'Healthy' badge. Counts (out/low/ok) display with colored dots."
+    },
+    {
+      "batch": "1",
+      "name": "Operations Hub KPI cards & Today's Activity",
+      "status": "PASS",
+      "details": "KPIs working: Stale Approvals=3, Ready to Dispatch=1, Pending Receives=0, Low Stock Items=67. Today's Activity feed shows real names: 'to DemoFranchise1', 'to DemoCentral1' (no '—' / 'Store #ID' fallback)."
+    },
+    {
+      "batch": "2",
+      "name": "Pending Queues — approval cards show real restaurant names",
+      "status": "PASS",
+      "details": "3 approval cards shown: 'My Genie → DemoFranchise4' (PO-0074), 'My Genie → DemoCentral1' (PO-0075, PO-0113). Subtitle says 'My Genie requesting from you'. No '—' or 'Store #ID' fallbacks observed."
+    },
+    {
+      "batch": "2",
+      "name": "Transfer Detail — FROM/TO cards show real names + type badges",
+      "status": "PASS",
+      "details": "On /transfer/74: FROM card = 'My Genie' with [Central Store] badge; TO card = 'DemoFranchise4' with [Outlet] badge. data-testid=transfer-from-name and transfer-to-name resolved correctly via restaurantMap."
+    },
+    {
+      "batch": "2",
+      "name": "History & Ledger — Source/Destination columns",
+      "status": "PASS",
+      "details": "20 history rows render real names in both Source ('My Genie') and Destination ('DemoFranchise1', 'DemoCentral1', 'DemoFranchise2/3/4', 'DemoCentral2') columns. No '—' placeholders for restaurant names."
+    },
+    {
+      "batch": "3",
+      "name": "Transfer Detail — REQUESTER STORE SNAPSHOT (Central, requested status)",
+      "status": "PASS",
+      "details": "On /transfer/74 (status=requested) as Central user, 'REQUESTER STORE SNAPSHOT — DEMOFRANCHISE4' section renders after ~15-30s (API is slow). Stat cards show 0 Out of Stock, 0 Low Stock, 4 Adequate, 4 Total Items. Item table lists 4 rows (Cooking Oil, maida, patri, red meat) with Stock Level, Min Threshold, Status badge (OK/LOW/OUT), and 'In This Request?' column ('Yes — 0.1 kg' for patri, 'Not requested' for others).",
+      "data_testid": "requester-snapshot, snapshot-row-{idx}"
+    },
+    {
+      "batch": "3",
+      "name": "Transfer Detail — APPROVAL IMPACT ON YOUR STOCK",
+      "status": "PASS",
+      "details": "Section renders below snapshot with table (Item | Requested | Your Stock | After Approval) and amber footer 'Approving will reduce your stock as shown above'. Row example: 'patri kg | 0.1 kg | 64.83 kg | 64.73 kg'.",
+      "data_testid": "approval-impact, impact-row-{idx}"
+    },
+    {
+      "batch": "3",
+      "name": "Snapshot gating — hidden for non-Central / non-requested",
+      "status": "PASS",
+      "details": "Logged in as outlet (owner@demofranchise1.com), viewed transfer detail page. requester-snapshot count=0, approval-impact count=0. Visibility gating works."
+    }
+  ],
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "TransferDetail",
+        "issues": ["Requester Snapshot fetch is noticeably slow (10-30s) on first load because it sequentially awaits hierarchy-detail + stock-inventory through the slow upstream POS API. Inline 'Loading requester store snapshot...' skeleton is shown — UX OK but consider caching by store-id across navigations to avoid re-fetch."]
+      }
+    ]
+  },
+  "test_report_links": ["/app/test_reports/iteration_31.json"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "useRestaurantMap.js: fetched.current guards re-fetch in StrictMode but is unconditional regardless of dependency changes. Acceptable since restaurantId is stable per-session, but consider keying it for multi-user contexts.",
+    "TransferDetail.jsx (line 122): Snapshot useEffect runs for status in ['requested','approved','partially_approved'] but task expected 'requested' only. Current behavior is broader than spec — verify with product if approved/partially_approved should also show snapshot. (Cosmetic only; not a bug.)",
+    "OperationsHub.jsx hierarchy-detail fan-out for store health metrics: batches via Promise.allSettled — good. Consider showing skeleton placeholders while storeHealth is empty during initial fetch instead of hiding the entire section."
+  ],
+  "updated_files": [],
+  "success_rate": { "backend": "N/A (frontend only)", "frontend": "100%" },
+  "test_credentials": {
+    "central": "abhishek@kalabahia.com / Qplazm@10",
+    "outlet": "owner@demofranchise1.com / Qplazm@10"
+  },
+  "seed_data_creation": "None — used existing POS API data (PO-0074 requested transfer used for snapshot test).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "CR-023 Batches 1-3 fully verified. Key flows tested with Central user (abhishek@kalabahia.com, rid=1): (1) Operations Hub Store Health Grid renders 6 cards with real names + colored badges/counts; (2) Pending Queues approval cards show 'My Genie → DemoFranchise4/DemoCentral1' format; (3) Transfer Detail FROM/TO use restaurantMap correctly with type badges; (4) History & Ledger Source/Destination columns show real names; (5) Requester Store Snapshot + Approval Impact sections render for Central+requested transfers (use /transfer/74 as canonical test case) and are HIDDEN for outlet users. NOTE: Snapshot can take up to 30s to load on first request — wait at least 20s in any retest. Batches 4-6 of CR-023 still need testing if requested by main agent."
+}

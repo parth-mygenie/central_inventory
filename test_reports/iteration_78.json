@@ -1,0 +1,25 @@
+{
+  "summary": "BUG-061 Option B: Purchase Report Fare column redesign - all 6 verifications PASS",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": { "backend": "N/A", "frontend": "100%" },
+  "verification_results": {
+    "V1_headers": "PASS - All 11 headers correct: Date, Store, Ingredient, Vendor, Qty, Unit Price, Item Amt, Fare, Payment, Invoice #, Txn ID",
+    "V2_baby_corn_fare": "PASS - PUR-828-20261020-8011: Item Amt=₹1,000, Fare=₹200 in <span class='font-semibold text-orange-600'>. data-testid='pr-fare-PUR-828-20261020-8011' present",
+    "V3_apple_no_fare": "PASS - PUR-828-20261020-8012: Fare cell shows '—'. data-testid='pr-fare-PUR-828-20261020-8012' present",
+    "V4_multi_item": "PASS - PUR-828-20261019-8009 header row has 11 cells: ['2026-10-19', 'Mygenietest002', '2 items', 'masala dairy', '—', '—', '—', '—', 'Cash', 'makakakaka', 'PUR-828-20261019-8009']",
+    "V5_summary_total": "PASS - ₹4,598 total visible in summary bar",
+    "V6_unit_price": "PASS - Baby Corn unit price ₹10 confirmed in txn 8011 row"
+  },
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "BUG-061 Option B fully implemented. 11-column Purchase Report with dedicated Fare column working correctly. Orange bold styling confirmed via outerHTML: <span class='font-semibold text-orange-600'>₹200</span>. Sub-rows for multi-item transactions maintain 11-column alignment."
+}
