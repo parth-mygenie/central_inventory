@@ -17,6 +17,17 @@ Deploy the existing React frontend repo directly into `/app` and run it as-is, w
 
 ## Deployment History
 
+### 2026-10-31 — Gate 2 Impact Analysis: Forward Push Module-Level Selection Screen
+- **PLANNING role** — Gate 2 (Impact Analysis) only, no code
+- Code Reality: NONE — no module push wizard code exists
+- Conflict Pre-Check: 4 target files scanned — NO conflicts (all changes additive, parallel-safe)
+- Data flow traced: push-form GET → push_summary.breakdown → module checkboxes → push POST with `modules` param
+- 4 files scoped: `api.js` (extend pushBundle + cache invalidation), `useHierarchyManagement.js` (forward modules), `StoreManagement.jsx` (button + dialog mount), NEW `ModulePushWizardDialog.jsx` (~300-370 lines)
+- 6 risks assessed (all LOW, 1 MEDIUM for new file)
+- 5 open questions for owner decision (combinable scoping, which modules, roles, button placement, naming)
+- Artifact: `control/sessions/CR-MODPUSH_ARTIFACT_2_IMPACT_ANALYSIS.md`
+- Next: Owner answers Q1-Q5 → Gate 3 (Implementation Plan)
+
 ### 2026-10-31 — Investigation: Forward Push Module-Level Selection Screen
 - **Investigation role** completed — no code changes
 - Curl-probed push-form API: confirmed `push_summary.breakdown` returns per-module counts (source/child_matched for 8 modules)
